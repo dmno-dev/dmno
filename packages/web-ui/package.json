@@ -1,0 +1,25 @@
+{
+  "name": "@dmno/web-ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "deploy": "pnpm build && netlify deploy --site=dmno --dir=dist --prod"
+  },
+  "dependencies": {
+    "@unhead/vue": "^1.8.3",
+    "vue": "^3.3.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.2.3",
+    "less": "^4.2.0",
+    "netlify-cli": "^17.1.0",
+    "pug": "^3.0.2",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5",
+    "vue-tsc": "^1.8.5"
+  }
+}

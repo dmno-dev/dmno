@@ -1,0 +1,5 @@
+SOME_KEY: 'someval'
+
+SOME_KEY:
+  _fetch:
+    provider: 1pass

@@ -1,0 +1,11 @@
+{
+  // not sure if this should be browser or not?
+  "extends": "@dmno/tsconfig/tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+  ]
+}
