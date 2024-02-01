@@ -1,0 +1,17 @@
+{
+  "name": "@dmno/ts-lib",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "lint": "eslint src --ext .ts,.js,.cjs,.vue",
+    "lint:fix": "pnpm run lint --fix"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@dmno/tsconfig": "workspace:*",
+    "@dmno/eslint-config": "workspace:*"
+  }
+}

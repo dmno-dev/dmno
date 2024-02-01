@@ -1,0 +1,21 @@
+{
+  "name": "example-monorepo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dmno": "NODE_NO_WARNINGS=1 node --experimental-specifier-resolution=node --loader ts-node/esm ./node_modules/@dmno/core/src/cli.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "volta": {
+    "node": "18.16.0",
+    "pnpm": "8.5.0"
+  },
+  "devDependencies": {
+    "@dmno/core": "../packages/core",
+    "@swc/core": "^1.3.36",
+    "ts-node": "^10.9.1"
+  }
+}

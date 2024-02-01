@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    // "composite": true,
+    "module": "CommonJS",
+    "target": "ESNext",
+    "lib": [
+      "ESNext"
+    ],
+    "strict": true,
+    "moduleResolution": "Node",
+    "allowSyntheticDefaultImports": true
+  }
+}

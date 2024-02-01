@@ -1,0 +1,37 @@
+{
+  "name": "@dmno/core",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "NODE_NO_WARNINGS=1 node --experimental-specifier-resolution=node --loader ts-node/esm ./src/test.ts"
+  },
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "index": [
+        "./src/index.ts"
+      ]
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "devDependencies": {
+    "@dmno/eslint-config": "workspace:*",
+    "@dmno/tsconfig": "workspace:*",
+    "@types/async": "^3.2.20",
+    "@types/lodash": "^4.14.195",
+    "@types/node": "^20.3.2"
+  },
+  "dependencies": {
+    "async": "^3.2.4",
+    "lodash": "^4.17.21",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.5"
+  }
+}
