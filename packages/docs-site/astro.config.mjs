@@ -1,10 +1,30 @@
 import { defineConfig } from 'astro/config';
-import mdx from '@astrojs/mdx';
-
-import sitemap from '@astrojs/sitemap';
+import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://docs.dmno.dev',
-	integrations: [mdx(), sitemap()],
+	integrations: [
+		starlight({
+			title: 'DMNO Docs',
+			logo: {
+				src: './src/assets/square-logo.svg'
+			},
+			social: {
+				github: 'https://github.com/dmno-dev',
+			},
+			sidebar: [
+				{
+					label: 'Guides',
+					items: [
+						// Each item here is one entry in the navigation menu.
+						{ label: 'Example Guide', link: '/guides/example/' },
+					],
+				},
+				{
+					label: 'Reference',
+					autogenerate: { directory: 'reference' },
+				},
+			],
+		}),
+	],
 });
