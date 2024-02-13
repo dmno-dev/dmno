@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import vue from '@astrojs/vue';
 
 // https://astro.build/config
 export default defineConfig({
@@ -26,5 +27,8 @@ export default defineConfig({
 				},
 			],
 		}),
+    vue({ 
+      // jsx: true,
+    }),
 	],
 });
