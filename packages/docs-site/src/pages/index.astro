@@ -8,13 +8,14 @@ import SignUp from '../components/mailerlite/SignUp.astro'
     <title>DMNO</title>
   </head>
   <body>
-
-    <div class="logo-with-loader">
-      <DmnoLogo client:load/>
-      <div class="logo-with-loader__line" />
-      <DotsLoader client:load/>
+    <div class="main-container">
+      <div class="logo-with-loader">
+        <DmnoLogo client:load/>
+        <div class="logo-with-loader__line" />
+        <DotsLoader client:load/>
+      </div>
+      <SignUp />
     </div>
-    <SignUp />
   </body>
 </html>
 
@@ -51,6 +52,7 @@ body {
   margin: 0;
   display: flex;
   place-items: center;
+  justify-content: center;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -117,12 +119,13 @@ button:focus-visible {
     color: white;
     border-radius: 10px;
     padding: 10px;
+    margin-bottom: 10%;
     display: flex;
     gap: 20px;
     position: relative;
     transform: rotate(-10deg);
     transition: all .5s;
-  
+    max-width: 55%;
     box-shadow: var(--shadow-elevation-high);
   
     &:hover {
