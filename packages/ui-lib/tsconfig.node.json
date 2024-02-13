@@ -1,0 +1,9 @@
+{
+  "extends": "@dmno/tsconfig/tsconfig.node.json",
+  "include": [
+    ".eslintrc.cjs",
+    "package.json",
+    "./*.js",
+    "./**/*.cjs",
+  ]
+}
