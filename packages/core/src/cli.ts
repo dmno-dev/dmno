@@ -32,33 +32,55 @@ console.log(memberPackages);
 // PNPM_SCRIPT_SRC_DIR
 
 
-// run dev scripts
+
 (async () => {
-  await async.eachOf(memberPackages, (member) => {
-    runCmd(member.path);
+  await async.eachOf(memberPackages, async (member) => {
+
+    const configPath = `${member.path}/.dmno/config.ts`;
+    if (fs.existsSync(configPath)) {
+      console.log(member.name, '- found config (ts)');
+
+      // TODO: figure out how to resolve/use tsx
+      // currently I installed on the example-repo where it is being used
+      const configResult = execSync(`./node_modules/.bin/tsx ${configPath}`);
+      console.log(configResult.toString());
+
+    }
+    // const configSchema = require(configPath);
+    // console.log(configSchema);
   })
 })();
 
-function runCmd(dir: string) {
-  console.log('running in dir', dir)
-  const ls = spawn('pnpm', ["run dev"], {
-    cwd: dir,
-    shell: true
-  });
 
-  ls.stdout.on('data', (data) => {
-    console.log(`stdout: ${data}`);
-  });
 
-  ls.stderr.on('data', (data) => {
-    console.error(`stderr: ${data}`);
-  });
 
-  ls.on('close', (code) => {
-    console.log(`child process exited with code ${code}`);
-  }); 
-  return ls;
-}
+// // run dev scripts
+// (async () => {
+//   await async.eachOf(memberPackages, (member) => {
+//     runCmd(member.path);
+//   })
+// })();
+
+// function runCmd(dir: string) {
+//   console.log('running in dir', dir)
+//   const ls = spawn('pnpm', ["run dev"], {
+//     cwd: dir,
+//     shell: true
+//   });
+
+//   ls.stdout.on('data', (data) => {
+//     console.log(`stdout: ${data}`);
+//   });
+
+//   ls.stderr.on('data', (data) => {
+//     console.error(`stderr: ${data}`);
+//   });
+
+//   ls.on('close', (code) => {
+//     console.log(`child process exited with code ${code}`);
+//   }); 
+//   return ls;
+// }
 
 
 

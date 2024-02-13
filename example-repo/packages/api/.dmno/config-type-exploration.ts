@@ -14,6 +14,21 @@ const StripePublicKey = createDmnoDataType({
 });
 
 
+const PgConnectionInfo = createDmnoDataType({
+  extends: DmnoBaseTypes.object({
+    object: {
+      extends: DmnoBaseTypes.object({
+
+      }),
+    },
+    connectionString: {
+      extends: DmnoBaseTypes.string({}),
+      value: (ctx) => `${ctx.get('object.host')}/${ctx.get('object.blah')}`,
+    }
+  })
+})
+
+
 
 defineConfigSchema({
   name: 'api2',

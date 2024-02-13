@@ -2,7 +2,7 @@ import { DmnoBaseTypes } from "./base-types";
 
 console.log('moo');
 
-const myType = DmnoBaseTypes.String({ minLength: 2, maxLength: 5 });
+const myType = DmnoBaseTypes.string({ minLength: 2, maxLength: 5 });
 
 
 function check(val: string) {

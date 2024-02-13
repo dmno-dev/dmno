@@ -2,12 +2,25 @@
 type ConfigRequiredAtTypes = 'build' | 'boot' | 'run' | 'deploy';
 
 
-type ConfigContext = any;
+type ConfigContext = {
+  get: (key: string) => any;
+};
 type ValueOrValueFromContextFn<T> = T | ((ctx: ConfigContext) => T);
 
+// TODO: do we allow Date?
+// what to do about null/undefined?
+type ConfigValue = string | number | boolean | null | { [key: string]: ConfigValue } | Array<ConfigValue>;
+type ConfigValueInlineFunction =  ((ctx: any) => ConfigValueOrResolver);
+type ConfigValueOrResolver =
+  // static value
+  ConfigValue |
+  // resolver - ex: formula, fetch from vault, etc
+  ConfigValueResolver |
+  // inline function, which can return a value or another resolver
+  ConfigValueInlineFunction
 
 type ConfigSchema = Record<string, ConfigSchemaItem>;
-type ConfigSchemaItem = {
+export type ConfigSchemaItem = {
   /** short description of what this config item is for */
   summary?: string,
   /** longer description info including details, gotchas, etc... supports markdown  */
@@ -58,7 +71,9 @@ type ConfigSchemaItem = {
   exportEnvKey?: string;
 
   /** set the value, can be static, or a function, or use helpers */
-  value?: ValueOrValueFromContextFn<any>;
+  // value?: ValueOrValueFromContextFn<any>;
+  value?: ConfigValueOrResolver;
+
   // set using formula
   // set via lookup
   // set by syncing
@@ -95,7 +110,7 @@ export function defineConfigSchema(opts: {
   schema: ConfigSchema,
   output?: OutputSchema,
 }) {
-
+  console.log('LOADING SCHEMA!', opts);
 }
 
 export function defineWorkspaceConfig(schema: ConfigSchema) {
@@ -105,12 +120,24 @@ export function defineWorkspaceConfig(schema: ConfigSchema) {
 
 type TypeValidationResult = boolean | undefined | void;
 
-type DmnoDataTypeOptions<T = any> = {
-  settingsSchema?: T,
-  validate?: (val: any, settings?: T) => TypeValidationResult;
-  asyncValidate?: (val: any, settings?: T) => Promise<TypeValidationResult>;
-  normalize?: (val: any, settings?: T) => any;
-} & Omit<ConfigSchemaItem, 'validate' | 'normalize' | 'asyncValidate'>;
+// data types expose all the same options, except they additionally have a "settings schema"
+// and their validations/normalize functions get passed in the _instance_ of those settings when invoked
+type DmnoDataTypeOptions<T = any> =
+  // the schema item validation/normalize fns do not get passed any settings
+  Omit<ConfigSchemaItem, 'validate' | 'normalize' | 'asyncValidate'> &
+  {
+    settingsSchema?: T,
+    validate?: (val: any, settings?: T) => TypeValidationResult;
+    asyncValidate?: (val: any, settings?: T) => Promise<TypeValidationResult>;
+    normalize?: (val: any, settings?: T) => any;
+  };
+
+class DmnoConfigItem {
+  constructor(public schema: ConfigSchemaItem) {
+
+  }
+}
+
 
 
 export function createDmnoDataType<T>(opts: DmnoDataTypeOptions<T>) {
@@ -130,3 +157,47 @@ export function createDmnoDataType<T>(opts: DmnoDataTypeOptions<T>) {
     },
   });
 }
+
+export class ConfigPath {
+  constructor (readonly path: string) { }
+}
+export const configPath = (path: string) => new ConfigPath(path);
+
+export abstract class ConfigValueResolver<T = ConfigValue> {
+  abstract icon: string;
+  abstract getPreviewLabel(): string;
+  abstract resolve(ctx: any): Promise<T | ConfigValueResolver>;
+}
+
+export class DmnoFormulaResolver extends ConfigValueResolver {
+  constructor(readonly formula: string) {
+    super();
+  }
+  icon = 'fluent:math-formula-16-filled';
+  getPreviewLabel() {
+    return 'formula!';
+  }
+  async resolve(ctx: any) {
+    return 'formula result!';
+  }
+}
+// create DmnoFormula helper so we can use formulas without having to call `new`
+export const dmnoFormula = (formula: string) => new DmnoFormulaResolver(formula);
+
+
+type ToggleOptions = Record<string, ConfigValueOrResolver>;
+export class ToggleResolver extends ConfigValueResolver {
+  icon = 'gravity-ui:branches-right';
+  getPreviewLabel() {
+    return `toggle by ${this.toggleByKey}`;
+  }
+  constructor(readonly toggleByKey: string, readonly toggles: ToggleOptions) {
+    super();
+  }
+  async resolve() {
+    return 'resolved toggle value';
+  }
+}
+
+export const toggleByEnv = (toggles: ToggleOptions) => new ToggleResolver('DMNO_ENV', toggles);
+export const toggleBy = (key: string, toggles: ToggleOptions) => new ToggleResolver(key, toggles);

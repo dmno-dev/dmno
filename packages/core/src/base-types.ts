@@ -1,8 +1,8 @@
-import { createDmnoDataType } from "./config-engine"
+import { ConfigSchemaItem, createDmnoDataType } from "./config-engine"
 import * as _ from 'lodash';
 
 const StringDataType = createDmnoDataType({
-  settingsSchema: Object as {
+  settingsSchema: Object as undefined | {
     minLength?: number;
     maxLength?: number;
     isLength?: number;
@@ -54,7 +54,7 @@ const StringDataType = createDmnoDataType({
 });
 
 const NumberDataType = createDmnoDataType({
-  settingsSchema: Object as {
+  settingsSchema: Object as undefined | {
     min?: number;
     max?: number;
   },
@@ -72,8 +72,84 @@ const NumberDataType = createDmnoDataType({
   }
 });
 
+const ObjectDataType = createDmnoDataType({
+  settingsSchema: Object as any as Record<string, ConfigSchemaItem>,
+});
+
+const ArrayDataType = createDmnoDataType({
+  settingsSchema: Object as {
+    childExtends?: ConfigSchemaItem;
+
+    minLength?: number;
+    maxLength?: number;
+    isLength?: number;
+  }
+  // TODO: validate checks if it's an array
+  // helper to coerce csv string into array of strings
+});
+
+const DictionaryDataType = createDmnoDataType({
+  settingsSchema: Object as {
+    childExtends?: any;
+
+    validateKeys?: (key: string) => boolean;
+    asyncValidateKeys?: (key: string) => Promise<boolean>;    
+    keyDescription?: string
+    // TODO: more features around the keys themselves
+
+    minItems?: number;
+    maxItems?: number;
+    // TODO: more validations around the whole dict
+  }
+  // TODO: validate checks if it's an object
+
+});
+
+type PossibleEnumValues = string | number | boolean; // do we need explicitly allow null/undefined?
+type ExtendedEnumDescription = {
+  value: PossibleEnumValues,
+  description?: string,
+  // icon, color, docs url, etc...
+}
+const EnumDataType = createDmnoDataType({
+  settingsSchema: Object as any as 
+    (
+      // simple list of values
+      PossibleEnumValues[]
+      // array or values with extra metadata
+      | ExtendedEnumDescription[]
+      // object where possible enum values (strings) are keys and values are metadata
+      | Record<string, Omit<ExtendedEnumDescription, 'value'>>
+    )
+});
+
 
 export const DmnoBaseTypes = {
   string: StringDataType,
   number: NumberDataType,
+  enum: EnumDataType, 
+
+  // TODO:
+  // - boolean
+  // - email
+  // - url
+  // - ip address
+  // - port number
+  // - semver range
+  // - date / timestamp / etc
+
+  // "compound" types /////////////////
+  object: ObjectDataType,
+  array: ArrayDataType,
+  dictionary: DictionaryDataType, // TODO: could be called record? something else?
 }
+
+
+// example of defining common type using our base types
+export const NodeEnvType = createDmnoDataType({
+  extends: DmnoBaseTypes.enum({
+    development: { description: 'true during local development' },
+    test: { description: 'true while running tests' },
+    production: { description: 'true for production' },
+  }),
+});

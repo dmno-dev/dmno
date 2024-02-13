@@ -2,7 +2,6 @@
   "name": "@example/api",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "dev": "node --watch --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm ./src/main.ts",
     "build": "tsc --incremental false -p tsconfig-build.json",
