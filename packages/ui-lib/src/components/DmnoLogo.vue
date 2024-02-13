@@ -9,7 +9,7 @@
 
 
 <script setup lang="ts">
-import { PropType } from 'vue';
+// import { PropType } from 'vue';
 // const props = defineProps({
 //   prop1: String,
 //   prop2: { type: String, default },

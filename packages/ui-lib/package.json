@@ -1,0 +1,31 @@
+{
+  "name": "@dmno/ui-lib",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./brand-assets/": {
+      "default": "./src/brand-assets/"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "index": [
+        "./src/index.ts"
+      ]
+    }
+  },
+  "dependencies": {
+    "vue": "^3.3.4"
+  },
+  "devDependencies": {
+    "@dmno/eslint-config": "workspace:*",
+    "@dmno/tsconfig": "workspace:*",
+    "less": "^4.2.0",
+    "pug": "^3.0.2",
+    "typescript": "^5.0.2"
+  }
+}

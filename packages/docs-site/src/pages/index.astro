@@ -1,6 +1,5 @@
 ---
-import DmnoLogo from '../../../../packages/web-ui/src/components/DmnoLogo.vue'
-import DominoLoader from '../../../../packages/web-ui/src/components/DominoLoader.vue'
+import { DmnoLogo, DotsLoader }  from '@dmno/ui-lib'
 import SignUp from '../components/mailerlite/SignUp.astro'
 ---
 
@@ -13,7 +12,7 @@ import SignUp from '../components/mailerlite/SignUp.astro'
     <div class="logo-with-loader">
       <DmnoLogo client:load/>
       <div class="logo-with-loader__line" />
-      <DominoLoader client:load/>
+      <DotsLoader client:load/>
     </div>
     <SignUp />
   </body>
