@@ -1,8 +1,9 @@
-import { defineConfigSchema } from '@dmno/core';
+import { DmnoBaseTypes, defineConfigSchema } from '@dmno/core';
 
 
 
-defineConfigSchema({
+export default defineConfigSchema({
+  name: 'web',
   pick: [
     {
       source: 'api',
@@ -10,7 +11,17 @@ defineConfigSchema({
     },
   ],
   schema: {
-
+    VITE_STATIC_VAL_STR: {
+      value: 'static'
+    },
+    VITE_STATIC_VAL_NUM: {
+      extends: DmnoBaseTypes.number({}),
+      value: 42
+    },
+    VITE_RANDOM_NUM: {
+      extends: DmnoBaseTypes.number({}),
+      value: (ctx) => Math.floor(Math.random() * 100),
+    }
   },
   output: {
     WEB_URL: {

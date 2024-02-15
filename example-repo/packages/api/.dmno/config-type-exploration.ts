@@ -30,7 +30,7 @@ const PgConnectionInfo = createDmnoDataType({
 
 
 
-defineConfigSchema({
+export default defineConfigSchema({
   name: 'api2',
   schema: {
     THING_DELAY: {

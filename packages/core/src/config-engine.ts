@@ -101,7 +101,11 @@ type PickConfigSchemaItem = string | {
 type OutputSchema = Record<string, OutputSchemaItem>;
 type OutputSchemaItem = ConfigSchemaItem;
 
-export function defineConfigSchema(opts: {
+
+export type WorkspaceConfig = {
+  schema: ConfigSchema,
+};
+export type ServiceConfigSchema = {
   // service name
   name?: string,
   // name of parent service (if applicable)
@@ -109,12 +113,16 @@ export function defineConfigSchema(opts: {
   pick?: PickConfigSchema,
   schema: ConfigSchema,
   output?: OutputSchema,
-}) {
+};
+
+export function defineConfigSchema(opts: ServiceConfigSchema) {
   console.log('LOADING SCHEMA!', opts);
+  // TODO: return initialized object
+  return opts;
 }
 
-export function defineWorkspaceConfig(schema: ConfigSchema) {
-
+export function defineWorkspaceConfig(opts: WorkspaceConfig) {
+  return opts;
 }
 
 

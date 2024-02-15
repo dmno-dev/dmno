@@ -1,93 +1,52 @@
-import fs from 'node:fs';
+/**
+ * This is the code for the cli executable
+ * it doesn't do much itself, mostly just find tsx, and then trigger the cli-entry script via tsx
+ * which is what lets us then load all the config files using dynamic imports within the same process
+ * 
+ * alternatively, we'd have to load each config file in a separate process, which would be difficult to coordinate
+ * 
+ * this strategy may not work long-term, but seems like a good place to start
+ */
+import path from 'node:path';
 import _ from 'lodash';
-import async from 'async';
 import { execSync, exec, spawn } from 'node:child_process';
 
+import yargs from 'yargs'
+import { hideBin } from 'yargs/helpers'
 
-console.log('running dmno CLI');
+
+// potentially useful items in process.env
+// PNPM_PACKAGE_NAME
+// NODE_PATH:
 
 const CWD = process.cwd();
+const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 
-const IS_PNPM = fs.existsSync(`${CWD}/pnpm-lock.yaml`);
-if (IS_PNPM) console.log('detected pnpm');
-if (!IS_PNPM) throw new Error('Must be run in a pnpm-based monorepo');
+console.log('> dmno CLI');
+// console.log({
+//   cwd: process.cwd(),
+//   // __dirname,
+//   'import.meta.url': import.meta.url,
+//   thisFilePath,
+// });
 
-// use `pnpm m ls` to list workspace packages
-const workspacePackagesRaw = execSync('pnpm m ls --json --depth=-1').toString();
-const workspacePackagesData = JSON.parse(workspacePackagesRaw);
+// we know the location of this file is the dist folder of @dmno/core within the project's node_modules
+// and since tsx is a dependency of @dmno/core, we can assume it will be in node_modules/.bin
+// (we will probably need to adjust this to also work with yarn/npm etc...)
+const tsxPath = path.resolve(thisFilePath, '../../node_modules/.bin/tsx');
+// the cli-entry code will be relative to this file, and we are going to run the built mjs file
+// (we could decide to run the ts directly since we are running via tsx)
+const dmnoCliEntryPath = path.resolve(thisFilePath, '../cli-entry.mjs');
 
-// workspace root should have the shortest path, since the others will all be nested
-const workspaceRootEntry = _.minBy(workspacePackagesData, (w: {
-  name: string;
-  version: string;
-  path: string;
-  private: boolean;
-}) => w.path.length)!;
-
-const WORKSPACE_ROOT_PATH = workspaceRootEntry;
-
-const memberPackages = _.omit(_.keyBy(workspacePackagesData, (w) => w.name), workspaceRootEntry.name);
-console.log(memberPackages);
-
-// PNPM_SCRIPT_SRC_DIR
+// console.log({tsxPath, dmnoCliEntryPath, configPath});
 
 
-
-(async () => {
-  await async.eachOf(memberPackages, async (member) => {
-
-    const configPath = `${member.path}/.dmno/config.ts`;
-    if (fs.existsSync(configPath)) {
-      console.log(member.name, '- found config (ts)');
-
-      // TODO: figure out how to resolve/use tsx
-      // currently I installed on the example-repo where it is being used
-      const configResult = execSync(`./node_modules/.bin/tsx ${configPath}`);
-      console.log(configResult.toString());
-
-    }
-    // const configSchema = require(configPath);
-    // console.log(configSchema);
+yargs(hideBin(process.argv))
+  .command('load', 'load the dmno config', () => {}, (argv) => {
+    // TODO: we'll want to pass through the args/options
+    // and any other context info about which service we are within
+    const result = execSync(`${tsxPath} ${dmnoCliEntryPath}`);
+    console.log(result.toString());
   })
-})();
-
-
-
-
-// // run dev scripts
-// (async () => {
-//   await async.eachOf(memberPackages, (member) => {
-//     runCmd(member.path);
-//   })
-// })();
-
-// function runCmd(dir: string) {
-//   console.log('running in dir', dir)
-//   const ls = spawn('pnpm', ["run dev"], {
-//     cwd: dir,
-//     shell: true
-//   });
-
-//   ls.stdout.on('data', (data) => {
-//     console.log(`stdout: ${data}`);
-//   });
-
-//   ls.stderr.on('data', (data) => {
-//     console.error(`stderr: ${data}`);
-//   });
-
-//   ls.on('close', (code) => {
-//     console.log(`child process exited with code ${code}`);
-//   }); 
-//   return ls;
-// }
-
-
-
-
-
-
-// console.log(process.env);
-
-// console.log();
-// pnpm m ls --json --depth=-1 | node -e "const path = require('path'); console.log(JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf-8')).map((m) => path.relative(__dirname, m.path)).filter(Boolean))"
+  .demandCommand(1)
+  .parse();

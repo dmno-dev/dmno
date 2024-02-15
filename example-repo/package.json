@@ -21,6 +21,5 @@
     "ts-node": "^10.9.1"
   },
   "dependencies": {
-    "tsx": "^4.7.0"
   }
 }

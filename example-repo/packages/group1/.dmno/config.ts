@@ -1,6 +1,6 @@
 import { defineConfigSchema } from '@dmno/core';
 
-defineConfigSchema({
+export default defineConfigSchema({
   name: 'group1',
   schema: {
     GROUP1_THINGY: {

@@ -3,13 +3,15 @@ import { OnePasswordSecretService } from '@dmno/1password-plugin';
 
 const DevOnePassBackend = new OnePasswordSecretService(
   configPath('ONE_PASSWORD.DEV_SERVICE_ACCOUNT_TOKEN'),
+  { defaultVaultName: 'dev test' }
 );
 
 const ProdOnePassBackend = new OnePasswordSecretService(
   configPath('ONE_PASSWORD.PROD_SERVICE_ACCOUNT_TOKEN'),
+  { defaultVaultName: 'dev test' }
 );
 
-defineConfigSchema({
+export default defineConfigSchema({
   name: 'api',
   parent: 'group1',
   pick: [
@@ -60,6 +62,7 @@ defineConfigSchema({
         fn: (ctx) => {
           return ctx.get('OTHER_VAL') + "_fn";
         },
+        noBueno: new Date(),
       }),
     },
 
