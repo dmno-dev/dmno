@@ -7,24 +7,6 @@
   </div>
 </template>
 
-
-<script setup lang="ts">
-// import { PropType } from 'vue';
-// const props = defineProps({
-//   prop1: String,
-//   prop2: { type: String, default },
-//   prop3: { type: String as PropType<'a' | 'b'> },
-// })
-
-// const props2 = defineProps<{
-//   prop1: string,
-//   prop2?: string,
-// }>();
-
-
-</script>
-
-
 <style scoped lang="less">
 .dmno-logo {
   color: currentColor;
