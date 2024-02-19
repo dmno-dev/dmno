@@ -1,5 +1,6 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import starlightBlog from 'starlight-blog'
 import vue from "@astrojs/vue";
 import robotsTxt from "astro-robots-txt";
 
@@ -16,7 +17,18 @@ export default defineConfig({
       social: {
         github: "https://github.com/dmno-dev",
       },
+      plugins: [starlightBlog()],
+      pagination: false,
       sidebar: [
+        {
+          label: "Get Started",
+          items: [
+            {
+              label: "Quickstart",
+              link: "/get-started/quickstart"
+            }
+          ]
+        },
         {
           label: "Guides",
           items: [
@@ -33,6 +45,12 @@ export default defineConfig({
             directory: "reference",
           },
         },
+        {
+          label: "Plugins",
+          autogenerate: {
+            directory: "plugins"
+          }
+        }
       ],
     }),
     vue({

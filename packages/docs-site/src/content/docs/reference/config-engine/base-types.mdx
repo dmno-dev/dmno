@@ -1,0 +1,76 @@
+---
+title: DMNO Base Types
+---
+
+# Base Types
+
+DMNO comes with a comprehensive set of base types to cover the majority of use cases. They can also be extended to create more application specific types as needed. See [_creating your own types_](/reference/config-engine/base-types/#creating-your-own-types) for more on this. 
+
+```javascript
+
+// example use
+
+const myType = DmnoBaseTypes.String({ settingsObject });
+```
+
+
+## `StringDataType`
+
+DMNO Built-in data type for Strings. Includes the following (optional) settings: 
+
+```
+minLength?: number;
+maxLength?: number;
+isLength?: number;
+startsWith?: string;
+endsWith?: string;
+matches?: RegExp | string;
+```
+
+Examples: 
+```javascript
+const myMinMaxType = DmnoBaseTypes.String({ minLength: 2, maxLength: 5 });
+const myFixedLengthType = DmnoBaseTypes.String({ isLength: 5 });
+const myStartsWithType = DmnoBaseTypes.String({ startsWith: 'pk_' })
+
+```
+
+
+## `NumberDataType`
+
+DMNO Built-in data type for Numbers. Includes the following (optional) settings: 
+
+```
+min?: number;
+max?: number;
+```
+
+Examples: 
+```javascript
+const myMinMaxType = DmnoBaseTypes.String({ min: 2, max: 5 });
+
+```
+
+
+## `ObjectDataType`
+
+
+## `ArrayDataType`
+
+
+## `DictionaryDataType`
+
+
+## `EnumDataType`
+
+
+## `NodeEnvType` 
+
+## Creating your own types
+
+:::caution[Warning]
+  We _highly_ recommend extending our base types as a means of creating custom types for your own applications. However, we do provide the means to create your own via `createDmnoDataType`. 
+:::
+
+
+### `createDmnoDataType(opts)` 
