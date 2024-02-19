@@ -8,6 +8,8 @@ import fs from 'node:fs';
 import _ from 'lodash';
 import async from 'async';
 import { execSync, exec, spawn } from 'node:child_process';
+import graphlib from '@dagrejs/graphlib';
+
 import { ServiceConfigSchema } from './config-engine';
 
 console.log('>>CLI ENTRY!');
@@ -47,6 +49,7 @@ type PnpmPackageListing = {
 const workspaceRootEntry = _.minBy(workspacePackagesData, (w) => w.path.length)!;
 const WORKSPACE_ROOT_PATH = workspaceRootEntry.path;
 
+// TODO: probably change from a type to a class with some helpers
 type LoadedServiceInfo = {
   /** name of service according to package.json file  */
   packageName: string,
@@ -57,34 +60,112 @@ type LoadedServiceInfo = {
   /** path to .dmno/config.ts file */
   configFilePath: string,
   /** unprocessed config schema pulled from config.ts */
-  rawConfig: ServiceConfigSchema,
+  rawConfig?: ServiceConfigSchema,
+  /** error encountered while _loading_ the config schema */
+  configLoadError?: Error,
+  /** error within the schema itself */
+  schemaErrors: Error[], // TODO: probably want a specific error type...?
 }
 
-const services: Record<string, LoadedServiceInfo> = {};
+const services: LoadedServiceInfo[] = [];
 for (const w of workspacePackagesData) {
   const isRoot = w.name === workspaceRootEntry.name;
+  // not sure yet about naming the root file differently?
+  // especially in the 1 service context, it may feel odd
   const configFilePath = `${w.path}/.dmno/${isRoot ? 'workspace-' : ''}config.ts`;
-  const importedConfig = await import(configFilePath);
-
-  // TODO: check if the config file actually exported the right thing and throw helpful error otherwise
-  const rawConfig = importedConfig.default as ServiceConfigSchema;
 
   // default to package.json module name, but use name from config.ts if provided
   let serviceName = isRoot ? 'root' : w.name;
-  if (!isRoot && rawConfig.name) {
-    if (rawConfig.name === 'root') {
-      throw new Error('You cannot name a dmno service "root"');
+
+  try {
+    const importedConfig = await import(configFilePath);
+    // TODO: check if the config file actually exported the right thing and throw helpful error otherwise
+    const rawConfig = importedConfig.default as ServiceConfigSchema;
+
+    // override service name with name from config if one is set
+    if (!isRoot && rawConfig.name) {
+      if (rawConfig.name === 'root') {
+        throw new Error('You cannot explicitly name a dmno service "root" unless it is the project root');
+      }
+      serviceName = rawConfig.name;
     }
-    serviceName = rawConfig.name;
+
+    services.push({
+      serviceName,
+      packageName: w.name,
+      path: w.path,
+      configFilePath,
+      rawConfig: importedConfig.default,
+      schemaErrors: [],
+    });
+
+  } catch (err) {
+    console.log('found error when loading config');
+
+    // TODO dry this up
+    services.push({
+      serviceName,
+      packageName: w.name,
+      path: w.path,
+      configFilePath,
+      configLoadError: err as Error,
+      schemaErrors: [],
+    });
+
   }
-  
-  services[serviceName] = {
-    serviceName,
-    packageName: w.name,
-    path: w.path,
-    configFilePath,
-    rawConfig: importedConfig.default,
-  };
 };
+
+const servicesByName = _.keyBy(services, (s) => s.serviceName);
+
+// validate schema names are valid (config.parent and config.pick)
+
+// we may want to expirement with "compound nodes" to have the services contain their config items as children?
+const servicesDag = new graphlib.Graph({ directed: true });
+
+// create a node for each service
+for (const service of services) {
+  servicesDag.setNode(service.serviceName, { /* can add more metadata here */ });
+}
+
+for (const service of services) {
+  // check if parent service is valid
+  const parentServiceName = service.rawConfig?.parent;
+  if (parentServiceName) {
+    if (!servicesByName[parentServiceName]) {
+      service.schemaErrors.push(new Error(`Unable to find parent service "${parentServiceName}"`))
+    } else if (parentServiceName === service.serviceName) {
+      service.schemaErrors.push(new Error(`Cannot set parent to self`));
+    } else {
+      // creates a directed edge from parent to child
+      servicesDag.setEdge(parentServiceName, service.serviceName, { type: 'parent' });
+    }
+  }
+}
+
+// add graph edges based on "pick" - we will not resolve individual items yet
+// but this will tell us what order to resolve our services in
+for (const service of services) {
+  _.each(service.rawConfig?.pick, (rawPick) => {
+    // pick defaults to picking from "root" unless otherwise specified
+    const pickFromServiceName = _.isString(rawPick) ? 'root' : (rawPick.source || 'root');
+    if (!servicesByName[pickFromServiceName]) {
+      service.schemaErrors.push(new Error(`Invalid service name in "pick" config - "${pickFromServiceName}"`))
+    } else if (pickFromServiceName === service.serviceName) {
+        service.schemaErrors.push(new Error(`Cannot "pick" from self`));
+    } else {
+      // create directed edge from service being "picked" from to this one
+      servicesDag.setEdge(pickFromServiceName, service.serviceName, { type: 'pick' });
+    }
+  });
+}
+
+// look for cycles in the services graph
+const graphCycles = graphlib.alg.findCycles(servicesDag);
+_.each(graphCycles, (cycleMemberNames) => { // can find multiple cycles
+  _.each(cycleMemberNames, (name, i) => { // each cycle is just an array of node names in the cycle
+    servicesByName[name].schemaErrors.push(new Error(`Detected service dependency cycle - ${cycleMemberNames.join(' + ')}`))
+  });
+});
+
 
 console.log(services);

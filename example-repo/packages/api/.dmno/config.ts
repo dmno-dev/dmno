@@ -62,7 +62,7 @@ export default defineConfigSchema({
         fn: (ctx) => {
           return ctx.get('OTHER_VAL') + "_fn";
         },
-        noBueno: new Date(),
+        // noBueno: new Date(),
       }),
     },
 

@@ -4,6 +4,7 @@ import { DmnoBaseTypes, defineConfigSchema } from '@dmno/core';
 
 export default defineConfigSchema({
   name: 'web',
+  parent: 'group1',
   pick: [
     {
       source: 'api',

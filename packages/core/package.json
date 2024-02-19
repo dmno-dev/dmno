@@ -39,6 +39,7 @@
     "tsup": "^8.0.1"
   },
   "dependencies": {
+    "@dagrejs/graphlib": "^2.1.13",
     "async": "^3.2.4",
     "caller-path": "^4.0.0",
     "lodash": "^4.17.21",

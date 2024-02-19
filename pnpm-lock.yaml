@@ -6,6 +6,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@dagrejs/graphlib':
+        specifier: ^2.1.13
+        version: 2.1.13
       async:
         specifier: ^3.2.4
         version: 3.2.4
@@ -777,6 +780,11 @@ packages:
       enabled: 2.0.0
       kuler: 2.0.0
     dev: true
+
+  /@dagrejs/graphlib@2.1.13:
+    resolution: {integrity: sha512-calbMa7Gcyo+/t23XBaqQqon8LlgE9regey4UVoikoenKBXvUnCUL3s9RP6USCxttfr0XWVICtYUuKMdehKqMw==}
+    engines: {node: '>17.0.0'}
+    dev: false
 
   /@dependents/detective-less@4.1.0:
     resolution: {integrity: sha512-KrkT6qO5NxqNfy68sBl6CTSoJ4SNDIS5iQArkibhlbGU4LaDukZ3q2HIkh8aUKDio6o4itU4xDR7t82Y2eP1Bg==}
