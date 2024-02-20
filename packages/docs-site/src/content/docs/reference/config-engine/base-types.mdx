@@ -6,15 +6,17 @@ title: DMNO Base Types
 
 DMNO comes with a comprehensive set of base types to cover the majority of use cases. They can also be extended to create more application specific types as needed. See [_creating your own types_](/reference/config-engine/base-types/#creating-your-own-types) for more on this. 
 
+These types are used when defining
+
 ```javascript
 
-// example use
+// example use for creating a type
 
 const myType = DmnoBaseTypes.String({ settingsObject });
 ```
 
 
-## `StringDataType`
+## `String`
 
 DMNO Built-in data type for Strings. Includes the following (optional) settings: 
 
@@ -36,7 +38,7 @@ const myStartsWithType = DmnoBaseTypes.String({ startsWith: 'pk_' })
 ```
 
 
-## `NumberDataType`
+## `Number`
 
 DMNO Built-in data type for Numbers. Includes the following (optional) settings: 
 
@@ -52,19 +54,19 @@ const myMinMaxType = DmnoBaseTypes.String({ min: 2, max: 5 });
 ```
 
 
-## `ObjectDataType`
+## `Object`
 
 
-## `ArrayDataType`
+## `Array`
 
 
-## `DictionaryDataType`
+## `Dictionary`
 
 
-## `EnumDataType`
+## `Enum`
 
 
-## `NodeEnvType` 
+## `NodeEnv` 
 
 ## Creating your own types
 
