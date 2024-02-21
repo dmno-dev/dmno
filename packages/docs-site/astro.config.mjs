@@ -26,7 +26,11 @@ export default defineConfig({
             {
               label: "Quickstart",
               link: "/get-started/quickstart"
-            }
+            },
+            {
+              label: "Concepts",
+              link: "/get-started/concepts"
+            },
           ]
         },
         {
@@ -34,16 +38,36 @@ export default defineConfig({
           items: [
             // Each item here is one entry in the navigation menu.
             {
-              label: "Example Guide",
-              link: "/guides/example/",
+              label: "Next.js",
+              link: "/guides/nextjs/",
+            },
+            {
+              label: "Nuxt.js",
+              link: "/guides/nuxtjs/",
+            },
+            {
+              label: "Astro",
+              link: "/guides/astro/",
             },
           ],
         },
         {
           label: "Reference",
-          autogenerate: {
-            directory: "reference",
-          },
+          items: [
+            {
+              label: 'config-engine',
+              items: [
+                {
+                  label: 'Installation',
+                  link: '/reference/config-engine/installation/'
+                },
+                {
+                  label: 'Base Types',
+                  link: '/reference/config-engine/base-types/'
+                },
+              ]
+            }
+          ]
         },
         {
           label: "Plugins",
