@@ -65,6 +65,10 @@ export default defineConfig({
                   label: 'Base Types',
                   link: '/reference/config-engine/base-types/'
                 },
+                {
+                  label: 'Helper Methods',
+                  link: '/reference/config-engine/helper-methods/'
+                },
               ]
             }
           ]
