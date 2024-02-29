@@ -8,7 +8,7 @@
  * this strategy may not work long-term, but seems like a good place to start
  */
 import path from 'node:path';
-import _ from 'lodash';
+import _ from 'lodash-es';
 import { execSync, exec, spawn } from 'node:child_process';
 
 import yargs from 'yargs'
@@ -36,7 +36,9 @@ console.log('> dmno CLI');
 const tsxPath = path.resolve(thisFilePath, '../../node_modules/.bin/tsx');
 // the cli-entry code will be relative to this file, and we are going to run the built mjs file
 // (we could decide to run the ts directly since we are running via tsx)
+
 const dmnoCliEntryPath = path.resolve(thisFilePath, '../cli-entry.mjs');
+// const dmnoCliEntryPath = path.resolve(thisFilePath, '../../src/cli-entry.ts');
 
 // console.log({tsxPath, dmnoCliEntryPath, configPath});
 

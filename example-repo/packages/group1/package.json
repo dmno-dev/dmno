@@ -1,5 +1,8 @@
 {
   "name": "@example/group1",
   "private": true,
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "dependencies": {
+    "@dmno/core": "../../../packages/core"
+  }
 }

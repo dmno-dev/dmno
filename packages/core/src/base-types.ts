@@ -1,7 +1,51 @@
-import { ConfigSchemaItem, createDmnoDataType } from "./config-engine"
-import * as _ from 'lodash';
+import { ConfigItemDefinition, TypeExtendsDefinition } from "./config-engine"
+import _ from 'lodash-es';
+
+
+
+
+type TypeValidationResult = boolean | undefined | void;
+
+// data types expose all the same options, except they additionally have a "settings schema"
+// and their validations/normalize functions get passed in the _instance_ of those settings when invoked
+type DmnoDataTypeOptions<T> =
+  // the schema item validation/normalize fns do not get passed any settings
+  Omit<ConfigItemDefinition, 'validate' | 'normalize' | 'asyncValidate'> &
+  {
+    settingsSchema?: T,
+    /**
+     * if the settings schema has nested types, this function must return
+     * an array of the types that need to be initialized
+     * */
+    getChildren?: (settings?: T) => Record<string, ConfigItemDefinition>;
+    validate?: (val: any, settings?: T) => TypeValidationResult;
+    asyncValidate?: (val: any, settings?: T) => Promise<TypeValidationResult>;
+    normalize?: (val: any, settings?: T) => any;
+  };
+
+
+
+export class DmnoDataType<T = any> {
+  constructor(readonly typeDef: DmnoDataTypeOptions<T>, readonly typeInstanceOptions: T) {
+  }
+}
+
+
+// TODO: figure this out
+// when using a type, ideally we could omit usage options only when the schema has been mareked as `undefined | {}...`
+// alternatively, we can force the user to write it a certain way, but it's nice to be flexible
+// note that we have allowed the bare (non-function call, ie `extends: DmnoBaseTypes.string`) which
+// is also unaware if the settings schema is able to be undefined or not
+// (we're talking about allowing `DmnoBaseTypes.string()` vs only `DmnoBaseTypes.string({})`)
+export function createDmnoDataType<T>(opts: DmnoDataTypeOptions<T>) {
+  return function (usageOpts?: T) {
+    return new DmnoDataType(opts, usageOpts);
+  }
+}
+
 
 const StringDataType = createDmnoDataType({
+  // summary: 'generic string data type',
   settingsSchema: Object as undefined | {
     minLength?: number;
     maxLength?: number;
@@ -72,17 +116,55 @@ const NumberDataType = createDmnoDataType({
   }
 });
 
+
+const BooleanDataType = createDmnoDataType({
+  validate(val, settings) {
+    return true;
+  },
+  normalize(val, settings) {
+    // TODO: coerce to boolean
+    return !!val;
+  }
+});
+
+
+// Common utility types ///////////////////////////////////////////////////////////////
+
+const URL_REGEX = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
+const UrlDataType = createDmnoDataType({
+  extends: StringDataType({}),
+  // summary: 'url base type summary',
+  settingsSchema: Object as undefined | {
+
+  },
+  validate(val, settings) {
+    // TODO: this is testing assuming its a normal web/http URL
+    // we'll want some options to enable/disable specific protocols and things like that...
+    return URL_REGEX.test(val);
+  }
+})
+
+
+
+// Complex "container" types //////////////////////////////////////////////////////////
+
 const ObjectDataType = createDmnoDataType({
-  settingsSchema: Object as any as Record<string, ConfigSchemaItem>,
+  settingsSchema: Object as any as Record<string, ConfigItemDefinition>,
+  getChildren(settings) {
+    return settings || {};
+  }
 });
 
 const ArrayDataType = createDmnoDataType({
   settingsSchema: Object as {
-    childExtends?: ConfigSchemaItem;
+    itemSchema?: ConfigItemDefinition;
 
     minLength?: number;
     maxLength?: number;
     isLength?: number;
+  },
+  getChildren(settings) {
+    return { _item: settings?.itemSchema || {} };
   }
   // TODO: validate checks if it's an array
   // helper to coerce csv string into array of strings
@@ -90,7 +172,7 @@ const ArrayDataType = createDmnoDataType({
 
 const DictionaryDataType = createDmnoDataType({
   settingsSchema: Object as {
-    childExtends?: any;
+    itemSchema?: ConfigItemDefinition;
 
     validateKeys?: (key: string) => boolean;
     asyncValidateKeys?: (key: string) => Promise<boolean>;    
@@ -100,6 +182,9 @@ const DictionaryDataType = createDmnoDataType({
     minItems?: number;
     maxItems?: number;
     // TODO: more validations around the whole dict
+  },
+  getChildren(settings) {
+    return { _item: settings?.itemSchema || {} };
   }
   // TODO: validate checks if it's an object
 
@@ -127,10 +212,12 @@ const EnumDataType = createDmnoDataType({
 export const DmnoBaseTypes = {
   string: StringDataType,
   number: NumberDataType,
+  boolean: BooleanDataType,
+
   enum: EnumDataType, 
 
+  url: UrlDataType,
   // TODO:
-  // - boolean
   // - email
   // - url
   // - ip address
@@ -143,6 +230,11 @@ export const DmnoBaseTypes = {
   array: ArrayDataType,
   dictionary: DictionaryDataType, // TODO: could be called record? something else?
 }
+
+// cannot use `keyof typeof DmnoBaseTypes` as it creates a circular reference...
+// so we'll list the basic types that don't need any options
+export type DmnoSimpleBaseTypeNames = 'string' | 'number' | 'url' | 'boolean';
+
 
 
 // example of defining common type using our base types

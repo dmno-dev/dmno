@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import _ from 'lodash-es';
 import { z } from 'zod';
 import { ApiError } from "../lib/api-error";
 import { validate } from "../lib/validation-helpers";

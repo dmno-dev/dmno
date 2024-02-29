@@ -5,12 +5,12 @@
  */
 import path from 'node:path';
 import fs from 'node:fs';
-import _ from 'lodash';
+import _ from 'lodash-es';
 import async from 'async';
 import { execSync, exec, spawn } from 'node:child_process';
 import graphlib from '@dagrejs/graphlib';
 
-import { ServiceConfigSchema } from './config-engine';
+import { DmnoConfigItem, DmnoPickedConfigItem, DmnoService, ServiceConfigSchema } from './config-engine';
 
 console.log('>>CLI ENTRY!');
 
@@ -36,7 +36,7 @@ console.log({
 // using `pnpm m ls` to list workspace packages
 const workspacePackagesRaw = execSync('pnpm m ls --json --depth=-1').toString();
 const workspacePackagesData = JSON.parse(workspacePackagesRaw) as PnpmPackageListing[];
-console.log(workspacePackagesData);
+// console.log(workspacePackagesData);
 
 type PnpmPackageListing = {
   name: string;
@@ -48,85 +48,65 @@ type PnpmPackageListing = {
 // workspace root should have the shortest path, since the others will all be nested
 const workspaceRootEntry = _.minBy(workspacePackagesData, (w) => w.path.length)!;
 const WORKSPACE_ROOT_PATH = workspaceRootEntry.path;
+let rootServiceName!: string;
 
-// TODO: probably change from a type to a class with some helpers
-type LoadedServiceInfo = {
-  /** name of service according to package.json file  */
-  packageName: string,
-  /** name of service within dmno - pulled from config.ts but defaults to packageName if not provided  */
-  serviceName: string,
-  /** path to the service itself */
-  path: string,
-  /** path to .dmno/config.ts file */
-  configFilePath: string,
-  /** unprocessed config schema pulled from config.ts */
-  rawConfig?: ServiceConfigSchema,
-  /** error encountered while _loading_ the config schema */
-  configLoadError?: Error,
-  /** error within the schema itself */
-  schemaErrors: Error[], // TODO: probably want a specific error type...?
-}
-
-const services: LoadedServiceInfo[] = [];
+// TODO: we may want to set up an initial sort of the services so at least root is first?
+const servicesByName: Record<string, DmnoService> = {};
 for (const w of workspacePackagesData) {
   const isRoot = w.name === workspaceRootEntry.name;
   // not sure yet about naming the root file differently?
   // especially in the 1 service context, it may feel odd
-  const configFilePath = `${w.path}/.dmno/${isRoot ? 'workspace-' : ''}config.ts`;
+  const configFilePath = `${w.path}/.dmno/${isRoot ? 'workspace-' : ''}config.mts`;
+  // TODO: do we want to allow .ts or .js too?
+  // having some issues when mixing esm with non-esm code in TSX...
+  // if (!fs.existsSync(configFilePath)) {
+  //   configFilePath = configFilePath.replace(/\.mts$/, '.ts');
+  // }
 
-  // default to package.json module name, but use name from config.ts if provided
-  let serviceName = isRoot ? 'root' : w.name;
+  const serviceInitOpts = {
+    isRoot,
+    packageName: w.name,
+    path: w.path,
+  };
 
+  let service: DmnoService;
   try {
     const importedConfig = await import(configFilePath);
-    // TODO: check if the config file actually exported the right thing and throw helpful error otherwise
-    const rawConfig = importedConfig.default as ServiceConfigSchema;
-
-    // override service name with name from config if one is set
-    if (!isRoot && rawConfig.name) {
-      if (rawConfig.name === 'root') {
-        throw new Error('You cannot explicitly name a dmno service "root" unless it is the project root');
-      }
-      serviceName = rawConfig.name;
-    }
-
-    services.push({
-      serviceName,
-      packageName: w.name,
-      path: w.path,
-      configFilePath,
-      rawConfig: importedConfig.default,
-      schemaErrors: [],
+    service = new DmnoService({
+      ...serviceInitOpts,
+      // TODO: check if the config file actually exported the right thing and throw helpful error otherwise
+      rawConfig: importedConfig.default as ServiceConfigSchema,
     });
-
   } catch (err) {
     console.log('found error when loading config');
-
-    // TODO dry this up
-    services.push({
-      serviceName,
-      packageName: w.name,
-      path: w.path,
-      configFilePath,
-      configLoadError: err as Error,
-      schemaErrors: [],
+    service = new DmnoService({
+      ...serviceInitOpts,
+      rawConfig: err as Error,
     });
+  }
+  if (isRoot) {
+    rootServiceName = service.serviceName;
+  }
 
+  console.log('init service', service);
+
+  if (servicesByName[service.serviceName]) {
+    throw new Error(`Service names must be unique - duplicate name detected "${service.serviceName}"`)
+  } else {
+    servicesByName[service.serviceName] = service;
   }
 };
 
-const servicesByName = _.keyBy(services, (s) => s.serviceName);
+const services = _.values(servicesByName);
 
-// validate schema names are valid (config.parent and config.pick)
-
-// we may want to expirement with "compound nodes" to have the services contain their config items as children?
+// initialize a services DAG
+// note - we may want to experiment with "compound nodes" to have the services contain their config items as children?
 const servicesDag = new graphlib.Graph({ directed: true });
-
-// create a node for each service
 for (const service of services) {
   servicesDag.setNode(service.serviceName, { /* can add more metadata here */ });
 }
 
+// first set up graph edges based on "parent"
 for (const service of services) {
   // check if parent service is valid
   const parentServiceName = service.rawConfig?.parent;
@@ -139,33 +119,169 @@ for (const service of services) {
       // creates a directed edge from parent to child
       servicesDag.setEdge(parentServiceName, service.serviceName, { type: 'parent' });
     }
+
+  // anything without an explicit parent set is a child of the root
+  } else if (!service.isRoot) {
+    servicesDag.setEdge(rootServiceName, service.serviceName, { type: 'parent' });
   }
 }
 
-// add graph edges based on "pick" - we will not resolve individual items yet
-// but this will tell us what order to resolve our services in
+// add graph edges based on "pick"
+// we will not process individual items yet, but this will give us a DAG of service dependencies
 for (const service of services) {
   _.each(service.rawConfig?.pick, (rawPick) => {
     // pick defaults to picking from "root" unless otherwise specified
-    const pickFromServiceName = _.isString(rawPick) ? 'root' : (rawPick.source || 'root');
+    const pickFromServiceName = _.isString(rawPick) ? rootServiceName : (rawPick.source || rootServiceName);
     if (!servicesByName[pickFromServiceName]) {
       service.schemaErrors.push(new Error(`Invalid service name in "pick" config - "${pickFromServiceName}"`))
     } else if (pickFromServiceName === service.serviceName) {
         service.schemaErrors.push(new Error(`Cannot "pick" from self`));
     } else {
-      // create directed edge from service being "picked" from to this one
+      // create directed edge from service output feeding into this one (ex: database feeeds DB_URL into api )
       servicesDag.setEdge(pickFromServiceName, service.serviceName, { type: 'pick' });
     }
   });
 }
 
-// look for cycles in the services graph
+// look for cycles in the services graph, add schema errors if present
 const graphCycles = graphlib.alg.findCycles(servicesDag);
-_.each(graphCycles, (cycleMemberNames) => { // can find multiple cycles
-  _.each(cycleMemberNames, (name, i) => { // each cycle is just an array of node names in the cycle
+_.each(graphCycles, (cycleMemberNames) => {
+  // each cycle is just an array of node names in the cycle
+  _.each(cycleMemberNames, (name, i) => {
     servicesByName[name].schemaErrors.push(new Error(`Detected service dependency cycle - ${cycleMemberNames.join(' + ')}`))
   });
 });
 
 
-console.log(services);
+// if no cycles were found in the services graph, we use a topological sort to get the right order to continue loading config
+let sortedServices = services;
+if (!graphCycles.length) {
+  const sortedServiceNames = graphlib.alg.topsort(servicesDag);
+  sortedServices = _.map(sortedServiceNames, (serviceName) => servicesByName[serviceName]);
+  console.log('DEP SORTED SERVICES', sortedServiceNames);
+}
+
+for (const service of sortedServices) {
+  
+  // load the regular config schema items first because picking can 
+  for (const itemKey in service.rawConfig?.schema) {
+    // TODO: `!` is needed here - tsup gives an error, while VScode is not...
+    const itemDef = service.rawConfig?.schema[itemKey];
+    // service.
+    service.addConfigItem(new DmnoConfigItem(itemKey, itemDef));
+    // TODO: add dag node
+  }
+
+  
+  const ancestorServiceNames = servicesDag.predecessors(service.serviceName) || [];
+
+  // process "picked" items
+  for (const rawPickItem of service.rawConfig?.pick || []) {
+    const pickFromServiceName = _.isString(rawPickItem) ? rootServiceName : (rawPickItem.source || rootServiceName);
+    const isPickingFromAncestor = ancestorServiceNames.includes(pickFromServiceName);
+    const rawPickKey = _.isString(rawPickItem) ? rawPickItem : rawPickItem.key;
+    const pickFromService = servicesByName[pickFromServiceName];
+    if (!pickFromService) {
+      // NOTE: we've already added a schema error if item is picking from an non-existant service (above)
+      // so we can just bail on this item
+      continue;
+    }
+
+    // first we'll gather a list of the possible keys we can pick from
+    // when picking from an ancestor, we pick from all config items
+    // while non-ancestors expose only items that have `expose: true` set on them
+    const potentialKeysToPickFrom: string[] = [];
+    
+    if (isPickingFromAncestor) {
+      potentialKeysToPickFrom.push(..._.keys(pickFromService.config));
+    } else {
+      // whereas only "exposed" items can be picked from non-ancestors
+      const exposedItems = _.pickBy(pickFromService.config, (itemConfig, key) => !!itemConfig.expose);
+      potentialKeysToPickFrom.push(..._.keys(exposedItems));
+    }
+
+    const keysToPick: string[] = [];
+
+    // if key is a string or array of strings, we'll need to check they are valid
+    if (_.isString(rawPickKey) || _.isArray(rawPickKey)) {
+      for (const keyToCheck of _.castArray(rawPickKey)) {
+        if (!potentialKeysToPickFrom.includes(keyToCheck)) {
+          // TODO: we could include if the key exists but is not marked to "expose"?
+          service.schemaErrors.push(new Error(`Picked item ${pickFromServiceName}/${keyToCheck} was not found`));
+        } else {
+          keysToPick.push(keyToCheck);
+        }
+      }
+
+
+    // if it's a function, we'll be filtering from the list of potential items
+    } else if (_.isFunction(rawPickKey)) { // fn that filters keys
+      // when picking from an ancestor, we filter all items
+      // otherwise, we only filter from outputs
+      const pickKeysViaFilter = _.filter(potentialKeysToPickFrom, rawPickKey);
+      
+      // we probably want to warn the user if the filter selected nothing?
+      if (!pickKeysViaFilter.length) {
+        // TODO: we may want to mark this error as a "warning" or something?
+        // or some other way of configuring / ignoring
+        service.schemaErrors.push(new Error(`Pick from ${pickFromServiceName} using key filter fn had no matches`));
+      } else {
+        keysToPick.push(...pickKeysViaFilter);
+        // console.log('pick keys by filter', pickKeysViaFilter);
+      }
+    }
+
+
+    for (let i = 0; i < keysToPick.length; i++) {
+      const pickKey = keysToPick[i];
+      // deal with key renaming 
+      let newKeyName = pickKey;
+      if (!_.isString(rawPickItem) && rawPickItem.renameKey) {
+        // renameKey can be a static string (if dealing with a single key)
+        if (_.isString(rawPickItem.renameKey)) {
+          // deal with the case of trying to rename multiple keys to a single value
+          // TODO: might be able to discourage this in the TS typing?
+          if (keysToPick.length > 1) {
+            // add an error (once)
+            if (i === 0) {
+              service.schemaErrors.push(new Error(`Picked multiple keys from ${pickFromServiceName} using static rename`));
+            }
+            // add an index suffix... so the items will at least still appear
+            newKeyName = `${rawPickItem.renameKey}-${i}`;
+          } else {
+            newKeyName = rawPickItem.renameKey;
+          }
+
+        // or a function to transform the existing key
+        } else {
+          newKeyName = rawPickItem.renameKey(pickKey);
+        }
+      }
+
+      
+      service.addConfigItem(new DmnoPickedConfigItem(newKeyName, {
+        pickItem: pickFromService.config[pickKey],
+        transformValue: _.isString(rawPickItem) ? undefined : rawPickItem.transformValue,
+      }));
+      // TODO: add to dag node with link to source item
+    }
+
+
+  }
+}
+
+for (const service of sortedServices) {
+  if (service.schemaErrors.length) {
+    console.log(`SERVICE ${service.serviceName} has schema errors: `);
+    console.log(service.schemaErrors);
+  } else {
+    console.log(service.config);
+  }
+}
+
+// console.log(sortedServices);
+
+
+
+
+// console.log(services);
