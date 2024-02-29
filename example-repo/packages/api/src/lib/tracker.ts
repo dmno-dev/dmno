@@ -2,7 +2,7 @@
  * small wrapper for tracking so we can pass in our domain objects
  * and get consistently formatted data
  */
-import _ from 'lodash';
+import _ from 'lodash-es';
 import { User } from '@prisma/client';
 import { posthog } from './posthog';
 
