@@ -1,0 +1,38 @@
+{
+  "name": "@dmno/1password-plugin",
+  "version": "1.0.0",
+  "description": "adds ability to sync secrets with 1password to the DMNO config engine",
+  "scripts": {
+    "build": "tsup src/index.ts --dts",
+    "dev": "pnpm run build --watch",
+    "test": "NODE_NO_WARNINGS=1 node --experimental-specifier-resolution=node --loader ts-node/esm ./src/test.ts"
+  },
+  "exports": {
+    ".": {
+      "default": "./dist/index.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "index": [
+        "./dist/index.d.ts"
+      ]
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "devDependencies": {
+    "@dmno/core": "workspace:*",
+    "@dmno/eslint-config": "workspace:*",
+    "@dmno/tsconfig": "workspace:*",
+    "@types/async": "^3.2.20",
+    "@types/lodash-es": "^4.17.12",
+    "@types/node": "^20.3.2",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "async": "^3.2.4",
+    "lodash-es": "^4.17.21"
+  }
+}

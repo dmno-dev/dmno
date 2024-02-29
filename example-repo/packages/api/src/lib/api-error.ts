@@ -17,7 +17,7 @@
   and storing the captured error to pass through to the logging middleware which will send to sentry
 */
 
-import _ from "lodash";
+import _ from "lodash-es";
 import * as Koa from 'koa';
 
 // copied from https://github.com/jshttp/statuses/blob/master/src/node.json

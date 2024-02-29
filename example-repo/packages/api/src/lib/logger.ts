@@ -1,5 +1,5 @@
 /* eslint-disable consistent-return,no-console */
-import _ from "lodash";
+import _ from "lodash-es";
 import Debug from "debug";
 import PrettyError from "pretty-error";
 import chalk from "chalk";
