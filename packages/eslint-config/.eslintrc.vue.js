@@ -12,9 +12,6 @@ module.exports = {
     __dirname + '/.eslintrc.base.js',
     "plugin:vue/vue3-recommended",
     "@vue/eslint-config-typescript/recommended",
-    // "airbnb-base",
-    // "airbnb-typescript/base",
-    "@vue/eslint-config-prettier",
   ],
   parser: "vue-eslint-parser",
   parserOptions: {

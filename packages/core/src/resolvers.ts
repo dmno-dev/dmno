@@ -1,15 +1,16 @@
+/* eslint-disable class-methods-use-this */
 
 // TODO: do we allow Date?
 // what to do about null/undefined?
 type ConfigValue = string | number | boolean | null | { [key: string]: ConfigValue } | Array<ConfigValue>;
-type ConfigValueInlineFunction =  ((ctx: any) => ConfigValueOrResolver);
+type ConfigValueInlineFunction = ((ctx: any) => ConfigValueOrResolver);
 export type ConfigValueOrResolver =
   // static value
   ConfigValue |
   // resolver - ex: formula, fetch from vault, etc
   ConfigValueResolver |
   // inline function, which can return a value or another resolver
-  ConfigValueInlineFunction
+  ConfigValueInlineFunction;
 
 export abstract class ConfigValueResolver<T = ConfigValue> {
   abstract icon: string;
@@ -25,7 +26,7 @@ export class DmnoFormulaResolver extends ConfigValueResolver {
   getPreviewLabel() {
     return 'formula!';
   }
-  async resolve(ctx: any) {
+  async resolve(_ctx: any) {
     return 'formula result!';
   }
 }
@@ -54,7 +55,7 @@ export const toggleBy = (key: string, toggles: ToggleOptions) => new ToggleResol
 export class DeferredDeploymentResolver extends ConfigValueResolver {
   icon = 'radix-icons:component-placeholder';
   getPreviewLabel() {
-    return 'generated during deployment'
+    return 'generated during deployment';
   }
   async resolve() {
     return 'resolved by deployment process';

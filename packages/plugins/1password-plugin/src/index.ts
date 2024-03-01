@@ -22,7 +22,7 @@ export class OnePasswordSecretService {
   // can read items by id - need a vault id, item id
   // and then need to grab the specific data from a big json blob
   // cli command `op item get bphvvrqjegfmd5yoz4buw2aequ --vault=ut2dftalm3ugmxc6klavms6tfq --format json`
-  item(idOrIdAndVault: ItemId | { id: ItemId, vaultId: VaultId }, pathToFetch?: string ) {
+  item(idOrIdAndVault: ItemId | { id: ItemId, vaultId: VaultId }, pathToFetch?: string) {
     let vaultId: VaultId;
     let itemId: ItemId;
     if (_.isString(idOrIdAndVault)) {
@@ -38,7 +38,6 @@ export class OnePasswordSecretService {
   // however these are not necessarily stable...
   // cli command `op read "op://dev test/example/username"`
   itemByReference(referenceUrl: ReferenceUrl) {
-
     let fullReference = referenceUrl;
     // TODO: if reference starts with "op://" then it includes the vault
     if (!referenceUrl.startsWith('op://')) {

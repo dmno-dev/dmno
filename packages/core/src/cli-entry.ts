@@ -1,16 +1,15 @@
 /**
  * This is the actual cli logic - triggered from cli.ts via tsx
- * 
+ *
  * much of this will likely get reorganized, but just trying to get things working first
  */
-import path from 'node:path';
-import fs from 'node:fs';
+import { execSync } from 'node:child_process';
 import _ from 'lodash-es';
-import async from 'async';
-import { execSync, exec, spawn } from 'node:child_process';
 import graphlib from '@dagrejs/graphlib';
 
-import { DmnoConfigItem, DmnoPickedConfigItem, DmnoService, ServiceConfigSchema } from './config-engine';
+import {
+  DmnoConfigItem, DmnoPickedConfigItem, DmnoService, ServiceConfigSchema,
+} from './config-engine';
 
 console.log('>>CLI ENTRY!');
 
@@ -35,7 +34,7 @@ console.log({
 
 // using `pnpm m ls` to list workspace packages
 const workspacePackagesRaw = execSync('pnpm m ls --json --depth=-1').toString();
-const workspacePackagesData = JSON.parse(workspacePackagesRaw) as PnpmPackageListing[];
+const workspacePackagesData = JSON.parse(workspacePackagesRaw) as Array<PnpmPackageListing>;
 // console.log(workspacePackagesData);
 
 type PnpmPackageListing = {
@@ -91,11 +90,11 @@ for (const w of workspacePackagesData) {
   console.log('init service', service);
 
   if (servicesByName[service.serviceName]) {
-    throw new Error(`Service names must be unique - duplicate name detected "${service.serviceName}"`)
+    throw new Error(`Service names must be unique - duplicate name detected "${service.serviceName}"`);
   } else {
     servicesByName[service.serviceName] = service;
   }
-};
+}
 
 const services = _.values(servicesByName);
 
@@ -112,9 +111,9 @@ for (const service of services) {
   const parentServiceName = service.rawConfig?.parent;
   if (parentServiceName) {
     if (!servicesByName[parentServiceName]) {
-      service.schemaErrors.push(new Error(`Unable to find parent service "${parentServiceName}"`))
+      service.schemaErrors.push(new Error(`Unable to find parent service "${parentServiceName}"`));
     } else if (parentServiceName === service.serviceName) {
-      service.schemaErrors.push(new Error(`Cannot set parent to self`));
+      service.schemaErrors.push(new Error('Cannot set parent to self'));
     } else {
       // creates a directed edge from parent to child
       servicesDag.setEdge(parentServiceName, service.serviceName, { type: 'parent' });
@@ -133,9 +132,9 @@ for (const service of services) {
     // pick defaults to picking from "root" unless otherwise specified
     const pickFromServiceName = _.isString(rawPick) ? rootServiceName : (rawPick.source || rootServiceName);
     if (!servicesByName[pickFromServiceName]) {
-      service.schemaErrors.push(new Error(`Invalid service name in "pick" config - "${pickFromServiceName}"`))
+      service.schemaErrors.push(new Error(`Invalid service name in "pick" config - "${pickFromServiceName}"`));
     } else if (pickFromServiceName === service.serviceName) {
-        service.schemaErrors.push(new Error(`Cannot "pick" from self`));
+      service.schemaErrors.push(new Error('Cannot "pick" from self'));
     } else {
       // create directed edge from service output feeding into this one (ex: database feeeds DB_URL into api )
       servicesDag.setEdge(pickFromServiceName, service.serviceName, { type: 'pick' });
@@ -147,11 +146,10 @@ for (const service of services) {
 const graphCycles = graphlib.alg.findCycles(servicesDag);
 _.each(graphCycles, (cycleMemberNames) => {
   // each cycle is just an array of node names in the cycle
-  _.each(cycleMemberNames, (name, i) => {
-    servicesByName[name].schemaErrors.push(new Error(`Detected service dependency cycle - ${cycleMemberNames.join(' + ')}`))
+  _.each(cycleMemberNames, (name) => {
+    servicesByName[name].schemaErrors.push(new Error(`Detected service dependency cycle - ${cycleMemberNames.join(' + ')}`));
   });
 });
-
 
 // if no cycles were found in the services graph, we use a topological sort to get the right order to continue loading config
 let sortedServices = services;
@@ -162,8 +160,7 @@ if (!graphCycles.length) {
 }
 
 for (const service of sortedServices) {
-  
-  // load the regular config schema items first because picking can 
+  // load the regular config schema items first because picking can
   for (const itemKey in service.rawConfig?.schema) {
     // TODO: `!` is needed here - tsup gives an error, while VScode is not...
     const itemDef = service.rawConfig?.schema[itemKey];
@@ -172,7 +169,6 @@ for (const service of sortedServices) {
     // TODO: add dag node
   }
 
-  
   const ancestorServiceNames = servicesDag.predecessors(service.serviceName) || [];
 
   // process "picked" items
@@ -190,17 +186,17 @@ for (const service of sortedServices) {
     // first we'll gather a list of the possible keys we can pick from
     // when picking from an ancestor, we pick from all config items
     // while non-ancestors expose only items that have `expose: true` set on them
-    const potentialKeysToPickFrom: string[] = [];
-    
+    const potentialKeysToPickFrom: Array<string> = [];
+
     if (isPickingFromAncestor) {
       potentialKeysToPickFrom.push(..._.keys(pickFromService.config));
     } else {
       // whereas only "exposed" items can be picked from non-ancestors
-      const exposedItems = _.pickBy(pickFromService.config, (itemConfig, key) => !!itemConfig.expose);
+      const exposedItems = _.pickBy(pickFromService.config, (itemConfig) => !!itemConfig.expose);
       potentialKeysToPickFrom.push(..._.keys(exposedItems));
     }
 
-    const keysToPick: string[] = [];
+    const keysToPick: Array<string> = [];
 
     // if key is a string or array of strings, we'll need to check they are valid
     if (_.isString(rawPickKey) || _.isArray(rawPickKey)) {
@@ -213,13 +209,12 @@ for (const service of sortedServices) {
         }
       }
 
-
     // if it's a function, we'll be filtering from the list of potential items
     } else if (_.isFunction(rawPickKey)) { // fn that filters keys
       // when picking from an ancestor, we filter all items
       // otherwise, we only filter from outputs
       const pickKeysViaFilter = _.filter(potentialKeysToPickFrom, rawPickKey);
-      
+
       // we probably want to warn the user if the filter selected nothing?
       if (!pickKeysViaFilter.length) {
         // TODO: we may want to mark this error as a "warning" or something?
@@ -231,10 +226,9 @@ for (const service of sortedServices) {
       }
     }
 
-
     for (let i = 0; i < keysToPick.length; i++) {
       const pickKey = keysToPick[i];
-      // deal with key renaming 
+      // deal with key renaming
       let newKeyName = pickKey;
       if (!_.isString(rawPickItem) && rawPickItem.renameKey) {
         // renameKey can be a static string (if dealing with a single key)
@@ -258,15 +252,12 @@ for (const service of sortedServices) {
         }
       }
 
-      
       service.addConfigItem(new DmnoPickedConfigItem(newKeyName, {
         pickItem: pickFromService.config[pickKey],
         transformValue: _.isString(rawPickItem) ? undefined : rawPickItem.transformValue,
       }));
       // TODO: add to dag node with link to source item
     }
-
-
   }
 }
 
@@ -280,8 +271,5 @@ for (const service of sortedServices) {
 }
 
 // console.log(sortedServices);
-
-
-
 
 // console.log(services);

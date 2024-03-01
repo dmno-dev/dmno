@@ -14,9 +14,7 @@
     "pnpm": "8.5.0"
   },
   "devDependencies": {
-    "@dmno/core": "../packages/core",
-    "@dmno/1password-plugin": "../packages/plugins/1password-plugin"
-  },
-  "dependencies": {
+    "@dmno/1password-plugin": "../packages/plugins/1password-plugin",
+    "@dmno/core": "../packages/core"
   }
 }
