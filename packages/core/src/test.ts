@@ -1,8 +1,11 @@
-import { DmnoBaseTypes } from "./base-types";
-import { DmnoConfigItem } from "./config-engine";
+/* eslint-disable no-console */
+
+
+import { DmnoBaseTypes } from './base-types';
+import { DmnoConfigItem } from './config-engine';
 
 const testItem = new DmnoConfigItem('test1', {
-  extends: DmnoBaseTypes.string({ minLength: 2, maxLength: 5 })
+  extends: DmnoBaseTypes.string({ minLength: 2, maxLength: 5 }),
 });
 
 

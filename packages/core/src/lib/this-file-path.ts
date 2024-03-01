@@ -1,5 +1,5 @@
-import { fileURLToPath } from "node:url";
-import path from "node:path";
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 
 // replacement for __filename and __dirname in esm
 // see https://humanwhocodes.com/snippets/2023/01/mimicking-dirname-filename-nodejs-esm/

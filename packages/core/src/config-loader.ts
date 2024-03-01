@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import getCallerPath from 'caller-path';
 import { execSync } from 'node:child_process';
+import getCallerPath from 'caller-path';
 
 export function loadConfig(
   /** optionally pass in the filename/path of the caller - which may be necessary in some scenarios  */
-  filename?: string
+  filename?: string,
 ) {
   console.log('loading dmno config');
 
@@ -43,14 +43,14 @@ export function loadConfig(
   const dmnoFolder = findDmnoFolder(loadingFromDir);
 
   const configPath = path.resolve(dmnoFolder, 'config.ts');
-  console.log('loading config file - ', configPath)
+  console.log('loading config file - ', configPath);
 
-  const configResult = execSync(`pnpm exec dmno load`);
+  const configResult = execSync('pnpm exec dmno load');
   console.log(configResult.toString());
 
   const config = {
     foo: 1,
-  }
+  };
 
   console.log(config);
 
@@ -60,7 +60,7 @@ export function loadConfig(
 function findDmnoFolder(searchFromDir: string) {
   const pathParts = searchFromDir.split('/');
 
-  
+
   let dmnoFolderPath: string | undefined;
   while (pathParts.length) {
     const maybeDmnoFolderPath = `${pathParts.join('/')}/.dmno`;

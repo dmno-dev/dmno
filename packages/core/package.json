@@ -7,7 +7,9 @@
     "clean": "rm -rf dist",
     "build": "tsup",
     "dev": "pnpm run build --watch",
-    "test": "tsx ./src/test.ts"
+    "test": "tsx ./src/test.ts",
+    "lint": "eslint src --ext .ts,.cjs",
+    "lint:fix": "pnpm run lint --fix"
   },
   "engines": {
     "node": ">=16"
@@ -32,15 +34,15 @@
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
-    "@types/async": "^3.2.20",
+    "@types/async": "^3.2.24",
     "@types/lodash-es": "^4.17.12",
-    "@types/node": "^20.3.2",
+    "@types/node": "^20.11.24",
     "@types/yargs": "^17.0.32",
-    "tsup": "^8.0.1"
+    "tsup": "^8.0.2"
   },
   "dependencies": {
     "@dagrejs/graphlib": "^2.1.13",
-    "async": "^3.2.4",
+    "async": "^3.2.5",
     "caller-path": "^4.0.0",
     "lodash-es": "^4.17.21",
     "tsx": "^4.7.1",

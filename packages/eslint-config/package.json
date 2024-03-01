@@ -10,19 +10,18 @@
     "./vue": "./.eslintrc.vue.js"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.56.0",
-    "@typescript-eslint/parser": "^5.56.0",
-    "@vue/eslint-config-typescript": "^11.0.0",
-    "eslint": "^8.36.0",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
+    "@vue/eslint-config-typescript": "^12.0.0",
+    "eslint": "^8.57.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-airbnb-typescript": "^17.0.0",
-    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
     "eslint-import-resolver-exports": "1.0.0-beta.5",
-    "eslint-import-resolver-typescript": "^3.5.3",
-    "eslint-plugin-import": "^2.27.5",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-no-autofix": "^1.2.3",
-    "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-vue": "^9.8.0",
-    "typescript": "^5.3.3"
+    "eslint-plugin-vue": "^9.22.0",
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^7.1.0"
   }
 }
