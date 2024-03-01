@@ -6,8 +6,8 @@ instructions to generate JWT signing key
 - `cat jwtRS256.key.pub`
 */
 
-import fs from "fs";
-import JWT from "jsonwebtoken";
+import fs from 'fs';
+import JWT from 'jsonwebtoken';
 
 // load private and public key from either env var or paths set in config
 // keys in the repo are also used by SDF to verify jwt is signed correctly and in tests to create/sign jwts
@@ -34,7 +34,7 @@ export function createJWT(
   options?: Omit<JWT.SignOptions, 'algorithm'>,
 ) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return JWT.sign(payload, _JWT_PRIVATE_KEY!, { algorithm: "RS256", ...options });
+  return JWT.sign(payload, _JWT_PRIVATE_KEY!, { algorithm: 'RS256', ...options });
 }
 export function verifyJWT(token: string) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
