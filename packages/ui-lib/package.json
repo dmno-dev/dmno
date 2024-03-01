@@ -18,14 +18,18 @@
       ]
     }
   },
+  "scripts": {
+    "lint": "eslint src --ext .ts,.cjs",
+    "lint:fix": "pnpm run lint --fix"
+  },
   "dependencies": {
-    "vue": "^3.3.4"
+    "vue": "^3.4.21"
   },
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "less": "^4.2.0",
     "pug": "^3.0.2",
-    "typescript": "^5.0.2"
+    "typescript": "^5.3.3"
   }
 }

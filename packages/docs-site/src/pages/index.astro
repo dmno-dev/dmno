@@ -1,4 +1,5 @@
 ---
+import { Icon } from 'astro-iconify'
 import { DmnoLogo, DotsLoader }  from '@dmno/ui-lib'
 import SignUp from '../components/mailerlite/SignUp.astro'
 ---
@@ -6,6 +7,14 @@ import SignUp from '../components/mailerlite/SignUp.astro'
 <html lang="en">
   <head>
     <title>DMNO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" type="image/x-icon" href="/favicon.svg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet">
+
   </head>
   <body>
     <div class="main-container">
@@ -14,7 +23,22 @@ import SignUp from '../components/mailerlite/SignUp.astro'
         <div class="logo-with-loader__line" />
         <DotsLoader client:load/>
       </div>
-      <SignUp />
+      <div class="homepage-card">
+        <p><b>DMNO will simplify how you configure, run, and deploy your applications.</b></p>
+        <p>We've got some absolutely mind-blowing tools in the works. So, please subscribe below and we'll keep you in the loop as we launch!</p>
+
+        <SignUp />
+
+        <p><Icon name="mdi:heart" /> Theo + Phil</p>
+
+        <p class="homepage-ps">
+          PS - please take our short <a href="https://forms.gle/PqasaFVcZrPXrg5z6" target="_blank">developer survey</a>!
+        </p>
+
+
+        
+      </div>
+      
     </div>
   </body>
 </html>
@@ -28,9 +52,9 @@ import SignUp from '../components/mailerlite/SignUp.astro'
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #555;
 
-  background: linear-gradient(0deg, rgba(5,1,78,1) 0%, rgba(42,9,121,1) 35%, rgba(130,0,255,1) 100%);
+  /* background: linear-gradient(0deg, rgba(5,1,78,1) 0%, rgba(42,9,121,1) 35%, rgba(130,0,255,1) 100%); */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -55,6 +79,38 @@ body {
   justify-content: center;
   min-width: 320px;
   min-height: 100vh;
+  
+  
+  font-family: "Fira Code", monospace;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+.main-container {
+  padding: 1.5rem;
+  position: relative;
+}
+.homepage-card {
+  background: #000;
+  max-width: 500px;
+  padding: .5rem 1.5rem;
+}
+.homepage-card p {
+
+}
+.homepage-card p a {
+  color: #0fd236;
+}
+.homepage-card p a:hover {
+  color: #0dfc05;
+}
+.homepage-card p svg[astro-icon] {
+  color: red;
+  height: 1.4em;
+  vertical-align: middle;
+}
+.homepage-ps {
+  font-size: .8em;
 }
 
 h1 {
@@ -119,13 +175,15 @@ button:focus-visible {
     color: white;
     border-radius: 10px;
     padding: 10px;
-    margin-bottom: 10%;
+    margin-bottom: 50px;
+    margin-left: auto;
+    margin-right: auto;
     display: flex;
     gap: 20px;
+    width: 220px;
     position: relative;
-    transform: rotate(-10deg);
+    transform: rotate(-5deg);
     transition: all .5s;
-    max-width: 55%;
     box-shadow: var(--shadow-elevation-high);
   
     &:hover {
@@ -147,4 +205,4 @@ button:focus-visible {
       width: 100%;
     }
   }
-  </style>
+</style>

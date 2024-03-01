@@ -17,7 +17,7 @@
   and storing the captured error to pass through to the logging middleware which will send to sentry
 */
 
-import _ from "lodash";
+import _ from 'lodash-es';
 import * as Koa from 'koa';
 
 // copied from https://github.com/jshttp/statuses/blob/master/src/node.json
@@ -119,7 +119,7 @@ export class ApiError extends Error {
     this.message = errorMessage;
     this.details = errorDetails;
 
-    if (typeof Error.captureStackTrace === "function") {
+    if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, this.constructor);
     } else {
       this.stack = new Error(errorMessage).stack;
@@ -133,7 +133,7 @@ export class ApiError extends Error {
 export async function errorHandlingMiddleware(ctx: Koa.Context, next: Koa.Next) {
   // disable koa's built-in ctx.throw with a helpful message
   ctx.throw = (..._args) => {
-    throw new Error("Do not use ctx.throw, use `throw new ApiError()` instead");
+    throw new Error('Do not use ctx.throw, use `throw new ApiError()` instead');
   };
 
   try {
@@ -147,7 +147,7 @@ export async function errorHandlingMiddleware(ctx: Koa.Context, next: Koa.Next) 
       // this is the format exposed to clients
       // we can alter it here and vary with api version request if necessary
       ctx.body = {
-        ..._.pick(err, "kind", "message", "details"),
+        ..._.pick(err, 'kind', 'message', 'details'),
       };
 
       // otherwise, it was unexpected, so we want to respond with a 500
@@ -155,9 +155,9 @@ export async function errorHandlingMiddleware(ctx: Koa.Context, next: Koa.Next) 
       ctx.status = 500;
       // hide all details from users
       ctx.body = {
-        kind: "InternalServerError",
+        kind: 'InternalServerError',
         message:
-          "An unexpected error occurred - please try again or contact customer service at support@systeminit.com",
+          'An unexpected error occurred - please try again or contact customer service at support@systeminit.com',
       };
 
       // error object is still attached to ctx.state.capturedError

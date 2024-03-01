@@ -85,11 +85,13 @@ export default defineConfig({
       // jsx: true,
     }),
     robotsTxt({
+      sitemap: false,
       policy: [
         {
           userAgent: '*',
-          // disable all crawling (for now)
-          disallow: '',
+          // disable all crawling, except homepage (for now)
+          allow: '/$',
+          disallow: '/',
         },
       ]
     }),

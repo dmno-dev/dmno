@@ -1,10 +1,10 @@
 /* eslint-disable consistent-return,no-console */
-import _ from "lodash";
-import Debug from "debug";
-import PrettyError from "pretty-error";
-import chalk from "chalk";
+import _ from 'lodash-es';
+import Debug from 'debug';
+import PrettyError from 'pretty-error';
+import chalk from 'chalk';
 
-import { ApiError } from "./api-error";
+import { ApiError } from './api-error';
 // import { getLogDnaLogger } from '../external-services/logdna';
 // import { logErrorToSentry } from '../external-services/sentry';
 
@@ -24,11 +24,11 @@ import { ApiError } from "./api-error";
 const prettyError = new PrettyError();
 prettyError.skipNodeFiles();
 prettyError.skipPackage(
-  "koa",
-  "@koa",
-  "@koa/router",
-  "koa-compose",
-  "koa-body",
+  'koa',
+  '@koa',
+  '@koa/router',
+  'koa-compose',
+  'koa-body',
 );
 
 // used to toggle swallowing 500 errors in test mode - only when testing 500 handling on purpose...
@@ -51,9 +51,9 @@ export function log(
     [key: string]: any;
   } = {},
 ) {
-  if (!_.isString(message)) throw new Error("Missing log message");
+  if (!_.isString(message)) throw new Error('Missing log message');
   if (meta === null) meta = {};
-  if (meta.id) throw new Error("Do not set ID in data to log!");
+  if (meta.id) throw new Error('Do not set ID in data to log!');
 
   const error = meta.error;
 
@@ -64,17 +64,17 @@ export function log(
       meta.error = _.pickBy(
         _.pick(error, [
           // extra _.pickBy removes empty keys (details)
-          "name",
-          "generalType",
-          "message",
-          "details",
-          "stack",
+          'name',
+          'generalType',
+          'message',
+          'details',
+          'stack',
         ]),
       );
 
       // if expected error, trim off stack
       if (meta.statusCode && meta.statusCode < 500) {
-        meta.error = _.omit(meta.error, ["stack"]);
+        meta.error = _.omit(meta.error, ['stack']);
       }
     }
 
@@ -88,14 +88,14 @@ export function log(
 
   // we use meta.type both to categorize logs on logdna and also as a debug "topic"
   // meta.type defaults to "general" if nothing is set
-  meta.type = meta.type || "general";
+  meta.type = meta.type || 'general';
 
   // log to console using debug with the topic set by meta.type
   const debugTopic = meta.type;
   if (!debuggers[debugTopic]) debuggers[debugTopic] = Debug(debugTopic);
   const debugLogger = debuggers[debugTopic];
   debugLogger(message);
-  const metaWithoutType = _.omit(meta, "type");
+  const metaWithoutType = _.omit(meta, 'type');
   if (!_.isEmpty(metaWithoutType)) debugLogger(metaWithoutType); // maybe dont always want to show?
 
   // log to LogDNA
@@ -113,9 +113,9 @@ export function log(
     && !(error as ApiError).expectedError
     && !swallowUnexpectedErrors
   ) {
-    console.log(chalk.red("------ CAUGHT EXCEPTION ------"));
+    console.log(chalk.red('------ CAUGHT EXCEPTION ------'));
     console.log(prettyError.render(error));
-    console.log(chalk.red("------------------------------"));
+    console.log(chalk.red('------------------------------'));
 
     // logErrorToSentry(_.pick(meta, "url", "method"), meta.user, error);
   }

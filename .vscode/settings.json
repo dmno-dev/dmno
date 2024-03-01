@@ -1,0 +1,23 @@
+{
+  // use the project's TS version rather than the VSCode's built-in one
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "files.associations": {
+    // package.json needs to be "json" rather than "json with comments" so that the "version lens" plugin works
+    "package.json": "json"
+  },
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+  "editor.formatOnSave": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  }
+}

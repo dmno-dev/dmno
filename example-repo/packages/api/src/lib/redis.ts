@@ -17,7 +17,7 @@ async function setJSON(
   payload: Record<string, any>,
   options?: { expiresIn?: number },
 ) {
-  let args: string[] = [];
+  let args: Array<string> = [];
   // seconds to expire
   if (options?.expiresIn) args = ['EX', options.expiresIn.toString()];
   return this.set(key, JSON.stringify(payload), ...args as any);
