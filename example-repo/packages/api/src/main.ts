@@ -1,19 +1,19 @@
 /* eslint-disable no-console */
 
 // import first to set up env
-import "./init-env";
+import './init-env';
 
-import Koa from "koa";
+import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import chalk from 'chalk';
 import cors from '@koa/cors';
 
-import { router, routesLoaded } from "./routes";
-import { ApiError, errorHandlingMiddleware } from "./lib/api-error";
-import { httpRequestLoggingMiddleware } from "./lib/request-logger";
+import { router, routesLoaded } from './routes';
+import { ApiError, errorHandlingMiddleware } from './lib/api-error';
+import { httpRequestLoggingMiddleware } from './lib/request-logger';
 // import { loadAuthMiddleware } from "./services/auth.service";
-import { detectClientIp } from "./lib/client-ip";
-import { CustomAppContext, CustomAppState } from "./custom-state";
+import { detectClientIp } from './lib/client-ip';
+import { CustomAppContext, CustomAppState } from './custom-state';
 
 import './lib/posthog';
 
@@ -34,7 +34,7 @@ app.use(router.routes());
 
 // catch-all middelware after routes handles no route match (404)
 app.use((_ctx, _next) => {
-  throw new ApiError("NotFound", "NoMatchingURL", "No matching URL found");
+  throw new ApiError('NotFound', 'NoMatchingURL', 'No matching URL found');
 });
 
 if (process.env.NODE_ENV !== 'test') {

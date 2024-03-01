@@ -1,10 +1,10 @@
-import _ from "lodash-es";
-import chalk from "chalk";
-import { v4 as uuidv4 } from "uuid";
+import _ from 'lodash-es';
+import chalk from 'chalk';
+import { v4 as uuidv4 } from 'uuid';
 import Koa from 'koa';
 
 // import { RouteCtx } from "./router";
-import { log } from "./logger";
+import { log } from './logger';
 
 // Koa request middleware that
 // - sets up a generic logging function that attaches extra info about the request
@@ -14,7 +14,7 @@ export const httpRequestLoggingMiddleware: Koa.Middleware = async (ctx, next) =>
   const { req, res } = ctx;
 
   // skip logs for favicon, which browsers hit when hitting endpoints directly
-  if (req.url === "/favicon.ico") return next();
+  if (req.url === '/favicon.ico') return next();
 
   ctx.state.requestStart = +new Date();
   ctx.state.requestId = uuidv4();
@@ -23,7 +23,7 @@ export const httpRequestLoggingMiddleware: Koa.Middleware = async (ctx, next) =>
     url: req.url,
     method: req.method,
     requestId: ctx.state.requestId,
-    userAgent: req.headers["user-agent"],
+    userAgent: req.headers['user-agent'],
     remoteIp: ctx.state.clientIp,
     // apiVersion: ctx.state.version,
     ...(ctx.request.originalUrl && { originalUrl: ctx.request.originalUrl }),
@@ -37,7 +37,7 @@ export const httpRequestLoggingMiddleware: Koa.Middleware = async (ctx, next) =>
   // define a log method which attaches a extra info about the request
   ctx.log = (message: string, meta: any) => {
     log(message, {
-      type: "http",
+      type: 'http',
       ...requestInfo,
       // ...(ctx.state.authUser && {
       //   user: {
@@ -55,14 +55,14 @@ export const httpRequestLoggingMiddleware: Koa.Middleware = async (ctx, next) =>
   const requestTimeSpent = +new Date() - ctx.state.requestStart;
 
   // skip logs for ping/health checks
-  if (requestInfo.url === "/" && requestInfo.userAgent?.startsWith("Render/")) {
+  if (requestInfo.url === '/' && requestInfo.userAgent?.startsWith('Render/')) {
     return;
   }
 
   // write final log of request
   ctx.log(
     `${requestInfo.method} ${requestInfo.url} ${chalk[
-      res.statusCode < 400 ? "green" : "red"
+      res.statusCode < 400 ? 'green' : 'red'
     ](res.statusCode)} ${requestTimeSpent}ms`,
     {
       timer: requestTimeSpent,

@@ -1,15 +1,14 @@
 import _ from 'lodash-es';
 import { z } from 'zod';
-import { ApiError } from "../lib/api-error";
-import { validate } from "../lib/validation-helpers";
+import { ApiError } from '../lib/api-error';
+import { validate } from '../lib/validation-helpers';
 
 import { CustomRouteContext } from '../custom-state';
-import { router } from ".";
+import { router } from '.';
 
-router.get("/foo", async (ctx) => {
-
+router.get('/foo', async (ctx) => {
   ctx.body = {
-    foo: 'bar!'
+    foo: 'bar!',
   };
 });
 
