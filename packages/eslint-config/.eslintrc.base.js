@@ -1,24 +1,24 @@
 const { execSync } = require('child_process');
 const actualProjectDir = execSync('npm prefix').toString().replace(/\n/g, '');
+console.log(actualProjectDir);
 
 module.exports = {
   env: {
     node: true,
   },
   parser: "@typescript-eslint/parser",
+  ignorePatterns: [".eslintrc.js", ".eslintrc.cjs"],
   parserOptions: {
     project: [`${actualProjectDir}/tsconfig.json`],
     tsconfigRootDir: __dirname, 
   },
   plugins: [
     "@typescript-eslint", 
-    // "prettier",
     "no-autofix",  
   ],
   extends: [
     "airbnb-base",
     "airbnb-typescript/base",
-    // "plugin:prettier/recommended",
   ],
   settings: {
     "import/resolver": {
@@ -28,12 +28,10 @@ module.exports = {
     },
   },
   rules: {
-    // "prettier/prettier": process.env.STRICT_LINT ? "error" : "warn",
-    "@typescript-eslint/quotes": 0,
 
     // some strict rules from TS / airbnb presets to relax -----------
-    camelcase: "off",
-    "@typescript-eslint/ban-ts-comment": "off",
+    // camelcase: 0,
+    "@typescript-eslint/ban-ts-comment": 0,
     "import/prefer-default-export": 0,
     "no-plusplus": 0,
     radix: 0,
@@ -49,6 +47,7 @@ module.exports = {
     "no-underscore-dangle": 0,
     "no-await-in-loop": 0,
     "no-lonely-if": 0,
+    "no-multiple-empty-lines": 0,
     "@typescript-eslint/no-unused-vars": [
       "warn",
       {
@@ -57,6 +56,7 @@ module.exports = {
       },
     ],
     "@typescript-eslint/return-await": 0,
+    "@typescript-eslint/array-type": ["error", { "default": "generic" }],
 
     // other -----------------------------------------------------
     "no-undef": 0, // handled by typescript, which is better aware of global types
@@ -109,24 +109,29 @@ module.exports = {
     "@typescript-eslint/no-shadow": 0,
     "guard-for-in": 0,
 
-    // some rules to downgrade to warning while developing --------------------
-    // useful so things dont crash when code is temporarily commented out
-    "no-console": process.env.STRICT_LINT ? "error" : "warn",
-    "@typescript-eslint/no-empty-function": process.env.STRICT_LINT
-      ? "error"
-      : "warn",
-    "no-debugger": process.env.STRICT_LINT ? "error" : "warn",
-    "no-alert": process.env.STRICT_LINT ? "error" : "warn",
-    "no-empty": process.env.STRICT_LINT ? "error" : "warn",
-
+    // some rules to downgrade to warning which we'll allow while developing --------------------
+    "no-console": "warn",
+    "@typescript-eslint/no-empty-function": "warn",
+    "no-debugger": "warn",
+    "no-alert": "warn",
+    "no-empty": "warn",
     
-    // rules that we want to warn, but disable agressive auto-fixing -----------
+    // rules that we want to warn, but disable agressive auto-fixing ----------------------------
+    // unreachable code will be removed by default, but it's useful to return early or throw an error while debugging
+    "no-unreachable": 0, 
+    "no-autofix/no-unreachable": "warn",
+    // commenting out var modifications in later code means auto changing let to const, and then getting angry when uncommenting
     "prefer-const": 0,
-    "no-unreachable": 0, // handy when you return early or throw an error while debugging
-    // unreachable code will be removed by default, so we disable autofix, but leave a warning
-    "no-autofix/no-unreachable": 1,
-    // useful while debugging and commenting things out, otherwise gets automatically changed from let to const
-    "no-autofix/prefer-const": process.env.STRICT_LINT ? "error" : "warn",
-
+    "no-autofix/prefer-const": "warn",
   },
+  "overrides": [
+    {
+      "files": [
+        ".eslintrc.js"
+      ],
+      "extends": [
+          "eslint:recommended",
+      ],
+    }
+  ],
 }

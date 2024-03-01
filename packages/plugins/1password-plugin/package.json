@@ -5,7 +5,8 @@
   "scripts": {
     "build": "tsup src/index.ts --dts",
     "dev": "pnpm run build --watch",
-    "test": "NODE_NO_WARNINGS=1 node --experimental-specifier-resolution=node --loader ts-node/esm ./src/test.ts"
+    "lint": "eslint src --ext .ts,.cjs",
+    "lint:fix": "pnpm run lint --fix"
   },
   "exports": {
     ".": {
@@ -22,17 +23,17 @@
   "keywords": [],
   "author": "",
   "devDependencies": {
-    "@dmno/core": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
-    "@types/async": "^3.2.20",
+    "@types/async": "^3.2.24",
     "@types/lodash-es": "^4.17.12",
-    "@types/node": "^20.3.2",
-    "tsup": "^8.0.1",
+    "@types/node": "^20.11.24",
+    "tsup": "^8.0.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "async": "^3.2.4",
+    "@dmno/core": "workspace:*",
+    "async": "^3.2.5",
     "lodash-es": "^4.17.21"
   }
 }

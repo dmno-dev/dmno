@@ -1,5 +1,5 @@
-import { ConfigItemDefinition, TypeExtendsDefinition } from "./config-engine"
 import _ from 'lodash-es';
+import { ConfigItemDefinition } from './config-engine';
 
 
 
@@ -38,9 +38,7 @@ export class DmnoDataType<T = any> {
 // is also unaware if the settings schema is able to be undefined or not
 // (we're talking about allowing `DmnoBaseTypes.string()` vs only `DmnoBaseTypes.string({})`)
 export function createDmnoDataType<T>(opts: DmnoDataTypeOptions<T>) {
-  return function (usageOpts?: T) {
-    return new DmnoDataType(opts, usageOpts);
-  }
+  return (usageOpts?: T) => new DmnoDataType(opts, usageOpts);
 }
 
 
@@ -52,7 +50,7 @@ const StringDataType = createDmnoDataType({
     isLength?: number;
     startsWith?: string;
     endsWith?: string;
-    
+
     matches?: RegExp | string;
     // isUpperCase?: boolean;
     // isLowerCase?: boolean;
@@ -70,7 +68,7 @@ const StringDataType = createDmnoDataType({
 
   validate(val: string, settings) {
     if (_.isEmpty(settings)) return true;
-    
+
     if (settings.minLength !== undefined && val.length < settings.minLength) {
       throw new Error(`Length must be more than ${settings.minLength}`);
     }
@@ -93,8 +91,7 @@ const StringDataType = createDmnoDataType({
       const matches = val.match(regex);
       if (!matches) throw new Error(`Value must match regex "${settings.matches}"`);
     }
-    
-  }
+  },
 });
 
 const NumberDataType = createDmnoDataType({
@@ -113,7 +110,7 @@ const NumberDataType = createDmnoDataType({
     }
     if (!_.isFinite(val)) throw new Error(`Cannot convert ${val} to number`);
     return val;
-  }
+  },
 });
 
 
@@ -124,13 +121,13 @@ const BooleanDataType = createDmnoDataType({
   normalize(val, settings) {
     // TODO: coerce to boolean
     return !!val;
-  }
+  },
 });
 
 
 // Common utility types ///////////////////////////////////////////////////////////////
 
-const URL_REGEX = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
+const URL_REGEX = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/;
 const UrlDataType = createDmnoDataType({
   extends: StringDataType({}),
   // summary: 'url base type summary',
@@ -141,8 +138,8 @@ const UrlDataType = createDmnoDataType({
     // TODO: this is testing assuming its a normal web/http URL
     // we'll want some options to enable/disable specific protocols and things like that...
     return URL_REGEX.test(val);
-  }
-})
+  },
+});
 
 
 
@@ -152,7 +149,7 @@ const ObjectDataType = createDmnoDataType({
   settingsSchema: Object as any as Record<string, ConfigItemDefinition>,
   getChildren(settings) {
     return settings || {};
-  }
+  },
 });
 
 const ArrayDataType = createDmnoDataType({
@@ -165,7 +162,7 @@ const ArrayDataType = createDmnoDataType({
   },
   getChildren(settings) {
     return { _item: settings?.itemSchema || {} };
-  }
+  },
   // TODO: validate checks if it's an array
   // helper to coerce csv string into array of strings
 });
@@ -175,7 +172,7 @@ const DictionaryDataType = createDmnoDataType({
     itemSchema?: ConfigItemDefinition;
 
     validateKeys?: (key: string) => boolean;
-    asyncValidateKeys?: (key: string) => Promise<boolean>;    
+    asyncValidateKeys?: (key: string) => Promise<boolean>;
     keyDescription?: string
     // TODO: more features around the keys themselves
 
@@ -185,7 +182,7 @@ const DictionaryDataType = createDmnoDataType({
   },
   getChildren(settings) {
     return { _item: settings?.itemSchema || {} };
-  }
+  },
   // TODO: validate checks if it's an object
 
 });
@@ -195,17 +192,17 @@ type ExtendedEnumDescription = {
   value: PossibleEnumValues,
   description?: string,
   // icon, color, docs url, etc...
-}
+};
 const EnumDataType = createDmnoDataType({
-  settingsSchema: Object as any as 
+  settingsSchema: Object as any as
     (
       // simple list of values
-      PossibleEnumValues[]
+      Array<PossibleEnumValues>
       // array or values with extra metadata
-      | ExtendedEnumDescription[]
-      // object where possible enum values (strings) are keys and values are metadata
+      | Array<ExtendedEnumDescription>
+      // object where object keys are the possible enum values and object values are additional metadata (works for strings only)
       | Record<string, Omit<ExtendedEnumDescription, 'value'>>
-    )
+    ),
 });
 
 
@@ -214,7 +211,7 @@ export const DmnoBaseTypes = {
   number: NumberDataType,
   boolean: BooleanDataType,
 
-  enum: EnumDataType, 
+  enum: EnumDataType,
 
   url: UrlDataType,
   // TODO:
@@ -229,7 +226,7 @@ export const DmnoBaseTypes = {
   object: ObjectDataType,
   array: ArrayDataType,
   dictionary: DictionaryDataType, // TODO: could be called record? something else?
-}
+};
 
 // cannot use `keyof typeof DmnoBaseTypes` as it creates a circular reference...
 // so we'll list the basic types that don't need any options

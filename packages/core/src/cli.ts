@@ -2,24 +2,27 @@
  * This is the code for the cli executable
  * it doesn't do much itself, mostly just find tsx, and then trigger the cli-entry script via tsx
  * which is what lets us then load all the config files using dynamic imports within the same process
- * 
+ *
  * alternatively, we'd have to load each config file in a separate process, which would be difficult to coordinate
- * 
+ *
  * this strategy may not work long-term, but seems like a good place to start
  */
-import path from 'node:path';
-import _ from 'lodash-es';
-import { execSync, exec, spawn } from 'node:child_process';
 
-import yargs from 'yargs'
-import { hideBin } from 'yargs/helpers'
+/* eslint-disable no-console */
+
+import path from 'node:path';
+import { execSync } from 'node:child_process';
+import _ from 'lodash-es';
+
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 
 // potentially useful items in process.env
 // PNPM_PACKAGE_NAME
 // NODE_PATH:
 
-const CWD = process.cwd();
+// const CWD = process.cwd();
 const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 
 console.log('> dmno CLI');
@@ -43,7 +46,7 @@ const dmnoCliEntryPath = path.resolve(thisFilePath, '../cli-entry.mjs');
 // console.log({tsxPath, dmnoCliEntryPath, configPath});
 
 
-yargs(hideBin(process.argv))
+await yargs(hideBin(process.argv))
   .command('load', 'load the dmno config', () => {}, (argv) => {
     // TODO: we'll want to pass through the args/options
     // and any other context info about which service we are within
@@ -52,3 +55,4 @@ yargs(hideBin(process.argv))
   })
   .demandCommand(1)
   .parse();
+

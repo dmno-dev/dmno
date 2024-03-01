@@ -19,7 +19,7 @@ export type ConfigItemDefinition = Pick<DmnoConfigItemBase, 'summary' | 'descrip
 
   /** description of the data type itself, rather than the instance */
   typeDescription?: string;
-  
+
   /** link to external documentation */
   externalDocs?: {
     description?: string,
@@ -38,7 +38,7 @@ export type ConfigItemDefinition = Pick<DmnoConfigItemBase, 'summary' | 'descrip
      */
     color?: string;
   },
-  
+
   /** whether this config is sensitive and must be kept secret */
   secret?: ValueOrValueFromContextFn<boolean>;
 
@@ -48,12 +48,12 @@ export type ConfigItemDefinition = Pick<DmnoConfigItemBase, 'summary' | 'descrip
   overridable?: boolean
 
   /** at what time is this value required */
-  useAt?: ConfigRequiredAtTypes | ConfigRequiredAtTypes[];
+  useAt?: ConfigRequiredAtTypes | Array<ConfigRequiredAtTypes>;
 
   // we allow the fn that returns the data type so you can use the data type without calling the empty initializer
   // ie `DmnoBaseTypes.string` instead of `DmnoBaseTypes.string({})`;
   extends?: TypeExtendsDefinition,
-  
+
   validate?: ((val: any, ctx: ConfigContext) => boolean),
   asyncValidate?: ((val: any, ctx: ConfigContext) => Promise<boolean>),
 
@@ -65,29 +65,23 @@ export type ConfigItemDefinition = Pick<DmnoConfigItemBase, 'summary' | 'descrip
   /** set the value, can be static, or a function, or use helpers */
   // value?: ValueOrValueFromContextFn<any>;
   value?: ConfigValueOrResolver;
-
-  // set using formula
-  // set via lookup
-  // set by syncing
-  // helpers for generation
-
 };
 
 type PickConfigItemDefinition = {
   /** which service to pick from, defaults to "root" */
   source?: string;
   /** key(s) to pick, or function that matches against all keys from source */
-  key: string | string[] | ((key: string) => boolean),
-  
+  key: string | Array<string> | ((key: string) => boolean),
+
   /** new key name or function to rename key(s) */
   renameKey?: string | ((key: string) => string),
-  
+
   /** function to transform value(s) */
   transformValue?: (value: any) => any,
 
   // TOOD: also allow setting the value (not transforming)
   // value?: use same value type as above
-}
+};
 
 type ConfigItemDefinitionOrShorthand = ConfigItemDefinition | TypeExtendsDefinition;
 
@@ -99,7 +93,7 @@ export type ServiceConfigSchema = {
   name?: string,
   // name of parent service (if applicable)
   parent?: string,
-  pick?: (PickConfigItemDefinition | string)[],
+  pick?: Array<PickConfigItemDefinition | string>,
   schema: Record<string, ConfigItemDefinitionOrShorthand>,
 };
 
@@ -118,7 +112,7 @@ export function defineWorkspaceConfig(opts: WorkspaceConfig) {
 
 
 export class ConfigPath {
-  constructor (readonly path: string) { }
+  constructor(readonly path: string) { }
 }
 export const configPath = (path: string) => new ConfigPath(path);
 
@@ -142,8 +136,8 @@ export class DmnoService {
   /** error encountered while _loading_ the config schema */
   readonly configLoadError?: Error;
   /** error within the schema itself */
-  readonly schemaErrors: Error[] = []; // TODO: probably want a specific error type...?
-  
+  readonly schemaErrors: Array<Error> = []; // TODO: probably want a specific error type...?
+
   /** processed config items - not necessarily resolved yet */
   readonly config: Record<string, DmnoConfigItem | DmnoPickedConfigItem> = {};
 
@@ -167,13 +161,11 @@ export class DmnoService {
       // - stop naming a non-root service "root"?
       this.rawConfig = opts.rawConfig;
       this.serviceName = this.rawConfig.name || (opts.isRoot ? 'root' : this.packageName);
-      
     }
-    
   }
 
-  
-  
+
+
   addConfigItem(item: DmnoConfigItem | DmnoPickedConfigItem) {
     if (this.config[item.key]) {
       // TODO: not sure if we want to add the item anyway under a different key?
@@ -183,16 +175,14 @@ export class DmnoService {
       this.config[item.key] = item;
     }
   }
-
-
 }
 
 abstract class DmnoConfigItemBase {
   constructor(
     /** the item key / name */
-    readonly key: string
+    readonly key: string,
   ) {}
-  
+
   /** short description of what this config item is for */
   summary?: string;
   /** longer description info including details, gotchas, etc... supports markdown  */
@@ -201,8 +191,8 @@ abstract class DmnoConfigItemBase {
   /** expose this item to be "pick"ed by other services, usually used for outputs of run/deploy */
   expose?: boolean;
 
-  
-  
+
+
   abstract getDefItem<T extends keyof ConfigItemDefinition>(key: T): ConfigItemDefinition[T];
 
   protected initializeSettings() {
@@ -210,16 +200,14 @@ abstract class DmnoConfigItemBase {
     this.description = this.getDefItem('description');
     this.expose = this.getDefItem('expose');
   }
-
 }
 
 // this is a "processed" config item
 export class DmnoConfigItem extends DmnoConfigItemBase {
-
   readonly typeChain: Array<DmnoDataType> = [];
-  
+
   readonly schemaError?: Error;
-  
+
   children?: Record<string, DmnoConfigItem>;
 
   readonly def: ConfigItemDefinition;
@@ -227,7 +215,7 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
   constructor(key: string, defOrShorthand: ConfigItemDefinitionOrShorthand) {
     super(key);
 
-    console.log('>>>>> initializing config item key: '+key)
+    console.log(`>>>>> initializing config item key: ${key}`);
 
 
     // if the definition passed in was using a shorthand, first we'll unwrap that
@@ -247,18 +235,17 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
       this.def = defOrShorthand;
     } else {
       // TODO: put this in schema error instead?
-      throw new Error('invalid item schema')
+      throw new Error('invalid item schema');
     }
 
 
     try {
     // initialize the chain of extends/parents
-    this.initializeExtendsChain();
-    // now fill in all the settings using the schema and the type ancestors
-    this.initializeSettings();
+      this.initializeExtendsChain();
+      // now fill in all the settings using the schema and the type ancestors
+      this.initializeSettings();
 
-    this.initializeChildren();
-
+      this.initializeChildren();
     } catch (err) {
       this.schemaError = err as Error;
       console.log(err);
@@ -266,7 +253,6 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
   }
 
   private initializeExtendsChain() {
-    
     // if no type/extends is specified, we infer the type if a static non-string value is provided
     // and otherwise assume it's a basic string
     if (!this.def.extends) {
@@ -331,7 +317,7 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
       const ancestorType = this.typeChain[i];
       if (ancestorType.typeDef.getChildren) {
         const childDefs = ancestorType.typeDef.getChildren(ancestorType.typeInstanceOptions);
-        console.log(childDefs)
+        console.log(childDefs);
         this.children = _.mapValues(childDefs, (childDef, childKey) => new DmnoConfigItem(childKey, childDef));
         break;
       }
@@ -374,7 +360,6 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
           return { valid: false, message: (err as any).message };
         }
       }
-
     }
 
     // now check if the item itself has a validation defined in the config schema
@@ -386,10 +371,10 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
           return { valid: false, message: 'config item validation failed' };
         }
       } catch (err) {
-        return { valid: false, message: (err as any).message }
+        return { valid: false, message: (err as any).message };
       }
     }
-    
+
     return { valid: true };
   }
 
@@ -420,8 +405,8 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
 // TODO: we could merge this with the above and handle both cases? we'll see
 export class DmnoPickedConfigItem extends DmnoConfigItemBase {
   /** full chain of items up to the actual config item */
-  private pickChain: Array<DmnoConfigItem | DmnoPickedConfigItem> = [];  
-  
+  private pickChain: Array<DmnoConfigItem | DmnoPickedConfigItem> = [];
+
   constructor(key: string, private def: {
     pickItem: DmnoConfigItem | DmnoPickedConfigItem,
     transformValue?: (val: any) => any,
@@ -456,5 +441,4 @@ export class DmnoPickedConfigItem extends DmnoConfigItemBase {
   normalize(val: any) {
     return this.sourceItem.normalize(val);
   }
-
 }

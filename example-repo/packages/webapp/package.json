@@ -7,13 +7,16 @@
     "dev": "vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
-    "dmno": "dmno load"
+    "dmno": "dmno load",
+    "lint": "eslint src --ext .ts,.cjs",
+    "lint:fix": "pnpm run lint --fix"
   },
   "dependencies": {
     "vue": "^3.2.47"
   },
   "devDependencies": {
     "@dmno/core": "../../../packages/core",
+    "@dmno/eslint-config": "../../../packages/eslint-config",
     "@vitejs/plugin-vue": "^4.1.0",
     "typescript": "^5.3.3",
     "vite": "^4.3.9",
