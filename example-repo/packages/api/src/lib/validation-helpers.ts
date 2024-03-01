@@ -1,5 +1,5 @@
 import Zod from 'zod';
-import { ApiError } from "./api-error";
+import { ApiError } from './api-error';
 
 export function validate<Z extends Zod.Schema>(obj: any, schema: Z) {
   try {
