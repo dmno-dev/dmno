@@ -9,6 +9,9 @@ const OnePassBackend = new OnePasswordSecretService(
 export default defineWorkspaceConfig({
   schema: {
     NODE_ENV: NodeEnvType, 
+    DMNO_ENV: {
+      value: (ctx) => ctx.get('NODE_ENV'),
+    },
 
     ONE_PASSWORD: {
       description: '1password creds and vault',

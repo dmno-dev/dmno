@@ -71,7 +71,7 @@ module.exports = {
     }],
     "max-statements-per-line": ["error", { "max": 1 }],
     "@typescript-eslint/no-floating-promises": "error",
-
+    "@typescript-eslint/prefer-includes": "error",
 
     // custom plugin configs ------------------------------------------
     // make import/order understand our alias paths

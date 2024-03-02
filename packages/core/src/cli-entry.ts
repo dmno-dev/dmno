@@ -160,15 +160,6 @@ if (!graphCycles.length) {
 }
 
 for (const service of sortedServices) {
-  // load the regular config schema items first because picking can
-  for (const itemKey in service.rawConfig?.schema) {
-    // TODO: `!` is needed here - tsup gives an error, while VScode is not...
-    const itemDef = service.rawConfig?.schema[itemKey];
-    // service.
-    service.addConfigItem(new DmnoConfigItem(itemKey, itemDef));
-    // TODO: add dag node
-  }
-
   const ancestorServiceNames = servicesDag.predecessors(service.serviceName) || [];
 
   // process "picked" items
@@ -259,6 +250,15 @@ for (const service of sortedServices) {
       // TODO: add to dag node with link to source item
     }
   }
+
+  // process the regular config schema items
+  for (const itemKey in service.rawConfig?.schema) {
+    // TODO: `!` is needed here - tsup gives an error, while VScode is not...
+    const itemDef = service.rawConfig?.schema[itemKey];
+    // service.
+    service.addConfigItem(new DmnoConfigItem(itemKey, itemDef));
+    // TODO: add dag node
+  }
 }
 
 for (const service of sortedServices) {
@@ -266,7 +266,7 @@ for (const service of sortedServices) {
     console.log(`SERVICE ${service.serviceName} has schema errors: `);
     console.log(service.schemaErrors);
   } else {
-    console.log(service.config);
+    await service.resolveConfig();
   }
 }
 

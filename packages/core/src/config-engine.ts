@@ -1,6 +1,10 @@
 import _ from 'lodash-es';
 import { DmnoBaseTypes, DmnoDataType, DmnoSimpleBaseTypeNames } from './base-types';
-import { ConfigValueOrResolver } from './resolvers';
+import {
+  ConfigValue,
+  ValueResolverDef, ConfigValueOverride, ConfigValueResolver, processResolverDef,
+} from './resolvers';
+import { getConfigFromEnvVars } from './lib/env-vars';
 
 type ConfigRequiredAtTypes = 'build' | 'boot' | 'run' | 'deploy';
 
@@ -15,57 +19,53 @@ type ValueOrValueFromContextFn<T> = T | ((ctx: ConfigContext) => T);
 // - string label for a small subset of simple base types - ex: `'string'`
 export type TypeExtendsDefinition = DmnoDataType | ((opts?: any) => DmnoDataType) | DmnoSimpleBaseTypeNames;
 
-export type ConfigItemDefinition = Pick<DmnoConfigItemBase, 'summary' | 'description' | 'expose'> & {
+export type ConfigItemDefinition =
+  Pick<DmnoConfigItemBase, 'summary' | 'description' | 'expose' | 'importEnvKey' | 'exportEnvKey'> & {
 
-  /** description of the data type itself, rather than the instance */
-  typeDescription?: string;
+    /** description of the data type itself, rather than the instance */
+    typeDescription?: string;
 
-  /** link to external documentation */
-  externalDocs?: {
-    description?: string,
-    url: string,
-  },
+    /** link to external documentation */
+    externalDocs?: {
+      description?: string,
+      url: string,
+    },
 
-  /** dmno config ui specific options */
-  ui?: {
+    /** dmno config ui specific options */
+    ui?: {
     /** icon to use, see https://icones.js.org/ for available options
      * @example mdi:aws
      */
-    icon?: string;
+      icon?: string;
 
-    /** color (any valid css color)
+      /** color (any valid css color)
      * @example FF0000
      */
-    color?: string;
-  },
+      color?: string;
+    },
 
-  /** whether this config is sensitive and must be kept secret */
-  secret?: ValueOrValueFromContextFn<boolean>;
+    /** whether this config is sensitive and must be kept secret */
+    secret?: ValueOrValueFromContextFn<boolean>;
 
-  required?: ValueOrValueFromContextFn<boolean>;
+    required?: ValueOrValueFromContextFn<boolean>;
 
-  /** can this be overridden at all */
-  overridable?: boolean
+    /** can this be overridden at all */
+    overridable?: boolean
 
-  /** at what time is this value required */
-  useAt?: ConfigRequiredAtTypes | Array<ConfigRequiredAtTypes>;
+    /** at what time is this value required */
+    useAt?: ConfigRequiredAtTypes | Array<ConfigRequiredAtTypes>;
 
-  // we allow the fn that returns the data type so you can use the data type without calling the empty initializer
-  // ie `DmnoBaseTypes.string` instead of `DmnoBaseTypes.string({})`;
-  extends?: TypeExtendsDefinition,
+    // we allow the fn that returns the data type so you can use the data type without calling the empty initializer
+    // ie `DmnoBaseTypes.string` instead of `DmnoBaseTypes.string({})`;
+    extends?: TypeExtendsDefinition,
 
-  validate?: ((val: any, ctx: ConfigContext) => boolean),
-  asyncValidate?: ((val: any, ctx: ConfigContext) => Promise<boolean>),
+    validate?: ((val: any, ctx: ConfigContext) => boolean),
+    asyncValidate?: ((val: any, ctx: ConfigContext) => Promise<boolean>),
 
-  /** import value a env variable with a different name */
-  importEnvKey?: string;
-  /** export value as env variable with a different name */
-  exportEnvKey?: string;
-
-  /** set the value, can be static, or a function, or use helpers */
-  // value?: ValueOrValueFromContextFn<any>;
-  value?: ConfigValueOrResolver;
-};
+    /** set the value, can be static, or a function, or use helpers */
+    // value?: ValueOrValueFromContextFn<any>;
+    value?: ValueResolverDef;
+  };
 
 type PickConfigItemDefinition = {
   /** which service to pick from, defaults to "root" */
@@ -167,20 +167,80 @@ export class DmnoService {
 
 
   addConfigItem(item: DmnoConfigItem | DmnoPickedConfigItem) {
-    if (this.config[item.key]) {
+    if (item instanceof DmnoPickedConfigItem && this.rawConfig?.schema[item.key]) {
+      // check if a picked item is conflicting with a regular item
+      this.schemaErrors.push(new Error(`Picked config key conflicting with a locally defined item - "${item.key}"`));
+    } else if (this.config[item.key]) {
       // TODO: not sure if we want to add the item anyway under a different key?
       // probably want to expose more info too
       this.schemaErrors.push(new Error(`Config keys must be unique, duplicate detected - "${item.key}"`));
     } else {
       this.config[item.key] = item;
+      item.parentService = this;
     }
   }
+
+  async resolveConfig() {
+    const configFromEnv = getConfigFromEnvVars();
+
+    for (const itemKey in this.config) {
+      const configItem = this.config[itemKey];
+
+      // TODO: set overrides from files
+
+      // TODO: deal with nested items
+
+      // set override from environment (process.env)
+      const envKey = configItem.getPath(true);
+      if (process.env[envKey] !== undefined) {
+        // TODO: not sure about coercion / validation? do we want to run it early?
+        configItem.overrides.push({
+          source: { type: 'environment' },
+          value: process.env[envKey]!,
+        });
+      }
+
+      await configItem.resolve(new ResolverContext(this));
+    }
+  }
+
+  getConfigItemByPath(path: string) {
+    const pathParts = path.split('.');
+    let currentItem: DmnoConfigItem | DmnoPickedConfigItem = this.config[pathParts[0]];
+    for (let i = 1; i < pathParts.length; i++) {
+      const pathPart = pathParts[i];
+      if (_.has(currentItem.children, pathPart)) {
+        currentItem = currentItem.children[pathPart];
+      } else {
+        throw new Error(`Trying to access ${this.serviceName} / ${path} failed at ${pathPart}`);
+      }
+    }
+    return currentItem;
+  }
 }
+
+export class ResolverContext {
+  constructor(private service: DmnoService) {
+
+  }
+  get(itemPath: string) {
+    const item = this.service.getConfigItemByPath(itemPath);
+    if (!item) {
+      throw new Error(`Tried to get item that does not exist ${itemPath}`);
+    }
+    if (!item.isResolved) {
+      throw new Error(`Tried to access item that was not resolved - ${item.getPath()}`);
+    }
+    return item.resolvedValue;
+  }
+}
+
 
 abstract class DmnoConfigItemBase {
   constructor(
     /** the item key / name */
     readonly key: string,
+    readonly parentConfigItem?: DmnoConfigItem,
   ) {}
 
   /** short description of what this config item is for */
@@ -192,6 +252,22 @@ abstract class DmnoConfigItemBase {
   expose?: boolean;
 
 
+  /** import value a env variable with a different name */
+  importEnvKey?: string;
+  /** export value as env variable with a different name */
+  exportEnvKey?: string;
+
+  overrides: Array<ConfigValueOverride> = [];
+
+
+  /** the parent "service" */
+  parentService?: DmnoService;
+  valueResolver?: ConfigValueResolver;
+
+
+  isResolved = false;
+  resolvedValue?: ConfigValue;
+  resolutionError?: Error;
 
   abstract getDefItem<T extends keyof ConfigItemDefinition>(key: T): ConfigItemDefinition[T];
 
@@ -199,8 +275,41 @@ abstract class DmnoConfigItemBase {
     this.summary = this.getDefItem('summary');
     this.description = this.getDefItem('description');
     this.expose = this.getDefItem('expose');
+    this.importEnvKey = this.getDefItem('importEnvKey');
+  }
+
+  getPath(respectImportOverride = false): string {
+    const itemKey = (respectImportOverride && this.importEnvKey) || this.key;
+    if (this.parentConfigItem) {
+      const parentPath = this.parentConfigItem.getPath(respectImportOverride);
+      return `${parentPath}.${itemKey}`;
+    }
+    return itemKey;
+  }
+
+  async resolve(ctx: ResolverContext) {
+    if (this.valueResolver) {
+      try {
+        await this.valueResolver.resolve(ctx);
+        this.resolvedValue = this.valueResolver.resolvedValue;
+      } catch (err) {
+        console.log('resolution failed', this.key, err);
+        this.resolutionError = err as Error;
+      }
+    }
+
+    // take into account overrides
+    if (this.overrides.length) {
+      // TODO: filter out for env-specific overrides
+      this.resolvedValue = this.overrides[0].value;
+    }
+
+    this.isResolved = true;
+    console.log(`${this.parentService?.serviceName}/${this.key}`, JSON.stringify(this.resolvedValue));
   }
 }
+
+
 
 // this is a "processed" config item
 export class DmnoConfigItem extends DmnoConfigItemBase {
@@ -208,12 +317,19 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
 
   readonly schemaError?: Error;
 
-  children?: Record<string, DmnoConfigItem>;
+  children: Record<string, DmnoConfigItem> = {};
 
   readonly def: ConfigItemDefinition;
 
-  constructor(key: string, defOrShorthand: ConfigItemDefinitionOrShorthand) {
-    super(key);
+
+
+
+  constructor(
+    key: string,
+    defOrShorthand: ConfigItemDefinitionOrShorthand,
+    parentConfigItem?: DmnoConfigItem,
+  ) {
+    super(key, parentConfigItem);
 
     console.log(`>>>>> initializing config item key: ${key}`);
 
@@ -246,6 +362,10 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
       this.initializeSettings();
 
       this.initializeChildren();
+
+      if (this.def.value !== undefined) {
+        this.valueResolver = processResolverDef(this.def.value);
+      }
     } catch (err) {
       this.schemaError = err as Error;
       console.log(err);
@@ -317,8 +437,12 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
       const ancestorType = this.typeChain[i];
       if (ancestorType.typeDef.getChildren) {
         const childDefs = ancestorType.typeDef.getChildren(ancestorType.typeInstanceOptions);
-        console.log(childDefs);
-        this.children = _.mapValues(childDefs, (childDef, childKey) => new DmnoConfigItem(childKey, childDef));
+        _.each(childDefs, (childDef, childKey) => {
+          const childItem = new DmnoConfigItem(childKey, childDef, this);
+          // TODO: we could instead rely on connecting to the parent to get to the parent service?
+          if (this.parentService) childItem.parentService = this.parentService;
+          this.children[childKey] = childItem;
+        });
         break;
       }
     }
@@ -407,10 +531,15 @@ export class DmnoPickedConfigItem extends DmnoConfigItemBase {
   /** full chain of items up to the actual config item */
   private pickChain: Array<DmnoConfigItem | DmnoPickedConfigItem> = [];
 
-  constructor(key: string, private def: {
-    pickItem: DmnoConfigItem | DmnoPickedConfigItem,
-    transformValue?: (val: any) => any,
-  }) {
+  children: Record<string, DmnoPickedConfigItem> = {};
+
+  constructor(
+    key: string,
+    private def: {
+      pickItem: DmnoConfigItem | DmnoPickedConfigItem,
+      transformValue?: (val: any) => any,
+    },
+  ) {
     super(key);
 
     // we'll follow through the chain of picked items until we get to a real config item
@@ -423,6 +552,7 @@ export class DmnoPickedConfigItem extends DmnoConfigItemBase {
 
     // fill in settings from the actual source item
     this.initializeSettings();
+    this.initializeChildren();
   }
 
   getDefItem<T extends keyof ConfigItemDefinition>(key: T): ConfigItemDefinition[T] {
@@ -433,6 +563,14 @@ export class DmnoPickedConfigItem extends DmnoConfigItemBase {
   get sourceItem() {
     // we know the first item in the list will be the actual source (and a DmnoConfigItem)
     return this.pickChain[0] as DmnoConfigItem;
+  }
+
+  private initializeChildren() {
+    if (this.sourceItem.children) {
+      _.each(this.sourceItem.children, (sourceChild, childKey) => {
+        this.children[childKey] = new DmnoPickedConfigItem(sourceChild.key, { pickItem: sourceChild });
+      });
+    }
   }
 
   validate(val: any) {

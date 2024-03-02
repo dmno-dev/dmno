@@ -241,4 +241,6 @@ export const NodeEnvType = createDmnoDataType({
     test: { description: 'true while running tests' },
     production: { description: 'true for production' },
   }),
+  // we'll set the default value, and assume it will be passed in via the environment to override
+  value: 'development',
 });

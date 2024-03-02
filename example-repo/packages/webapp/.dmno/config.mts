@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, createDmnoDataType, defineConfigSchema } from '@dmno/core';
+import { DmnoBaseTypes, createDmnoDataType, defineConfigSchema, dmnoFormula, toggleByEnv, toggleByNodeEnv } from '@dmno/core';
 
 
 const customUrlType = createDmnoDataType({
@@ -10,6 +10,8 @@ export default defineConfigSchema({
   name: 'web',
   parent: 'group1',
   pick: [
+    'NODE_ENV',
+    'DMNO_ENV',
     {
       source: 'api',
       key: 'API_URL',
@@ -29,17 +31,17 @@ export default defineConfigSchema({
         },
       })
     },
-    ARRAY_EXAMPLE: {
-      extends: DmnoBaseTypes.array({
-        itemSchema: {
-          extends: 'number',
-        }
-      })
-    },
 
     VITE_STATIC_VAL_STR: {
       description: 'this does this thing!',
       value: 'static'
+    },
+    TOGGLE_EXAMPLE: {
+      value: toggleByNodeEnv({
+        _default: 'default-val',
+        staging: 'staging-value',
+        production: (ctx) => `prod-${ctx.get('NODE_ENV')}`,
+      })
     },
     VITE_STATIC_VAL_NUM: {
       value: 42
