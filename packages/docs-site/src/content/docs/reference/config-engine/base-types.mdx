@@ -37,6 +37,13 @@ const myStartsWithType = DmnoBaseTypes.String({ startsWith: 'pk_' })
 
 ```
 
+Example Type Errors:
+```javascript
+const myStartsWithType = DmnoBaseTypes.String({ startsWith: 'pk_' })
+
+```
+
+
 
 ## `Number`
 
@@ -70,9 +77,49 @@ const myMinMaxType = DmnoBaseTypes.String({ min: 2, max: 5 });
 
 ## Creating your own types
 
-:::caution[Warning]
-  We _highly_ recommend extending our base types as a means of creating custom types for your own applications. However, we do provide the means to create your own via `createDmnoDataType`. 
+:::tip[Advanced]
+  In the event that our base types aren't sufficient, you can extend them to create your own, more specific types using `createDmnoDataType`. 
 :::
 
 
 ### `createDmnoDataType(opts)` 
+
+Creates a new DMNO data type. 
+
+```javascript
+const myType = createDmnoDataType({
+  name: 'MyType',
+  extends: DmnoBaseTypes.String{
+    // settings object
+  },
+  settingsSchema: {
+    // user specific settings object
+  },
+  validate: (value) => {
+    // return true if value is valid
+  },
+  coerce: (value) => {
+    // return coerced value
+  },
+})
+```
+
+You can then use it in your config schema like so: 
+
+```javascript
+const myType = DmnoBaseTypes.MyType({ settingsObject });
+
+export default defineConfigSchema({
+  name: 'MyConfig',
+  parent: 'root',
+  schema: {
+    MYFIELD: {
+      extends: myType,
+      required: true
+    },
+    MYFIELD2,
+    MYFIELD3,
+  }
+});
+```
+

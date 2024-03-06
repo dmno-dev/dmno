@@ -1,44 +1,53 @@
 ---
-import { Icon } from 'astro-iconify'
-import { DmnoLogo, DotsLoader }  from '@dmno/ui-lib'
-import SignUp from '../components/mailerlite/SignUp.astro'
+import { Icon } from 'astro-iconify';
+import { DmnoLogo, DotsLoader } from '@dmno/ui-lib';
+import SignUp from '../components/mailerlite/SignUp.astro';
 ---
 
 <html lang="en">
   <head>
     <title>DMNO</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link rel="icon" type="image/x-icon" href="/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="/favicon.svg" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet">
-
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div class="main-container">
       <div class="logo-with-loader">
-        <DmnoLogo client:load/>
-        <div class="logo-with-loader__line" />
-        <DotsLoader client:load/>
+        <DmnoLogo client:load />
+        <div class="logo-with-loader__line"></div>
+        <DotsLoader client:load />
       </div>
       <div class="homepage-card">
-        <p><b>DMNO will simplify how you configure, run, and deploy your applications.</b></p>
-        <p>We've got some absolutely mind-blowing tools in the works. So, please subscribe below and we'll keep you in the loop as we launch!</p>
+        <p>
+          <b
+            >DMNO will simplify how you configure, run, and deploy your
+            applications.</b
+          >
+        </p>
+        <p>
+          We've got some absolutely mind-blowing tools in the works. So, please
+          subscribe below and we'll keep you in the loop as we launch!
+        </p>
 
         <SignUp />
 
         <p><Icon name="mdi:heart" /> Theo + Phil</p>
 
         <p class="homepage-ps">
-          PS - please take our short <a href="https://forms.gle/PqasaFVcZrPXrg5z6" target="_blank">developer survey</a>!
+          PS - please take our short <a
+            href="https://forms.gle/PqasaFVcZrPXrg5z6"
+            target="_blank">developer survey</a
+          >!
         </p>
-
-
-        
       </div>
-      
     </div>
   </body>
 </html>
@@ -46,122 +55,118 @@ import SignUp from '../components/mailerlite/SignUp.astro'
 <style>
   /* style.css */
   :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #555;
+    color-scheme: light dark;
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #555;
 
-  /* background: linear-gradient(0deg, rgba(5,1,78,1) 0%, rgba(42,9,121,1) 35%, rgba(130,0,255,1) 100%); */
+    /* background: linear-gradient(0deg, rgba(5,1,78,1) 0%, rgba(42,9,121,1) 35%, rgba(130,0,255,1) 100%); */
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+  }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
+  a {
+    font-weight: 500;
+    color: #646cff;
+    text-decoration: inherit;
+  }
+  a:hover {
+    color: #535bf2;
+  }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  justify-content: center;
-  min-width: 320px;
-  min-height: 100vh;
-  
-  
-  font-family: "Fira Code", monospace;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
-}
-.main-container {
-  padding: 1.5rem;
-  position: relative;
-}
-.homepage-card {
-  background: #000;
-  max-width: 500px;
-  padding: .5rem 1.5rem;
-}
-.homepage-card p {
+  body {
+    margin: 0;
+    display: flex;
+    place-items: center;
+    justify-content: center;
+    min-width: 320px;
+    min-height: 100vh;
 
-}
-.homepage-card p a {
-  color: #0fd236;
-}
-.homepage-card p a:hover {
-  color: #0dfc05;
-}
-.homepage-card p svg[astro-icon] {
-  color: red;
-  height: 1.4em;
-  vertical-align: middle;
-}
-.homepage-ps {
-  font-size: .8em;
-}
+    font-family: "Fira Code", monospace;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+  }
+  .main-container {
+    padding: 1.5rem;
+    position: relative;
+  }
+  .homepage-card {
+    background: #000;
+    max-width: 500px;
+    padding: 0.5rem 1.5rem;
+  }
+  .homepage-card p {
+  }
+  .homepage-card p a {
+    color: #0fd236;
+  }
+  .homepage-card p a:hover {
+    color: #0dfc05;
+  }
+  .homepage-card p svg[astro-icon] {
+    color: red;
+    height: 1.4em;
+    vertical-align: middle;
+  }
+  .homepage-ps {
+    font-size: 0.8em;
+  }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
+  h1 {
+    font-size: 3.2em;
+    line-height: 1.1;
+  }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
+  button {
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: #1a1a1a;
+    cursor: pointer;
+    transition: border-color 0.25s;
+  }
+  button:hover {
+    border-color: #646cff;
+  }
+  button:focus,
+  button:focus-visible {
+    outline: 4px auto -webkit-focus-ring-color;
+  }
 
-.card {
-  padding: 2em;
-}
+  .card {
+    padding: 2em;
+  }
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-/* app.vue styles */
+  #app {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+  }
+  /* app.vue styles */
 
   :root {
     --shadow-color: 0deg 0% 0%;
-    --shadow-elevation-low:
-      -0.5px 0.9px 1.1px hsl(var(--shadow-color) / 0.1),
+    --shadow-elevation-low: -0.5px 0.9px 1.1px hsl(var(--shadow-color) / 0.1),
       -0.7px 1.5px 1.8px -1.3px hsl(var(--shadow-color) / 0.1),
       -1.8px 3.6px 4.4px -2.7px hsl(var(--shadow-color) / 0.1);
-    --shadow-elevation-medium:
-      -0.5px 0.9px 1.1px hsl(var(--shadow-color) / 0.11),
+    --shadow-elevation-medium: -0.5px 0.9px 1.1px
+        hsl(var(--shadow-color) / 0.11),
       -1.4px 2.9px 3.6px -0.9px hsl(var(--shadow-color) / 0.11),
       -3.6px 7.2px 8.9px -1.8px hsl(var(--shadow-color) / 0.1),
       -8.9px 17.8px 21.9px -2.7px hsl(var(--shadow-color) / 0.1);
-    --shadow-elevation-high:
-      -0.5px 0.9px 1.1px hsl(var(--shadow-color) / 0.12),
+    --shadow-elevation-high: -0.5px 0.9px 1.1px hsl(var(--shadow-color) / 0.12),
       -2.8px 5.5px 6.8px -0.4px hsl(var(--shadow-color) / 0.11),
       -5.5px 10.8px 13.4px -0.9px hsl(var(--shadow-color) / 0.11),
       -9.7px 19.3px 23.8px -1.3px hsl(var(--shadow-color) / 0.11),
@@ -169,7 +174,7 @@ button:focus-visible {
       -27.7px 55px 67.9px -2.2px hsl(var(--shadow-color) / 0.11),
       -43.8px 87.1px 107.5px -2.7px hsl(var(--shadow-color) / 0.11);
   }
-  
+
   .logo-with-loader {
     background: black;
     color: white;
@@ -183,24 +188,24 @@ button:focus-visible {
     width: 220px;
     position: relative;
     transform: rotate(-5deg);
-    transition: all .5s;
+    transition: all 0.5s;
     box-shadow: var(--shadow-elevation-high);
-  
+
     &:hover {
       transform: rotate(0deg);
     }
     .logo-with-loader__line {
       position: absolute;
       background: currentColor;
-      opacity: .2;
+      opacity: 0.2;
       width: 1px;
       top: 10px;
       bottom: 10px;
       left: 50%;
     }
-  
+
     &:after {
-      content: '';
+      content: "";
       position: absolute;
       width: 100%;
     }
