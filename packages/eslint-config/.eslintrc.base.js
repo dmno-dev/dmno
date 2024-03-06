@@ -1,6 +1,6 @@
 const { execSync } = require('child_process');
 const actualProjectDir = execSync('npm prefix').toString().replace(/\n/g, '');
-console.log(actualProjectDir);
+// console.log(actualProjectDir);
 
 module.exports = {
   env: {

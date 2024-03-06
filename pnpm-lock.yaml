@@ -1,9 +1,5 @@
 lockfileVersion: '6.0'
 
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
-
 importers:
 
   .:
@@ -90,9 +86,6 @@ importers:
       eslint-plugin-astro:
         specifier: ^0.31.4
         version: 0.31.4(eslint@8.57.0)
-      eslint-plugin-markdown:
-        specifier: ^4.0.1
-        version: 4.0.1(eslint@8.57.0)
       eslint-plugin-mdx:
         specifier: ^3.1.5
         version: 3.1.5(eslint@8.57.0)
@@ -1560,7 +1553,7 @@ packages:
       '@opentelemetry/sdk-metrics': 1.18.0(@opentelemetry/api@1.7.0)
       '@opentelemetry/sdk-node': 0.39.1(@opentelemetry/api@1.7.0)(supports-color@9.4.0)
       '@opentelemetry/sdk-trace-base': 1.18.0(@opentelemetry/api@1.7.0)
-      axios: 1.6.0(debug@4.3.4)
+      axios: 1.6.7(debug@4.3.4)
     transitivePeerDependencies:
       - debug
       - supports-color
@@ -1594,7 +1587,7 @@ packages:
       '@iconify/types': 2.0.0
       '@iconify/utils': 2.1.22
       '@types/tar': 6.1.11
-      axios: 1.6.7
+      axios: 1.6.7(debug@4.3.4)
       cheerio: 1.0.0-rc.12
       extract-zip: 2.0.1
       local-pkg: 0.5.0
@@ -4911,25 +4904,14 @@ packages:
       - supports-color
     dev: true
 
-  /axios@1.6.0(debug@4.3.4):
-    resolution: {integrity: sha512-EZ1DYihju9pwVB+jg67ogm+Tmqc6JmhamRN6I4Zt8DfZu5lbcQGw3ozH9lFejSJgs/ibaef3A9PMXPLeefFGJg==}
-    dependencies:
-      follow-redirects: 1.15.3(debug@4.3.4)
-      form-data: 4.0.0
-      proxy-from-env: 1.1.0
-    transitivePeerDependencies:
-      - debug
-    dev: true
-
-  /axios@1.6.7:
+  /axios@1.6.7(debug@4.3.4):
     resolution: {integrity: sha512-/hDJGff6/c7u0hDkvkGxR/oy6CbCs8ziCsC7SqmhjfozqiJGc8Z11wrv9z9lYfY4K8l+H9TpjcMDX0xOZmx+RA==}
     dependencies:
-      follow-redirects: 1.15.5
+      follow-redirects: 1.15.5(debug@4.3.4)
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
-    dev: false
 
   /axobject-query@4.0.0:
     resolution: {integrity: sha512-+60uv1hiVFhHZeO+Lz0RYzsVHy5Wr1ayX0mwda9KPDVLNJgZ1T9Ny7VmFbLDzxsH0D87I86vgj3gFrjTJUYznw==}
@@ -6877,18 +6859,6 @@ packages:
       - supports-color
     dev: false
 
-  /eslint-plugin-markdown@4.0.1(eslint@8.57.0):
-    resolution: {integrity: sha512-5/MnGvYU0i8MbHH5cg8S+Vl3DL+bqRNYshk1xUO86DilNBaxtTkhH+5FD0/yO03AmlI6+lfNFdk2yOw72EPzpA==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      eslint: '>=8'
-    dependencies:
-      eslint: 8.57.0
-      mdast-util-from-markdown: 0.8.5
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
   /eslint-plugin-mdx@3.1.5(eslint@8.57.0):
     resolution: {integrity: sha512-lUE7tP7IrIRHU3gTtASDe5u4YM2SvQveYVJfuo82yn3MLh/B/v05FNySURCK4aIxIYF1QYo3IRemQG/lyQzpAg==}
     engines: {node: '>=18.0.0'}
@@ -7646,7 +7616,7 @@ packages:
       debug: 4.3.4(supports-color@9.4.0)
     dev: true
 
-  /follow-redirects@1.15.5:
+  /follow-redirects@1.15.5(debug@4.3.4):
     resolution: {integrity: sha512-vSFWUON1B+yAw1VN4xMfxgn5fTUiaOzAJCKBwIIgT/+7CuGy9+r+5gITvP62j3RmaD5Ph65UaERdOSRGUzZtgw==}
     engines: {node: '>=4.0'}
     peerDependencies:
@@ -7654,7 +7624,8 @@ packages:
     peerDependenciesMeta:
       debug:
         optional: true
-    dev: false
+    dependencies:
+      debug: 4.3.4(supports-color@9.4.0)
 
   /for-each@0.3.3:
     resolution: {integrity: sha512-jqYfLp7mo9vIyQf8ykW2v7A+2N4QjeCeI5+Dz9XraiO1ign81wjiH7Fb9vSOWvQfNtmSa4H2RoQTrrXivdUZmw==}
@@ -15057,3 +15028,7 @@ packages:
   /zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
     dev: false
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false

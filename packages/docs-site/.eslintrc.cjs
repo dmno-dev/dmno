@@ -1,14 +1,14 @@
 module.exports = {
-  extends: [
-    "@dmno/eslint-config/base",
-    "plugin:astro/recommended",
-    "plugin:markdown/recommended-legacy",
-    // "plugin:mdx/recommended",
-  ],
+  ignorePatterns: [".eslintrc.js", ".eslintrc.cjs"],
   overrides: [
     {
+      files: ["*.ts"],
+      extends: ["@dmno/eslint-config/base"],
+    },
+    {
       // Define the configuration for `.astro` file.
-      files: ["*.astro"],
+      files: ["**/*.astro"],
+      extends: ["plugin:astro/recommended"],
       // Allows Astro components to be parsed.
       parser: "astro-eslint-parser",
       // Parse the script in `.astro` as TypeScript by adding the following configuration.
@@ -23,21 +23,32 @@ module.exports = {
       },
     },
     {
-      // 2. Enable the Markdown processor for all .md files.
-      files: ["**/*.md"],
-      processor: "markdown/markdown"
-    },
-    {
-      files: ["*.mdx"],
-      extends: 'plugin:mdx/recommended',
-      parserOptions: {
-        parser: "@typescript-eslint/parser",
-        extraFileExtensions: [".mdx"],
-        project: './tsconfig.json',
+      files: ["**/*.mdx", "**/*.md"],
+      extends: [
+        'plugin:mdx/recommended',
+      ],
+      settings: {
+        "mdx/code-blocks": true,
       },
-    }
+    },
+
+    // RULES SPECIFIC TO CODE BLOCKS WITHIN MDX!
+    {
+      files: [
+        "**/*.mdx/*.ts",
+        "**/*.md/*.ts",
+        "**/*.mdx/*.js",
+        "**/*.md/*.js"
+      ],
+      extends: [
+        '@dmno/eslint-config/base',
+        'plugin:@typescript-eslint/disable-type-checked'
+      ],
+      rules: {
+        "import/no-unresolved": 0,
+        "@typescript-eslint/no-unused-vars": 0,
+      },
+    },
   ],
-  settings: {
-    "mdx/code-blocks": true,
-  }
+  
 };

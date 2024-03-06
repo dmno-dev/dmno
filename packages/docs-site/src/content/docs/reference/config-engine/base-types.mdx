@@ -33,13 +33,13 @@ Examples:
 ```javascript
 const myMinMaxType = DmnoBaseTypes.String({ minLength: 2, maxLength: 5 });
 const myFixedLengthType = DmnoBaseTypes.String({ isLength: 5 });
-const myStartsWithType = DmnoBaseTypes.String({ startsWith: 'pk_' })
+const myStartsWithType = DmnoBaseTypes.String({ startsWith: 'pk_' });
 
 ```
 
 Example Type Errors:
-```javascript
-const myStartsWithType = DmnoBaseTypes.String({ startsWith: 'pk_' })
+```typescript
+const myStartsWithType = DmnoBaseTypes.String({ startsWith: 'pk_' });
 
 ```
 
@@ -89,9 +89,9 @@ Creates a new DMNO data type.
 ```javascript
 const myType = createDmnoDataType({
   name: 'MyType',
-  extends: DmnoBaseTypes.String{
+  extends: DmnoBaseTypes.String({
     // settings object
-  },
+  }),
   settingsSchema: {
     // user specific settings object
   },
@@ -101,7 +101,7 @@ const myType = createDmnoDataType({
   coerce: (value) => {
     // return coerced value
   },
-})
+});
 ```
 
 You can then use it in your config schema like so: 
@@ -115,11 +115,11 @@ export default defineConfigSchema({
   schema: {
     MYFIELD: {
       extends: myType,
-      required: true
+      required: true,
     },
     MYFIELD2,
     MYFIELD3,
-  }
+  },
 });
 ```
 
