@@ -47,12 +47,32 @@ const dmnoCliEntryPath = path.resolve(thisFilePath, '../cli-entry.mjs');
 
 
 await yargs(hideBin(process.argv))
-  .command('load', 'load the dmno config', () => {}, (argv) => {
-    // TODO: we'll want to pass through the args/options
-    // and any other context info about which service we are within
-    const result = execSync(`${tsxPath} ${dmnoCliEntryPath}`);
-    console.log(result.toString());
+  .command(
+    'load',
+    'load the dmno config',
+    {},
+    // (opts?: {
+    //   services?: string
+    // }) => {
+    (argv) => {
+      const commandInfo = {
+        mode: 'load',
+        services: argv?.services,
+      };
+
+      console.log(commandInfo);
+      // TODO: we'll want to pass through the args/options
+      // and any other context info about which service we are within
+      const result = execSync(`${tsxPath} ${dmnoCliEntryPath}`);
+      console.log(result.toString());
+    },
+  )
+  .option('services', {
+    alias: 's',
+    type: 'string',
+    description: 'Load only specific service(s)',
   })
+  .help()
   .demandCommand(1)
   .parse();
 

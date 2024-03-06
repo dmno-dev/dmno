@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
 import { match } from 'assert';
 import _ from 'lodash-es';
-import { ResolverContext } from './config-engine';
+import { DmnoConfigItem, DmnoPickedConfigItem, ResolverContext } from './config-engine';
 
 // TODO: do we allow Date?
 // what to do about null/undefined?
@@ -165,6 +165,8 @@ export const toggleByEnv = (toggles: ToggleOptions) => new ToggleResolver('DMNO_
 export const toggleBy = (key: string, toggles: ToggleOptions) => new ToggleResolver(key, toggles);
 
 
+
+
 export class DeferredDeploymentResolver extends ConfigValueResolver {
   icon = 'radix-icons:component-placeholder';
   getPreviewLabel() {
@@ -175,4 +177,27 @@ export class DeferredDeploymentResolver extends ConfigValueResolver {
   }
 }
 export const valueCreatedDuringDeployment = () => new DeferredDeploymentResolver();
+
+
+export class PickedValueResolver extends ConfigValueResolver {
+  /* eslint-disable class-methods-use-this */
+  icon = 'material-symbols:content-copy-outline-sharp';
+  getPreviewLabel() {
+    return 'picked value';
+  }
+
+  constructor(private sourceItem: DmnoConfigItem | DmnoPickedConfigItem, private valueTransform?: ((val: any) => any)) {
+    super();
+  }
+  _resolve(_ctx: ResolverContext) {
+    if (!this.sourceItem.isResolved) {
+      return new Error('picked value has not been resolved yet');
+    }
+    if (this.valueTransform) {
+      return this.valueTransform(this.sourceItem.resolvedValue);
+    } else {
+      return this.sourceItem.resolvedValue;
+    }
+  }
+}
 

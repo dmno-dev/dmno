@@ -244,7 +244,7 @@ for (const service of sortedServices) {
       }
 
       service.addConfigItem(new DmnoPickedConfigItem(newKeyName, {
-        pickItem: pickFromService.config[pickKey],
+        sourceItem: pickFromService.config[pickKey],
         transformValue: _.isString(rawPickItem) ? undefined : rawPickItem.transformValue,
       }));
       // TODO: add to dag node with link to source item

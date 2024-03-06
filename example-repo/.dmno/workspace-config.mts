@@ -12,6 +12,9 @@ export default defineWorkspaceConfig({
     DMNO_ENV: {
       value: (ctx) => ctx.get('NODE_ENV'),
     },
+    PICK_TEST: {
+      value: (ctx) => `pick-test--${ctx.get('NODE_ENV')}`,
+    },
 
     ONE_PASSWORD: {
       description: '1password creds and vault',

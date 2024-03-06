@@ -2,7 +2,7 @@ import _ from 'lodash-es';
 import { DmnoBaseTypes, DmnoDataType, DmnoSimpleBaseTypeNames } from './base-types';
 import {
   ConfigValue,
-  ValueResolverDef, ConfigValueOverride, ConfigValueResolver, processResolverDef,
+  ValueResolverDef, ConfigValueOverride, ConfigValueResolver, processResolverDef, PickedValueResolver,
 } from './resolvers';
 import { getConfigFromEnvVars } from './lib/env-vars';
 
@@ -19,53 +19,67 @@ type ValueOrValueFromContextFn<T> = T | ((ctx: ConfigContext) => T);
 // - string label for a small subset of simple base types - ex: `'string'`
 export type TypeExtendsDefinition = DmnoDataType | ((opts?: any) => DmnoDataType) | DmnoSimpleBaseTypeNames;
 
-export type ConfigItemDefinition =
-  Pick<DmnoConfigItemBase, 'summary' | 'description' | 'expose' | 'importEnvKey' | 'exportEnvKey'> & {
 
-    /** description of the data type itself, rather than the instance */
-    typeDescription?: string;
+export type TypeValidationResult = boolean | undefined | void | Error | Array<Error>;
 
-    /** link to external documentation */
-    externalDocs?: {
-      description?: string,
-      url: string,
-    },
+export type ConfigItemDefinition = {
+  /** short description of what this config item is for */
+  summary?: string;
+  /** longer description info including details, gotchas, etc... supports markdown  */
+  description?: string;
+  /** expose this item to be "pick"ed by other services, usually used for outputs of run/deploy */
+  expose?: boolean;
 
-    /** dmno config ui specific options */
-    ui?: {
-    /** icon to use, see https://icones.js.org/ for available options
-     * @example mdi:aws
-     */
-      icon?: string;
+  /** description of the data type itself, rather than the instance */
+  typeDescription?: string;
 
-      /** color (any valid css color)
-     * @example FF0000
-     */
-      color?: string;
-    },
-
-    /** whether this config is sensitive and must be kept secret */
-    secret?: ValueOrValueFromContextFn<boolean>;
-
-    required?: ValueOrValueFromContextFn<boolean>;
-
-    /** can this be overridden at all */
-    overridable?: boolean
-
-    /** at what time is this value required */
-    useAt?: ConfigRequiredAtTypes | Array<ConfigRequiredAtTypes>;
-
-    // we allow the fn that returns the data type so you can use the data type without calling the empty initializer
-    // ie `DmnoBaseTypes.string` instead of `DmnoBaseTypes.string({})`;
-    extends?: TypeExtendsDefinition,
-
-    validate?: ((val: any, ctx: ConfigContext) => boolean),
-    asyncValidate?: ((val: any, ctx: ConfigContext) => Promise<boolean>),
-
-    /** set the value, can be static, or a function, or use helpers */
-    // value?: ValueOrValueFromContextFn<any>;
-    value?: ValueResolverDef;
+  /** link to external documentation */
+  externalDocs?: {
+    description?: string,
+    url: string,
   };
+
+  /** dmno config ui specific options */
+  ui?: {
+  /** icon to use, see https://icones.js.org/ for available options
+   * @example mdi:aws
+   */
+    icon?: string;
+
+    /** color (any valid css color)
+   * @example FF0000
+   */
+    color?: string;
+  };
+
+  /** whether this config is sensitive and must be kept secret */
+  secret?: ValueOrValueFromContextFn<boolean>;
+
+  required?: ValueOrValueFromContextFn<boolean>;
+
+  /** can this be overridden at all */
+  overridable?: boolean;
+
+  /** at what time is this value required */
+  useAt?: ConfigRequiredAtTypes | Array<ConfigRequiredAtTypes>;
+
+  // we allow the fn that returns the data type so you can use the data type without calling the empty initializer
+  // ie `DmnoBaseTypes.string` instead of `DmnoBaseTypes.string({})`;
+  extends?: TypeExtendsDefinition;
+
+  validate?: ((val: any, ctx: ResolverContext) => TypeValidationResult);
+  asyncValidate?: ((val: any, ctx: ResolverContext) => Promise<TypeValidationResult>);
+  coerce?: ((val: any, ctx: ResolverContext) => any);
+
+  /** set the value, can be static, or a function, or use helpers */
+  // value?: ValueOrValueFromContextFn<any>
+  value?: ValueResolverDef;
+
+  /** import value a env variable with a different name */
+  importEnvKey?: string;
+  /** export value as env variable with a different name */
+  exportEnvKey?: string;
+};
 
 type PickConfigItemDefinition = {
   /** which service to pick from, defaults to "root" */
@@ -240,43 +254,62 @@ abstract class DmnoConfigItemBase {
   constructor(
     /** the item key / name */
     readonly key: string,
-    readonly parentConfigItem?: DmnoConfigItem,
+    readonly parentConfigItem?: DmnoConfigItem | DmnoPickedConfigItem,
   ) {}
 
-  /** short description of what this config item is for */
-  summary?: string;
-  /** longer description info including details, gotchas, etc... supports markdown  */
-  description?: string;
-
-  /** expose this item to be "pick"ed by other services, usually used for outputs of run/deploy */
-  expose?: boolean;
-
-
-  /** import value a env variable with a different name */
-  importEnvKey?: string;
-  /** export value as env variable with a different name */
-  exportEnvKey?: string;
-
   overrides: Array<ConfigValueOverride> = [];
-
 
   /** the parent "service" */
   parentService?: DmnoService;
   valueResolver?: ConfigValueResolver;
 
-
   isResolved = false;
-  resolvedValue?: ConfigValue;
+  /** resolved value _before_ coercion logic applied */
+  resolvedRawValue?: ConfigValue;
+  /** error encountered during resolution */
   resolutionError?: Error;
+
+  /** resolved value _after_ coercion logic applied */
+  resolvedValue?: ConfigValue;
+
+  // not sure if the coercion error should be stored in resolution error or split?
+  /** error encountered during coercion step */
+  coercionError?: Error;
+
+
+  /** more details about the validation failure if applicable */
+  validationErrors?: Array<Error>;
+  /** whether the final resolved value is valid or not */
+  get isValid(): boolean | undefined {
+    if (this.validationErrors === undefined) return undefined;
+    return this.validationErrors.length === 0;
+  }
+
+
 
   abstract getDefItem<T extends keyof ConfigItemDefinition>(key: T): ConfigItemDefinition[T];
 
-  protected initializeSettings() {
-    this.summary = this.getDefItem('summary');
-    this.description = this.getDefItem('description');
-    this.expose = this.getDefItem('expose');
-    this.importEnvKey = this.getDefItem('importEnvKey');
-  }
+  // not sure if this is the right pattern... here we're grabbing things on demand
+  // but we may want to pre-process it all once
+  get summary() { return this.getDefItem('summary'); }
+  get description() { return this.getDefItem('description'); }
+  get expose() { return this.getDefItem('expose'); }
+  get typeDescription() { return this.getDefItem('typeDescription'); }
+  get externalDocs() { return this.getDefItem('externalDocs'); }
+  get ui() { return this.getDefItem('ui'); }
+  get secret() { return this.getDefItem('secret'); }
+  get required() { return this.getDefItem('required'); }
+  get overridable() { return this.getDefItem('overridable'); }
+  get useAt() { return this.getDefItem('useAt'); }
+  get value() { return this.getDefItem('value'); }
+  get importEnvKey() { return this.getDefItem('importEnvKey'); }
+  get exportEnvKey() { return this.getDefItem('exportEnvKey'); }
+
+  // we reuse the type, but we mark as non-nullable because we'll have a no-op to call
+  abstract validate(val: any, ctx: ResolverContext): TypeValidationResult;
+  abstract asyncValidate(val: any, ctx: ResolverContext): Promise<TypeValidationResult>;
+  abstract coerce(val: any, ctx: ResolverContext): any;
+
 
   getPath(respectImportOverride = false): string {
     const itemKey = (respectImportOverride && this.importEnvKey) || this.key;
@@ -288,10 +321,11 @@ abstract class DmnoConfigItemBase {
   }
 
   async resolve(ctx: ResolverContext) {
+    // console.log(`> resolving ${this.parentService?.serviceName}/${this.key}`);
     if (this.valueResolver) {
       try {
         await this.valueResolver.resolve(ctx);
-        this.resolvedValue = this.valueResolver.resolvedValue;
+        this.resolvedRawValue = this.valueResolver.resolvedValue;
       } catch (err) {
         console.log('resolution failed', this.key, err);
         this.resolutionError = err as Error;
@@ -300,12 +334,83 @@ abstract class DmnoConfigItemBase {
 
     // take into account overrides
     if (this.overrides.length) {
+      // console.log('found overrides', this.overrides);
       // TODO: filter out for env-specific overrides
-      this.resolvedValue = this.overrides[0].value;
+      this.resolvedRawValue = this.overrides[0].value;
     }
 
     this.isResolved = true;
-    console.log(`${this.parentService?.serviceName}/${this.key}`, JSON.stringify(this.resolvedValue));
+
+    // TODO: need to think through if we want to run coercion/validation at all when we've encountered
+    // errors in the previous steps
+
+    // apply coercion logic (for example - parse strings into numbers)
+    // NOTE - currently we trigger this if the resolved value was not undefined
+    // but we may want to coerce undefined values in some cases as well?
+    // need to think through errors + overrides + empty values...
+    if (this.resolvedRawValue !== undefined) {
+      try {
+        // TODO: we may need to do something more complex here to expose the parent type's coerce fn
+        this.resolvedValue = this.coerce(_.cloneDeep(this.resolvedRawValue), ctx);
+      } catch (err) {
+        this.coercionError = err as Error;
+      }
+    }
+
+    // run validation logic
+    // NOTE - again, we are only running this if the resolved value is not empty
+    // but we'll need to think through how we handle empty values
+
+    // handle required errors first, so every validation does not need to handle empty logic
+    // TODO: need to do more thinking about undefined/null/empty strings...
+    // we might want to handle some of that in coercion, so we only need to deal with one case
+    if (this.resolvedValue === undefined || this.resolvedValue === null || this.resolvedValue === '') {
+      if (this.getDefItem('required')) {
+        this.validationErrors = [new Error('Value is required, but is currently empty')];
+      }
+    } else {
+      try {
+        // TODO: all this logic handling true/false/errors should probably live somewhere else?
+        const validationResult = this.validate(_.cloneDeep(this.resolvedValue), ctx);
+
+        // TODO: think through validation fn shape - how to return status and errors...
+        if (validationResult === false) {
+          // not sure if we should even allow this...?
+          this.validationErrors = [new Error('Validation failed - no more info provided')];
+        } else if (
+          validationResult === undefined
+          || validationResult === true
+          || (_.isArray(validationResult) && validationResult.length === 0)
+        ) {
+          // isValid is based on checking validationErrors being an empty array
+          this.validationErrors = [];
+        } else if (validationResult instanceof Error) {
+          this.validationErrors = [validationResult];
+        } else if (_.isArray(validationResult) && validationResult[0] instanceof Error) {
+          // TODO: might want to verify all array items are errors...?
+          this.validationErrors = validationResult;
+        } else {
+          this.validationErrors = [new Error(`Validation returned invalid result: ${validationResult}`)];
+        }
+      } catch (err) {
+        // TODO: handle array of errors case, check that it's actually an error
+        if (err instanceof Error) {
+          this.validationErrors = [err];
+        } else if (_.isArray(err)) {
+          this.validationErrors = err as Array<Error>;
+        } else {
+          this.validationErrors = [new Error(`Validation threw a non-error: ${err}`)];
+        }
+      }
+    }
+
+
+    console.log(
+      `${this.parentService?.serviceName}/${this.key} = `,
+      JSON.stringify(this.resolvedRawValue),
+      JSON.stringify(this.resolvedValue),
+      this.isValid ? '✅' : `❌ ${this.validationErrors?.[0]?.message}`,
+    );
   }
 }
 
@@ -359,12 +464,13 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
     // initialize the chain of extends/parents
       this.initializeExtendsChain();
       // now fill in all the settings using the schema and the type ancestors
-      this.initializeSettings();
+      // this.initializeSettings();
 
       this.initializeChildren();
 
-      if (this.def.value !== undefined) {
-        this.valueResolver = processResolverDef(this.def.value);
+      const unprocessedValueResolver = this.getDefItem('value');
+      if (unprocessedValueResolver !== undefined) {
+        this.valueResolver = processResolverDef(unprocessedValueResolver);
       }
     } catch (err) {
       this.schemaError = err as Error;
@@ -402,7 +508,6 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
     while (currentParent) {
       // deal with string case - only valid for simple base types - `extends: 'number'`
       if (_.isString(currentParent)) {
-        console.log('found string parent, initializing', currentParent);
         if (!DmnoBaseTypes[currentParent]) {
           throw new Error(`found invalid parent (string) in extends chain - "${currentParent}"`);
         } else {
@@ -464,69 +569,110 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
     }
   }
 
-  validate(val: any) {
-    // TODO: currently this will run all of the parents' validations
-    // I think instead we want to run only the first, but optionally pass in a way to call the next parent?
-    // or maybe we just call the first parent and call it a day?
 
-    // first handle validations from the type chain
+
+  // TODO: DRY THIS UP!
+  // also might want to still pass the ctx through
+  // also might want to make type instance settings stuff available for more than just coerce/validate?
+  // also might need to make the parent type fn availble (ie a validation can call the parent validation)
+  coerce(val: any, ctx: ResolverContext) {
+    if (this.def.coerce !== undefined) return this.def.coerce(val, ctx);
     for (let i = 0; i < this.typeChain.length; i++) {
       const ancestorType = this.typeChain[i];
-      if (ancestorType.typeDef.validate) {
-        try {
-          // we probably want to move the validate call that passes throgh typeInstanceOptions into the DmnoDataType class?
-          const typeValidationResult = ancestorType.typeDef.validate(val, ancestorType.typeInstanceOptions);
-          if (typeValidationResult === false) {
-            // TODO: need to include info about which type/parent had the validation that failed
-            return { valid: false, message: 'type validation failed' };
-          }
-        } catch (err) {
-          return { valid: false, message: (err as any).message };
-        }
+      if (ancestorType.typeDef.coerce !== undefined) {
+        return ancestorType.typeDef.coerce(val, ancestorType.typeInstanceOptions);
       }
     }
-
-    // now check if the item itself has a validation defined in the config schema
-    if (this.def.validate) {
-      try {
-        // @ts-ignore
-        const itemValidationResult = this.def.validate(val);
-        if (itemValidationResult === false) {
-          return { valid: false, message: 'config item validation failed' };
-        }
-      } catch (err) {
-        return { valid: false, message: (err as any).message };
-      }
-    }
-
-    return { valid: true };
-  }
-
-  normalize(val: any) {
-    // TODO: figure out how we want to handle this...
-    // do we start with nearest ancestor and stop when we've found a normalize fn?
-    // do we do some base string-y coercion first? or just make those utils available?
-
-    for (let i = 0; i < this.typeChain.length; i++) {
-      const ancestorType = this.typeChain[i];
-      if (ancestorType.typeDef.normalize) {
-        try {
-          const normalizedResult = ancestorType.typeDef.normalize(val, ancestorType.typeInstanceOptions);
-          return normalizedResult;
-        } catch (err) {
-          // what to do on error?
-          console.log('normalization failed :(', err);
-          throw err;
-        }
-      }
-    }
-
-    // if no normalize fn was found, we just return the value itself
     return val;
   }
+  validate(val: any, ctx: ResolverContext) {
+    if (this.def.validate !== undefined) {
+      const result = this.def.validate(val, ctx);
+      if (result === false) return result;
+    }
+    for (let i = 0; i < this.typeChain.length; i++) {
+      const ancestorType = this.typeChain[i];
+      if (ancestorType.typeDef.validate !== undefined) {
+        return ancestorType.typeDef.validate(val, ancestorType.typeInstanceOptions);
+      }
+    }
+    return true;
+  }
+  async asyncValidate(val: any, ctx: ResolverContext) {
+    if (this.def.asyncValidate !== undefined) return this.def.asyncValidate(val, ctx);
+    for (let i = 0; i < this.typeChain.length; i++) {
+      const ancestorType = this.typeChain[i];
+      if (ancestorType.typeDef.asyncValidate !== undefined) {
+        return ancestorType.typeDef.asyncValidate(val, ancestorType.typeInstanceOptions);
+      }
+    }
+    return true;
+  }
+
+  // runValidation(val: any) {
+  //   // TODO: currently this will run all of the parents' validations
+  //   // I think instead we want to run only the first, but optionally pass in a way to call the next parent?
+  //   // or maybe we just call the first parent and call it a day?
+
+  //   // first handle validations from the type chain
+  //   for (let i = 0; i < this.typeChain.length; i++) {
+  //     const ancestorType = this.typeChain[i];
+  //     if (ancestorType.typeDef.validate) {
+  //       try {
+  //         // we probably want to move the validate call that passes throgh typeInstanceOptions into the DmnoDataType class?
+  //         const typeValidationResult = ancestorType.typeDef.validate(val, ancestorType.typeInstanceOptions);
+  //         if (typeValidationResult === false) {
+  //           // TODO: need to include info about which type/parent had the validation that failed
+  //           return { valid: false, message: 'type validation failed' };
+  //         }
+  //       } catch (err) {
+  //         return { valid: false, message: (err as any).message };
+  //       }
+  //     }
+  //   }
+
+  //   // now check if the item itself has a validation defined in the config schema
+  //   if (this.def.validate) {
+  //     try {
+  //       // @ts-ignore
+  //       const itemValidationResult = this.def.validate(val);
+  //       if (itemValidationResult === false) {
+  //         return { valid: false, message: 'config item validation failed' };
+  //       }
+  //     } catch (err) {
+  //       return { valid: false, message: (err as any).message };
+  //     }
+  //   }
+
+  //   return { valid: true };
+  // }
+
+  // runNormalization(val: any) {
+  //   // TODO: figure out how we want to handle this...
+  //   // do we start with nearest ancestor and stop when we've found a normalize fn?
+  //   // do we do some base string-y coercion first? or just make those utils available?
+
+  //   for (let i = 0; i < this.typeChain.length; i++) {
+  //     const ancestorType = this.typeChain[i];
+  //     if (ancestorType.typeDef.normalize) {
+  //       try {
+  //         const normalizedResult = ancestorType.typeDef.normalize(val, ancestorType.typeInstanceOptions);
+  //         return normalizedResult;
+  //       } catch (err) {
+  //         // what to do on error?
+  //         console.log('normalization failed :(', err);
+  //         throw err;
+  //       }
+  //     }
+  //   }
+
+  //   // if no normalize fn was found, we just return the value itself
+  //   return val;
+  // }
 }
 
 // TODO: we could merge this with the above and handle both cases? we'll see
+
 export class DmnoPickedConfigItem extends DmnoConfigItemBase {
   /** full chain of items up to the actual config item */
   private pickChain: Array<DmnoConfigItem | DmnoPickedConfigItem> = [];
@@ -536,47 +682,57 @@ export class DmnoPickedConfigItem extends DmnoConfigItemBase {
   constructor(
     key: string,
     private def: {
-      pickItem: DmnoConfigItem | DmnoPickedConfigItem,
+      sourceItem: DmnoConfigItem | DmnoPickedConfigItem,
       transformValue?: (val: any) => any,
     },
+    parent?: DmnoPickedConfigItem,
   ) {
-    super(key);
+    super(key, parent);
 
     // we'll follow through the chain of picked items until we get to a real config item
     // note we're storing them in the opposite order as the typechain above
     // because we'll want to traverse them in this order to do value transformations
-    this.pickChain.unshift(this.def.pickItem);
+    this.pickChain.unshift(this.def.sourceItem);
     while (this.pickChain[0] instanceof DmnoPickedConfigItem) {
-      this.pickChain.unshift(this.pickChain[0].def.pickItem);
+      this.pickChain.unshift(this.pickChain[0].def.sourceItem);
     }
 
     // fill in settings from the actual source item
-    this.initializeSettings();
+    // this.initializeSettings();
     this.initializeChildren();
+
+    // each item in the chain could have a value transformer, so we must follow the entire chain
+    this.valueResolver = new PickedValueResolver(this.def.sourceItem, this.def.transformValue);
   }
 
   getDefItem<T extends keyof ConfigItemDefinition>(key: T): ConfigItemDefinition[T] {
-    return (this.sourceItem as any)[key];
+    // whereas all other config (other than the key) is based on the original ConfigItem
+    // note - if we decide we want to allow picked items to alter more config from the original
+    // we'll need to adjust this to follow the chain
+    return (this.originalConfigItem as any)[key];
   }
 
-  /** the real source config item  */
-  get sourceItem() {
+  /** the real source config item - which defines most of the settings */
+  get originalConfigItem() {
     // we know the first item in the list will be the actual source (and a DmnoConfigItem)
     return this.pickChain[0] as DmnoConfigItem;
   }
 
   private initializeChildren() {
-    if (this.sourceItem.children) {
-      _.each(this.sourceItem.children, (sourceChild, childKey) => {
-        this.children[childKey] = new DmnoPickedConfigItem(sourceChild.key, { pickItem: sourceChild });
+    if (this.originalConfigItem.children) {
+      _.each(this.originalConfigItem.children, (sourceChild, childKey) => {
+        this.children[childKey] = new DmnoPickedConfigItem(sourceChild.key, { sourceItem: sourceChild }, this);
       });
     }
   }
 
-  validate(val: any) {
-    return this.sourceItem.validate(val);
+  coerce(val: any, ctx: ResolverContext) {
+    return this.originalConfigItem.coerce(val, ctx);
   }
-  normalize(val: any) {
-    return this.sourceItem.normalize(val);
+  validate(val: any, ctx: ResolverContext) {
+    return this.originalConfigItem.validate(val, ctx);
+  }
+  async asyncValidate(val: any, ctx: ResolverContext) {
+    return this.originalConfigItem.asyncValidate(val, ctx);
   }
 }
