@@ -13,6 +13,16 @@ import {
 
 console.log('>>CLI ENTRY!');
 
+// TODO: share this type with cli.ts
+type DmnoRunCommandInfo = {
+  command: 'load',
+  service?: string,
+};
+
+const commandInfo: DmnoRunCommandInfo = JSON.parse(process.argv[2]);
+console.log(commandInfo);
+
+
 const CWD = process.cwd();
 const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 
@@ -246,7 +256,7 @@ for (const service of sortedServices) {
       service.addConfigItem(new DmnoPickedConfigItem(newKeyName, {
         sourceItem: pickFromService.config[pickKey],
         transformValue: _.isString(rawPickItem) ? undefined : rawPickItem.transformValue,
-      }));
+      }, service));
       // TODO: add to dag node with link to source item
     }
   }
@@ -256,7 +266,7 @@ for (const service of sortedServices) {
     // TODO: `!` is needed here - tsup gives an error, while VScode is not...
     const itemDef = service.rawConfig?.schema[itemKey];
     // service.
-    service.addConfigItem(new DmnoConfigItem(itemKey, itemDef));
+    service.addConfigItem(new DmnoConfigItem(itemKey, itemDef, service));
     // TODO: add dag node
   }
 }

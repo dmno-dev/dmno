@@ -1,7 +1,9 @@
 /* eslint-disable class-methods-use-this */
 import { match } from 'assert';
 import _ from 'lodash-es';
-import { DmnoConfigItem, DmnoPickedConfigItem, ResolverContext } from './config-engine';
+import {
+  DmnoConfigItem, DmnoConfigItemBase, DmnoPickedConfigItem, ResolverContext,
+} from './config-engine';
 
 // TODO: do we allow Date?
 // what to do about null/undefined?
@@ -186,7 +188,7 @@ export class PickedValueResolver extends ConfigValueResolver {
     return 'picked value';
   }
 
-  constructor(private sourceItem: DmnoConfigItem | DmnoPickedConfigItem, private valueTransform?: ((val: any) => any)) {
+  constructor(private sourceItem: DmnoConfigItemBase, private valueTransform?: ((val: any) => any)) {
     super();
   }
   _resolve(_ctx: ResolverContext) {

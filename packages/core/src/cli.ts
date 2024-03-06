@@ -11,7 +11,7 @@
 /* eslint-disable no-console */
 
 import path from 'node:path';
-import { execSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 import _ from 'lodash-es';
 
 import yargs from 'yargs';
@@ -55,22 +55,28 @@ await yargs(hideBin(process.argv))
     //   services?: string
     // }) => {
     (argv) => {
+      // TODO: should use a shared type for this
       const commandInfo = {
         mode: 'load',
-        services: argv?.services,
+        service: argv?.service,
       };
 
       console.log(commandInfo);
       // TODO: we'll want to pass through the args/options
       // and any other context info about which service we are within
-      const result = execSync(`${tsxPath} ${dmnoCliEntryPath}`);
+
+      // execFile is safer way to pass data through
+      const result = execFileSync(tsxPath, [dmnoCliEntryPath, JSON.stringify(commandInfo)], {
+        // stdio: 'inherit',
+        // env: process.env, // default already passes through process.env
+      });
       console.log(result.toString());
     },
   )
-  .option('services', {
+  .option('service', {
     alias: 's',
     type: 'string',
-    description: 'Load only specific service(s)',
+    description: 'Load only a specific service',
   })
   .help()
   .demandCommand(1)

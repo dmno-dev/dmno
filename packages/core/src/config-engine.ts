@@ -190,7 +190,6 @@ export class DmnoService {
       this.schemaErrors.push(new Error(`Config keys must be unique, duplicate detected - "${item.key}"`));
     } else {
       this.config[item.key] = item;
-      item.parentService = this;
     }
   }
 
@@ -205,22 +204,23 @@ export class DmnoService {
       // TODO: deal with nested items
 
       // set override from environment (process.env)
-      const envKey = configItem.getPath(true);
-      if (process.env[envKey] !== undefined) {
+      const envOverrideValue = configFromEnv[configItem.getPath(true)];
+      if (envOverrideValue !== undefined) {
         // TODO: not sure about coercion / validation? do we want to run it early?
         configItem.overrides.push({
           source: { type: 'environment' },
-          value: process.env[envKey]!,
+          value: envOverrideValue,
         });
       }
 
+      // currently this resolve fn will trigger resolve on nested items
       await configItem.resolve(new ResolverContext(this));
     }
   }
 
   getConfigItemByPath(path: string) {
     const pathParts = path.split('.');
-    let currentItem: DmnoConfigItem | DmnoPickedConfigItem = this.config[pathParts[0]];
+    let currentItem: DmnoConfigItemBase = this.config[pathParts[0]];
     for (let i = 1; i < pathParts.length; i++) {
       const pathPart = pathParts[i];
       if (_.has(currentItem.children, pathPart)) {
@@ -250,17 +250,15 @@ export class ResolverContext {
 }
 
 
-abstract class DmnoConfigItemBase {
+export abstract class DmnoConfigItemBase {
   constructor(
     /** the item key / name */
     readonly key: string,
-    readonly parentConfigItem?: DmnoConfigItem | DmnoPickedConfigItem,
+    private parent?: DmnoService | DmnoConfigItemBase,
   ) {}
 
   overrides: Array<ConfigValueOverride> = [];
 
-  /** the parent "service" */
-  parentService?: DmnoService;
   valueResolver?: ConfigValueResolver;
 
   isResolved = false;
@@ -310,17 +308,34 @@ abstract class DmnoConfigItemBase {
   abstract asyncValidate(val: any, ctx: ResolverContext): Promise<TypeValidationResult>;
   abstract coerce(val: any, ctx: ResolverContext): any;
 
+  children: Record<string, DmnoConfigItemBase> = {};
+
+  get parentService(): DmnoService | undefined {
+    if (this.parent instanceof DmnoService) {
+      return this.parent;
+    } else if (this.parent instanceof DmnoConfigItemBase) {
+      return this.parent.parentService;
+    }
+  }
 
   getPath(respectImportOverride = false): string {
     const itemKey = (respectImportOverride && this.importEnvKey) || this.key;
-    if (this.parentConfigItem) {
-      const parentPath = this.parentConfigItem.getPath(respectImportOverride);
+    if (this.parent instanceof DmnoConfigItemBase) {
+      const parentPath = this.parent.getPath(respectImportOverride);
       return `${parentPath}.${itemKey}`;
     }
     return itemKey;
   }
 
   async resolve(ctx: ResolverContext) {
+    // resolve children of objects... this will need to be thought through and adjusted
+
+    for (const childKey in this.children) {
+      // note - this isn't right, each resolve will probably need a new context object?
+      // an we'll need to deal with merging values set by the parent with values set in the child
+      await this.children[childKey].resolve(ctx);
+    }
+
     // console.log(`> resolving ${this.parentService?.serviceName}/${this.key}`);
     if (this.valueResolver) {
       try {
@@ -367,6 +382,9 @@ abstract class DmnoConfigItemBase {
     if (this.resolvedValue === undefined || this.resolvedValue === null || this.resolvedValue === '') {
       if (this.getDefItem('required')) {
         this.validationErrors = [new Error('Value is required, but is currently empty')];
+      } else {
+        // this marks the item as being "valid"
+        this.validationErrors = [];
       }
     } else {
       try {
@@ -406,7 +424,7 @@ abstract class DmnoConfigItemBase {
 
 
     console.log(
-      `${this.parentService?.serviceName}/${this.key} = `,
+      `${this.parentService?.serviceName}/${this.getPath()} = `,
       JSON.stringify(this.resolvedRawValue),
       JSON.stringify(this.resolvedValue),
       this.isValid ? '✅' : `❌ ${this.validationErrors?.[0]?.message}`,
@@ -422,19 +440,14 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
 
   readonly schemaError?: Error;
 
-  children: Record<string, DmnoConfigItem> = {};
-
   readonly def: ConfigItemDefinition;
-
-
-
 
   constructor(
     key: string,
     defOrShorthand: ConfigItemDefinitionOrShorthand,
-    parentConfigItem?: DmnoConfigItem,
+    parent?: DmnoService | DmnoConfigItem,
   ) {
-    super(key, parentConfigItem);
+    super(key, parent);
 
     console.log(`>>>>> initializing config item key: ${key}`);
 
@@ -544,8 +557,6 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
         const childDefs = ancestorType.typeDef.getChildren(ancestorType.typeInstanceOptions);
         _.each(childDefs, (childDef, childKey) => {
           const childItem = new DmnoConfigItem(childKey, childDef, this);
-          // TODO: we could instead rely on connecting to the parent to get to the parent service?
-          if (this.parentService) childItem.parentService = this.parentService;
           this.children[childKey] = childItem;
         });
         break;
@@ -675,17 +686,17 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
 
 export class DmnoPickedConfigItem extends DmnoConfigItemBase {
   /** full chain of items up to the actual config item */
-  private pickChain: Array<DmnoConfigItem | DmnoPickedConfigItem> = [];
+  private pickChain: Array<DmnoConfigItemBase> = [];
 
-  children: Record<string, DmnoPickedConfigItem> = {};
+  // children: Record<string, DmnoPickedConfigItem> = {};
 
   constructor(
     key: string,
     private def: {
-      sourceItem: DmnoConfigItem | DmnoPickedConfigItem,
+      sourceItem: DmnoConfigItemBase,
       transformValue?: (val: any) => any,
     },
-    parent?: DmnoPickedConfigItem,
+    parent?: DmnoService | DmnoPickedConfigItem,
   ) {
     super(key, parent);
 

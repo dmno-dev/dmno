@@ -62,11 +62,11 @@ export default defineConfigSchema({
     VITE_STATIC_VAL_NUM: {
       extends: DmnoBaseTypes.number({
         precision: 1,
-        max: 100,
+        max: 1000,
         min: 1,
       }),
       value: (ctx) => {
-        return ctx.get('VITE_RANDOM_NUM') + 100;
+        return ctx.get('VITE_RANDOM_NUM') + 1;
       },
     },
     WEB_URL: {
