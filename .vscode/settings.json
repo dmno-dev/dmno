@@ -10,6 +10,7 @@
       "mode": "auto"
     }
   ],
+  "eslint.format.enable": true,
   "editor.formatOnSave": true,
   "[typescript]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"

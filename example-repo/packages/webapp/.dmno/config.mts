@@ -12,11 +12,7 @@ export default defineConfigSchema({
   parent: 'group1',
   pick: [
     'NODE_ENV',
-    {
-      key: 'DMNO_ENV',
-      renameKey: 'DMNO_ENV_WEB',
-      transformValue: (val) => `${val}-for-web`,
-    },
+    'DMNO_ENV',
     {
       source: 'api',
       key: 'API_URL',
@@ -24,8 +20,10 @@ export default defineConfigSchema({
     },
     {
       source: 'group1',
+      // picking the renamed key from group1
       key: 'PICK_TEST_G1',
       renameKey: 'PICK_TEST_W',
+      // should apply _after_ the group1 transform
       transformValue: (val) => `${val}-webtransform`,
     }
   ],
@@ -46,7 +44,6 @@ export default defineConfigSchema({
     VITE_STATIC_VAL_STR: {
       description: 'this does this thing!',
       value: 'static'
-  
     },
     TOGGLE_EXAMPLE: {
       value: toggleByNodeEnv({
@@ -57,6 +54,8 @@ export default defineConfigSchema({
     },
     VITE_RANDOM_NUM: {
       extends: DmnoBaseTypes.number,
+      // generate a random number, will be different each time resolution runs
+      // (eventually we'll have some caching and rules around that...)
       value: (ctx) => Math.floor(Math.random() * 100),
     },
     VITE_STATIC_VAL_NUM: {

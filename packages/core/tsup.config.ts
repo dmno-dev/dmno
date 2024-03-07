@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/cli.ts', 'src/cli-entry.ts'], // Entry point(s)
+  entry: ['src/index.ts', 'src/cli/cli-executable.ts', 'src/cli-entry.ts'], // Entry point(s)
 
   dts: true, // Generate .d.ts files
   // minify: true, // Minify output

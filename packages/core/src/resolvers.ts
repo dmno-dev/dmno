@@ -69,8 +69,8 @@ export class FunctionResolver extends ConfigValueResolver {
   getPreviewLabel() {
     return 'function!';
   }
-  async _resolve(_ctx: ResolverContext) {
-    return await this.fn.call(this, _ctx);
+  async _resolve(ctx: ResolverContext) {
+    return await this.fn.call(this, ctx);
   }
 }
 
@@ -192,6 +192,8 @@ export class PickedValueResolver extends ConfigValueResolver {
     super();
   }
   _resolve(_ctx: ResolverContext) {
+    // since we handle resolution of services in the right order
+    // we can assume the picked value will be resolved already (if it was possible at all)
     if (!this.sourceItem.isResolved) {
       return new Error('picked value has not been resolved yet');
     }

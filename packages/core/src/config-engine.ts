@@ -41,14 +41,14 @@ export type ConfigItemDefinition = {
 
   /** dmno config ui specific options */
   ui?: {
-  /** icon to use, see https://icones.js.org/ for available options
-   * @example mdi:aws
-   */
+    /** icon to use, see https://icones.js.org/ for available options
+    * @example mdi:aws
+    */
     icon?: string;
 
     /** color (any valid css color)
-   * @example FF0000
-   */
+    * @example FF0000
+    */
     color?: string;
   };
 
@@ -56,9 +56,6 @@ export type ConfigItemDefinition = {
   secret?: ValueOrValueFromContextFn<boolean>;
 
   required?: ValueOrValueFromContextFn<boolean>;
-
-  /** can this be overridden at all */
-  overridable?: boolean;
 
   /** at what time is this value required */
   useAt?: ConfigRequiredAtTypes | Array<ConfigRequiredAtTypes>;
@@ -297,13 +294,11 @@ export abstract class DmnoConfigItemBase {
   get ui() { return this.getDefItem('ui'); }
   get secret() { return this.getDefItem('secret'); }
   get required() { return this.getDefItem('required'); }
-  get overridable() { return this.getDefItem('overridable'); }
   get useAt() { return this.getDefItem('useAt'); }
   get value() { return this.getDefItem('value'); }
   get importEnvKey() { return this.getDefItem('importEnvKey'); }
   get exportEnvKey() { return this.getDefItem('exportEnvKey'); }
 
-  // we reuse the type, but we mark as non-nullable because we'll have a no-op to call
   abstract validate(val: any, ctx: ResolverContext): TypeValidationResult;
   abstract asyncValidate(val: any, ctx: ResolverContext): Promise<TypeValidationResult>;
   abstract coerce(val: any, ctx: ResolverContext): any;
@@ -619,67 +614,6 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
     }
     return true;
   }
-
-  // runValidation(val: any) {
-  //   // TODO: currently this will run all of the parents' validations
-  //   // I think instead we want to run only the first, but optionally pass in a way to call the next parent?
-  //   // or maybe we just call the first parent and call it a day?
-
-  //   // first handle validations from the type chain
-  //   for (let i = 0; i < this.typeChain.length; i++) {
-  //     const ancestorType = this.typeChain[i];
-  //     if (ancestorType.typeDef.validate) {
-  //       try {
-  //         // we probably want to move the validate call that passes throgh typeInstanceOptions into the DmnoDataType class?
-  //         const typeValidationResult = ancestorType.typeDef.validate(val, ancestorType.typeInstanceOptions);
-  //         if (typeValidationResult === false) {
-  //           // TODO: need to include info about which type/parent had the validation that failed
-  //           return { valid: false, message: 'type validation failed' };
-  //         }
-  //       } catch (err) {
-  //         return { valid: false, message: (err as any).message };
-  //       }
-  //     }
-  //   }
-
-  //   // now check if the item itself has a validation defined in the config schema
-  //   if (this.def.validate) {
-  //     try {
-  //       // @ts-ignore
-  //       const itemValidationResult = this.def.validate(val);
-  //       if (itemValidationResult === false) {
-  //         return { valid: false, message: 'config item validation failed' };
-  //       }
-  //     } catch (err) {
-  //       return { valid: false, message: (err as any).message };
-  //     }
-  //   }
-
-  //   return { valid: true };
-  // }
-
-  // runNormalization(val: any) {
-  //   // TODO: figure out how we want to handle this...
-  //   // do we start with nearest ancestor and stop when we've found a normalize fn?
-  //   // do we do some base string-y coercion first? or just make those utils available?
-
-  //   for (let i = 0; i < this.typeChain.length; i++) {
-  //     const ancestorType = this.typeChain[i];
-  //     if (ancestorType.typeDef.normalize) {
-  //       try {
-  //         const normalizedResult = ancestorType.typeDef.normalize(val, ancestorType.typeInstanceOptions);
-  //         return normalizedResult;
-  //       } catch (err) {
-  //         // what to do on error?
-  //         console.log('normalization failed :(', err);
-  //         throw err;
-  //       }
-  //     }
-  //   }
-
-  //   // if no normalize fn was found, we just return the value itself
-  //   return val;
-  // }
 }
 
 // TODO: we could merge this with the above and handle both cases? we'll see
@@ -687,8 +621,6 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
 export class DmnoPickedConfigItem extends DmnoConfigItemBase {
   /** full chain of items up to the actual config item */
   private pickChain: Array<DmnoConfigItemBase> = [];
-
-  // children: Record<string, DmnoPickedConfigItem> = {};
 
   constructor(
     key: string,

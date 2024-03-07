@@ -14,14 +14,13 @@ import {
 console.log('>>CLI ENTRY!');
 
 // TODO: share this type with cli.ts
-type DmnoRunCommandInfo = {
+export type DmnoRunCommandInfo = {
   command: 'load',
   service?: string,
+  format?: 'json',
 };
 
 const commandInfo: DmnoRunCommandInfo = JSON.parse(process.argv[2]);
-console.log(commandInfo);
-
 
 const CWD = process.cwd();
 const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
@@ -104,6 +103,12 @@ for (const w of workspacePackagesData) {
   } else {
     servicesByName[service.serviceName] = service;
   }
+}
+
+
+if (commandInfo.service && !servicesByName[commandInfo.service]) {
+  // TODO: figure out best way to throw / return an error here?
+  throw new Error(`Unable to find service: ${commandInfo.service}`);
 }
 
 const services = _.values(servicesByName);
@@ -277,6 +282,34 @@ for (const service of sortedServices) {
     console.log(service.schemaErrors);
   } else {
     await service.resolveConfig();
+  }
+}
+
+
+// if we are loading a single service, we want to get the config for just that service
+if (commandInfo.service) {
+  const service = servicesByName[commandInfo.service];
+  console.log('-----------------------------------------');
+  console.log(`Resolved env for service ${service.serviceName}`);
+  console.log('-----------------------------------------');
+
+  // TODO: move this to service?
+  const serviceConfig = {} as any;
+  _.each(service.config, (item, key) => {
+    serviceConfig[key] = item.resolvedValue;
+
+    // TODO: need to figure out how to send back all the error data in a way that can be logged nicely
+    // TODO: send all invalid items, and all validation errors from each
+    if (!item.isValid) {
+      throw item.validationErrors![0];
+    }
+    // console.log(`${item.key}=${item.resolvedValue}`);
+  });
+
+  if (commandInfo.format === 'json') {
+    console.log(JSON.stringify(serviceConfig));
+  } else {
+    console.log(serviceConfig);
   }
 }
 

@@ -187,7 +187,7 @@ const BooleanDataType = createDmnoDataType({
     } else if (_.isFinite(val)) {
       if (val === 0) return false;
       if (val === 1) return true;
-      throw new Error('Unable to coerce number value to boolean');
+      throw new Error('Unable to coerce number value to boolean (only 0 or 1 is valid)');
     } else {
       throw new Error('Unable to coerce value to boolean');
     }
