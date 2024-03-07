@@ -17,6 +17,9 @@
     "markdown",
   ],
   "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
   // these are written out individually because if written as a group
   // users cannot override individual items in their settings.json
   "[typescript]": {
@@ -29,7 +32,7 @@
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
   "[astro]": {
-    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    "editor.defaultFormatter": "astro-build.astro-vscode"
   },
   "[mdx]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
