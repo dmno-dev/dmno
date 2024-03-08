@@ -2,31 +2,30 @@
 title: DMNO Base Types
 ---
 
-# Base Types
+## Base Types
 
-DMNO comes with a comprehensive set of base types to cover the majority of use cases. They can also be extended to create more application specific types as needed. See [_creating your own types_](/reference/config-engine/base-types/#creating-your-own-types) for more on this. 
+DMNO comes with a comprehensive set of types to cover the majority of use cases. 
 
-These types are used when defining
+These types are used when defining your config schema and can be extended to create more application specific types as needed.
 
-```javascript
-
-// example use for creating a type
-
-const myType = DmnoBaseTypes.String({ settingsObject });
-```
+See [_creating your own types_](/reference/config-engine/base-types/#creating-your-own-types) for more on this. 
 
 
-## `String`
+### `string`
+
+`DmnoBaseTypes.string({ settingsSchema? })`
 
 DMNO Built-in data type for Strings. Includes the following (optional) settings: 
 
-```
-minLength?: number;
-maxLength?: number;
-isLength?: number;
-startsWith?: string;
-endsWith?: string;
-matches?: RegExp | string;
+```typescript
+type settingsSchema = {
+  minLength?: number;
+  maxLength?: number;
+  isLength?: number;
+  startsWith?: string;
+  endsWith?: string;
+  matches?: RegExp | string;
+};
 ```
 
 Examples: 
@@ -37,43 +36,210 @@ const myStartsWithType = DmnoBaseTypes.String({ startsWith: 'pk_' });
 
 ```
 
-Example Type Errors:
-```typescript
-const myStartsWithType = DmnoBaseTypes.String({ startsWith: 'pk_' });
 
-```
+### `number`
 
-
-
-## `Number`
+`DmnoBaseTypes.number({ settingsSchema? })`
 
 DMNO Built-in data type for Numbers. Includes the following (optional) settings: 
 
-```
-min?: number;
-max?: number;
+```typescript
+type settingsSchema = {
+  min?: number;
+  max?: number;
+};
 ```
 
-Examples: 
+Example: 
 ```javascript
 const myMinMaxType = DmnoBaseTypes.String({ min: 2, max: 5 });
 
 ```
 
+### `boolean`
 
-## `Object`
+`DmnoBaseTypes.boolean()`
+
+DMNO Built-in data type for Booleans.
+
+Example: 
+```javascript
+const myBoolType = DmnoBaseTypes.Boolean();
+
+```
+
+## Container types
+
+These types are used to define more complex data structures.
+
+### `object`
+
+`DmnoBaseTypes.object({ settingsObject? })`
+
+DMNO Built-in data type for Objects. Includes the following (optional) settings: 
+
+```typescript
+type settingsObject = {
+  child1: DmnoBaseType;
+  child2: DmnoBaseType;
+  // ...
+};
+
+```
+
+Example: 
+```javascript
+const myObjectType = DmnoBaseTypes.object({
+  child1: {
+    extends: 'number', // or DmnoBaseTypes.number()
+    value: 123,
+  },
+  child2: {
+    extends: 'boolean', // or DmnoBaseTypes.boolean()
+    value: true,
+  },
+});
+
+```
 
 
-## `Array`
+
+### `array`
+
+`DmnoBaseTypes.array({ settingsSchema? })`
+
+DMNO Built-in data type for Arrays. Includes the following (optional) settings: 
+
+```typescript
+type settingsSchema = {
+  // schema for each item in the array
+  itemSchema?: DmnoBaseType;
+  minLength?: number;
+  maxLength?: number;
+  isLength?: boolean;
+};
+```
+
+Example: 
+```javascript
+const myArrayType = DmnoBaseTypes.array({ itemSchema: DmnoBaseTypes.String() });
+const myMinLengthType = DmnoBaseTypes.array({ minLength: 2 });
+```
+
+### `dictionary`
+
+`DmnoBaseTypes.dictionary({ settingsSchema? })`
+
+DMNO Built-in data type for Dictionaries. Includes the following (optional) settings: 
+
+```typescript
+type settingsSchema = {
+  // schema for each item in the dictionary
+  itemSchema?: DmnoBaseType;
+  validateKeys?: (key: string) => boolean;
+  asyncValidateKeys?: (key: string) => Promise<boolean>;
+  minItems?: number;
+  maxItems?: number;
+};
+```
+
+Example: 
+```javascript
+const myDictionaryType = DmnoBaseTypes.dictionary({ itemSchema: DmnoBaseTypes.String() });
+const myMinItemsType = DmnoBaseTypes.dictionary({ minItems: 2 });
+```
 
 
-## `Dictionary`
+### `Enum`
 
+`DmnoBaseTypes.Enum({ settingsSchema? })`
 
-## `Enum`
+DMNO Built-in data type for Enums. Includes the following (optional) settings: 
 
+```typescript
+type settingsSchema = {
+  // simple list of values
+  values: Array<string>
+  // array or values with extra metadata
+  | Array< { value: string | number | boolean, description: string }>
+  // object with key value pairs (strings only)
+  | Record<string, string>;
+};
+```
 
-## `NodeEnv` 
+Example: 
+```javascript
+const myEnumType = DmnoBaseTypes.Enum({ values: ['one', 'two', 'three'] });
+const myEnumType2 = DmnoBaseTypes.Enum({
+  values: [
+    { value: 'one', description: 'The first one' },
+    { value: 'two', description: 'The second one' }],
+});
+const myEnumType3 = DmnoBaseTypes.Enum(
+  {
+    values: {
+      one: 'The first one',
+      two: 'The second one',
+    },
+  },
+);
+```
+
+## Utility types
+
+These types are used for specific use cases.
+
+### `NodeEnvType` 
+
+DMNO Built-in data type for Node Environment variables, built using `Enum`. 
+
+Its definition looks like this:
+```javascript
+const NodeEnvType = createDmnoDataType({
+  extends: DmnoBaseTypes.enum({
+    development: { description: 'true during local development' },
+    test: { description: 'true while running tests' },
+    production: { description: 'true for production' },
+  }),
+});
+```
+
+Example: 
+```javascript
+import { NodeEnvType, defineConfigSchema } from '@dmno/config-engine';
+// ...
+
+export default defineConfigSchema({
+  name: 'MyConfig',
+  // ...
+  schema: {
+    NODE_ENV: NodeEnvType,
+    // ...
+  },
+  // ...
+});
+
+```
+### `UrlDataType`
+
+DMNO Built-in data type for URLs. 
+
+Example:
+```javascript
+import { UrlDataType, defineConfigSchema } from '@dmno/config-engine';
+// ...
+export default defineConfigSchema({
+  name: 'MyConfig',
+  // ...
+  schema: {
+    API_URL: UrlDataType,
+    // ...
+  },
+  // ...
+});
+
+```
+
 
 ## Creating your own types
 
@@ -82,24 +248,28 @@ const myMinMaxType = DmnoBaseTypes.String({ min: 2, max: 5 });
 :::
 
 
-### `createDmnoDataType(opts)` 
+### `createDmnoDataType`
+
+`createDmnoDataType({ options })` 
 
 Creates a new DMNO data type. 
 
 ```javascript
 const myType = createDmnoDataType({
   name: 'MyType',
-  extends: DmnoBaseTypes.String({
-    // settings object
+  extends: DmnoBaseTypes.string({
+    // settings object as outlined above
   }),
   settingsSchema: {
     // user specific settings object
   },
   validate: (value) => {
     // return true if value is valid
+    // has access to settingsSchema
   },
   coerce: (value) => {
     // return coerced value
+    // has access to settingsSchema
   },
 });
 ```
