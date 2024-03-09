@@ -27,7 +27,7 @@
     }
   },
   "bin": {
-    "dmno": "./dist/cli.mjs"
+    "dmno": "./dist/cli/cli-executable.mjs"
   },
   "keywords": [],
   "author": "",
@@ -37,16 +37,20 @@
     "@types/async": "^3.2.24",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^20.11.24",
-    "@types/yargs": "^17.0.32",
+    "@types/which": "^3.0.3",
     "tsup": "^8.0.2"
   },
   "dependencies": {
     "@dagrejs/graphlib": "^2.1.13",
+    "@inquirer/prompts": "^4.1.0",
     "async": "^3.2.5",
     "caller-path": "^4.0.0",
+    "clipanion": "4.0.0-rc.3",
+    "execa": "^8.0.1",
     "lodash-es": "^4.17.21",
+    "picocolors": "^1.0.0",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3",
-    "yargs": "^17.7.2"
+    "which": "^4.0.0"
   }
 }

@@ -13,6 +13,15 @@ import {
 
 console.log('>>CLI ENTRY!');
 
+// TODO: share this type with cli.ts
+export type DmnoRunCommandInfo = {
+  command: 'load',
+  service?: string,
+  format?: 'json',
+};
+
+const commandInfo: DmnoRunCommandInfo = JSON.parse(process.argv[2]);
+
 const CWD = process.cwd();
 const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 
@@ -96,6 +105,12 @@ for (const w of workspacePackagesData) {
   }
 }
 
+
+if (commandInfo.service && !servicesByName[commandInfo.service]) {
+  // TODO: figure out best way to throw / return an error here?
+  throw new Error(`Unable to find service: ${commandInfo.service}`);
+}
+
 const services = _.values(servicesByName);
 
 // initialize a services DAG
@@ -160,15 +175,6 @@ if (!graphCycles.length) {
 }
 
 for (const service of sortedServices) {
-  // load the regular config schema items first because picking can
-  for (const itemKey in service.rawConfig?.schema) {
-    // TODO: `!` is needed here - tsup gives an error, while VScode is not...
-    const itemDef = service.rawConfig?.schema[itemKey];
-    // service.
-    service.addConfigItem(new DmnoConfigItem(itemKey, itemDef));
-    // TODO: add dag node
-  }
-
   const ancestorServiceNames = servicesDag.predecessors(service.serviceName) || [];
 
   // process "picked" items
@@ -253,11 +259,20 @@ for (const service of sortedServices) {
       }
 
       service.addConfigItem(new DmnoPickedConfigItem(newKeyName, {
-        pickItem: pickFromService.config[pickKey],
+        sourceItem: pickFromService.config[pickKey],
         transformValue: _.isString(rawPickItem) ? undefined : rawPickItem.transformValue,
-      }));
+      }, service));
       // TODO: add to dag node with link to source item
     }
+  }
+
+  // process the regular config schema items
+  for (const itemKey in service.rawConfig?.schema) {
+    // TODO: `!` is needed here - tsup gives an error, while VScode is not...
+    const itemDef = service.rawConfig?.schema[itemKey];
+    // service.
+    service.addConfigItem(new DmnoConfigItem(itemKey, itemDef, service));
+    // TODO: add dag node
   }
 }
 
@@ -266,7 +281,35 @@ for (const service of sortedServices) {
     console.log(`SERVICE ${service.serviceName} has schema errors: `);
     console.log(service.schemaErrors);
   } else {
-    console.log(service.config);
+    await service.resolveConfig();
+  }
+}
+
+
+// if we are loading a single service, we want to get the config for just that service
+if (commandInfo.service) {
+  const service = servicesByName[commandInfo.service];
+  console.log('-----------------------------------------');
+  console.log(`Resolved env for service ${service.serviceName}`);
+  console.log('-----------------------------------------');
+
+  // TODO: move this to service?
+  const serviceConfig = {} as any;
+  _.each(service.config, (item, key) => {
+    serviceConfig[key] = item.resolvedValue;
+
+    // TODO: need to figure out how to send back all the error data in a way that can be logged nicely
+    // TODO: send all invalid items, and all validation errors from each
+    if (!item.isValid) {
+      throw item.validationErrors![0];
+    }
+    // console.log(`${item.key}=${item.resolvedValue}`);
+  });
+
+  if (commandInfo.format === 'json') {
+    console.log(JSON.stringify(serviceConfig));
+  } else {
+    console.log(serviceConfig);
   }
 }
 
