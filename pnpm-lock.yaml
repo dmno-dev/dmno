@@ -31,6 +31,9 @@ importers:
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
+      node-ipc:
+        specifier: npm:@achrinza/node-ipc@^10.1.10
+        version: /@achrinza/node-ipc@10.1.10
       picocolors:
         specifier: ^1.0.0
         version: 1.0.0
@@ -59,6 +62,9 @@ importers:
       '@types/node':
         specifier: ^20.11.24
         version: 20.11.24
+      '@types/node-ipc':
+        specifier: ^9.2.3
+        version: 9.2.3
       '@types/which':
         specifier: ^3.0.3
         version: 3.0.3
@@ -232,6 +238,33 @@ packages:
   /@aashutoshrathi/word-wrap@1.2.6:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
+
+  /@achrinza/event-pubsub@5.0.9:
+    resolution: {integrity: sha512-49RyPP7w4abKMsLRHKgB9neAH085mdHQtv+0H5TnJeOq3oK57qQRd/JD9K5Z5D3vFODsvBODiBjYkRQZKdqiAA==}
+    engines: {node: 13 || 14 || 16 || 17 || 18 || 19 || 20}
+    dependencies:
+      '@achrinza/strong-type': 0.1.11
+    dev: false
+
+  /@achrinza/node-ipc@10.1.10:
+    resolution: {integrity: sha512-eBP/YMdiaxFHQ5OlKfYpnarMtuMmdtv+iI21UeXL1yATZEGEvRm2gqPsnio6SRlarLt9/IxTQJl0b/6S5yX+1g==}
+    engines: {node: 14 || 16 || 17 || 18 || 19 || 20 || 21}
+    dependencies:
+      '@achrinza/event-pubsub': 5.0.9
+      '@achrinza/strong-type': 1.1.8
+      '@node-ipc/js-queue': 2.0.3
+      js-message: 1.0.7
+    dev: false
+
+  /@achrinza/strong-type@0.1.11:
+    resolution: {integrity: sha512-35Ou0jcGHGKQS8a6lgdan+u3BajmL315ZpDhH2/WSRNgG1jPpizhe87epgLaotN4uY3kXaEbfRU56sBPMdR5LA==}
+    engines: {node: 12 || 13 || 14 || 15 || 16 || 17 || 18 || 19 || 20}
+    dev: false
+
+  /@achrinza/strong-type@1.1.8:
+    resolution: {integrity: sha512-ub/mgPRjbqZmwhU3rGya745IMn9znh3cm4g2iGepzvzhZUlKhLRfdkVoUD+H1NLaHE30pRp/FQHEoHTAVcleBQ==}
+    engines: {node: ^12.21.0 || 14 || 15 || 16 || 17 || 18 || 19 || 20 || 21}
+    dev: false
 
   /@ampproject/remapping@2.2.1:
     resolution: {integrity: sha512-lFMjJTrFL3j7L9yBxwYfCq2k6qqwHyzuUl/XBnif78PWTJYyL/dfowQHWE3sp6U6ZzqWiiIZnpTMO96zhkjwtg==}
@@ -2384,6 +2417,13 @@ packages:
       - supports-color
     dev: true
 
+  /@node-ipc/js-queue@2.0.3:
+    resolution: {integrity: sha512-fL1wpr8hhD5gT2dA1qifeVaoDFlQR5es8tFuKqjHX+kdOtdNHnxkVZbtIrR2rxnMFvehkjaZRNV2H/gPXlb0hw==}
+    engines: {node: '>=1.0.0'}
+    dependencies:
+      easy-stack: 1.0.1
+    dev: false
+
   /@nodelib/fs.scandir@2.1.5:
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -3530,6 +3570,12 @@ packages:
     dependencies:
       '@types/unist': 2.0.10
     dev: false
+
+  /@types/node-ipc@9.2.3:
+    resolution: {integrity: sha512-/MvSiF71fYf3+zwqkh/zkVkZj1hl1Uobre9EMFy08mqfJNAmpR0vmPgOUdEIDVgifxHj6G1vYMPLSBLLxoDACQ==}
+    dependencies:
+      '@types/node': 20.11.24
+    dev: true
 
   /@types/node@17.0.45:
     resolution: {integrity: sha512-w+tIMs3rq2afQdsPJlODhoUEKzFP1ayaoyl1CcnwtIlsVe7K7bA1NGm4s3PraqTLlXnbIN84zuBlxBWo1u9BLw==}
@@ -6425,6 +6471,11 @@ packages:
 
   /eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
+
+  /easy-stack@1.0.1:
+    resolution: {integrity: sha512-wK2sCs4feiiJeFXn3zvY0p41mdU5VUgbgs1rNsc/y5ngFUijdWd+iIN8eoyuZHKB8xN6BL4PdWmzqFmxNg6V2w==}
+    engines: {node: '>=6.0.0'}
+    dev: false
 
   /ecdsa-sig-formatter@1.0.11:
     resolution: {integrity: sha512-nagl3RYrbNv6kQkeJIpt6NJZy8twLB/2vtz6yN9Z4vRKHN4/QZJIEbqohALSgwKdnksuY3k5Addp5lg8sVoVcQ==}
@@ -9409,6 +9460,11 @@ packages:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
     dev: true
+
+  /js-message@1.0.7:
+    resolution: {integrity: sha512-efJLHhLjIyKRewNS9EGZ4UpI8NguuL6fKkhRxVuMmrGV2xN/0APGdQYwLFky5w9naebSZ0OwAGp0G6/2Cg90rA==}
+    engines: {node: '>=0.6.0'}
+    dev: false
 
   /js-string-escape@1.0.1:
     resolution: {integrity: sha512-Smw4xcfIQ5LVjAOuJCvN/zIodzA/BBSsluuoSykP+lUvScIi4U6RJLfwHet5cxFnCswUjISV8oAXaqaJDY3chg==}

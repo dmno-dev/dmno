@@ -1,26 +1,79 @@
 /**
- * This is the actual cli logic - triggered from cli.ts via tsx
+ * This is the entry point for the config loader process.
+ * **It must be run via `tsup`**, so that we can import each `.dmno/config.mts` file dynamically
  *
- * much of this will likely get reorganized, but just trying to get things working first
+ * It's reponsible for:
+ * - determining where all our services are
+ * - loading each service config (or only loading some of it depending on what is needed)
+ * - responding to queries from the cli (ex: get all the config for service X)
+ *
+ * In the future, when we have more of "dev" mode, it will probably also be responsible for
+ * watching the config files for changes, and then reloading them and firing off updates to the CLI
  */
+
 import { execSync } from 'node:child_process';
 import _ from 'lodash-es';
 import graphlib from '@dagrejs/graphlib';
+import ipc from 'node-ipc';
 
 import {
   DmnoConfigItem, DmnoPickedConfigItem, DmnoService, ServiceConfigSchema,
-} from './config-engine';
+} from '../config-engine';
+import { ConfigLoaderRequestMap } from './requests';
 
 console.log('>>CLI ENTRY!');
 
-// TODO: share this type with cli.ts
-export type DmnoRunCommandInfo = {
-  command: 'load',
-  service?: string,
-  format?: 'json',
-};
 
-const commandInfo: DmnoRunCommandInfo = JSON.parse(process.argv[2]);
+// const ipc = new NodeIpc.IPC();
+ipc.config.id = 'dmno';
+ipc.config.retry = 1500;
+
+const requestHandlers = {} as Record<keyof ConfigLoaderRequestMap, any>;
+
+function registerRequestHandler<K extends keyof ConfigLoaderRequestMap>(
+  key: K,
+  handler: (payload: ConfigLoaderRequestMap[K]['payload']) => Promise<ConfigLoaderRequestMap[K]['response']>,
+) {
+  console.log(`registered handler for key: ${key}`);
+  requestHandlers[key] = handler;
+}
+
+
+
+ipc.connectTo('dmno', function () {
+  ipc.of.dmno.on('connect', function () {
+    ipc.log('## connected to dmno ##', ipc.config.retry);
+  });
+
+  ipc.of.dmno.on('disconnect', function () {
+    ipc.log('disconnected from dmno');
+  });
+
+  ipc.of.dmno.on(
+    'message', // any event or message type your server listens for
+    function (data) {
+      ipc.log('got a message from dmno : ', data);
+    },
+  );
+
+  ipc.of.dmno.on('request', async (message: any) => {
+    console.log('RECEIVED REQUEST!', message);
+    const handler = (requestHandlers as any)[message.requestType];
+    if (!handler) {
+      throw new Error(`No handler for request type: ${message.requestType}`);
+    }
+    const result = await handler(message.payload);
+    ipc.of.dmno.emit('request-response', {
+      requestId: message.requestId,
+      response: result,
+    });
+  });
+});
+
+
+
+
+
 
 const CWD = process.cwd();
 const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
@@ -105,11 +158,6 @@ for (const w of workspacePackagesData) {
   }
 }
 
-
-if (commandInfo.service && !servicesByName[commandInfo.service]) {
-  // TODO: figure out best way to throw / return an error here?
-  throw new Error(`Unable to find service: ${commandInfo.service}`);
-}
 
 const services = _.values(servicesByName);
 
@@ -286,12 +334,11 @@ for (const service of sortedServices) {
 }
 
 
-// if we are loading a single service, we want to get the config for just that service
-if (commandInfo.service) {
-  const service = servicesByName[commandInfo.service];
-  console.log('-----------------------------------------');
-  console.log(`Resolved env for service ${service.serviceName}`);
-  console.log('-----------------------------------------');
+registerRequestHandler('get-resolved-config', async (payload) => {
+  const service = servicesByName[payload.service];
+  // console.log('-----------------------------------------');
+  // console.log(`Resolved env for service ${service.serviceName}`);
+  // console.log('-----------------------------------------');
 
   // TODO: move this to service?
   const serviceConfig = {} as any;
@@ -306,13 +353,6 @@ if (commandInfo.service) {
     // console.log(`${item.key}=${item.resolvedValue}`);
   });
 
-  if (commandInfo.format === 'json') {
-    console.log(JSON.stringify(serviceConfig));
-  } else {
-    console.log(serviceConfig);
-  }
-}
-
-// console.log(sortedServices);
-
-// console.log(services);
+  // console.log(serviceConfig);
+  return serviceConfig;
+});

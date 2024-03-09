@@ -6,8 +6,9 @@ import { input } from '@inquirer/prompts';
 import _ from 'lodash-es';
 
 
-import { loadDmnoConfig } from '../lib/load-config';
+import { ConfigLoaderProcess, loadDmnoConfig } from '../lib/loader-process';
 import { executeCommandWithEnv } from '../lib/execute-command';
+import { promiseDelay } from '../../lib/delay';
 
 
 
@@ -40,8 +41,23 @@ export class RunCommand extends Command {
     // this.context.stdout.write('Hello stdout!\n');
     // console.log(this.command);
 
-    const resolvedEnv = loadDmnoConfig(this.service);
-    await executeCommandWithEnv(this.command, resolvedEnv);
+    const configLoader = new ConfigLoaderProcess();
+
+    // TODO: have `makeRequest` wait for the ipc stuff to be set up
+    // rather than needing a delay...
+    await promiseDelay(1000);
+
+
+    // TODO: infer the service from the current directory, if not set
+    if (!this.service) {
+      throw new Error('please set a service name');
+    }
+
+    const config = await configLoader.makeRequest('get-resolved-config', { service: this.service });
+
+    // console.log('resolved config', config);
+
+    await executeCommandWithEnv(this.command, config);
   }
 }
 

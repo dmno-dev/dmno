@@ -4,7 +4,8 @@ import { Command, Option } from 'clipanion';
 import pc from 'picocolors';
 import { input } from '@inquirer/prompts';
 import { createDmnoDataType } from '../../base-types';
-import { loadDmnoConfig } from '../lib/load-config';
+import { ConfigLoaderProcess, loadDmnoConfig } from '../lib/loader-process';
+import { promiseDelay } from '../../lib/delay';
 
 
 
@@ -33,7 +34,20 @@ export class LoadCommand extends Command {
 
 
   async execute() {
-    const config = loadDmnoConfig(this.service);
+    const configLoader = new ConfigLoaderProcess();
+
+    await promiseDelay(1000);
+
+    if (!this.service) {
+      throw new Error('please set a service name');
+    }
+
+    const config = await configLoader.makeRequest('get-resolved-config', { service: this.service });
+
+    console.log('-----------------------------------------');
+    console.log(`Resolved env for service ${this.service}`);
+    console.log('-----------------------------------------');
+
     console.log(config);
   }
 }
