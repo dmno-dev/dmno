@@ -1,6 +1,6 @@
 export type ConfigLoaderRequestMap = {
   'get-resolved-config': {
-    payload: { service: string },
+    payload: { service?: string, packageName?: string },
     response: { configValues: Record<string, any> },
   }
 };

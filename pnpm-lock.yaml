@@ -25,6 +25,9 @@ importers:
       clipanion:
         specifier: 4.0.0-rc.3
         version: 4.0.0-rc.3(typanion@3.14.0)
+      debug:
+        specifier: ^4.3.4
+        version: 4.3.4(supports-color@9.4.0)
       execa:
         specifier: ^8.0.1
         version: 8.0.1
@@ -56,6 +59,9 @@ importers:
       '@types/async':
         specifier: ^3.2.24
         version: 3.2.24
+      '@types/debug':
+        specifier: ^4.1.12
+        version: 4.1.12
       '@types/lodash-es':
         specifier: ^4.17.12
         version: 4.17.12
@@ -3468,7 +3474,6 @@ packages:
     resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
     dependencies:
       '@types/ms': 0.7.34
-    dev: false
 
   /@types/estree-jsx@1.0.4:
     resolution: {integrity: sha512-5idy3hvI9lAMqsyilBM+N+boaCf1MgoefbDxN6KEO5aK17TOHwFAYT9sjxzeKAiIWRUBgLxmZ9mPcnzZXtTcRQ==}
@@ -3557,7 +3562,6 @@ packages:
 
   /@types/ms@0.7.34:
     resolution: {integrity: sha512-nG96G3Wp6acyAgJqGasjODb+acrI7KltPiRxzHPXnP3NgI28bpQDRv53olbqGXbfcgF5aiiHmO3xpwEpS5Ld9g==}
-    dev: false
 
   /@types/mute-stream@0.0.4:
     resolution: {integrity: sha512-CPM9nzrCPPJHQNA9keH9CVkVI+WR5kMa+7XEs5jcGQ0VoAGnLv242w8lIVgwAEfmE4oufJRaTc9PNLQl0ioAow==}

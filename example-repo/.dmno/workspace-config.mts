@@ -22,14 +22,14 @@ export default defineWorkspaceConfig({
         SERVICE_ACCOUNT_TOKEN: {
           description: 'token used to access a 1password service account',
           extends: DmnoBaseTypes.string({}),
-          required: true,
+          // required: true,
         },
         VAULT_ID: {
           description: 'ID of the vault we store our secrets in',
           extends: DmnoBaseTypes.string(),
         },
       }),
-      required: true,
+      // required: true,
     },
 
     SEGMENT_SECRET: {

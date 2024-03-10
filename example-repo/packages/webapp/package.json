@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "dmno run -s web -- vite",
+    "dev": "vite",
+    "dev:run": "dmno run -- vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
     "dmno": "dmno load",

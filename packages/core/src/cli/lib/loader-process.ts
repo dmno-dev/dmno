@@ -1,16 +1,17 @@
 import path from 'node:path';
-import { promisify } from 'node:util';
+import crypto from 'crypto';
 import {
-  ChildProcess, execFileSync, execSync, spawn, spawnSync,
+  ChildProcess, spawn,
 } from 'node:child_process';
 import pc from 'picocolors';
 import _ from 'lodash-es';
 import ipc from 'node-ipc';
+import Debug from 'debug';
 
-import { DmnoRunCommandInfo } from '../../config-loader/loader-executable';
-import { getThisDirname } from '../../lib/this-file-path';
-import { ConfigLoaderRequestMap } from '../../config-loader/requests';
+import { ConfigLoaderRequestMap } from '../../config-loader/ipc-requests';
 import { DeferredPromise, createDeferredPromise } from '../../lib/deferred-promise';
+
+const debug = Debug('dmno');
 
 const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 
@@ -27,6 +28,8 @@ const loaderExecutablePath = path.resolve(thisFilePath, '../../config-loader/loa
 
 export class ConfigLoaderProcess {
   childProcess?: ChildProcess;
+  isReady: DeferredPromise = createDeferredPromise();
+  uuid = crypto.randomUUID();
 
   constructor() {
     // NOTE - we may want to initialize an ipc instance rather than using the global setup
@@ -34,24 +37,25 @@ export class ConfigLoaderProcess {
 
     ipc.config.id = 'dmno';
     ipc.config.retry = 1500;
+    ipc.config.silent = true;
 
     // currently this defaults to using a socket at `/tmp/app.dmno`
     // we could put the socket in the root .dmno folder?
     // or at least name it differently?
-    ipc.serve(); // this has a callback... we aren't waiting here
+    ipc.serve(`/tmp/${this.uuid}.dmno.sock`); // this has a callback... we aren't waiting here
 
     ipc.server.on('start', () => this.onIpcStarted());
 
     ipc.server.on('connect', (msg) => {
-      console.log('IPC message: ', msg);
+      debug('IPC message: ', msg);
     });
 
     ipc.server.on('error', (err) => {
-      console.log('IPC error: ', err);
+      debug('IPC error: ', err);
     });
 
     ipc.server.on('message', (data, socket) => {
-      ipc.log('got a message : ', data);
+      debug('got a message : ', data);
       ipc.server.emit(
         socket,
         'message', // this can be anything you want so long as
@@ -68,32 +72,28 @@ export class ConfigLoaderProcess {
       return this.handleRequestResponse(response);
     });
 
+    ipc.server.on('ready', (response) => {
+      debug('READY!!!');
+      this.isReady.resolve();
+    });
+
     ipc.server.start();
   }
   private async onIpcStarted() {
-    console.log('ipc server started, booting up loader process');
-
-    const instructions = {
-      mode: 'load',
-      service: 'web',
-      format: 'json',
-    };
-
-
     try {
-      this.childProcess = spawn(tsxPath, [loaderExecutablePath], { stdio: 'inherit' });
+      this.childProcess = spawn(tsxPath, [loaderExecutablePath, this.uuid], { stdio: 'inherit' });
       this.childProcess.on('error', (err) => {
-        console.log('spawn error', err);
+        debug('spawn error', err);
       });
 
       // make sure we clean up!
       // TODO: this may not work in all cases? we might want a cli helper that will clean up rogue processes
       process.on('exit', (code) => {
-        console.log(pc.bgRed('KILLING LOADER PROCESS'));
+        debug(pc.bgRed('KILLING LOADER PROCESS'));
         this.childProcess?.kill();
       });
     } catch (err) {
-      console.log('error from spawn', err);
+      debug('error from spawn', err);
     }
   }
 
@@ -111,6 +111,9 @@ export class ConfigLoaderProcess {
     key: K,
     payload: ConfigLoaderRequestMap[K]['payload'],
   ): Promise<ConfigLoaderRequestMap[K]['response']> {
+    // make sure IPC and the process is booted before we do anything
+    await this.isReady.promise;
+
     // in order to make multiple concurrent requests, we create a "request id"
     // and use it to match up the reply. We'll use a simple counter for now...
     const requestId = this.requestCounter++;

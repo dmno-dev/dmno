@@ -1,10 +1,14 @@
 import _ from 'lodash-es';
+import Debug from 'debug';
 import { DmnoBaseTypes, DmnoDataType, DmnoSimpleBaseTypeNames } from './base-types';
 import {
   ConfigValue,
   ValueResolverDef, ConfigValueOverride, ConfigValueResolver, processResolverDef, PickedValueResolver,
 } from './resolvers';
 import { getConfigFromEnvVars } from './lib/env-vars';
+
+
+const debug = Debug('dmno');
 
 type ConfigRequiredAtTypes = 'build' | 'boot' | 'run' | 'deploy';
 
@@ -109,13 +113,13 @@ export type ServiceConfigSchema = {
 };
 
 export function defineConfigSchema(opts: ServiceConfigSchema) {
-  console.log('LOADING SCHEMA!', opts);
+  debug('LOADING SCHEMA!', opts);
   // TODO: return initialized object
   return opts;
 }
 
 export function defineWorkspaceConfig(opts: WorkspaceConfig) {
-  console.log('LOADING ROOT SCHEMA!', opts);
+  debug('LOADING ROOT SCHEMA!', opts);
   return opts;
 }
 
@@ -337,7 +341,7 @@ export abstract class DmnoConfigItemBase {
         await this.valueResolver.resolve(ctx);
         this.resolvedRawValue = this.valueResolver.resolvedValue;
       } catch (err) {
-        console.log('resolution failed', this.key, err);
+        debug('resolution failed', this.key, err);
         this.resolutionError = err as Error;
       }
     }
@@ -418,7 +422,7 @@ export abstract class DmnoConfigItemBase {
     }
 
 
-    console.log(
+    debug(
       `${this.parentService?.serviceName}/${this.getPath()} = `,
       JSON.stringify(this.resolvedRawValue),
       JSON.stringify(this.resolvedValue),
@@ -443,9 +447,6 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
     parent?: DmnoService | DmnoConfigItem,
   ) {
     super(key, parent);
-
-    console.log(`>>>>> initializing config item key: ${key}`);
-
 
     // if the definition passed in was using a shorthand, first we'll unwrap that
     if (_.isString(defOrShorthand)) {
@@ -482,7 +483,7 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
       }
     } catch (err) {
       this.schemaError = err as Error;
-      console.log(err);
+      debug(err);
     }
   }
 

@@ -118,7 +118,6 @@ export function processResolverDef(resolverDef: ValueResolverDef) {
   } else if (resolverDef !== undefined) {
     return new StaticValueResolver(resolverDef);
   } else {
-    console.log('invalid resolver definition', resolverDef);
     throw new Error('invalid resolver definition');
   }
 }
@@ -152,7 +151,6 @@ export class ToggleResolver extends ConfigValueResolver {
       if (branch.isDefault) return false;
       return branch.condition(ctx);
     });
-    console.log('found matching branch');
     if (matchingBranch) {
       return matchingBranch.resolver || null;
     } else {

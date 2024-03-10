@@ -15,32 +15,43 @@ import { execSync } from 'node:child_process';
 import _ from 'lodash-es';
 import graphlib from '@dagrejs/graphlib';
 import ipc from 'node-ipc';
+import Debug from 'debug';
 
 import {
   DmnoConfigItem, DmnoPickedConfigItem, DmnoService, ServiceConfigSchema,
 } from '../config-engine';
-import { ConfigLoaderRequestMap } from './requests';
+import { ConfigLoaderRequestMap } from './ipc-requests';
 
-console.log('>>CLI ENTRY!');
+
+const debug = Debug('dmno');
 
 
 // const ipc = new NodeIpc.IPC();
 ipc.config.id = 'dmno';
 ipc.config.retry = 1500;
+ipc.config.silent = true;
 
 const requestHandlers = {} as Record<keyof ConfigLoaderRequestMap, any>;
-
 function registerRequestHandler<K extends keyof ConfigLoaderRequestMap>(
-  key: K,
+  requestType: K,
   handler: (payload: ConfigLoaderRequestMap[K]['payload']) => Promise<ConfigLoaderRequestMap[K]['response']>,
 ) {
-  console.log(`registered handler for key: ${key}`);
-  requestHandlers[key] = handler;
+  // console.log(`registered handler for requestType: ${requestType}`);
+  if (requestHandlers[requestType]) {
+    throw new Error(`Duplicate IPC request handler detected for requestType "${requestType}"`);
+  }
+  requestHandlers[requestType] = handler;
 }
 
+// we pass in a uuid to identify the running process IPC socket
+// this allows us to run multiple concurrent loaders...
+// TBD whether that makes sense or if we should share a single process?
+const processUuid = process.argv[2];
+if (!processUuid) {
+  throw new Error('Missing process UUID');
+}
 
-
-ipc.connectTo('dmno', function () {
+ipc.connectTo('dmno', `/tmp/${processUuid}.dmno.sock`, function () {
   ipc.of.dmno.on('connect', function () {
     ipc.log('## connected to dmno ##', ipc.config.retry);
   });
@@ -57,7 +68,6 @@ ipc.connectTo('dmno', function () {
   );
 
   ipc.of.dmno.on('request', async (message: any) => {
-    console.log('RECEIVED REQUEST!', message);
     const handler = (requestHandlers as any)[message.requestType];
     if (!handler) {
       throw new Error(`No handler for request type: ${message.requestType}`);
@@ -73,18 +83,16 @@ ipc.connectTo('dmno', function () {
 
 
 
-
-
 const CWD = process.cwd();
 const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 
-console.log({
-  cwd: process.cwd(),
-  // __dirname,
-  'import.meta.url': import.meta.url,
-  thisFilePath,
-  'process.env.PNPM_PACKAGE_NAME': process.env.PNPM_PACKAGE_NAME,
-});
+// console.log({
+//   cwd: process.cwd(),
+//   // __dirname,
+//   'import.meta.url': import.meta.url,
+//   thisFilePath,
+//   'process.env.PNPM_PACKAGE_NAME': process.env.PNPM_PACKAGE_NAME,
+// });
 
 // currently assuming we are using pnpm, and piggybacking off of their definition of "services" in pnpm-workspace.yaml
 // we'll want to to do smarter detection and also support yarn/npm/etc as well as our own list of services defined at the root
@@ -139,7 +147,7 @@ for (const w of workspacePackagesData) {
       rawConfig: importedConfig.default as ServiceConfigSchema,
     });
   } catch (err) {
-    console.log('found error when loading config');
+    debug('found error when loading config');
     service = new DmnoService({
       ...serviceInitOpts,
       rawConfig: err as Error,
@@ -149,7 +157,7 @@ for (const w of workspacePackagesData) {
     rootServiceName = service.serviceName;
   }
 
-  console.log('init service', service);
+  debug('init service', service);
 
   if (servicesByName[service.serviceName]) {
     throw new Error(`Service names must be unique - duplicate name detected "${service.serviceName}"`);
@@ -160,6 +168,7 @@ for (const w of workspacePackagesData) {
 
 
 const services = _.values(servicesByName);
+const servicesByPackageName = _.keyBy(services, (s) => s.packageName);
 
 // initialize a services DAG
 // note - we may want to experiment with "compound nodes" to have the services contain their config items as children?
@@ -219,7 +228,7 @@ let sortedServices = services;
 if (!graphCycles.length) {
   const sortedServiceNames = graphlib.alg.topsort(servicesDag);
   sortedServices = _.map(sortedServiceNames, (serviceName) => servicesByName[serviceName]);
-  console.log('DEP SORTED SERVICES', sortedServiceNames);
+  debug('DEP SORTED SERVICES', sortedServiceNames);
 }
 
 for (const service of sortedServices) {
@@ -326,21 +335,28 @@ for (const service of sortedServices) {
 
 for (const service of sortedServices) {
   if (service.schemaErrors.length) {
-    console.log(`SERVICE ${service.serviceName} has schema errors: `);
-    console.log(service.schemaErrors);
+    debug(`SERVICE ${service.serviceName} has schema errors: `);
+    debug(service.schemaErrors);
   } else {
     await service.resolveConfig();
   }
 }
 
+// TODO: we're assuming here that IPC connection is already booted...
+// and this should probably happen earlier (before loading/resolving config)
+ipc.of.dmno.emit('ready');
+
 
 registerRequestHandler('get-resolved-config', async (payload) => {
-  const service = servicesByName[payload.service];
-  // console.log('-----------------------------------------');
-  // console.log(`Resolved env for service ${service.serviceName}`);
-  // console.log('-----------------------------------------');
+  let service: DmnoService | undefined;
 
-  // TODO: move this to service?
+  // TODO: will likely need this logic for many requests
+  // so might want to do it another way?
+  if (payload.service) service = servicesByName[payload.service];
+  else if (payload.packageName) service = servicesByPackageName[payload.packageName];
+  if (!service) throw new Error('Unable to select a service');
+
+  // TODO: move this logic into DmnoService?
   const serviceConfig = {} as any;
   _.each(service.config, (item, key) => {
     serviceConfig[key] = item.resolvedValue;
@@ -350,9 +366,7 @@ registerRequestHandler('get-resolved-config', async (payload) => {
     if (!item.isValid) {
       throw item.validationErrors![0];
     }
-    // console.log(`${item.key}=${item.resolvedValue}`);
   });
 
-  // console.log(serviceConfig);
   return serviceConfig;
 });
