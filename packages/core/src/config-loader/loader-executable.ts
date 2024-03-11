@@ -19,8 +19,9 @@ import Debug from 'debug';
 
 import {
   DmnoConfigItem, DmnoPickedConfigItem, DmnoService, ServiceConfigSchema,
-} from '../config-engine';
+} from '../config-engine/config-engine';
 import { ConfigLoaderRequestMap } from './ipc-requests';
+import { generateTypescriptTypes } from '../config-engine/type-generation';
 
 
 const debug = Debug('dmno');
@@ -370,3 +371,17 @@ registerRequestHandler('get-resolved-config', async (payload) => {
 
   return serviceConfig;
 });
+
+
+registerRequestHandler('generate-types', async (payload) => {
+  let service: DmnoService | undefined;
+
+  // TODO: will likely need this logic for many requests
+  // so might want to do it another way?
+  if (payload.service) service = servicesByName[payload.service];
+  else if (payload.packageName) service = servicesByPackageName[payload.packageName];
+  if (!service) throw new Error('Unable to select a service');
+
+  return { tsSrc: generateTypescriptTypes(service) };
+});
+

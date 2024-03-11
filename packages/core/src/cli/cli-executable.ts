@@ -19,6 +19,7 @@ import {
 
 import { LoadCommand } from './commands/load.command';
 import { RunCommand } from './commands/run.command';
+import { TypeGenCommand } from './commands/typegen.command';
 
 
 // import packageJson from '../package.json';
@@ -38,6 +39,7 @@ const cli = new Cli({
 
 cli.register(LoadCommand);
 cli.register(RunCommand);
+cli.register(TypeGenCommand);
 cli.register(Builtins.HelpCommand);
 
 

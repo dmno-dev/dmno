@@ -3,7 +3,7 @@ import { match } from 'assert';
 import _ from 'lodash-es';
 import {
   DmnoConfigItem, DmnoConfigItemBase, DmnoPickedConfigItem, ResolverContext,
-} from './config-engine';
+} from './config-engine/config-engine';
 
 // TODO: do we allow Date?
 // what to do about null/undefined?

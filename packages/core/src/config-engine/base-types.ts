@@ -27,6 +27,11 @@ type DmnoDataTypeOptions<T> =
 
 
 
+
+
+
+
+
 export class DmnoDataType<T = any> {
   // NOTE - note quite sure about this setup yet...
   // but the idea is to provide a wrapped version of the validate/coerce (the fns that need the type instance options)
@@ -200,6 +205,7 @@ const BooleanDataType = createDmnoDataType({
 const URL_REGEX = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/;
 const UrlDataType = createDmnoDataType({
   extends: StringDataType({}),
+  typeDescription: 'standard URL',
   // summary: 'url base type summary',
   settingsSchema: Object as undefined | {
 
@@ -306,6 +312,7 @@ export type DmnoSimpleBaseTypeNames = 'string' | 'number' | 'url' | 'boolean';
 
 // example of defining common type using our base types
 export const NodeEnvType = createDmnoDataType({
+  typeDescription: 'standard environment flag for Node.js',
   extends: DmnoBaseTypes.enum({
     development: { description: 'true during local development' },
     test: { description: 'true while running tests' },

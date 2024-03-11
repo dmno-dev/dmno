@@ -4,8 +4,8 @@ import { DmnoBaseTypes, DmnoDataType, DmnoSimpleBaseTypeNames } from './base-typ
 import {
   ConfigValue,
   ValueResolverDef, ConfigValueOverride, ConfigValueResolver, processResolverDef, PickedValueResolver,
-} from './resolvers';
-import { getConfigFromEnvVars } from './lib/env-vars';
+} from '../resolvers';
+import { getConfigFromEnvVars } from '../lib/env-vars';
 
 
 const debug = Debug('dmno');
@@ -104,10 +104,12 @@ export type WorkspaceConfig = {
   schema: Record<string, ConfigItemDefinitionOrShorthand>,
 };
 export type ServiceConfigSchema = {
-  // service name
+  /** service name - if empty, name from package.json will be used */
   name?: string,
-  // name of parent service (if applicable)
+  /** name of parent service (if applicable) - if empty this service will be a child of the root service */
   parent?: string,
+  /** optional array of "tags" for the service */
+  tags?: Array<string>,
   pick?: Array<PickConfigItemDefinition | string>,
   schema: Record<string, ConfigItemDefinitionOrShorthand>,
 };

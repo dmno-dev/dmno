@@ -22,7 +22,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "types": [
-      "./.dmno/dmno-config.d.ts"
+      "./.dmno/dmno.d.ts"
     ]
   },
   "include": [

@@ -10,3 +10,6 @@ dist
 config.local.ts
 .env.local
 .env.local.*
+
+# auto-generated type files
+dmno.d.ts
