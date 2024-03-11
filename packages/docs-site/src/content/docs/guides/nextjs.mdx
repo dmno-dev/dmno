@@ -10,7 +10,7 @@ import Install from '../../../components/Install.astro';
 
 If you have an existing Next.js app, you're probably already familiar with how environment variables work in Next. Check their docs [here](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables) if you need a refresher. 
 
-Now forget all of that, and let's simplify things with DMNO. 
+Now forget all of that, and let's simplify things with DMNO.
 
 ### Install dependencies
 
@@ -35,17 +35,19 @@ This will create a `.dmno` directory in the root of your project with a `workspa
 If you don't have a monorepo (yet), you can always add child apps/services to your monorepo later via the `dmno add` command.
 :::
 
-### Configure your environment variables
+### Configure your environment variables    
 
 Open the `workspace-config.mts` file in the `.dmno` directory at the root of your monorepo and add your environment variables like so:
 
-```typescript
-import { DmnoBaseTypes, defineWorkspaceConfig, configPath, toggleByEnv, dmnoFormula } from '@dmno/core';
+```typescript  
+import {
+  DmnoBaseTypes, defineWorkspaceConfig, configPath, toggleByEnv, dmnoFormula, asdf,
+} from '@dmno/core';
 
 export default defineWorkspaceConfig({
   schema: {
     // regular, defaults to string
-    ENVVAR1, 
+    ENVVAR1,
     // with number type
     ENVVAR2: DmnoBaseTypes.number,
     // with boolean type
@@ -55,11 +57,11 @@ export default defineWorkspaceConfig({
       extends: DmnoBaseTypes.string({
         minLength: 5,
         maxLength: 10,
-      }), 
-      value: 'default value', 
+      }),
+      value: 'default value',
       required: true,
-    }
-  }
+    },
+  },
 });
 ```
 
@@ -70,27 +72,31 @@ If you're migrating from an existing Next.js app, you might have some environmen
 Let's say you have a `NEXT_PUBLIC_API_URL` environment variable. You can add it to your `config.mts` file like so:
 
 ```typescript
-import { DmnoBaseTypes, defineConfigSchema, configPath, toggleByEnv, dmnoFormula } from '@dmno/core';
+import {
+  DmnoBaseTypes, defineConfigSchema, configPath, toggleByEnv, dmnoFormula,
+} from '@dmno/core';
 
 export default defineConfigSchema({
   schema: {
     NEXT_PUBLIC_API_URL: DmnoBaseTypes.string,
-  }
+  },
 });
 ```
 
 Or if you want to use items from your root config, you can make use of dmno's `pick` command to get those and use them in your Next.js app.
 
 ```typescript
-import { DmnoBaseTypes, defineConfigSchema, configPath, toggleByEnv, dmnoFormula } from '@dmno/core';
+import {
+  DmnoBaseTypes, defineConfigSchema, configPath, toggleByEnv, dmnoFormula,
+} from '@dmno/core';
 
 export default defineConfigSchema({
   pick: [
     {
       key: ['ENVVAR1', 'ENVVAR2'],
-      renameKey: (k => `NEXT_PUBLIC_${k}`),
-    }
-  ]
+      renameKey: ((k) => `NEXT_PUBLIC_${k}`),
+    },
+  ],
 });
 ```
 
@@ -103,24 +109,22 @@ Now that you have your environment variables set up, you can use them in your Ne
 Add the following to your `next.config.js` file:
 
 ```javascript
-const { withDmno } = require('@dmno/dmno-next');
+const withDmno = require('@dmno/dmno-next');
 
 module.exports = {
   // your existing config
-  env: {
-    withDmno(),
-  }
-}
+  env: { ...withDmno() },
+};
 ```
 
 Now your environment variables will be available in your Next.js app. Instead of using `process.env`, you can use `Dmno.get('NEXT_PUBLIC_ENVVAR1')`. 
 
 For example: 
 
-```typescript
+```tsx
 import Dmno from '@dmno/dmno-next';
 
-export default function Home() {
+export default function Home()   {
   return (
     <div>
       <h1>Some env var: {Dmno.get('NEXT_PUBLIC_ENVVAR1')}</h1>

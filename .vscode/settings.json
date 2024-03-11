@@ -10,8 +10,19 @@
       "mode": "auto"
     }
   ],
+  "eslint.validate": [
+    // enable eslint on file types other than js/ts
+    "astro",
+    "mdx",
+    "markdown",
+  ],
   "eslint.format.enable": true,
   "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  // these are written out individually because if written as a group
+  // users cannot override individual items in their settings.json
   "[typescript]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
@@ -19,6 +30,15 @@
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
   "[vue]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[astro]": {
+    "editor.defaultFormatter": "astro-build.astro-vscode"
+  },
+  "[mdx]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[markdown]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   }
 }
