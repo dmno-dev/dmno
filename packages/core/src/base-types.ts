@@ -1,16 +1,16 @@
 import _ from 'lodash-es';
-import { ConfigItemDefinition } from './config-engine';
+import { ConfigItemDefinition, ResolverContext, TypeValidationResult } from './config-engine';
 
 
 
 
-type TypeValidationResult = boolean | undefined | void;
+
 
 // data types expose all the same options, except they additionally have a "settings schema"
 // and their validations/normalize functions get passed in the _instance_ of those settings when invoked
 type DmnoDataTypeOptions<T> =
   // the schema item validation/normalize fns do not get passed any settings
-  Omit<ConfigItemDefinition, 'validate' | 'normalize' | 'asyncValidate'> &
+  Omit<ConfigItemDefinition, 'validate' | 'coerce' | 'asyncValidate'> &
   {
     settingsSchema?: T,
     /**
@@ -18,15 +18,35 @@ type DmnoDataTypeOptions<T> =
      * an array of the types that need to be initialized
      * */
     getChildren?: (settings?: T) => Record<string, ConfigItemDefinition>;
+
     validate?: (val: any, settings?: T) => TypeValidationResult;
     asyncValidate?: (val: any, settings?: T) => Promise<TypeValidationResult>;
-    normalize?: (val: any, settings?: T) => any;
+    coerce?: (val: any, settings?: T) => any;
   };
 
 
 
+
 export class DmnoDataType<T = any> {
+  // NOTE - note quite sure about this setup yet...
+  // but the idea is to provide a wrapped version of the validate/coerce (the fns that need the type instance options)
+  // while providing transparent access to the rest. This is so the ConfigItem can just walk up the chain of types
+  // without having to understand the details... The other option is to revert that change and
+
   constructor(readonly typeDef: DmnoDataTypeOptions<T>, readonly typeInstanceOptions: T) {
+  }
+
+  validateUsingInstanceOptions(val: any) {
+    if (!this.typeDef.validate) throw new Error('should not be calling validate');
+    return this.typeDef.validate(val, this.typeInstanceOptions);
+  }
+  asyncValidateUsingInstanceOptions(val: any) {
+    if (!this.typeDef.asyncValidate) throw new Error('should not be calling asyncValidate');
+    return this.typeDef.asyncValidate(val, this.typeInstanceOptions);
+  }
+  coerceUsingInstanceOptions(val: any) {
+    if (!this.typeDef.coerce) throw new Error('should not be calling coerce');
+    return this.typeDef.coerce(val, this.typeInstanceOptions);
   }
 }
 
@@ -60,7 +80,7 @@ const StringDataType = createDmnoDataType({
     // more stuff?
   },
 
-  normalize(val) {
+  coerce(val) {
     if (_.isString(val)) return val;
     if (_.isNil(val)) return '';
     return val.toString();
@@ -69,58 +89,108 @@ const StringDataType = createDmnoDataType({
   validate(val: string, settings) {
     if (_.isEmpty(settings)) return true;
 
+    // we support returning multiple errors and our base types use this pattern
+    // but many user defined types should just throw the first error they encounter
+    const errors = [] as Array<Error>;
     if (settings.minLength !== undefined && val.length < settings.minLength) {
-      throw new Error(`Length must be more than ${settings.minLength}`);
+      errors.push(new Error(`Length must be more than ${settings.minLength}`));
     }
     if (settings.maxLength !== undefined && val.length > settings.maxLength) {
-      throw new Error(`Length must be less than ${settings.maxLength}`);
+      errors.push(new Error(`Length must be less than ${settings.maxLength}`));
     }
     if (settings.isLength !== undefined && val.length !== settings.isLength) {
-      throw new Error(`Length must be exactly ${settings.isLength}`);
+      errors.push(new Error(`Length must be exactly ${settings.isLength}`));
     }
 
     if (settings.startsWith && !val.startsWith(settings.startsWith)) {
-      throw new Error(`Value must start with "${settings.startsWith}"`);
+      errors.push(new Error(`Value must start with "${settings.startsWith}"`));
     }
     if (settings.endsWith && !val.endsWith(settings.endsWith)) {
-      throw new Error(`Value must start with "${settings.endsWith}"`);
+      errors.push(new Error(`Value must start with "${settings.endsWith}"`));
     }
 
     if (settings.matches) {
       const regex = _.isString(settings.matches) ? new RegExp(settings.matches) : settings.matches;
       const matches = val.match(regex);
-      if (!matches) throw new Error(`Value must match regex "${settings.matches}"`);
+      if (!matches) {
+        errors.push(new Error(`Value must match regex "${settings.matches}"`));
+      }
     }
+    return errors.length ? errors : true;
   },
 });
+
 
 const NumberDataType = createDmnoDataType({
   settingsSchema: Object as undefined | {
     min?: number;
     max?: number;
-  },
-  validate(val, settings) {
-    return true;
-  },
-  normalize(val, settings) {
-    if (val instanceof String) {
-      const parsed = parseFloat(val as string);
-      if (_.isNaN(parsed)) throw new Error('Unable to coerce string to number');
-      return val;
+    coerceToMinMaxRange?: boolean;
+    isDivisibleBy?: number;
+  } & ({ isInt: true; } | { isInt?: never; precision?: number }),
+  validate(val, settings = {}) {
+    const errors = [] as Array<Error>;
+    if (settings.min !== undefined && val < settings.min) {
+      errors.push(new Error(`Min value is ${settings.min}`));
     }
-    if (!_.isFinite(val)) throw new Error(`Cannot convert ${val} to number`);
-    return val;
+    if (settings.max !== undefined && val > settings.max) {
+      errors.push(new Error(`Max value is ${settings.max}`));
+    }
+    if (settings.isDivisibleBy !== undefined && val % settings.isDivisibleBy !== 0) {
+      errors.push(new Error(`Value must be divisible by ${settings.isDivisibleBy}`));
+    }
+    return errors.length ? errors : true;
+  },
+  coerce(val, settings = {}) {
+    let numVal!: number;
+    if (_.isString(val)) {
+      const parsed = parseFloat(val);
+      if (_.isNaN(parsed)) throw new Error('Unable to coerce string to number');
+      numVal = parsed;
+    } else if (_.isFinite(val)) {
+      numVal = val;
+    } else {
+      throw new Error(`Cannot convert ${val} to number`);
+    }
+
+    if (settings.coerceToMinMaxRange) {
+      if (settings.min !== undefined) numVal = Math.max(settings.min, numVal);
+      if (settings.max !== undefined) numVal = Math.min(settings.max, numVal);
+    }
+
+    // not sure if we want to coerce to integer by default, versus just checking
+    if (settings.isInt === true || settings.precision === 0) {
+      numVal = Math.round(numVal);
+    } else if (settings.precision) {
+      const p = 10 ** settings.precision;
+      numVal = Math.round(numVal * p) / p;
+    }
+    return numVal;
   },
 });
 
 
 const BooleanDataType = createDmnoDataType({
+  // TODO: add settings to be more strict, or to allow other values to coerce to true/false
   validate(val, settings) {
-    return true;
+    if (_.isBoolean(val)) return true;
+    return new Error('Value must be `true` or `false`');
   },
-  normalize(val, settings) {
-    // TODO: coerce to boolean
-    return !!val;
+  coerce(val, settings) {
+    if (_.isBoolean(val)) {
+      return val;
+    } else if (_.isString(val)) {
+      const cleanVal = val.toLowerCase().trim();
+      if (['t', 'true', 'yes', 'on', '1'].includes(cleanVal)) return true;
+      if (['f', 'false', 'no', 'off', '0'].includes(cleanVal)) return false;
+      throw new Error('Unable to coerce string value to boolean');
+    } else if (_.isFinite(val)) {
+      if (val === 0) return false;
+      if (val === 1) return true;
+      throw new Error('Unable to coerce number value to boolean (only 0 or 1 is valid)');
+    } else {
+      throw new Error('Unable to coerce value to boolean');
+    }
   },
 });
 
@@ -241,4 +311,6 @@ export const NodeEnvType = createDmnoDataType({
     test: { description: 'true while running tests' },
     production: { description: 'true for production' },
   }),
+  // we'll set the default value, and assume it will be passed in via the environment to override
+  value: 'development',
 });

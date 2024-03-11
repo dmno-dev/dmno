@@ -16,6 +16,7 @@
     "mdx",
     "markdown",
   ],
+  "eslint.format.enable": true,
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true

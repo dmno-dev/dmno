@@ -2,7 +2,9 @@
   // not sure if this should be browser or not?
   "extends": "@dmno/tsconfig/tsconfig.node.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "target": "ESNext",
+    "module": "ESNext",
   },
   "include": [
     "src/**/*.ts",

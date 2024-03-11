@@ -15,11 +15,11 @@ export default defineConfigSchema({
   name: 'api',
   parent: 'group1',
   pick: [
+    'NODE_ENV',
+    'DMNO_ENV',
     'ONE_PASSWORD',
   ],
   schema: {
-    NODE_ENV: NodeEnvType,
-
     SECRET_EXAMPLE: {
       value: DevOnePassBackend.itemByReference("op://dev test/example/username"),
     },
