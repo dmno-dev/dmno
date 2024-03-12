@@ -1,35 +1,57 @@
+
 import _ from 'lodash-es';
-import { ConfigItemDefinition, ResolverContext, TypeValidationResult } from './config-engine';
-
-
-
-
-
+import {
+  ConfigItemDefinition, ResolverContext, TypeValidationResult,
+} from './config-engine';
+import { ConfigValueResolver, processResolverDef } from '../resolvers';
 
 // data types expose all the same options, except they additionally have a "settings schema"
 // and their validations/normalize functions get passed in the _instance_ of those settings when invoked
-type DmnoDataTypeOptions<T> =
+type DmnoDataTypeOptions<TypeSettings = any> =
   // the schema item validation/normalize fns do not get passed any settings
-  Omit<ConfigItemDefinition, 'validate' | 'coerce' | 'asyncValidate'> &
+  Omit<ConfigItemDefinition<TypeSettings>, 'validate' | 'asyncValidate' | 'coerce'> &
   {
-    settingsSchema?: T,
+    // TODO: we maybe want to split this into package/name or even org/package/name?
+    // TODO: figure out naming conventions (camel? Pascal? camel `package/typeName`)
+    /** type identifier used internally */
+    typeLabel?: string,
+
+    settingsSchema?: TypeSettings,
     /**
      * if the settings schema has nested types, this function must return
      * an array of the types that need to be initialized
      * */
-    getChildren?: (settings?: T) => Record<string, ConfigItemDefinition>;
+    getChildren?: (settings?: TypeSettings) => Record<string, ConfigItemDefinition>;
 
-    validate?: (val: any, settings?: T) => TypeValidationResult;
-    asyncValidate?: (val: any, settings?: T) => Promise<TypeValidationResult>;
-    coerce?: (val: any, settings?: T) => any;
+    /** validation function that can use type instance settings */
+    validate?: (val: any, settings: TypeSettings, ctx?: ResolverContext) => TypeValidationResult;
+
+    /** validation function that can use type instance settings */
+    asyncValidate?: (val: any, settings: TypeSettings, ctx?: ResolverContext) => Promise<TypeValidationResult>;
+
+    /** coerce function that can use type instance settings */
+    coerce?: (val: any, settings: TypeSettings, ctx?: ResolverContext) => any;
+
+    /** allows disabling or controling execution order of running the parent type's `validate` function (default = "before") */
+    runParentValidate?: 'before' | 'after' | false;
+    /** allows disabling or controling execution order of running the parent type's `asyncValidate` function (default = "before") */
+    runParentAsyncValidate?: 'before' | 'after' | false;
+    /** allows disabling or controling execution order of running the parent type's `coerce` function (default = "before") */
+    runParentCoerce?: 'before' | 'after' | false;
+
   };
 
-
-
-
-
-
-
+/**
+ * data type factory function - which is the result of `createDmnoDataType`
+ * This is the type of our base types and any custom types defined by the user
+ * */
+export type DmnoDataTypeFactoryFn<T> = ((opts?: T) => DmnoDataType<T>);
+/**
+ * utility type to extract the settings schema shape from a DmnoDataTypeFactoryFn (for example DmnoBaseTypes.string)
+ * this is useful when extending types and wanting to reuse the existing settings
+ * */
+export type ExtractSettingsSchema<F> =
+  F extends DmnoDataTypeFactoryFn<infer T> ? T : never;
 
 
 export class DmnoDataType<T = any> {
@@ -38,20 +60,287 @@ export class DmnoDataType<T = any> {
   // while providing transparent access to the rest. This is so the ConfigItem can just walk up the chain of types
   // without having to understand the details... The other option is to revert that change and
 
-  constructor(readonly typeDef: DmnoDataTypeOptions<T>, readonly typeInstanceOptions: T) {
+  parentType?: DmnoDataType;
+  private _valueResolver?: ConfigValueResolver;
+
+  constructor(
+    readonly typeDef: DmnoDataTypeOptions<T>,
+    readonly typeInstanceOptions: T,
+    /**
+     * the factory function that created this item
+     * Should be always defined unless this is an inline defined type from a config schema
+     * */
+    readonly typeFactoryFn?: DmnoDataTypeFactoryFn<T>,
+  ) {
+    // if this is already one of our primitive base types, we are done
+    if (this.typeDef.extends === PrimitiveBaseType) {
+      // we'll skip setting the parentType since the primitive base type is just a placeholder / marker
+
+    // if extends is set, we make sure it is initialized properly and save that in the parent
+    } else if (this.typeDef.extends) {
+      // deal with string case - only valid for simple base types - `extends: 'number'`
+      if (_.isString(this.typeDef.extends)) {
+        if (!DmnoBaseTypes[this.typeDef.extends]) {
+          throw new Error(`found invalid parent (string) in extends chain - "${this.typeDef.extends}"`);
+        } else {
+          this.parentType = DmnoBaseTypes[this.typeDef.extends](typeInstanceOptions as any);
+        }
+      // deal with uninitialized case - `extends: DmnoBaseTypes.number`
+      } else if (_.isFunction(this.typeDef.extends)) {
+        const initializedDataType = this.typeDef.extends(typeInstanceOptions as any);
+        if (initializedDataType instanceof DmnoDataType) {
+          this.parentType = initializedDataType;
+        } else {
+          throw new Error('found invalid parent (as result of fn) in extends chain');
+        }
+      // normal case - `extends: DmnoBaseTypes.number({ ... })`
+      } else if (this.typeDef.extends instanceof DmnoDataType) {
+        this.parentType = this.typeDef.extends;
+      // anything else is considered an error
+      } else if (this.typeDef.extends) {
+        throw new Error(`found invalid parent in extends chain: ${this.typeDef.extends}`);
+      }
+
+    // if no parent type is set, we can try to infer it from a default value, and otherwise default to string
+    } else {
+      let inferredType;
+      if (this.typeDef.value !== undefined) {
+        if (_.isBoolean(this.typeDef.value)) inferredType = BooleanDataType();
+        else if (_.isNumber(this.typeDef.value)) inferredType = NumberDataType();
+      }
+      // TODO: can probably attempt to infer type from certain kinds of resolver (like a toggle)
+
+      this.parentType = inferredType || StringDataType({});
+    }
+
+    // value resolvers have shorthands that can be passed in (static value, functions)
+    // so we'll make sure those are initialized properly as well
+    if (this.typeDef.value !== undefined) {
+      this._valueResolver = processResolverDef(this.typeDef.value);
+    }
+
+    // if we are dealing with one of our schema inline-defined types (instead of via a reusable data type)
+    // we must adjust validate/coerce functions because they do not accept any settings
+    if (!typeFactoryFn) {
+      if (this.typeDef.validate) {
+        const originalValidate = this.typeDef.validate;
+        this.typeDef.validate = (val, _settings, ctx) => (originalValidate as any)(val, ctx as any);
+      }
+      if (this.typeDef.asyncValidate) {
+        const originalAsyncValidate = this.typeDef.asyncValidate;
+        this.typeDef.asyncValidate = (val, _settings, ctx) => (originalAsyncValidate as any)(val, ctx as any);
+      }
+      if (this.typeDef.coerce) {
+        const originalCoerce = this.typeDef.coerce;
+        this.typeDef.coerce = (val, _settings, ctx) => (originalCoerce as any)(val, ctx as any);
+      }
+    }
   }
 
-  validateUsingInstanceOptions(val: any) {
-    if (!this.typeDef.validate) throw new Error('should not be calling validate');
-    return this.typeDef.validate(val, this.typeInstanceOptions);
+  get valueResolver(): ConfigValueResolver | undefined {
+    return this._valueResolver ?? this.parentType?.valueResolver;
   }
-  asyncValidateUsingInstanceOptions(val: any) {
-    if (!this.typeDef.asyncValidate) throw new Error('should not be calling asyncValidate');
-    return this.typeDef.asyncValidate(val, this.typeInstanceOptions);
+
+
+  validate(val: any, ctx?: ResolverContext): true | Array<Error> {
+    // first we'll deal with empty values, and we'll check al
+    // we'll check all the way up the chain for required setting and deal with that first
+    if (val === undefined || val === null || val === '') {
+      if (this.getDefItem('required')) {
+        return [new Error('Value is required, but is currently empty')];
+      } else {
+        // maybe want to return something else than true?
+        return true;
+      }
+    }
+
+    // call parent validation (which will go all the way up the chain)
+    // this can be disabled or moved to after but the `runParentValidate` setting
+    if (
+      this.parentType
+      && (this.typeDef.runParentValidate === 'before' || this.typeDef.runParentValidate === undefined)
+    ) {
+      const parentValidationResult = this.parentType?.validate(val);
+      if (_.isArray(parentValidationResult) && parentValidationResult.length > 0) {
+        return parentValidationResult;
+      }
+    }
+
+    if (this.typeDef.validate !== undefined) {
+      try {
+        // we can identify the schema-defined types by not having a typeFactoryFn set
+        // and the validation/coercion logic set there expects a resolver context, not a settings object
+        // TODO: see if theres a better way to deal with TS for this?
+        const validationResult = this.typeDef.validate(val, this.typeInstanceOptions, ctx);
+
+        // TODO: think through validation fn shape - how to return status and errors...
+        if (
+          validationResult === undefined
+          || validationResult === true
+          || (_.isArray(validationResult) && validationResult.length === 0)
+        ) {
+          // do nothing
+        } else if (validationResult instanceof Error) {
+          return [validationResult];
+        } else if (_.isArray(validationResult) && validationResult[0] instanceof Error) {
+          // TODO: might want to verify all array items are errors...?
+          return validationResult;
+        } else {
+          return [new Error(`Validation returned invalid result: ${validationResult}`)];
+        }
+      } catch (err) {
+        if (err instanceof Error) {
+          return [err];
+        } else if (_.isArray(err)) {
+          // TODO: should probably check that its an array of errors?
+          return err as Array<Error>;
+        } else {
+          return [new Error(`Validation threw a non-error: ${err}`)];
+        }
+      }
+    }
+
+    // handle parent validation in "after" mode
+    if (
+      this.parentType
+      && (this.typeDef.runParentValidate === 'after')
+    ) {
+      const parentValidationResult = this.parentType?.validate(val);
+      if (_.isArray(parentValidationResult) && parentValidationResult.length > 0) {
+        return parentValidationResult;
+      }
+    }
+
+    return true;
   }
-  coerceUsingInstanceOptions(val: any) {
-    if (!this.typeDef.coerce) throw new Error('should not be calling coerce');
-    return this.typeDef.coerce(val, this.typeInstanceOptions);
+
+
+  // TODO: DRY this up - its (almost) exactly the same as the validate method but calling asyncValidate instead
+  async asyncValidate(val: any, ctx?: ResolverContext): Promise<true | Array<Error>> {
+    // we'll first check if the value is "valid" - which will also deal with required but empty values
+    const isValid = this.validate(val, ctx);
+    if (!isValid) return [new Error('Cannot run asynv validation check on an invalid value')];
+
+
+    // TODO: not sure if we want to run the async validation if the value is empty?
+    // maybe want to return something else than true?
+    if (val === undefined || val === null || val === '') {
+      return true;
+    }
+
+    if (
+      this.parentType
+      && (this.typeDef.runParentAsyncValidate === 'before' || this.typeDef.runParentAsyncValidate === undefined)
+    ) {
+      const parentValidationResult = await this.parentType?.asyncValidate(val);
+      if (_.isArray(parentValidationResult) && parentValidationResult.length > 0) {
+        return parentValidationResult;
+      }
+    }
+
+    if (this.typeDef.asyncValidate !== undefined) {
+      try {
+        // we can identify the schema-defined types by not having a typeFactoryFn set
+        // and the validation/coercion logic set there expects a resolver context, not a settings object
+        // TODO: see if theres a better way to deal with TS for this?
+        const validationResult = await this.typeDef.asyncValidate(val, this.typeInstanceOptions, ctx);
+
+        // TODO: think through validation fn shape - how to return status and errors...
+        if (
+          validationResult === undefined
+          || validationResult === true
+          || (_.isArray(validationResult) && validationResult.length === 0)
+        ) {
+          // do nothing
+        } else if (validationResult instanceof Error) {
+          return [validationResult];
+        } else if (_.isArray(validationResult) && validationResult[0] instanceof Error) {
+          // TODO: might want to verify all array items are errors...?
+          return validationResult;
+        } else {
+          return [new Error(`Validation returned invalid result: ${validationResult}`)];
+        }
+      } catch (err) {
+        if (err instanceof Error) {
+          return [err];
+        } else if (_.isArray(err)) {
+          // TODO: should probably check that its an array of errors?
+          return err as Array<Error>;
+        } else {
+          return [new Error(`Validation threw a non-error: ${err}`)];
+        }
+      }
+    }
+
+    // handle parent validation in "after" mode
+    if (
+      this.parentType
+      && (this.typeDef.runParentAsyncValidate === 'after')
+    ) {
+      const parentValidationResult = await this.parentType?.asyncValidate(val);
+      if (_.isArray(parentValidationResult) && parentValidationResult.length > 0) {
+        return parentValidationResult;
+      }
+    }
+
+    return true;
+  }
+
+  coerce(val: any, ctx?: ResolverContext): boolean {
+    let coercedVal = val;
+
+    if (
+      this.parentType
+      && (this.typeDef.runParentCoerce === 'before' || this.typeDef.runParentCoerce === undefined)
+    ) {
+      coercedVal = this.parentType.coerce(coercedVal, ctx);
+    }
+
+    if (this.typeDef.coerce !== undefined) {
+      // see note about ctx and any in `validate` above
+      coercedVal = this.typeDef.coerce(coercedVal, this.typeInstanceOptions, ctx);
+    }
+
+    if (
+      this.parentType
+      && (this.typeDef.runParentCoerce === 'after')
+    ) {
+      coercedVal = this.parentType.coerce(coercedVal, ctx);
+    }
+
+    return coercedVal;
+  }
+
+
+  /** helper to unroll config schema using the type chain of parent "extends"  */
+  getDefItem<T extends keyof DmnoDataTypeOptions>(key: T): DmnoDataTypeOptions[T] {
+    // first check if the item definition itself has a value
+    if (this.typeDef[key] !== undefined) {
+      return this.typeDef[key];
+    // otherwise run up the ancestor heirarchy
+    } else {
+      return this.parentType?.getDefItem(key);
+    }
+  }
+
+
+  /** checks if this data type is directly an instance of the data type (not via inheritance) */
+  isType(factoryFn: DmnoDataTypeFactoryFn<any>): boolean {
+    return this.typeFactoryFn === factoryFn;
+  }
+  /** checks if this data type is an instance of the data type, whether directly or via inheritance */
+  extendsType(factoryFn: DmnoDataTypeFactoryFn<any>): boolean {
+    // follows up the chain checking for the type we passed in
+    return this.isType(factoryFn) || this.parentType?.extendsType(factoryFn) || false;
+  }
+
+  /** checks if this data type is directly an instance of the data type (not via inheritance) */
+  get primitiveBaseType(): DmnoDataTypeFactoryFn<any> {
+    if (!this.parentType) {
+      if (this.typeFactoryFn) return this.typeFactoryFn;
+      else throw new Error('Unable to determine primitive base type?');
+    }
+    return this.parentType.primitiveBaseType;
   }
 }
 
@@ -62,15 +351,31 @@ export class DmnoDataType<T = any> {
 // note that we have allowed the bare (non-function call, ie `extends: DmnoBaseTypes.string`) which
 // is also unaware if the settings schema is able to be undefined or not
 // (we're talking about allowing `DmnoBaseTypes.string()` vs only `DmnoBaseTypes.string({})`)
-export function createDmnoDataType<T>(opts: DmnoDataTypeOptions<T>) {
-  return (usageOpts?: T) => new DmnoDataType(opts, usageOpts);
+export function createDmnoDataType<T>(opts: DmnoDataTypeOptions<T>): DmnoDataTypeFactoryFn<T> {
+  // we are going to return a function which takes an _instance_ of the type settings schema for example `{ minLength: 2 }`
+  // and returns something which is able to use the DmnoDataType which knows how to combine the data type defintition and that isntance
+  // of the options together
+
+  // by storing a reference to this factory function we'll be able to compare a usage of the data type to the "type" itself
+  // for example `myCustomStringType.isType(DmnoBaseTypes.string)`
+  const typeFactoryFn = (usageOpts?: T) => new DmnoDataType<T>(opts, usageOpts ?? {} as T, typeFactoryFn);
+  return typeFactoryFn;
 }
 
 
+// we'll use this to mark our primitive types in a way that end users can't do by accident
+const PrimitiveBaseType = createDmnoDataType({});
+
+
 const StringDataType = createDmnoDataType({
+  typeLabel: 'dmno/string',
+  extends: PrimitiveBaseType,
+
   // summary: 'generic string data type',
   settingsSchema: Object as undefined | {
+    /** checks value is at least minLength characters (inclusive) */
     minLength?: number;
+    /** checks value is at most maxLength characters (inclusive) */
     maxLength?: number;
     isLength?: number;
     startsWith?: string;
@@ -83,12 +388,19 @@ const StringDataType = createDmnoDataType({
 
     // allow/deny character list
     // more stuff?
+
+    toUpperCase?: boolean;
+    toLowerCase?: boolean;
   },
 
-  coerce(val) {
-    if (_.isString(val)) return val;
-    if (_.isNil(val)) return '';
-    return val.toString();
+  coerce(rawVal, settings) {
+    if (_.isNil(rawVal)) return '';
+    let val = _.isString(rawVal) ? rawVal : rawVal.toString();
+
+    if (settings?.toUpperCase) val = val.toUpperCase();
+    if (settings?.toLowerCase) val = val.toLowerCase();
+
+    return val;
   },
 
   validate(val: string, settings) {
@@ -127,6 +439,8 @@ const StringDataType = createDmnoDataType({
 
 
 const NumberDataType = createDmnoDataType({
+  typeLabel: 'dmno/number',
+  extends: PrimitiveBaseType,
   settingsSchema: Object as undefined | {
     min?: number;
     max?: number;
@@ -176,12 +490,14 @@ const NumberDataType = createDmnoDataType({
 
 
 const BooleanDataType = createDmnoDataType({
+  typeLabel: 'dmno/boolean',
+  extends: PrimitiveBaseType,
   // TODO: add settings to be more strict, or to allow other values to coerce to true/false
-  validate(val, settings) {
+  validate(val) {
     if (_.isBoolean(val)) return true;
     return new Error('Value must be `true` or `false`');
   },
-  coerce(val, settings) {
+  coerce(val) {
     if (_.isBoolean(val)) {
       return val;
     } else if (_.isString(val)) {
@@ -204,16 +520,29 @@ const BooleanDataType = createDmnoDataType({
 
 const URL_REGEX = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/;
 const UrlDataType = createDmnoDataType({
-  extends: StringDataType({}),
+  typeLabel: 'dmno/url',
+  extends: (settings) => StringDataType({
+    ...settings.normalize && { toLowerCase: true },
+  }),
   typeDescription: 'standard URL',
-  // summary: 'url base type summary',
   settingsSchema: Object as undefined | {
-
+    prependProtocol?: boolean
+    normalize?: boolean,
   },
-  validate(val, settings) {
+
+  coerce(rawVal, settings) {
+    if (settings?.prependProtocol && !rawVal.startsWith('https://')) {
+      return `https://${rawVal}`;
+    }
+    return rawVal;
+  },
+
+  validate(val) {
     // TODO: this is testing assuming its a normal web/http URL
     // we'll want some options to enable/disable specific protocols and things like that...
-    return URL_REGEX.test(val);
+    const result = URL_REGEX.test(val);
+    if (result) return true;
+    return new Error('URL doesnt match url regex check');
   },
 });
 
@@ -222,6 +551,8 @@ const UrlDataType = createDmnoDataType({
 // Complex "container" types //////////////////////////////////////////////////////////
 
 const ObjectDataType = createDmnoDataType({
+  typeLabel: 'dmno/object',
+  extends: PrimitiveBaseType,
   settingsSchema: Object as any as Record<string, ConfigItemDefinition>,
   getChildren(settings) {
     return settings || {};
@@ -229,6 +560,8 @@ const ObjectDataType = createDmnoDataType({
 });
 
 const ArrayDataType = createDmnoDataType({
+  typeLabel: 'dmno/array',
+  extends: PrimitiveBaseType,
   settingsSchema: Object as {
     itemSchema?: ConfigItemDefinition;
 
@@ -244,11 +577,13 @@ const ArrayDataType = createDmnoDataType({
 });
 
 const DictionaryDataType = createDmnoDataType({
+  typeLabel: 'dmno/dictionary',
+  extends: PrimitiveBaseType,
   settingsSchema: Object as {
     itemSchema?: ConfigItemDefinition;
 
     validateKeys?: (key: string) => boolean;
-    asyncValidateKeys?: (key: string) => Promise<boolean>;
+    // asyncValidateKeys?: (key: string) => Promise<boolean>;
     keyDescription?: string
     // TODO: more features around the keys themselves
 
@@ -269,7 +604,12 @@ type ExtendedEnumDescription = {
   description?: string,
   // icon, color, docs url, etc...
 };
+
+
+
 const EnumDataType = createDmnoDataType({
+  typeLabel: 'dmno/enum',
+  extends: PrimitiveBaseType,
   settingsSchema: Object as any as
     (
       // simple list of values
@@ -312,6 +652,9 @@ export type DmnoSimpleBaseTypeNames = 'string' | 'number' | 'url' | 'boolean';
 
 // example of defining common type using our base types
 export const NodeEnvType = createDmnoDataType({
+  // TODO: might want to split the base types from these? (both in "dmno/" for now)
+  typeLabel: 'dmno/nodeEnv',
+
   typeDescription: 'standard environment flag for Node.js',
   extends: DmnoBaseTypes.enum({
     development: { description: 'true during local development' },

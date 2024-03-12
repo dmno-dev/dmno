@@ -47,9 +47,10 @@ function getTsDefinitionForItem(item: DmnoConfigItemBase, indentLevel = 0) {
   // TODO: also will need to figure out how we deal with null values
   // since we might need something like `key: string | null` rather than `key?: string`
 
-  const jsDocLines = ['❌ Hello!'];
-  if (item.getDefItem('description')) jsDocLines.push(item.getDefItem('description'));
-  if (item.getDefItem('typeDescription')) jsDocLines.push(item.getDefItem('typeDescription'));
+  const jsDocLines = [];
+  const itemType = item.type;
+  if (itemType.getDefItem('description')) jsDocLines.push(itemType.getDefItem('description'));
+  if (itemType.getDefItem('typeDescription')) jsDocLines.push(itemType.getDefItem('typeDescription'));
 
   if (jsDocLines.length === 1) {
     itemSrc.push(`/** ${jsDocLines[0]} */`);
@@ -62,16 +63,22 @@ function getTsDefinitionForItem(item: DmnoConfigItemBase, indentLevel = 0) {
   }
 
   // TODO: logic should probably be within the Item class(es) and we still need to figure out how to identify these types...
-  let primitiveBaseType: DmnoDataType;
-  if (item instanceof DmnoConfigItem) {
-    primitiveBaseType = item.typeChain[0];
-  } else if (item instanceof DmnoPickedConfigItem) {
-    primitiveBaseType = item.originalConfigItem.typeChain[0];
+  const baseType = itemType.primitiveBaseType;
+  let itemTsType = 'string';
+  if (baseType === DmnoBaseTypes.string) {
+    itemTsType = 'string';
+  } else if (baseType === DmnoBaseTypes.number) {
+    itemTsType = 'number';
+  } else if (baseType === DmnoBaseTypes.boolean) {
+    itemTsType = 'boolean';
+  } else if (baseType === DmnoBaseTypes.enum) {
+    itemTsType = "'a' | 'b' | 'c'";
+  } else if (baseType === DmnoBaseTypes.object) {
+    itemTsType = '{}';
   }
-  // if (primitiveBaseType === DmnoBaseTypes.string)
 
 
-  itemSrc.push(`readonly ${item.key}${item.getDefItem('required') ? '' : '?'}: string;`);
+  itemSrc.push(`readonly ${item.key}${itemType.getDefItem('required') ? '' : '?'}: ${itemTsType};`);
   itemSrc.push('');
   return _.map(itemSrc, (line) => `${i}${line}`);
 }

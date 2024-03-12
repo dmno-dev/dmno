@@ -8,7 +8,6 @@
 </template>
 
 <script setup lang="ts">
-
 // import { DMNO_CONFIG } from '@dmno/core';
 
 // import '../.dmno/dmno-config';

@@ -89,7 +89,7 @@ export class ConfigLoaderProcess {
       // make sure we clean up!
       // TODO: this may not work in all cases? we might want a cli helper that will clean up rogue processes
       process.on('exit', (code) => {
-        debug(pc.bgRed('KILLING LOADER PROCESS'));
+        debug(pc.bgRed(`KILLING LOADER PROCESS - exit code = ${code}`));
         this.childProcess?.kill();
       });
     } catch (err) {

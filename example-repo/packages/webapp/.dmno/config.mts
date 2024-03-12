@@ -1,10 +1,42 @@
-import { DmnoBaseTypes, createDmnoDataType, defineConfigSchema, dmnoFormula, toggleByEnv, toggleByNodeEnv } from '@dmno/core';
+import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, createDmnoDataType, defineConfigSchema, dmnoFormula, toggleByEnv, toggleByNodeEnv } from '@dmno/core';
 
 
 const customUrlType = createDmnoDataType({
-  extends: DmnoBaseTypes.url({}),
+  typeLabel: 'my-custom-url',
+  extends: DmnoBaseTypes.url({
+    prependProtocol: true,
+    normalize: true,
+  }),
   summary: 'summary from custom type',
+  
+  settingsSchema: Object as {
+    newSetting?: boolean,
+  },
 });
+
+const customizedStringType = createDmnoDataType({
+  typeLabel: 'my-custom-url',
+  extends: (settings) => DmnoBaseTypes.string({
+    ...settings,
+  }),
+  summary: 'summary from custom type',
+  
+  settingsSchema: Object as {
+    newSetting?: boolean,
+  } & ExtractSettingsSchema<typeof DmnoBaseTypes.string>,
+
+  validate(val, settings) {
+    console.log(settings.newSetting);
+    console.log(settings.minLength);
+  }
+});
+
+
+
+//type ExtractSettingsSchema<> = P extends (opts) => <infer T> ? T : never;
+
+
+
 
 
 export default defineConfigSchema({
@@ -52,6 +84,13 @@ export default defineConfigSchema({
         production: (ctx) => `prod-${ctx.get('NODE_ENV')}`,
       })
     },
+
+    BOOLEAN_EXAMPLE: {
+      description: 'this is a required boolean config item',
+      required: true,
+      value: true,
+    },
+
     VITE_RANDOM_NUM: {
       extends: DmnoBaseTypes.number,
       // generate a random number, will be different each time resolution runs
@@ -62,16 +101,15 @@ export default defineConfigSchema({
       extends: DmnoBaseTypes.number({
         precision: 1,
         max: 1000,
-        min: 1,
+        min: 1
       }),
-      value: (ctx) => {
-        return ctx.get('VITE_RANDOM_NUM') + 1;
-      },
+      value: '123'
     },
     WEB_URL: {
-      extends: customUrlType,
+      extends: customUrlType({ newSetting: true }),
       description: 'public url of this web app',
       expose: true,
+      value: 'EXAMPLE.com',
     },
   },
 })

@@ -1,8 +1,7 @@
 /* eslint-disable class-methods-use-this */
-import { match } from 'assert';
 import _ from 'lodash-es';
 import {
-  DmnoConfigItem, DmnoConfigItemBase, DmnoPickedConfigItem, ResolverContext,
+  DmnoConfigItemBase, ResolverContext,
 } from './config-engine/config-engine';
 
 // TODO: do we allow Date?

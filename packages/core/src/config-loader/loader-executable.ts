@@ -256,7 +256,7 @@ for (const service of sortedServices) {
       potentialKeysToPickFrom.push(..._.keys(pickFromService.config));
     } else {
       // whereas only "exposed" items can be picked from non-ancestors
-      const exposedItems = _.pickBy(pickFromService.config, (itemConfig) => !!itemConfig.expose);
+      const exposedItems = _.pickBy(pickFromService.config, (itemConfig) => !!itemConfig.type.getDefItem('expose'));
       potentialKeysToPickFrom.push(..._.keys(exposedItems));
     }
 
