@@ -1,37 +1,99 @@
 /**
- * This is the actual cli logic - triggered from cli.ts via tsx
+ * This is the entry point for the config loader process.
+ * **It must be run via `tsup`**, so that we can import each `.dmno/config.mts` file dynamically
  *
- * much of this will likely get reorganized, but just trying to get things working first
+ * It's reponsible for:
+ * - determining where all our services are
+ * - loading each service config (or only loading some of it depending on what is needed)
+ * - responding to queries from the cli (ex: get all the config for service X)
+ *
+ * In the future, when we have more of "dev" mode, it will probably also be responsible for
+ * watching the config files for changes, and then reloading them and firing off updates to the CLI
  */
+
 import { execSync } from 'node:child_process';
 import _ from 'lodash-es';
 import graphlib from '@dagrejs/graphlib';
+import ipc from 'node-ipc';
+import Debug from 'debug';
 
 import {
   DmnoConfigItem, DmnoPickedConfigItem, DmnoService, ServiceConfigSchema,
-} from './config-engine';
+} from '../config-engine/config-engine';
+import { ConfigLoaderRequestMap } from './ipc-requests';
+import { generateTypescriptTypes } from '../config-engine/type-generation';
 
-console.log('>>CLI ENTRY!');
 
-// TODO: share this type with cli.ts
-export type DmnoRunCommandInfo = {
-  command: 'load',
-  service?: string,
-  format?: 'json',
-};
+const debug = Debug('dmno');
 
-const commandInfo: DmnoRunCommandInfo = JSON.parse(process.argv[2]);
+
+// const ipc = new NodeIpc.IPC();
+ipc.config.id = 'dmno';
+ipc.config.retry = 1500;
+ipc.config.silent = true;
+
+const requestHandlers = {} as Record<keyof ConfigLoaderRequestMap, any>;
+function registerRequestHandler<K extends keyof ConfigLoaderRequestMap>(
+  requestType: K,
+  handler: (payload: ConfigLoaderRequestMap[K]['payload']) => Promise<ConfigLoaderRequestMap[K]['response']>,
+) {
+  // console.log(`registered handler for requestType: ${requestType}`);
+  if (requestHandlers[requestType]) {
+    throw new Error(`Duplicate IPC request handler detected for requestType "${requestType}"`);
+  }
+  requestHandlers[requestType] = handler;
+}
+
+// we pass in a uuid to identify the running process IPC socket
+// this allows us to run multiple concurrent loaders...
+// TBD whether that makes sense or if we should share a single process?
+const processUuid = process.argv[2];
+if (!processUuid) {
+  throw new Error('Missing process UUID');
+}
+
+ipc.connectTo('dmno', `/tmp/${processUuid}.dmno.sock`, function () {
+  ipc.of.dmno.on('connect', function () {
+    ipc.log('## connected to dmno ##', ipc.config.retry);
+  });
+
+  ipc.of.dmno.on('disconnect', function () {
+    ipc.log('disconnected from dmno');
+  });
+
+  ipc.of.dmno.on(
+    'message', // any event or message type your server listens for
+    function (data) {
+      ipc.log('got a message from dmno : ', data);
+    },
+  );
+
+  ipc.of.dmno.on('request', async (message: any) => {
+    const handler = (requestHandlers as any)[message.requestType];
+    if (!handler) {
+      throw new Error(`No handler for request type: ${message.requestType}`);
+    }
+    const result = await handler(message.payload);
+    ipc.of.dmno.emit('request-response', {
+      requestId: message.requestId,
+      response: result,
+    });
+  });
+});
+
+
+
 
 const CWD = process.cwd();
 const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 
-console.log({
-  cwd: process.cwd(),
-  // __dirname,
-  'import.meta.url': import.meta.url,
-  thisFilePath,
-  'process.env.PNPM_PACKAGE_NAME': process.env.PNPM_PACKAGE_NAME,
-});
+// console.log({
+//   cwd: process.cwd(),
+//   // __dirname,
+//   'import.meta.url': import.meta.url,
+//   thisFilePath,
+//   'process.env.PNPM_PACKAGE_NAME': process.env.PNPM_PACKAGE_NAME,
+// });
 
 // currently assuming we are using pnpm, and piggybacking off of their definition of "services" in pnpm-workspace.yaml
 // we'll want to to do smarter detection and also support yarn/npm/etc as well as our own list of services defined at the root
@@ -86,7 +148,7 @@ for (const w of workspacePackagesData) {
       rawConfig: importedConfig.default as ServiceConfigSchema,
     });
   } catch (err) {
-    console.log('found error when loading config');
+    debug('found error when loading config');
     service = new DmnoService({
       ...serviceInitOpts,
       rawConfig: err as Error,
@@ -96,7 +158,7 @@ for (const w of workspacePackagesData) {
     rootServiceName = service.serviceName;
   }
 
-  console.log('init service', service);
+  debug('init service', service);
 
   if (servicesByName[service.serviceName]) {
     throw new Error(`Service names must be unique - duplicate name detected "${service.serviceName}"`);
@@ -106,12 +168,8 @@ for (const w of workspacePackagesData) {
 }
 
 
-if (commandInfo.service && !servicesByName[commandInfo.service]) {
-  // TODO: figure out best way to throw / return an error here?
-  throw new Error(`Unable to find service: ${commandInfo.service}`);
-}
-
 const services = _.values(servicesByName);
+const servicesByPackageName = _.keyBy(services, (s) => s.packageName);
 
 // initialize a services DAG
 // note - we may want to experiment with "compound nodes" to have the services contain their config items as children?
@@ -171,7 +229,7 @@ let sortedServices = services;
 if (!graphCycles.length) {
   const sortedServiceNames = graphlib.alg.topsort(servicesDag);
   sortedServices = _.map(sortedServiceNames, (serviceName) => servicesByName[serviceName]);
-  console.log('DEP SORTED SERVICES', sortedServiceNames);
+  debug('DEP SORTED SERVICES', sortedServiceNames);
 }
 
 for (const service of sortedServices) {
@@ -198,7 +256,7 @@ for (const service of sortedServices) {
       potentialKeysToPickFrom.push(..._.keys(pickFromService.config));
     } else {
       // whereas only "exposed" items can be picked from non-ancestors
-      const exposedItems = _.pickBy(pickFromService.config, (itemConfig) => !!itemConfig.expose);
+      const exposedItems = _.pickBy(pickFromService.config, (itemConfig) => !!itemConfig.type.getDefItem('expose'));
       potentialKeysToPickFrom.push(..._.keys(exposedItems));
     }
 
@@ -278,22 +336,28 @@ for (const service of sortedServices) {
 
 for (const service of sortedServices) {
   if (service.schemaErrors.length) {
-    console.log(`SERVICE ${service.serviceName} has schema errors: `);
-    console.log(service.schemaErrors);
+    debug(`SERVICE ${service.serviceName} has schema errors: `);
+    debug(service.schemaErrors);
   } else {
     await service.resolveConfig();
   }
 }
 
+// TODO: we're assuming here that IPC connection is already booted...
+// and this should probably happen earlier (before loading/resolving config)
+ipc.of.dmno.emit('ready');
 
-// if we are loading a single service, we want to get the config for just that service
-if (commandInfo.service) {
-  const service = servicesByName[commandInfo.service];
-  console.log('-----------------------------------------');
-  console.log(`Resolved env for service ${service.serviceName}`);
-  console.log('-----------------------------------------');
 
-  // TODO: move this to service?
+registerRequestHandler('get-resolved-config', async (payload) => {
+  let service: DmnoService | undefined;
+
+  // TODO: will likely need this logic for many requests
+  // so might want to do it another way?
+  if (payload.service) service = servicesByName[payload.service];
+  else if (payload.packageName) service = servicesByPackageName[payload.packageName];
+  if (!service) throw new Error('Unable to select a service');
+
+  // TODO: move this logic into DmnoService?
   const serviceConfig = {} as any;
   _.each(service.config, (item, key) => {
     serviceConfig[key] = item.resolvedValue;
@@ -303,16 +367,21 @@ if (commandInfo.service) {
     if (!item.isValid) {
       throw item.validationErrors![0];
     }
-    // console.log(`${item.key}=${item.resolvedValue}`);
   });
 
-  if (commandInfo.format === 'json') {
-    console.log(JSON.stringify(serviceConfig));
-  } else {
-    console.log(serviceConfig);
-  }
-}
+  return serviceConfig;
+});
 
-// console.log(sortedServices);
 
-// console.log(services);
+registerRequestHandler('generate-types', async (payload) => {
+  let service: DmnoService | undefined;
+
+  // TODO: will likely need this logic for many requests
+  // so might want to do it another way?
+  if (payload.service) service = servicesByName[payload.service];
+  else if (payload.packageName) service = servicesByPackageName[payload.packageName];
+  if (!service) throw new Error('Unable to select a service');
+
+  return { tsSrc: generateTypescriptTypes(service) };
+});
+

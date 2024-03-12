@@ -4,10 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "dmno run -s web -- vite",
+    "dev": "vite",
+    "dev:run": "dmno run -- vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
     "dmno": "dmno load",
+    "dmno:types": "dmno types",
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix"
   },

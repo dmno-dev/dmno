@@ -1,14 +1,11 @@
 /* eslint-disable class-methods-use-this */
 
 import { Command, Option } from 'clipanion';
-import pc from 'picocolors';
-import { input } from '@inquirer/prompts';
 import _ from 'lodash-es';
 
 
-import { loadDmnoConfig } from '../lib/load-config';
+import { ConfigLoaderProcess } from '../lib/loader-process';
 import { executeCommandWithEnv } from '../lib/execute-command';
-
 
 
 
@@ -36,12 +33,14 @@ export class RunCommand extends Command {
   });
 
   async execute() {
-    // console.log('console.log!');
-    // this.context.stdout.write('Hello stdout!\n');
-    // console.log(this.command);
+    const configLoader = new ConfigLoaderProcess();
 
-    const resolvedEnv = loadDmnoConfig(this.service);
-    await executeCommandWithEnv(this.command, resolvedEnv);
+    const config = await configLoader.makeRequest('get-resolved-config', {
+      service: this.service,
+      packageName: process.env.npm_package_name,
+    });
+
+    await executeCommandWithEnv(this.command, config);
   }
 }
 
