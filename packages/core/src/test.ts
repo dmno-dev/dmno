@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import pc from 'picocolors';
+import kleur from 'kleur';
 import { DmnoBaseTypes, createDmnoDataType } from './config-engine/base-types';
 
 
@@ -30,7 +30,7 @@ const sType = DmnoBaseTypes.string({
 
 function checkValid(val: any) {
   const result = sType.validate(val);
-  console.log('Check valid', val, result === true ? pc.green('VALID!') : pc.red(`ERROR: ${result[0]?.message}`));
+  console.log('Check valid', val, result === true ? kleur.green('VALID!') : kleur.red(`ERROR: ${result[0]?.message}`));
 }
 
 checkValid('a');

@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import {
   ChildProcess, spawn,
 } from 'node:child_process';
-import pc from 'picocolors';
+import kleur from 'kleur';
 import _ from 'lodash-es';
 import ipc from 'node-ipc';
 import Debug from 'debug';
@@ -89,7 +89,7 @@ export class ConfigLoaderProcess {
       // make sure we clean up!
       // TODO: this may not work in all cases? we might want a cli helper that will clean up rogue processes
       process.on('exit', (code) => {
-        debug(pc.bgRed(`KILLING LOADER PROCESS - exit code = ${code}`));
+        debug(kleur.bgRed(`KILLING LOADER PROCESS - exit code = ${code}`));
         this.childProcess?.kill();
       });
     } catch (err) {

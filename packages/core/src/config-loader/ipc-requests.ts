@@ -1,7 +1,9 @@
+import { SerializedConfigItem, SerializedService } from './serialization-types';
+
 export type ConfigLoaderRequestMap = {
   'get-resolved-config': {
     payload: { service?: string, packageName?: string },
-    response: { configValues: Record<string, any> },
+    response: SerializedService,
   },
   'generate-types': {
     payload: { service?: string, packageName?: string },

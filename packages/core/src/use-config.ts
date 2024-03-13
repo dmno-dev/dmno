@@ -7,7 +7,8 @@ export function getResolvedConfig() {
     const configObj = JSON.parse(configResult.toString());
     return configObj;
   } catch (err) {
-    console.log('caught error while trying to load dmno config', err);
+    // console.log('caught error while trying to load dmno config');
+    console.log((err as any).stdout.toString());
     throw err;
   }
 }
@@ -17,9 +18,9 @@ export function getResolvedConfigForEnvInjection() {
   // when injecting into vite config via the `define` option, we need the data in a certain format
   // - each key must be like `import.meta.env.KEY`
   // - values must be JSON.stringified - meaning a string include quotes, for example '"value"'
-  return _.transform(config, (acc, val, key) => {
-    acc[`import.meta.env.${key.toString()}`] = JSON.stringify(val);
+  return _.transform(config, (acc, item, key) => {
+    acc[`import.meta.env.${key.toString()}`] = JSON.stringify(item.resolvedValue);
 
-    acc[`DMNO_CONFIG.${key.toString()}`] = JSON.stringify(val);
+    acc[`DMNO_CONFIG.${key.toString()}`] = JSON.stringify(item.resolvedValue);
   }, {} as any);
 }

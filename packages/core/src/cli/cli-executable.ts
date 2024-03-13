@@ -10,7 +10,7 @@
  * - formatting the result back to the user in the format requested (or exiting with an error code)
  */
 
-import pc from 'picocolors';
+import kleur from 'kleur';
 
 import {
   Cli, Builtins,
@@ -25,15 +25,15 @@ import { TypeGenCommand } from './commands/typegen.command';
 // import packageJson from '../package.json';
 
 process.on('uncaughtException', (err) => {
-  console.log(pc.red(`UNCAUGHT EXCEPTION: ${err.message}`));
-  console.log(pc.red(`UNCAUGHT EXCEPTION: ${err.stack}`));
+  console.log(kleur.red(`UNCAUGHT EXCEPTION: ${err.message}`));
+  console.log(kleur.red(`UNCAUGHT EXCEPTION: ${err.stack}`));
   // eslint-disable-next-line no-restricted-syntax
   process.exit(1);
 });
 
 const cli = new Cli({
   binaryName: 'dmno',
-  binaryLabel: pc.bgGreen('DMNO CLI'),
+  binaryLabel: kleur.bgGreen('DMNO CLI'),
   binaryVersion: '0.0.1',
 });
 

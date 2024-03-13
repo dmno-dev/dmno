@@ -8,6 +8,8 @@ import {
   ValueResolverDef, ConfigValueOverride, ConfigValueResolver, PickedValueResolver,
 } from '../resolvers';
 import { getConfigFromEnvVars } from '../lib/env-vars';
+import { SerializedConfigItem, SerializedService } from '../config-loader/serialization-types';
+import { CoercionError, DmnoError, ValidationError } from './errors';
 
 
 const debug = Debug('dmno');
@@ -243,6 +245,16 @@ export class DmnoService {
     }
     return currentItem;
   }
+
+  toJSON(): SerializedService {
+    return {
+      isValid: true,
+      isResolved: true,
+      packageName: this.packageName,
+      serviceName: this.serviceName,
+      config: _.mapValues(this.config, (item, _key) => item.toJSON()),
+    };
+  }
 }
 
 export class ResolverContext {
@@ -284,22 +296,19 @@ export abstract class DmnoConfigItemBase {
 
   // not sure if the coercion error should be stored in resolution error or split?
   /** error encountered during coercion step */
-  coercionError?: Error;
+  coercionError?: CoercionError;
 
 
   /** more details about the validation failure if applicable */
-  validationErrors?: Array<Error>;
+  validationErrors?: Array<ValidationError>;
   /** whether the final resolved value is valid or not */
   get isValid(): boolean | undefined {
+    if (this.coercionError) return false;
     if (this.validationErrors === undefined) return undefined;
     return this.validationErrors.length === 0;
   }
 
   abstract get type(): DmnoDataType;
-
-  abstract validate(val: any, ctx: ResolverContext): TypeValidationResult;
-  // abstract asyncValidate(val: any, ctx: ResolverContext): Promise<TypeValidationResult>;
-  abstract coerce(val: any, ctx: ResolverContext): any;
 
   children: Record<string, DmnoConfigItemBase> = {};
 
@@ -358,10 +367,14 @@ export abstract class DmnoConfigItemBase {
     // need to think through errors + overrides + empty values...
     if (this.resolvedRawValue !== undefined) {
       try {
-        // TODO: we may need to do something more complex here to expose the parent type's coerce fn
-        this.resolvedValue = this.type.coerce(_.cloneDeep(this.resolvedRawValue), ctx);
+        const coerceResult = this.type.coerce(_.cloneDeep(this.resolvedRawValue), ctx);
+        if (coerceResult instanceof CoercionError) {
+          this.coercionError = coerceResult;
+        } else {
+          this.resolvedValue = coerceResult;
+        }
       } catch (err) {
-        this.coercionError = err as Error;
+        this.coercionError = new CoercionError(err as Error);
       }
     }
 
@@ -376,7 +389,28 @@ export abstract class DmnoConfigItemBase {
       this.isValid ? '✅' : `❌ ${this.validationErrors?.[0]?.message}`,
     );
   }
+
+  toJSON(): SerializedConfigItem {
+    return {
+      key: this.key,
+      isValid: this.isValid,
+
+      resolvedRawValue: this.resolvedRawValue,
+      resolvedValue: this.resolvedValue,
+      isResolved: this.isResolved,
+      children: _.mapValues(this.children, (c) => c.toJSON()),
+
+      // schemaErrors
+      coercionError: this.coercionError?.toJSON(),
+
+      validationErrors:
+        this.validationErrors?.length
+          ? _.map(this.validationErrors, (err) => err.toJSON())
+          : undefined,
+    };
+  }
 }
+
 
 
 // this is a "processed" config item
@@ -420,8 +454,7 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
     }
 
     try {
-      // TODO: initialize children within this new setup
-      // this.initializeChildren();
+      this.initializeChildren();
     } catch (err) {
       this.schemaError = err as Error;
       debug(err);
@@ -430,33 +463,15 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
     this.valueResolver = this.type.valueResolver;
   }
 
-  // private initializeChildren() {
-  //   // follow up the chain until we find a type that has children (if applicable)
-  //   // then get the children from the datatype, and initialize a new DmnoConfigItem for each
-  //   // this will handle deeply nested stuff since those config items could have more children inside
-  //   for (let i = 0; i < this.typeChain.length; i++) {
-  //     const ancestorType = this.typeChain[i];
-  //     if (ancestorType.typeDef.getChildren) {
-  //       const childDefs = ancestorType.typeDef.getChildren(ancestorType.typeInstanceOptions);
-  //       _.each(childDefs, (childDef, childKey) => {
-  //         const childItem = new DmnoConfigItem(childKey, childDef, this);
-  //         this.children[childKey] = childItem;
-  //       });
-  //       break;
-  //     }
-  //   }
-  // }
-
-  /** helper to unroll config schema using the type chain of parent "extends"  */
-  getDefItem<T extends keyof ConfigItemDefinition>(key: T): ConfigItemDefinition[T] {
-    return this.type.getDefItem(key);
-  }
-
-  coerce(val: any, ctx: ResolverContext) {
-    return this.type.coerce(val, ctx);
-  }
-  validate(val: any, ctx: ResolverContext) {
-    return this.type.validate(val, ctx);
+  private initializeChildren() {
+    // special handling for object types to initialize children
+    if (this.type.primitiveTypeFactory === DmnoBaseTypes.object) {
+      _.each(this.type.primitiveType.typeInstanceOptions, (childDef, childKey) => {
+        this.children[childKey] = new DmnoConfigItem(childKey, childDef, this);
+      });
+    }
+    // TODO: also need to initialize the `itemType` for array and dictionary
+    // unless we change how those work altogether...
   }
 }
 
@@ -484,19 +499,10 @@ export class DmnoPickedConfigItem extends DmnoConfigItemBase {
       this.pickChain.unshift(this.pickChain[0].def.sourceItem);
     }
 
-    // fill in settings from the actual source item
-    // this.initializeSettings();
     this.initializeChildren();
 
     // each item in the chain could have a value transformer, so we must follow the entire chain
     this.valueResolver = new PickedValueResolver(this.def.sourceItem, this.def.transformValue);
-  }
-
-  getDefItem<T extends keyof ConfigItemDefinition>(key: T): ConfigItemDefinition[T] {
-    // whereas all other config (other than the key) is based on the original ConfigItem
-    // note - if we decide we want to allow picked items to alter more config from the original
-    // we'll need to adjust this to follow the chain
-    return (this.originalConfigItem as any)[key];
   }
 
   /** the real source config item - which defines most of the settings */
@@ -515,14 +521,4 @@ export class DmnoPickedConfigItem extends DmnoConfigItemBase {
       });
     }
   }
-
-  coerce(val: any, ctx: ResolverContext) {
-    return this.originalConfigItem.coerce(val, ctx);
-  }
-  validate(val: any, ctx: ResolverContext) {
-    return this.originalConfigItem.validate(val, ctx);
-  }
-  // async asyncValidate(val: any, ctx: ResolverContext) {
-  //   return this.originalConfigItem.asyncValidate(val, ctx);
-  // }
 }

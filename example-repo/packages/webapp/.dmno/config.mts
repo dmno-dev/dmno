@@ -63,17 +63,16 @@ export default defineConfigSchema({
     OBJECT_EXAMPLE: {
       extends: DmnoBaseTypes.object({
         child1: {
-          extends: 'number',
           value: 123
         },
         child2: {
-          extends: 'boolean',
           value: true,
         },
       })
     },
 
     VITE_STATIC_VAL_STR: {
+      // extends: DmnoBaseTypes.string({ startsWith: 'foo_' }),
       description: 'this does this thing!',
       value: 'static'
     },
@@ -100,16 +99,17 @@ export default defineConfigSchema({
     VITE_STATIC_VAL_NUM: {
       extends: DmnoBaseTypes.number({
         precision: 1,
-        max: 1000,
+        max: 100,
         min: 1
       }),
-      value: '123'
+      value: '12.345',
     },
     WEB_URL: {
       extends: customUrlType({ newSetting: true }),
       description: 'public url of this web app',
       expose: true,
-      value: 'EXAMPLE.com',
+      // required: true,
+      // value: 'EXAMPLE',
     },
   },
 })

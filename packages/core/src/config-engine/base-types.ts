@@ -4,6 +4,7 @@ import {
   ConfigItemDefinition, ResolverContext, TypeValidationResult,
 } from './config-engine';
 import { ConfigValueResolver, processResolverDef } from '../resolvers';
+import { CoercionError, EmptyRequiredValueError, ValidationError } from './errors';
 
 // data types expose all the same options, except they additionally have a "settings schema"
 // and their validations/normalize functions get passed in the _instance_ of those settings when invoked
@@ -16,12 +17,8 @@ type DmnoDataTypeOptions<TypeSettings = any> =
     /** type identifier used internally */
     typeLabel?: string,
 
+    /** define a schema for the settings that will be passed in when using this data type */
     settingsSchema?: TypeSettings,
-    /**
-     * if the settings schema has nested types, this function must return
-     * an array of the types that need to be initialized
-     * */
-    getChildren?: (settings?: TypeSettings) => Record<string, ConfigItemDefinition>;
 
     /** validation function that can use type instance settings */
     validate?: (val: any, settings: TypeSettings, ctx?: ResolverContext) => TypeValidationResult;
@@ -142,12 +139,13 @@ export class DmnoDataType<T = any> {
   }
 
 
-  validate(val: any, ctx?: ResolverContext): true | Array<Error> {
+  validate(val: any, ctx?: ResolverContext): true | Array<ValidationError> {
     // first we'll deal with empty values, and we'll check al
     // we'll check all the way up the chain for required setting and deal with that first
     if (val === undefined || val === null || val === '') {
       if (this.getDefItem('required')) {
-        return [new Error('Value is required, but is currently empty')];
+        // maybe pass through the value so we know which "empty" it is?
+        return [new EmptyRequiredValueError(val)];
       } else {
         // maybe want to return something else than true?
         return true;
@@ -180,22 +178,32 @@ export class DmnoDataType<T = any> {
           || (_.isArray(validationResult) && validationResult.length === 0)
         ) {
           // do nothing
-        } else if (validationResult instanceof Error) {
+        } else if (validationResult instanceof ValidationError) {
           return [validationResult];
+        } else if (validationResult instanceof Error) {
+          return [new ValidationError(validationResult)];
         } else if (_.isArray(validationResult) && validationResult[0] instanceof Error) {
-          // TODO: might want to verify all array items are errors...?
-          return validationResult;
+          return _.map(validationResult, (e) => {
+            if (e instanceof ValidationError) return e;
+            if (e instanceof Error) return new ValidationError(e);
+            return new ValidationError(new Error(`Threw invalid error: ${e}`));
+          });
         } else {
-          return [new Error(`Validation returned invalid result: ${validationResult}`)];
+          return [new ValidationError(new Error(`Validation returned invalid result: ${validationResult}`))];
         }
       } catch (err) {
-        if (err instanceof Error) {
+        if (err instanceof ValidationError) {
           return [err];
-        } else if (_.isArray(err)) {
-          // TODO: should probably check that its an array of errors?
-          return err as Array<Error>;
+        } else if (err instanceof Error) {
+          return [new ValidationError(err)];
+        } else if (_.isArray(err) && err[0] instanceof Error) {
+          return _.map(err, (e) => {
+            if (e instanceof ValidationError) return e;
+            if (e instanceof Error) return new ValidationError(e);
+            return new ValidationError(new Error(`Threw invalid error: ${e}`));
+          });
         } else {
-          return [new Error(`Validation threw a non-error: ${err}`)];
+          return [new ValidationError(new Error(`Validation threw a non-error: ${err}`))];
         }
       }
     }
@@ -219,7 +227,7 @@ export class DmnoDataType<T = any> {
   async asyncValidate(val: any, ctx?: ResolverContext): Promise<true | Array<Error>> {
     // we'll first check if the value is "valid" - which will also deal with required but empty values
     const isValid = this.validate(val, ctx);
-    if (!isValid) return [new Error('Cannot run asynv validation check on an invalid value')];
+    if (!isValid) return [new Error('Cannot run async validation check on an invalid value')];
 
 
     // TODO: not sure if we want to run the async validation if the value is empty?
@@ -286,7 +294,7 @@ export class DmnoDataType<T = any> {
     return true;
   }
 
-  coerce(val: any, ctx?: ResolverContext): boolean {
+  coerce(val: any, ctx?: ResolverContext): any | CoercionError {
     let coercedVal = val;
 
     if (
@@ -298,7 +306,17 @@ export class DmnoDataType<T = any> {
 
     if (this.typeDef.coerce !== undefined) {
       // see note about ctx and any in `validate` above
-      coercedVal = this.typeDef.coerce(coercedVal, this.typeInstanceOptions, ctx);
+      try {
+        coercedVal = this.typeDef.coerce(coercedVal, this.typeInstanceOptions, ctx);
+      } catch (err) {
+        if (err instanceof CoercionError) {
+          return err;
+        } else if (err instanceof Error) {
+          return new CoercionError(err);
+        } else {
+          return new CoercionError(new Error(`Coerce threw a non-error: ${err}`));
+        }
+      }
     }
 
     if (
@@ -334,13 +352,16 @@ export class DmnoDataType<T = any> {
     return this.isType(factoryFn) || this.parentType?.extendsType(factoryFn) || false;
   }
 
-  /** checks if this data type is directly an instance of the data type (not via inheritance) */
-  get primitiveBaseType(): DmnoDataTypeFactoryFn<any> {
+  // TODO: these names need to be thought through...
+  get primitiveType(): DmnoDataType {
     if (!this.parentType) {
-      if (this.typeFactoryFn) return this.typeFactoryFn;
-      else throw new Error('Unable to determine primitive base type?');
+      if (this.typeDef.extends === PrimitiveBaseType) return this;
+      throw new Error('Only primitive types should have no parent type');
     }
-    return this.parentType.primitiveBaseType;
+    return this.parentType?.primitiveType;
+  }
+  get primitiveTypeFactory(): DmnoDataTypeFactoryFn<any> {
+    return this.primitiveType.typeFactoryFn!;
   }
 }
 
@@ -408,29 +429,29 @@ const StringDataType = createDmnoDataType({
 
     // we support returning multiple errors and our base types use this pattern
     // but many user defined types should just throw the first error they encounter
-    const errors = [] as Array<Error>;
+    const errors = [] as Array<ValidationError>;
     if (settings.minLength !== undefined && val.length < settings.minLength) {
-      errors.push(new Error(`Length must be more than ${settings.minLength}`));
+      errors.push(new ValidationError(`Length must be more than ${settings.minLength}`));
     }
     if (settings.maxLength !== undefined && val.length > settings.maxLength) {
-      errors.push(new Error(`Length must be less than ${settings.maxLength}`));
+      errors.push(new ValidationError(`Length must be less than ${settings.maxLength}`));
     }
     if (settings.isLength !== undefined && val.length !== settings.isLength) {
-      errors.push(new Error(`Length must be exactly ${settings.isLength}`));
+      errors.push(new ValidationError(`Length must be exactly ${settings.isLength}`));
     }
 
     if (settings.startsWith && !val.startsWith(settings.startsWith)) {
-      errors.push(new Error(`Value must start with "${settings.startsWith}"`));
+      errors.push(new ValidationError(`Value must start with "${settings.startsWith}"`));
     }
     if (settings.endsWith && !val.endsWith(settings.endsWith)) {
-      errors.push(new Error(`Value must start with "${settings.endsWith}"`));
+      errors.push(new ValidationError(`Value must start with "${settings.endsWith}"`));
     }
 
     if (settings.matches) {
       const regex = _.isString(settings.matches) ? new RegExp(settings.matches) : settings.matches;
       const matches = val.match(regex);
       if (!matches) {
-        errors.push(new Error(`Value must match regex "${settings.matches}"`));
+        errors.push(new ValidationError(`Value must match regex "${settings.matches}"`));
       }
     }
     return errors.length ? errors : true;
@@ -448,15 +469,15 @@ const NumberDataType = createDmnoDataType({
     isDivisibleBy?: number;
   } & ({ isInt: true; } | { isInt?: never; precision?: number }),
   validate(val, settings = {}) {
-    const errors = [] as Array<Error>;
+    const errors = [] as Array<ValidationError>;
     if (settings.min !== undefined && val < settings.min) {
-      errors.push(new Error(`Min value is ${settings.min}`));
+      errors.push(new ValidationError(`Min value is ${settings.min}`));
     }
     if (settings.max !== undefined && val > settings.max) {
-      errors.push(new Error(`Max value is ${settings.max}`));
+      errors.push(new ValidationError(`Max value is ${settings.max}`));
     }
     if (settings.isDivisibleBy !== undefined && val % settings.isDivisibleBy !== 0) {
-      errors.push(new Error(`Value must be divisible by ${settings.isDivisibleBy}`));
+      errors.push(new ValidationError(`Value must be divisible by ${settings.isDivisibleBy}`));
     }
     return errors.length ? errors : true;
   },
@@ -464,12 +485,12 @@ const NumberDataType = createDmnoDataType({
     let numVal!: number;
     if (_.isString(val)) {
       const parsed = parseFloat(val);
-      if (_.isNaN(parsed)) throw new Error('Unable to coerce string to number');
+      if (_.isNaN(parsed)) throw new CoercionError('Unable to coerce string to number');
       numVal = parsed;
     } else if (_.isFinite(val)) {
       numVal = val;
     } else {
-      throw new Error(`Cannot convert ${val} to number`);
+      throw new CoercionError(`Cannot convert ${val} to number`);
     }
 
     if (settings.coerceToMinMaxRange) {
@@ -495,7 +516,7 @@ const BooleanDataType = createDmnoDataType({
   // TODO: add settings to be more strict, or to allow other values to coerce to true/false
   validate(val) {
     if (_.isBoolean(val)) return true;
-    return new Error('Value must be `true` or `false`');
+    return new ValidationError('Value must be `true` or `false`');
   },
   coerce(val) {
     if (_.isBoolean(val)) {
@@ -504,13 +525,13 @@ const BooleanDataType = createDmnoDataType({
       const cleanVal = val.toLowerCase().trim();
       if (['t', 'true', 'yes', 'on', '1'].includes(cleanVal)) return true;
       if (['f', 'false', 'no', 'off', '0'].includes(cleanVal)) return false;
-      throw new Error('Unable to coerce string value to boolean');
+      throw new CoercionError('Unable to coerce string value to boolean');
     } else if (_.isFinite(val)) {
       if (val === 0) return false;
       if (val === 1) return true;
-      throw new Error('Unable to coerce number value to boolean (only 0 or 1 is valid)');
+      throw new CoercionError('Unable to coerce number value to boolean (only 0 or 1 is valid)');
     } else {
-      throw new Error('Unable to coerce value to boolean');
+      throw new CoercionError('Unable to coerce value to boolean');
     }
   },
 });
@@ -542,7 +563,7 @@ const UrlDataType = createDmnoDataType({
     // we'll want some options to enable/disable specific protocols and things like that...
     const result = URL_REGEX.test(val);
     if (result) return true;
-    return new Error('URL doesnt match url regex check');
+    return new ValidationError('URL doesnt match url regex check');
   },
 });
 
@@ -554,9 +575,6 @@ const ObjectDataType = createDmnoDataType({
   typeLabel: 'dmno/object',
   extends: PrimitiveBaseType,
   settingsSchema: Object as any as Record<string, ConfigItemDefinition>,
-  getChildren(settings) {
-    return settings || {};
-  },
 });
 
 const ArrayDataType = createDmnoDataType({
@@ -568,9 +586,6 @@ const ArrayDataType = createDmnoDataType({
     minLength?: number;
     maxLength?: number;
     isLength?: number;
-  },
-  getChildren(settings) {
-    return { _item: settings?.itemSchema || {} };
   },
   // TODO: validate checks if it's an array
   // helper to coerce csv string into array of strings
@@ -590,9 +605,6 @@ const DictionaryDataType = createDmnoDataType({
     minItems?: number;
     maxItems?: number;
     // TODO: more validations around the whole dict
-  },
-  getChildren(settings) {
-    return { _item: settings?.itemSchema || {} };
   },
   // TODO: validate checks if it's an object
 
