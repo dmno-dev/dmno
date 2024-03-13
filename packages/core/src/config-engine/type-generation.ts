@@ -63,7 +63,7 @@ function getTsDefinitionForItem(item: DmnoConfigItemBase, indentLevel = 0) {
   }
 
   // TODO: logic should probably be within the Item class(es) and we still need to figure out how to identify these types...
-  const baseType = itemType.primitiveBaseType;
+  const baseType = itemType.primitiveTypeFactory;
   let itemTsType = 'string';
   if (baseType === DmnoBaseTypes.string) {
     itemTsType = 'string';

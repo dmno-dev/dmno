@@ -22,12 +22,13 @@ import {
 } from '../config-engine/config-engine';
 import { ConfigLoaderRequestMap } from './ipc-requests';
 import { generateTypescriptTypes } from '../config-engine/type-generation';
+import { SerializedConfigItem } from './serialization-types';
 
 
 const debug = Debug('dmno');
 
 
-// const ipc = new NodeIpc.IPC();
+// const ipc = new Nodeipc.IPC();
 ipc.config.id = 'dmno';
 ipc.config.retry = 1500;
 ipc.config.silent = true;
@@ -357,19 +358,7 @@ registerRequestHandler('get-resolved-config', async (payload) => {
   else if (payload.packageName) service = servicesByPackageName[payload.packageName];
   if (!service) throw new Error('Unable to select a service');
 
-  // TODO: move this logic into DmnoService?
-  const serviceConfig = {} as any;
-  _.each(service.config, (item, key) => {
-    serviceConfig[key] = item.resolvedValue;
-
-    // TODO: need to figure out how to send back all the error data in a way that can be logged nicely
-    // TODO: send all invalid items, and all validation errors from each
-    if (!item.isValid) {
-      throw item.validationErrors![0];
-    }
-  });
-
-  return serviceConfig;
+  return service.toJSON();
 });
 
 
