@@ -62,23 +62,53 @@ export function createDmnoDataType<T>(opts: DmnoDataTypeOptions<T>) {
 }
 
 
+/** String base type settings
+ * @category BaseTypes
+ */
+export type StringDataTypeSettings = {
+  /**
+     * The minimum length of the string.
+     */
+  minLength?: number;
+  /**
+     * The maximum length of the string.
+     */
+  maxLength?: number;
+  /**
+     * The exact length of the string.
+     */
+  isLength?: number;
+  /**
+     * The required starting substring of the string.
+     */
+  startsWith?: string;
+  /**
+     * The required ending substring of the string.
+     */
+  endsWith?: string;
+
+  /**
+     * The regular expression or string pattern that the string must match.
+     */
+  matches?: RegExp | string;
+  // isUpperCase?: boolean;
+  // isLowerCase?: boolean;
+  // isAlphaNumeric?: boolean;
+
+  // allow/deny character list
+  // more stuff?
+};
+
+/**
+ * Represents a generic string data type.
+ * @category Base Types
+ */
 const StringDataType = createDmnoDataType({
   // summary: 'generic string data type',
-  settingsSchema: Object as undefined | {
-    minLength?: number;
-    maxLength?: number;
-    isLength?: number;
-    startsWith?: string;
-    endsWith?: string;
-
-    matches?: RegExp | string;
-    // isUpperCase?: boolean;
-    // isLowerCase?: boolean;
-    // isAlphaNumeric?: boolean;
-
-    // allow/deny character list
-    // more stuff?
-  },
+  /**
+   * Defines the settings schema for the string data type.
+   */
+  settingsSchema: Object as undefined | StringDataTypeSettings,
 
   coerce(val) {
     if (_.isString(val)) return val;
@@ -120,14 +150,44 @@ const StringDataType = createDmnoDataType({
   },
 });
 
+/**
+ * Represents the settings for the NumberDataType.
+ * @category BaseTypes
+ */
+export type NumberDataTypeSettings = {
+  /**
+   * The minimum value allowed for the number.
+   */
+  min?: number;
+  /**
+   * The maximum value allowed for the number.
+   */
+  max?: number;
+  /**
+   * Determines whether the number should be coerced to the minimum or maximum value if it is outside the range.
+   */
+  coerceToMinMaxRange?: boolean;
+  /**
+   * The number that the value must be divisible by.
+   */
+  isDivisibleBy?: number;
+  /**
+   * Determines whether the number should be an integer.
+   */
+  isInt?: boolean;
+  /**
+   * The precision of the number.
+   */
+  precision?: number;
+};
 
+/**
+ * Represents a generic number data type.
+ * @category Base Types
+ */
 const NumberDataType = createDmnoDataType({
-  settingsSchema: Object as undefined | {
-    min?: number;
-    max?: number;
-    coerceToMinMaxRange?: boolean;
-    isDivisibleBy?: number;
-  } & ({ isInt: true; } | { isInt?: never; precision?: number }),
+  settingsSchema: Object as undefined | NumberDataTypeSettings
+  & ({ isInt: true; } | { isInt?: never; precision?: number }),
   validate(val, settings = {}) {
     const errors = [] as Array<Error>;
     if (settings.min !== undefined && val < settings.min) {
@@ -222,14 +282,35 @@ const ObjectDataType = createDmnoDataType({
   },
 });
 
-const ArrayDataType = createDmnoDataType({
-  settingsSchema: Object as {
-    itemSchema?: ConfigItemDefinition;
 
-    minLength?: number;
-    maxLength?: number;
-    isLength?: number;
-  },
+/**
+ * Represents the settings for the ArrayDataType.
+ * @category BaseTypes
+ */
+export type ArrayDataTypeSettings = {
+  /**
+   * The schema definition for each item in the array.
+   */
+  itemSchema?: ConfigItemDefinition;
+
+  /**
+   * The minimum length of the array.
+   */
+  minLength?: number;
+
+  /**
+   * The maximum length of the array.
+   */
+  maxLength?: number;
+
+  /**
+   * The exact length of the array.
+   */
+  isLength?: number;
+};
+
+const ArrayDataType = createDmnoDataType({
+  settingsSchema: Array as undefined | ArrayDataTypeSettings,
   getChildren(settings) {
     return { _item: settings?.itemSchema || {} };
   },
@@ -237,19 +318,44 @@ const ArrayDataType = createDmnoDataType({
   // helper to coerce csv string into array of strings
 });
 
+/**
+ * Represents the settings for the DictionaryDataType.
+ * @category BaseTypes
+ */
+export type DictionaryDataTypeSettings = {
+  /**
+   * The schema definition for each item in the dictionary.
+   */
+  itemSchema?: ConfigItemDefinition;
+
+  /**
+   * The minimum number of items in the dictionary.
+   */
+  minItems?: number;
+
+  /**
+   * The maximum number of items in the dictionary.
+   */
+  maxItems?: number;
+
+  /**
+   * A function to validate the keys of the dictionary.
+   */
+  validateKeys?: (key: string) => boolean;
+
+  /**
+   * A function to asynchronously validate the keys of the dictionary.
+   */
+  asyncValidateKeys?: (key: string) => Promise<boolean>;
+
+  /**
+   * A description of the keys of the dictionary.
+   */
+  keyDescription?: string;
+};
+
 const DictionaryDataType = createDmnoDataType({
-  settingsSchema: Object as {
-    itemSchema?: ConfigItemDefinition;
-
-    validateKeys?: (key: string) => boolean;
-    asyncValidateKeys?: (key: string) => Promise<boolean>;
-    keyDescription?: string
-    // TODO: more features around the keys themselves
-
-    minItems?: number;
-    maxItems?: number;
-    // TODO: more validations around the whole dict
-  },
+  settingsSchema: Object as undefined | DictionaryDataTypeSettings,
   getChildren(settings) {
     return { _item: settings?.itemSchema || {} };
   },
@@ -263,6 +369,7 @@ type ExtendedEnumDescription = {
   description?: string,
   // icon, color, docs url, etc...
 };
+
 const EnumDataType = createDmnoDataType({
   settingsSchema: Object as any as
     (

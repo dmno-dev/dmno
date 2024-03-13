@@ -9,6 +9,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "deploy": "pnpm build && netlify deploy --site=dmno --dir=dist --prod",
+    "docgen": "pnpm exec typedoc --options ./src/utils/typedoc/typedoc.json",
     "lint": "eslint src --ext .ts,.cjs,.astro,.md,.mdx",
     "lint:fix": "pnpm run lint --fix"
   },
@@ -30,6 +31,7 @@
     "vue": "^3.3.4"
   },
   "devDependencies": {
-    "netlify-cli": "^17.1.0"
+    "netlify-cli": "^17.1.0",
+    "typedoc": "^0.25.12"
   }
 }

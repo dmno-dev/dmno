@@ -1,0 +1,1297 @@
+{
+	"id": 0,
+	"name": "@dmno/core",
+	"variant": "project",
+	"kind": 1,
+	"flags": {},
+	"children": [
+		{
+			"id": 489,
+			"name": "FunctionResolver",
+			"variant": "declaration",
+			"kind": 128,
+			"flags": {},
+			"comment": {
+				"summary": [
+					{
+						"kind": "text",
+						"text": "Resolver used to wrap inline functions into a proper resolver"
+					}
+				]
+			},
+			"sources": [
+				{
+					"fileName": "resolvers.ts",
+					"line": 64,
+					"character": 13,
+					"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/resolvers.ts#L64"
+				}
+			],
+			"extendedTypes": [
+				{
+					"type": "reference",
+					"target": {
+						"sourceFileName": "../core/src/resolvers.ts",
+						"qualifiedName": "ConfigValueResolver"
+					},
+					"name": "ConfigValueResolver",
+					"package": "@dmno/core"
+				}
+			]
+		},
+		{
+			"id": 506,
+			"name": "StaticValueResolver",
+			"variant": "declaration",
+			"kind": 128,
+			"flags": {},
+			"comment": {
+				"summary": [
+					{
+						"kind": "text",
+						"text": "Resolver used to wrap static values resolver (already resolved)"
+					}
+				]
+			},
+			"sources": [
+				{
+					"fileName": "resolvers.ts",
+					"line": 80,
+					"character": 13,
+					"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/resolvers.ts#L80"
+				}
+			],
+			"extendedTypes": [
+				{
+					"type": "reference",
+					"target": {
+						"sourceFileName": "../core/src/resolvers.ts",
+						"qualifiedName": "ConfigValueResolver"
+					},
+					"name": "ConfigValueResolver",
+					"package": "@dmno/core"
+				}
+			]
+		},
+		{
+			"id": 385,
+			"name": "ArrayDataTypeSettings",
+			"variant": "declaration",
+			"kind": 2097152,
+			"flags": {},
+			"comment": {
+				"summary": [
+					{
+						"kind": "text",
+						"text": "Represents the settings for the ArrayDataType."
+					}
+				]
+			},
+			"sources": [
+				{
+					"fileName": "base-types.ts",
+					"line": 290,
+					"character": 12,
+					"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L290"
+				}
+			],
+			"type": {
+				"type": "reflection",
+				"declaration": {
+					"id": 386,
+					"name": "__type",
+					"variant": "declaration",
+					"kind": 65536,
+					"flags": {},
+					"children": [
+						{
+							"id": 390,
+							"name": "isLength",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The exact length of the array."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 309,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L309"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							}
+						},
+						{
+							"id": 387,
+							"name": "itemSchema",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The schema definition for each item in the array."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 294,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L294"
+								}
+							],
+							"type": {
+								"type": "reference",
+								"target": {
+									"sourceFileName": "../core/src/config-engine.ts",
+									"qualifiedName": "ConfigItemDefinition"
+								},
+								"name": "ConfigItemDefinition",
+								"package": "@dmno/core"
+							}
+						},
+						{
+							"id": 389,
+							"name": "maxLength",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The maximum length of the array."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 304,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L304"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							}
+						},
+						{
+							"id": 388,
+							"name": "minLength",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The minimum length of the array."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 299,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L299"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"children": [
+								390,
+								387,
+								389,
+								388
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "base-types.ts",
+							"line": 290,
+							"character": 36,
+							"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L290"
+						}
+					]
+				}
+			}
+		},
+		{
+			"id": 391,
+			"name": "DictionaryDataTypeSettings",
+			"variant": "declaration",
+			"kind": 2097152,
+			"flags": {},
+			"comment": {
+				"summary": [
+					{
+						"kind": "text",
+						"text": "Represents the settings for the DictionaryDataType."
+					}
+				]
+			},
+			"sources": [
+				{
+					"fileName": "base-types.ts",
+					"line": 325,
+					"character": 12,
+					"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L325"
+				}
+			],
+			"type": {
+				"type": "reflection",
+				"declaration": {
+					"id": 392,
+					"name": "__type",
+					"variant": "declaration",
+					"kind": 65536,
+					"flags": {},
+					"children": [
+						{
+							"id": 400,
+							"name": "asyncValidateKeys",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "A function to asynchronously validate the keys of the dictionary."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 349,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L349"
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 401,
+									"name": "__type",
+									"variant": "declaration",
+									"kind": 65536,
+									"flags": {},
+									"sources": [
+										{
+											"fileName": "base-types.ts",
+											"line": 349,
+											"character": 22,
+											"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L349"
+										}
+									],
+									"signatures": [
+										{
+											"id": 402,
+											"name": "__type",
+											"variant": "signature",
+											"kind": 4096,
+											"flags": {},
+											"parameters": [
+												{
+													"id": 403,
+													"name": "key",
+													"variant": "param",
+													"kind": 32768,
+													"flags": {},
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												}
+											],
+											"type": {
+												"type": "reference",
+												"target": {
+													"sourceFileName": "../../node_modules/.pnpm/typescript@5.3.3/node_modules/typescript/lib/lib.es5.d.ts",
+													"qualifiedName": "Promise"
+												},
+												"typeArguments": [
+													{
+														"type": "intrinsic",
+														"name": "boolean"
+													}
+												],
+												"name": "Promise",
+												"package": "typescript"
+											}
+										}
+									]
+								}
+							}
+						},
+						{
+							"id": 393,
+							"name": "itemSchema",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The schema definition for each item in the dictionary."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 329,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L329"
+								}
+							],
+							"type": {
+								"type": "reference",
+								"target": {
+									"sourceFileName": "../core/src/config-engine.ts",
+									"qualifiedName": "ConfigItemDefinition"
+								},
+								"name": "ConfigItemDefinition",
+								"package": "@dmno/core"
+							}
+						},
+						{
+							"id": 404,
+							"name": "keyDescription",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "A description of the keys of the dictionary."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 354,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L354"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						},
+						{
+							"id": 395,
+							"name": "maxItems",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The maximum number of items in the dictionary."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 339,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L339"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							}
+						},
+						{
+							"id": 394,
+							"name": "minItems",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The minimum number of items in the dictionary."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 334,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L334"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							}
+						},
+						{
+							"id": 396,
+							"name": "validateKeys",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "A function to validate the keys of the dictionary."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 344,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L344"
+								}
+							],
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 397,
+									"name": "__type",
+									"variant": "declaration",
+									"kind": 65536,
+									"flags": {},
+									"sources": [
+										{
+											"fileName": "base-types.ts",
+											"line": 344,
+											"character": 17,
+											"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L344"
+										}
+									],
+									"signatures": [
+										{
+											"id": 398,
+											"name": "__type",
+											"variant": "signature",
+											"kind": 4096,
+											"flags": {},
+											"parameters": [
+												{
+													"id": 399,
+													"name": "key",
+													"variant": "param",
+													"kind": 32768,
+													"flags": {},
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												}
+											],
+											"type": {
+												"type": "intrinsic",
+												"name": "boolean"
+											}
+										}
+									]
+								}
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"children": [
+								400,
+								393,
+								404,
+								395,
+								394,
+								396
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "base-types.ts",
+							"line": 325,
+							"character": 41,
+							"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L325"
+						}
+					]
+				}
+			}
+		},
+		{
+			"id": 377,
+			"name": "NumberDataTypeSettings",
+			"variant": "declaration",
+			"kind": 2097152,
+			"flags": {},
+			"comment": {
+				"summary": [
+					{
+						"kind": "text",
+						"text": "Represents the settings for the NumberDataType."
+					}
+				]
+			},
+			"sources": [
+				{
+					"fileName": "base-types.ts",
+					"line": 157,
+					"character": 12,
+					"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L157"
+				}
+			],
+			"type": {
+				"type": "reflection",
+				"declaration": {
+					"id": 378,
+					"name": "__type",
+					"variant": "declaration",
+					"kind": 65536,
+					"flags": {},
+					"children": [
+						{
+							"id": 381,
+							"name": "coerceToMinMaxRange",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "Determines whether the number should be coerced to the minimum or maximum value if it is outside the range."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 169,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L169"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "boolean"
+							}
+						},
+						{
+							"id": 382,
+							"name": "isDivisibleBy",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The number that the value must be divisible by."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 173,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L173"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							}
+						},
+						{
+							"id": 383,
+							"name": "isInt",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "Determines whether the number should be an integer."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 177,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L177"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "boolean"
+							}
+						},
+						{
+							"id": 380,
+							"name": "max",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The maximum value allowed for the number."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 165,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L165"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							}
+						},
+						{
+							"id": 379,
+							"name": "min",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The minimum value allowed for the number."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 161,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L161"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							}
+						},
+						{
+							"id": 384,
+							"name": "precision",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The precision of the number."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 181,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L181"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"children": [
+								381,
+								382,
+								383,
+								380,
+								379,
+								384
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "base-types.ts",
+							"line": 157,
+							"character": 37,
+							"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L157"
+						}
+					]
+				}
+			}
+		},
+		{
+			"id": 369,
+			"name": "StringDataTypeSettings",
+			"variant": "declaration",
+			"kind": 2097152,
+			"flags": {},
+			"comment": {
+				"summary": [
+					{
+						"kind": "text",
+						"text": "String base type settings"
+					}
+				]
+			},
+			"sources": [
+				{
+					"fileName": "base-types.ts",
+					"line": 68,
+					"character": 12,
+					"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L68"
+				}
+			],
+			"type": {
+				"type": "reflection",
+				"declaration": {
+					"id": 370,
+					"name": "__type",
+					"variant": "declaration",
+					"kind": 65536,
+					"flags": {},
+					"children": [
+						{
+							"id": 375,
+							"name": "endsWith",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The required ending substring of the string."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 88,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L88"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						},
+						{
+							"id": 373,
+							"name": "isLength",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The exact length of the string."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 80,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L80"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							}
+						},
+						{
+							"id": 376,
+							"name": "matches",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The regular expression or string pattern that the string must match."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 93,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L93"
+								}
+							],
+							"type": {
+								"type": "union",
+								"types": [
+									{
+										"type": "reference",
+										"target": {
+											"sourceFileName": "../../node_modules/.pnpm/typescript@5.3.3/node_modules/typescript/lib/lib.es5.d.ts",
+											"qualifiedName": "RegExp"
+										},
+										"name": "RegExp",
+										"package": "typescript"
+									},
+									{
+										"type": "intrinsic",
+										"name": "string"
+									}
+								]
+							}
+						},
+						{
+							"id": 372,
+							"name": "maxLength",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The maximum length of the string."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 76,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L76"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							}
+						},
+						{
+							"id": 371,
+							"name": "minLength",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The minimum length of the string."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 72,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L72"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "number"
+							}
+						},
+						{
+							"id": 374,
+							"name": "startsWith",
+							"variant": "declaration",
+							"kind": 1024,
+							"flags": {
+								"isOptional": true
+							},
+							"comment": {
+								"summary": [
+									{
+										"kind": "text",
+										"text": "The required starting substring of the string."
+									}
+								]
+							},
+							"sources": [
+								{
+									"fileName": "base-types.ts",
+									"line": 84,
+									"character": 2,
+									"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L84"
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						}
+					],
+					"groups": [
+						{
+							"title": "Properties",
+							"children": [
+								375,
+								373,
+								376,
+								372,
+								371,
+								374
+							]
+						}
+					],
+					"sources": [
+						{
+							"fileName": "base-types.ts",
+							"line": 68,
+							"character": 37,
+							"url": "https://github.com/dmno-dev/core/blob/1e65fe7/packages/core/src/base-types.ts#L68"
+						}
+					]
+				}
+			}
+		}
+	],
+	"groups": [
+		{
+			"title": "Classes",
+			"children": [
+				489,
+				506
+			]
+		},
+		{
+			"title": "Type Aliases",
+			"children": [
+				385,
+				391,
+				377,
+				369
+			]
+		}
+	],
+	"categories": [
+		{
+			"title": "BaseTypes",
+			"children": [
+				385,
+				391,
+				377,
+				369
+			]
+		},
+		{
+			"title": "Other",
+			"children": [
+				489,
+				506
+			]
+		}
+	],
+	"packageName": "@dmno/core",
+	"readme": [
+		{
+			"kind": "text",
+			"text": "# DMNO\n\nWelcome to the dmno monorepo\n\n## Installation\n\nFirst, install "
+		},
+		{
+			"kind": "code",
+			"text": "`nvm`"
+		},
+		{
+			"kind": "text",
+			"text": ": \n- [nvm](https://github.com/nvm-sh/nvm)\n\nThen use "
+		},
+		{
+			"kind": "code",
+			"text": "`nvm`"
+		},
+		{
+			"kind": "text",
+			"text": " to install the latest Node LTS: \n"
+		},
+		{
+			"kind": "code",
+			"text": "`nvm install --lts`"
+		},
+		{
+			"kind": "text",
+			"text": "\n\nThen install "
+		},
+		{
+			"kind": "code",
+			"text": "`pnpm`"
+		},
+		{
+			"kind": "text",
+			"text": "\n- [pnpm](https://pnpm.io/installation)\n\nThen install deps via "
+		},
+		{
+			"kind": "code",
+			"text": "`pnpm`"
+		},
+		{
+			"kind": "text",
+			"text": ": \n"
+		},
+		{
+			"kind": "code",
+			"text": "`pnpm i`"
+		}
+	],
+	"symbolIdMap": {
+		"0": {
+			"sourceFileName": "../core/src/index.ts",
+			"qualifiedName": ""
+		},
+		"369": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "StringDataTypeSettings"
+		},
+		"370": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type"
+		},
+		"371": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.minLength"
+		},
+		"372": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.maxLength"
+		},
+		"373": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.isLength"
+		},
+		"374": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.startsWith"
+		},
+		"375": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.endsWith"
+		},
+		"376": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.matches"
+		},
+		"377": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "NumberDataTypeSettings"
+		},
+		"378": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type"
+		},
+		"379": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.min"
+		},
+		"380": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.max"
+		},
+		"381": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.coerceToMinMaxRange"
+		},
+		"382": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.isDivisibleBy"
+		},
+		"383": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.isInt"
+		},
+		"384": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.precision"
+		},
+		"385": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "ArrayDataTypeSettings"
+		},
+		"386": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type"
+		},
+		"387": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.itemSchema"
+		},
+		"388": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.minLength"
+		},
+		"389": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.maxLength"
+		},
+		"390": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.isLength"
+		},
+		"391": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "DictionaryDataTypeSettings"
+		},
+		"392": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type"
+		},
+		"393": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.itemSchema"
+		},
+		"394": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.minItems"
+		},
+		"395": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.maxItems"
+		},
+		"396": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.validateKeys"
+		},
+		"397": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type"
+		},
+		"398": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type"
+		},
+		"399": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "key"
+		},
+		"400": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.asyncValidateKeys"
+		},
+		"401": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type"
+		},
+		"402": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type"
+		},
+		"403": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "key"
+		},
+		"404": {
+			"sourceFileName": "../core/src/base-types.ts",
+			"qualifiedName": "__type.keyDescription"
+		},
+		"489": {
+			"sourceFileName": "../core/src/resolvers.ts",
+			"qualifiedName": "FunctionResolver"
+		},
+		"506": {
+			"sourceFileName": "../core/src/resolvers.ts",
+			"qualifiedName": "StaticValueResolver"
+		}
+	}
+}

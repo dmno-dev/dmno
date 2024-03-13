@@ -1,0 +1,22 @@
+---
+import { Tabs, TabItem, Code } from "@astrojs/starlight/components";
+import PropTable from "./PropTable.astro";
+
+import {
+  getSettingsForType,
+  getSchemaStringFromTypes,
+} from "../utils/typedoc/baseTypes";
+
+const { typeName } = Astro.props;
+const typeSettings = getSettingsForType(typeName);
+const schemaString = getSchemaStringFromTypes(typeName);
+---
+
+<Tabs>
+  <TabItem label="Schema">
+    <Code lang="ts" code=`type settingSchema = ${schemaString}` />
+  </TabItem>
+  <TabItem label="Properties">
+    <PropTable properties={typeSettings} />
+  </TabItem>
+</Tabs>
