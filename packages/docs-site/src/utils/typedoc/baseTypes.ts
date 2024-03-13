@@ -19,6 +19,9 @@ const prettyFormatTypeSettings = (rawSettings: any) => {
       case 'intrinsic':
         propertyType = i.type.name;
         break;
+      case 'reflection':
+        propertyType = 'function';
+        break;
       default:
         propertyType = i.type.name;
         break;
