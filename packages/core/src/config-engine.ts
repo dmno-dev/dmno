@@ -22,6 +22,11 @@ export type TypeExtendsDefinition = DmnoDataType | ((opts?: any) => DmnoDataType
 
 export type TypeValidationResult = boolean | undefined | void | Error | Array<Error>;
 
+/**
+ * options for defining an individual config item
+ * @category HelperMethods
+ */
+
 export type ConfigItemDefinition = {
   /** short description of what this config item is for */
   summary?: string;
@@ -96,9 +101,23 @@ type PickConfigItemDefinition = {
 
 type ConfigItemDefinitionOrShorthand = ConfigItemDefinition | TypeExtendsDefinition;
 
+/**
+ * options for defining a service's config schema
+ * @category HelperMethods
+ */
+
 export type WorkspaceConfig = {
+  /**
+   * root property that holds all the of schema items
+   */
   schema: Record<string, ConfigItemDefinitionOrShorthand>,
 };
+
+/**
+ * options for defining a service's config schema
+ * @category HelperMethods
+ */
+
 export type ServiceConfigSchema = {
   // service name
   name?: string,

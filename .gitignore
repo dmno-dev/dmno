@@ -10,3 +10,4 @@ dist
 config.local.ts
 .env.local
 .env.local.*
+packages/docs-site/src/utils/typedoc/typedoc-output.json

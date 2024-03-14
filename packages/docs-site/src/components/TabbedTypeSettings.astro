@@ -14,7 +14,7 @@ const schemaString = getSchemaStringFromTypes(typeName);
 
 <Tabs>
   <TabItem label="Schema">
-    <Code lang="ts" code=`type settingSchema = ${schemaString}` />
+    <Code lang="ts" code=`type ${typeName} = ${schemaString}` />
   </TabItem>
   <TabItem label="Properties">
     <PropTable properties={typeSettings} />

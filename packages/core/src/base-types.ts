@@ -8,7 +8,11 @@ import { ConfigItemDefinition, ResolverContext, TypeValidationResult } from './c
 
 // data types expose all the same options, except they additionally have a "settings schema"
 // and their validations/normalize functions get passed in the _instance_ of those settings when invoked
-type DmnoDataTypeOptions<T> =
+/**
+ * Represents the options for a DmnoDataType
+ * @category HelperMethods
+ */
+export type DmnoDataTypeOptions<T> =
   // the schema item validation/normalize fns do not get passed any settings
   Omit<ConfigItemDefinition, 'validate' | 'coerce' | 'asyncValidate'> &
   {
