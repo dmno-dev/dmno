@@ -1,9 +1,8 @@
 /* eslint-disable class-methods-use-this */
-import { match } from 'assert';
 import _ from 'lodash-es';
 import {
-  DmnoConfigItem, DmnoConfigItemBase, DmnoPickedConfigItem, ResolverContext,
-} from './config-engine';
+  DmnoConfigItemBase, ResolverContext,
+} from './config-engine/config-engine';
 
 // TODO: do we allow Date?
 // what to do about null/undefined?
@@ -118,7 +117,6 @@ export function processResolverDef(resolverDef: ValueResolverDef) {
   } else if (resolverDef !== undefined) {
     return new StaticValueResolver(resolverDef);
   } else {
-    console.log('invalid resolver definition', resolverDef);
     throw new Error('invalid resolver definition');
   }
 }
@@ -152,7 +150,6 @@ export class ToggleResolver extends ConfigValueResolver {
       if (branch.isDefault) return false;
       return branch.condition(ctx);
     });
-    console.log('found matching branch');
     if (matchingBranch) {
       return matchingBranch.resolver || null;
     } else {

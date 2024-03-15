@@ -61,6 +61,7 @@ const prettyFormatTypeSettings = (rawSettings: any) => {
 // TODO fix output formatting
 export const getSchemaStringFromTypes = (type: string) => {
   const settings = getSettingsForType(type);
+  if (!settings) return '';
   const properties = settings.map((i: any) => {
     return `${i?.name}${i?.required ? '' : '?'}: ${i?.type}`;
   });

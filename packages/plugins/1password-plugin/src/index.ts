@@ -16,7 +16,6 @@ export class OnePasswordSecretService {
       defaultVaultName?: VaultName | ConfigPath
     },
   ) {
-    console.log('initialized 1password plugin');
   }
 
   // can read items by id - need a vault id, item id
