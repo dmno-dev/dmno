@@ -1,0 +1,44 @@
+---
+// interface Props {
+//   properties: {
+//     name: string;
+//     type: string;
+//     required: boolean;
+//     description: string;
+//   }[];
+// }
+
+const { properties } = Astro.props;
+
+// refactor this to actually do the data fecting and just take a string with property list name
+---
+
+{
+  properties?.length > 0 ? (
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Required</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {properties.map((property) => {
+          return (
+            <tr>
+              <td>{property?.name}</td>
+              <td>{property?.type}</td>
+              <td>{property?.required ? "Yes" : "No"}</td>
+              <td>{property?.description}</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  ) : (
+    //  TODO - maybe add a better message or just log it
+    <p>No properties</p>
+  )
+}

@@ -2,6 +2,10 @@
 title: DMNO Base Types
 ---
 
+import { Tabs, TabItem, Code } from "@astrojs/starlight/components";
+import TabbedTypeSettings from '../../../../components/TabbedTypeSettings.astro';
+
+
 ## Base Types
 
 DMNO comes with a comprehensive set of types to cover the majority of use cases. 
@@ -17,16 +21,10 @@ See [_creating your own types_](/reference/config-engine/base-types/#creating-yo
 
 DMNO Built-in data type for Strings. Includes the following (optional) settings: 
 
-```typescript
-type settingsSchema = {
-  minLength?: number;
-  maxLength?: number;
-  isLength?: number;
-  startsWith?: string;
-  endsWith?: string;
-  matches?: RegExp | string;
-};
-```
+<TabbedTypeSettings 
+  typeName = "StringDataTypeSettings"
+/>
+
 
 Examples: 
 ```javascript
@@ -43,12 +41,9 @@ const myStartsWithType = DmnoBaseTypes.String({ startsWith: 'pk_' });
 
 DMNO Built-in data type for Numbers. Includes the following (optional) settings: 
 
-```typescript
-type settingsSchema = {
-  min?: number;
-  max?: number;
-};
-```
+<TabbedTypeSettings 
+  typeName = "NumberDataTypeSettings"
+/>
 
 Example: 
 ```javascript
@@ -110,15 +105,9 @@ const myObjectType = DmnoBaseTypes.object({
 
 DMNO Built-in data type for Arrays. Includes the following (optional) settings: 
 
-```typescript
-type settingsSchema = {
-  // schema for each item in the array
-  itemSchema?: DmnoBaseType;
-  minLength?: number;
-  maxLength?: number;
-  isLength?: boolean;
-};
-```
+<TabbedTypeSettings
+  typeName = "ArrayDataTypeSettings"
+/>
 
 Example: 
 ```javascript
@@ -132,16 +121,9 @@ const myMinLengthType = DmnoBaseTypes.array({ minLength: 2 });
 
 DMNO Built-in data type for Dictionaries. Includes the following (optional) settings: 
 
-```typescript
-type settingsSchema = {
-  // schema for each item in the dictionary
-  itemSchema?: DmnoBaseType;
-  validateKeys?: (key: string) => boolean;
-  asyncValidateKeys?: (key: string) => Promise<boolean>;
-  minItems?: number;
-  maxItems?: number;
-};
-```
+<TabbedTypeSettings
+  typeName = "DictionaryDataTypeSettings"
+/>
 
 Example: 
 ```javascript
@@ -292,4 +274,3 @@ export default defineConfigSchema({
   },
 });
 ```
-

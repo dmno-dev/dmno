@@ -8,6 +8,10 @@ import { CoercionError, EmptyRequiredValueError, ValidationError } from './error
 
 // data types expose all the same options, except they additionally have a "settings schema"
 // and their validations/normalize functions get passed in the _instance_ of those settings when invoked
+/**
+ * Represents the options for a DmnoDataType
+ * @category HelperMethods
+ */
 type DmnoDataTypeOptions<TypeSettings = any> =
   // the schema item validation/normalize fns do not get passed any settings
   Omit<ConfigItemDefinition<TypeSettings>, 'validate' | 'asyncValidate' | 'coerce'> &
@@ -387,32 +391,58 @@ export function createDmnoDataType<T>(opts: DmnoDataTypeOptions<T>): DmnoDataTyp
 // we'll use this to mark our primitive types in a way that end users can't do by accident
 const PrimitiveBaseType = createDmnoDataType({});
 
+/** String base type settings
+ * @category BaseTypes
+ */
+export type StringDataTypeSettings = {
+  /**
+     * The minimum length of the string.
+     */
+  minLength?: number;
+  /**
+     * The maximum length of the string.
+     */
+  maxLength?: number;
+  /**
+     * The exact length of the string.
+     */
+  isLength?: number;
+  /**
+     * The required starting substring of the string.
+     */
+  startsWith?: string;
+  /**
+     * The required ending substring of the string.
+     */
+  endsWith?: string;
+
+  /**
+     * The regular expression or string pattern that the string must match.
+     */
+  matches?: RegExp | string;
+  // isUpperCase?: boolean;
+  // isLowerCase?: boolean;
+  // isAlphaNumeric?: boolean;
+
+  // allow/deny character list
+  // more stuff?
+  /** converts to upper case */
+  toUpperCase?: boolean;
+  /** converts to lower case */
+  toLowerCase?: boolean;
+};
+
+/**
+ * Represents a generic string data type.
+ * @category Base Types
+ */
 
 const StringDataType = createDmnoDataType({
   typeLabel: 'dmno/string',
   extends: PrimitiveBaseType,
 
   // summary: 'generic string data type',
-  settingsSchema: Object as undefined | {
-    /** checks value is at least minLength characters (inclusive) */
-    minLength?: number;
-    /** checks value is at most maxLength characters (inclusive) */
-    maxLength?: number;
-    isLength?: number;
-    startsWith?: string;
-    endsWith?: string;
-
-    matches?: RegExp | string;
-    // isUpperCase?: boolean;
-    // isLowerCase?: boolean;
-    // isAlphaNumeric?: boolean;
-
-    // allow/deny character list
-    // more stuff?
-
-    toUpperCase?: boolean;
-    toLowerCase?: boolean;
-  },
+  settingsSchema: Object as undefined | StringDataTypeSettings,
 
   coerce(rawVal, settings) {
     if (_.isNil(rawVal)) return '';
@@ -458,16 +488,54 @@ const StringDataType = createDmnoDataType({
   },
 });
 
+/**
+ * Represents the settings for the NumberDataType.
+ * @category BaseTypes
+ */
+export type NumberDataTypeSettings = {
+  /**
+   * The minimum value allowed for the number.
+   */
+  min?: number;
+  /**
+   * The maximum value allowed for the number.
+   */
+  max?: number;
+  /**
+   * Determines whether the number should be coerced to the minimum or maximum value if it is outside the range.
+   */
+  coerceToMinMaxRange?: boolean;
+  /**
+   * The number that the value must be divisible by.
+   */
+  isDivisibleBy?: number;
+  /**
+   * Determines whether the number should be an integer.
+   */
+  /** checks if it's an integer */
+  isInt?: boolean;
+  /** The number of decimal places allowed (for non-integers) */
+  precision?: number
+};
+// TOOD ACTUALLY USE THIS TYPE
 
+/**
+ * Represents a generic number data type.
+ * @category Base Types
+ */
 const NumberDataType = createDmnoDataType({
   typeLabel: 'dmno/number',
   extends: PrimitiveBaseType,
   settingsSchema: Object as undefined | {
+
     min?: number;
     max?: number;
     coerceToMinMaxRange?: boolean;
     isDivisibleBy?: number;
-  } & ({ isInt: true; } | { isInt?: never; precision?: number }),
+  } & ({ isInt: true; } | {
+    isInt?: never;
+    precision?: number
+  }),
   validate(val, settings = {}) {
     const errors = [] as Array<ValidationError>;
     if (settings.min !== undefined && val < settings.min) {
@@ -577,35 +645,79 @@ const ObjectDataType = createDmnoDataType({
   settingsSchema: Object as any as Record<string, ConfigItemDefinition>,
 });
 
+/**
+ * Represents the settings for the ArrayDataType.
+ * @category BaseTypes
+ */
+export type ArrayDataTypeSettings = {
+  /**
+   * The schema definition for each item in the array.
+   */
+  itemSchema?: ConfigItemDefinition;
+
+  /**
+   * The minimum length of the array.
+   */
+  minLength?: number;
+
+  /**
+   * The maximum length of the array.
+   */
+  maxLength?: number;
+
+  /**
+   * The exact length of the array.
+   */
+  isLength?: number;
+};
 const ArrayDataType = createDmnoDataType({
   typeLabel: 'dmno/array',
   extends: PrimitiveBaseType,
-  settingsSchema: Object as {
-    itemSchema?: ConfigItemDefinition;
-
-    minLength?: number;
-    maxLength?: number;
-    isLength?: number;
-  },
+  settingsSchema: Array as ArrayDataTypeSettings,
   // TODO: validate checks if it's an array
   // helper to coerce csv string into array of strings
 });
 
+
+/**
+ * Represents the settings for the DictionaryDataType.
+ * @category BaseTypes
+ */
+export type DictionaryDataTypeSettings = {
+  /**
+   * The schema definition for each item in the dictionary.
+   */
+  itemSchema?: ConfigItemDefinition;
+
+  /**
+   * The minimum number of items in the dictionary.
+   */
+  minItems?: number;
+
+  /**
+   * The maximum number of items in the dictionary.
+   */
+  maxItems?: number;
+
+  /**
+   * A function to validate the keys of the dictionary.
+   */
+  validateKeys?: (key: string) => boolean;
+
+  /**
+   * A function to asynchronously validate the keys of the dictionary.
+   */
+  asyncValidateKeys?: (key: string) => Promise<boolean>;
+
+  /**
+   * A description of the keys of the dictionary.
+   */
+  keyDescription?: string;
+};
 const DictionaryDataType = createDmnoDataType({
   typeLabel: 'dmno/dictionary',
   extends: PrimitiveBaseType,
-  settingsSchema: Object as {
-    itemSchema?: ConfigItemDefinition;
-
-    validateKeys?: (key: string) => boolean;
-    // asyncValidateKeys?: (key: string) => Promise<boolean>;
-    keyDescription?: string
-    // TODO: more features around the keys themselves
-
-    minItems?: number;
-    maxItems?: number;
-    // TODO: more validations around the whole dict
-  },
+  settingsSchema: Object as DictionaryDataTypeSettings,
   // TODO: validate checks if it's an object
 
 });

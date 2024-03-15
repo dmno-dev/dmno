@@ -35,6 +35,11 @@ export type TypeExtendsDefinition<TypeSettings = any> =
 
 export type TypeValidationResult = boolean | undefined | void | Error | Array<Error>;
 
+/**
+ * options for defining an individual config item
+ * @category HelperMethods
+ */
+
 export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
   /** short description of what this config item is for */
   summary?: string;
@@ -68,6 +73,7 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
   /** whether this config is sensitive and must be kept secret */
   secret?: ValueOrValueFromContextFn<boolean>;
 
+  /** is this config item required, an error will be shown if empty */
   required?: ValueOrValueFromContextFn<boolean>;
 
   /** at what time is this value required */
@@ -75,12 +81,14 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
 
   // we allow the fn that returns the data type so you can use the data type without calling the empty initializer
   // ie `DmnoBaseTypes.string` instead of `DmnoBaseTypes.string({})`;
+  /** the type the item is based, can be a DmnoBaseType or something custom */
   extends?: TypeExtendsDefinition<ExtendsTypeSettings>;
 
-  /** validate the value */
+  /** a validation function for the value, return true if valid, otherwise throw an error */
   validate?: ((val: any, ctx: ResolverContext) => TypeValidationResult);
+  /** same as \`validate\` but async */
   asyncValidate?: ((val: any, ctx: ResolverContext) => Promise<TypeValidationResult>);
-  /** coerce the value */
+  /** a function to coerce values */
   coerce?: ((val: any, ctx: ResolverContext) => any);
 
   /** set the value, can be static, or a function, or use helpers */
@@ -111,9 +119,23 @@ type PickConfigItemDefinition = {
 
 type ConfigItemDefinitionOrShorthand = ConfigItemDefinition | TypeExtendsDefinition;
 
+/**
+ * options for defining a service's config schema
+ * @category HelperMethods
+ */
+
 export type WorkspaceConfig = {
+  /**
+   * root property that holds all the of schema items
+   */
   schema: Record<string, ConfigItemDefinitionOrShorthand>,
 };
+
+/**
+ * options for defining a service's config schema
+ * @category HelperMethods
+ */
+
 export type ServiceConfigSchema = {
   /** service name - if empty, name from package.json will be used */
   name?: string,
@@ -121,7 +143,9 @@ export type ServiceConfigSchema = {
   parent?: string,
   /** optional array of "tags" for the service */
   tags?: Array<string>,
+  /** array of config items to be picked from parent */
   pick?: Array<PickConfigItemDefinition | string>,
+  /** the config schema itself */
   schema: Record<string, ConfigItemDefinitionOrShorthand>,
 };
 

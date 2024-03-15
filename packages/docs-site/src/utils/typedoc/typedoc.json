@@ -1,0 +1,14 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "../../../../core/src/index.ts",
+  ],
+  "tsconfig": "../../../../core/tsconfig.json",
+  "json": "./typedoc-output.json",
+  "skipErrorChecking": true,
+  "excludeNotDocumented": true,
+  "compilerOptions": {
+    "strictNullChecks": false,
+    "skipLibCheck": true,
+  }
+}
