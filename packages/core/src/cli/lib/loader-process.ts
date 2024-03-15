@@ -8,23 +8,105 @@ import _ from 'lodash-es';
 import ipc from 'node-ipc';
 import Debug from 'debug';
 
+import { createServer } from 'vite';
+import { ViteNodeServer } from 'vite-node/server';
+import { ViteNodeRunner } from 'vite-node/client';
+import { installSourcemapsSupport } from 'vite-node/source-map';
+
 import { ConfigLoaderRequestMap } from '../../config-loader/ipc-requests';
 import { DeferredPromise, createDeferredPromise } from '../../lib/deferred-promise';
+import type { Plugin } from 'vite';
 
 const debug = Debug('dmno');
 
 const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 
+
+const monorepoResolverPlugin: Plugin = {
+  name: 'dmno-monorepo-resolver-plugin',
+  // Run before the builtin 'vite:resolve' of Vite
+  enforce: 'pre',
+  resolveId(source, importer, options) {
+    console.log('PLUGIN RESOLVE!', source, importer, options);
+    return source;
+    // if (resolveKeys.includes(source)) {
+    //   // @see - https://vitejs.dev/guide/api-plugin.html#virtual-modules-convention
+    //   return prefix + source;
+    // }
+  },
+  load(id, options) {
+    console.log('PLUGIN LOAD!', id, options);
+  },
+};
+
+// create vite server
+const server = await createServer({
+  optimizeDeps: {
+    // It's recommended to disable deps optimization
+    disabled: true,
+  },
+  ssr: true,
+  appType: 'custom',
+  clearScreen: false,
+
+  plugins: [monorepoResolverPlugin],
+  // if the folder we are running in has its own vite.config file, it will try to use it
+  // passing false here tells it to skip that process
+  configFile: false,
+});
+console.log(server.config);
+// this is need to initialize the plugins
+await server.pluginContainer.buildStart({});
+
+
+// const thisNodeModulesDir = `${path.resolve(thisFilePath, '../../../node_modules')}/`;
+// console.log(thisNodeModulesDir);
+
+// create vite-node server
+const node = new ViteNodeServer(server, {
+  deps: { moduleDirectories: ['/node_modules/@dmno/core/node_modules/'] },
+});
+
+
+// fixes stacktraces in Errors
+installSourcemapsSupport({
+  getSourceMap: (source) => node.getSourceMap(source),
+});
+
+// create vite-node runner
+const runner = new ViteNodeRunner({
+  debug: true,
+  root: server.config.root,
+  base: server.config.base,
+  // when having the server and runner in a different context,
+  // you will need to handle the communication between them
+  // and pass to this function
+  fetchModule(id) {
+    console.log('fetch module', id);
+    return node.fetchModule(id);
+  },
+  resolveId(id, importer) {
+    console.log('resolve id', id, importer);
+    return node.resolveId(id, importer);
+  },
+});
+
+
+
+
 // we know the location of this file is the dist folder of @dmno/core within the project's node_modules
 // and since tsx is a dependency of @dmno/core, we can assume it will be in node_modules/.bin
 // (we will probably need to adjust this to also work with yarn/npm etc...)
-const tsxPath = path.resolve(thisFilePath, '../../../node_modules/.bin/tsx');
+// const tsxPath = path.resolve(thisFilePath, '../../../node_modules/.bin/tsx');
+const tsxPath = path.resolve(thisFilePath, '../../../node_modules/.bin/vite-node');
 
 // the loader code will be relative to this file, and we are going to run the built mjs file
 // (we could decide to run the ts directly since we are running via tsx)
 
 const loaderExecutablePath = path.resolve(thisFilePath, '../../config-loader/loader-executable.mjs');
 
+const startAt = new Date();
+let readyAt: Date | undefined;
 
 export class ConfigLoaderProcess {
   childProcess?: ChildProcess;
@@ -74,6 +156,9 @@ export class ConfigLoaderProcess {
 
     ipc.server.on('ready', (response) => {
       debug('READY!!!');
+      readyAt = new Date();
+
+      console.log(kleur.yellow(`took ${readyAt.getTime() - startAt.getTime()} ms to boot`));
       this.isReady.resolve();
     });
 
@@ -81,10 +166,15 @@ export class ConfigLoaderProcess {
   }
   private async onIpcStarted() {
     try {
-      this.childProcess = spawn(tsxPath, [loaderExecutablePath, this.uuid], { stdio: 'inherit' });
-      this.childProcess.on('error', (err) => {
-        debug('spawn error', err);
-      });
+      console.log('runner execute!');
+      await runner.executeFile(loaderExecutablePath);
+      console.log('executed');
+
+      // console.log('spawning', tsxPath, loaderExecutablePath);
+      // this.childProcess = spawn(tsxPath, [loaderExecutablePath, this.uuid], { stdio: 'inherit' });
+      // this.childProcess.on('error', (err) => {
+      //   debug('spawn error', err);
+      // });
 
       // make sure we clean up!
       // TODO: this may not work in all cases? we might want a cli helper that will clean up rogue processes

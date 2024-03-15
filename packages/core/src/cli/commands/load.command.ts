@@ -31,6 +31,7 @@ export class LoadCommand extends Command {
 
 
   async execute() {
+    console.log('execute load command');
     const configLoader = new ConfigLoaderProcess();
 
     const result = await configLoader.makeRequest('get-resolved-config', {

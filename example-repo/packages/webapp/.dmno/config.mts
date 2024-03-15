@@ -102,7 +102,7 @@ export default defineConfigSchema({
         max: 100,
         min: 1
       }),
-      value: '12.345',
+      value: '123.45',
     },
     WEB_URL: {
       extends: customUrlType({ newSetting: true }),
