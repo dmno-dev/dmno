@@ -2,9 +2,6 @@ import json from './typedoc-output.json';
 
 export const getSettingsForType = (type: string) => {
   const temp = json?.children?.find((i) => i.name === type);
-  // console.log('temp', temp);
-  // TODO handle different top level shapes: declaration, union, etc
-  // return prettyFormatTypeSettings(temp?.type?.declaration?.children || temp?.type?.types);
   return prettyFormatTypeSettings(temp?.type);
 };
 
@@ -17,47 +14,44 @@ const prettyFormatTypeSettings = (rawSettings: any) => {
     settings = rawSettings.declaration.children;
   } else if (rawSettings?.types) {
     settings = rawSettings.types;
-    // console.log('settings', settings);
   }
 
 
   return (settings.map((i: any) => {
-    // if (i.declaration?.children) {
-    //   return prettyFormatTypeSettings(i.declaration?.children) || '';
-    // }
-    const type = i.type?.name || i.name || i.type.type;
-    console.log('type', type, i);
+    const type = i.type?.name || i.type.type;
     let propertyType;
     switch (type) {
       case 'union':
-        propertyType = i.type.types.map((i: any) => i.name).join(' | ');
+        propertyType = i.type?.types?.map((i: any) => i.name).join(' | ');
         break;
       case 'intrinsic':
-        propertyType = i.type.name;
+        propertyType = type;
         break;
       case 'reflection':
-        propertyType = 'function';
-        return;
+        propertyType = i.type?.declaration?.children?.map((i: any) => i.name).join(', ');
+        propertyType = propertyType ? `{ ${propertyType} }` : 'function()';
+        break;
       case 'Record':
-        propertyType = `Record<${i.type.typeArguments.map((i: any) => i.name).join(', ')}>`;
+        propertyType = `Record<${i.type?.typeArguments.map((i: any) => i.name).join(', ')}>`;
         break;
       case 'reference':
-        propertyType = i.type.types.map((i: any) => i.name).join(' & ');
-        // console.log('reference', i);
+        propertyType = i.type?.types?.map((i: any) => i.name).join(' & ');
+        break;
+      case 'Omit':
+        propertyType = `Omit<${i.typeArguments?.map((i: any) => i.name || i.value).join(', ')}>`;
         break;
       case 'intersection':
-        return;
+        break;
       default:
-        propertyType = i.type.name;
-        // console.log('default', i);
+        propertyType = type;
         break;
     }
 
     // TODO handle array and build out children recursively
 
     return {
-      name: i.name,
-      type: propertyType || typeof i.type, // TODO handle non-strings
+      name: i.name || i.type?.name,
+      type: propertyType,
       required: !i.flags?.isOptional,
       description: i.comment?.summary[0]?.text || '',
     };

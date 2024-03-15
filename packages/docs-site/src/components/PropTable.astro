@@ -28,10 +28,10 @@ const { properties } = Astro.props;
         {properties.map((property) => {
           return (
             <tr>
-              <td>{property.name}</td>
-              <td>{property.type}</td>
-              <td>{property.required ? "Yes" : "No"}</td>
-              <td>{property.description}</td>
+              <td>{property?.name}</td>
+              <td>{property?.type}</td>
+              <td>{property?.required ? "Yes" : "No"}</td>
+              <td>{property?.description}</td>
             </tr>
           );
         })}

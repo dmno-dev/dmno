@@ -60,6 +60,7 @@ export type ConfigItemDefinition = {
   /** whether this config is sensitive and must be kept secret */
   secret?: ValueOrValueFromContextFn<boolean>;
 
+  /** is this config item required, an error will be shown if empty */
   required?: ValueOrValueFromContextFn<boolean>;
 
   /** at what time is this value required */
@@ -67,10 +68,14 @@ export type ConfigItemDefinition = {
 
   // we allow the fn that returns the data type so you can use the data type without calling the empty initializer
   // ie `DmnoBaseTypes.string` instead of `DmnoBaseTypes.string({})`;
+  /** the type the item is based, can be a DmnoBaseType or something custom */
   extends?: TypeExtendsDefinition;
 
+  /** a validation function for the value, return true if valid, otherwise throw an error */
   validate?: ((val: any, ctx: ResolverContext) => TypeValidationResult);
+  /** same as \`validate\` but async */
   asyncValidate?: ((val: any, ctx: ResolverContext) => Promise<TypeValidationResult>);
+  /** a function to coerce values */
   coerce?: ((val: any, ctx: ResolverContext) => any);
 
   /** set the value, can be static, or a function, or use helpers */
@@ -119,11 +124,13 @@ export type WorkspaceConfig = {
  */
 
 export type ServiceConfigSchema = {
-  // service name
+  /** service name */
   name?: string,
-  // name of parent service (if applicable)
+  /** name of parent service (if applicable) */
   parent?: string,
+  /** array of config items to be picked from parent */
   pick?: Array<PickConfigItemDefinition | string>,
+  /** the config schema itself */
   schema: Record<string, ConfigItemDefinitionOrShorthand>,
 };
 
