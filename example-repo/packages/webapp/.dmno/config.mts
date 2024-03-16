@@ -14,29 +14,22 @@ const customUrlType = createDmnoDataType({
   },
 });
 
-const customizedStringType = createDmnoDataType({
-  typeLabel: 'my-custom-url',
-  extends: (settings) => DmnoBaseTypes.string({
-    ...settings,
-  }),
-  summary: 'summary from custom type',
+// const customizedStringType = createDmnoDataType({
+//   typeLabel: 'my-custom-url',
+//   extends: (settings) => DmnoBaseTypes.string({
+//     ...settings,
+//   }),
+//   summary: 'summary from custom type',
   
-  settingsSchema: Object as {
-    newSetting?: boolean,
-  } & ExtractSettingsSchema<typeof DmnoBaseTypes.string>,
+//   settingsSchema: Object as {
+//     newSetting?: boolean,
+//   } & ExtractSettingsSchema<typeof DmnoBaseTypes.string>,
 
-  validate(val, settings) {
-    console.log(settings.newSetting);
-    console.log(settings.minLength);
-  }
-});
-
-
-
-//type ExtractSettingsSchema<> = P extends (opts) => <infer T> ? T : never;
-
-
-
+//   validate(val, settings) {
+//     console.log(settings.newSetting);
+//     console.log(settings.minLength);
+//   }
+// });
 
 
 export default defineConfigSchema({
@@ -63,7 +56,7 @@ export default defineConfigSchema({
     OBJECT_EXAMPLE: {
       extends: DmnoBaseTypes.object({
         child1: {
-          value: 123
+          value: 125
         },
         child2: {
           value: true,

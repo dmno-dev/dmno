@@ -45,6 +45,7 @@
   "dependencies": {
     "@dagrejs/graphlib": "^2.1.13",
     "@inquirer/prompts": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
     "async": "^3.2.5",
     "caller-path": "^4.0.0",
     "cli-table3": "^0.6.3",

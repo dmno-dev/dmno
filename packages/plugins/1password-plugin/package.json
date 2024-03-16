@@ -4,19 +4,19 @@
   "description": "adds ability to sync secrets with 1password to the DMNO config engine",
   "scripts": {
     "build": "tsup src/index.ts --dts",
-    "dev": "pnpm run build --watch",
+    "dev": "pnpm run build --watch --format esm",
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix"
   },
   "exports": {
     ".": {
-      "default": "./dist/index.js"
+      "default": "./dist/index.mjs"
     }
   },
   "typesVersions": {
     "*": {
       "index": [
-        "./dist/index.d.ts"
+        "./dist/index.d.mts"
       ]
     }
   },

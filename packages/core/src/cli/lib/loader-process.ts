@@ -1,3 +1,4 @@
+import { builtinModules } from 'module';
 import path from 'node:path';
 import crypto from 'crypto';
 import {
@@ -7,6 +8,7 @@ import kleur from 'kleur';
 import _ from 'lodash-es';
 import ipc from 'node-ipc';
 import Debug from 'debug';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
 
 import { createServer } from 'vite';
 import { ViteNodeServer } from 'vite-node/server';
@@ -19,40 +21,103 @@ import type { Plugin } from 'vite';
 
 const debug = Debug('dmno');
 
+const _uuid = crypto.randomUUID();
+
 const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 
 
-const monorepoResolverPlugin: Plugin = {
-  name: 'dmno-monorepo-resolver-plugin',
+const injectDmnoConfigImportsPlugin: Plugin = {
+  name: 'inject-dmno-config-imports',
+
   // Run before the builtin 'vite:resolve' of Vite
-  enforce: 'pre',
-  resolveId(source, importer, options) {
-    console.log('PLUGIN RESOLVE!', source, importer, options);
-    return source;
-    // if (resolveKeys.includes(source)) {
-    //   // @see - https://vitejs.dev/guide/api-plugin.html#virtual-modules-convention
-    //   return prefix + source;
-    // }
+  // enforce: 'pre',
+  // async resolveId(source, importer, options) {
+  //   if (importer?.endsWith('.html')) return;
+  //   if (options.isEntry) return;
+
+  //   if (!importer?.endsWith('/loader-executable.mjs')) return;
+
+  //   // if (source.startsWith('/') || source.startsWith('./') || source.startsWith('../')) return;
+
+  //   //
+  //   console.log('PLUGIN RESOLVE!', source, importer, options);
+  //   const resolution = await this.resolve(source, importer, options);
+
+  //   // if (!resolution) return `notfound-${source}`;
+
+  //   // return 'asdf';
+
+  //   return source;
+  // },
+
+  transform(code, id, options) {
+    if (id.endsWith('/config-loader/loader-executable.mjs')) {
+      // console.log(code);
+
+      code = code.replace('let importedConfig = {};', `
+        let importedConfig = {};
+        if (w.name === '@example/monorepo') {
+          importedConfig = await import('/Users/theo/dmno/core/example-repo/.dmno/config.mts');
+        } else if (w.name === '@example/api') {
+          importedConfig = await import('/Users/theo/dmno/core/example-repo/packages/api/.dmno/config.mts');
+        } else if (w.name === '@example/group1') {
+          importedConfig = await import('/Users/theo/dmno/core/example-repo/packages/group1/.dmno/config.mts');
+        } else if (w.name === '@example/webapp') {
+          importedConfig = await import('/Users/theo/dmno/core/example-repo/packages/webapp/.dmno/config.mts');
+        } else {
+          console.log("OOPS!");
+        }
+        console.log('REPLACE SUCCESS!');
+      `);
+    }
+    code = code.replace('REPLACE-WITH-IPC-UUID', _uuid);
+
+    return code;
   },
-  load(id, options) {
-    console.log('PLUGIN LOAD!', id, options);
-  },
+  // async load(id, options) {
+  //   console.log('PLUGIN LOAD!', id, options);
+
+  //   const loadResult = await this.load({ id, resolveDependencies: true });
+
+  //   console.log(`${id} module info`, this.getModuleInfo(id), loadResult);
+  //   return;
+  // },
 };
 
 // create vite server
 const server = await createServer({
+  // root: '/Users/theo/dmno/core/example-repo',
   optimizeDeps: {
     // It's recommended to disable deps optimization
     disabled: true,
   },
-  ssr: true,
   appType: 'custom',
   clearScreen: false,
 
-  plugins: [monorepoResolverPlugin],
+  plugins: [
+    injectDmnoConfigImportsPlugin,
+    nodeResolve({
+      modulePaths: [
+        '/Users/theo/dmno/core/example-repo/node_modules/',
+        // '/Users/theo/dmno/core/example-repo/node_modules/.pnpm/',
+        '/Users/theo/dmno/core/example-repo/node_modules/@dmno/core/node_modules/',
+        // '/node_modules/@dmno/core/node_modules/',
+
+        // '/Users/theo/node_modules/@dmno/core/node_modules/'
+      ],
+    }),
+  ],
+
   // if the folder we are running in has its own vite.config file, it will try to use it
   // passing false here tells it to skip that process
   configFile: false,
+  build: {
+    target: 'ESNext',
+    rollupOptions: {
+      external: [...builtinModules, ...builtinModules.map((m) => `node:${m}`)],
+    },
+    ssr: true,
+  },
 });
 console.log(server.config);
 // this is need to initialize the plugins
@@ -64,7 +129,9 @@ await server.pluginContainer.buildStart({});
 
 // create vite-node server
 const node = new ViteNodeServer(server, {
-  deps: { moduleDirectories: ['/node_modules/@dmno/core/node_modules/'] },
+  deps: {
+    // moduleDirectories: ['/node_modules/', '/node_modules/@dmno/core/node_modules/']
+  },
 });
 
 
@@ -85,7 +152,7 @@ const runner = new ViteNodeRunner({
     console.log('fetch module', id);
     return node.fetchModule(id);
   },
-  resolveId(id, importer) {
+  async resolveId(id, importer) {
     console.log('resolve id', id, importer);
     return node.resolveId(id, importer);
   },
@@ -103,7 +170,7 @@ const tsxPath = path.resolve(thisFilePath, '../../../node_modules/.bin/vite-node
 // the loader code will be relative to this file, and we are going to run the built mjs file
 // (we could decide to run the ts directly since we are running via tsx)
 
-const loaderExecutablePath = path.resolve(thisFilePath, '../../config-loader/loader-executable.mjs');
+const loaderExecutablePath = path.resolve(thisFilePath, '../../../dist/config-loader/loader-executable.mjs');
 
 const startAt = new Date();
 let readyAt: Date | undefined;
@@ -111,7 +178,7 @@ let readyAt: Date | undefined;
 export class ConfigLoaderProcess {
   childProcess?: ChildProcess;
   isReady: DeferredPromise = createDeferredPromise();
-  uuid = crypto.randomUUID();
+  uuid = _uuid;
 
   constructor() {
     // NOTE - we may want to initialize an ipc instance rather than using the global setup
@@ -167,8 +234,9 @@ export class ConfigLoaderProcess {
   private async onIpcStarted() {
     try {
       console.log('runner execute!');
-      await runner.executeFile(loaderExecutablePath);
+      const result = await runner.executeFile(`${loaderExecutablePath}`);
       console.log('executed');
+      console.log(result);
 
       // console.log('spawning', tsxPath, loaderExecutablePath);
       // this.childProcess = spawn(tsxPath, [loaderExecutablePath, this.uuid], { stdio: 'inherit' });

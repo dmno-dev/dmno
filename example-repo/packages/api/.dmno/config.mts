@@ -33,7 +33,7 @@ export default defineConfigSchema({
 
 
     PORT: {
-      value: 8080,
+      value: 8081,
     },
     API_URL: {
       description: 'public url of this service',
