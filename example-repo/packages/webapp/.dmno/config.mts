@@ -56,7 +56,7 @@ export default defineConfigSchema({
     OBJECT_EXAMPLE: {
       extends: DmnoBaseTypes.object({
         child1: {
-          value: 125
+          value: 121
         },
         child2: {
           value: true,

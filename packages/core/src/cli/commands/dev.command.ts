@@ -22,12 +22,6 @@ export class DevCommand extends Command {
     const configLoader = new ConfigLoaderProcess();
     await configLoader.isReady.promise;
 
-    console.log('ready');
-
-    setInterval(() => {
-      console.log('tick from cli');
-    }, 1000);
-
     // const result = await configLoader.makeRequest('get-resolved-config', {
 
     // const result = await configLoader.makeRequest('get-resolved-config', {

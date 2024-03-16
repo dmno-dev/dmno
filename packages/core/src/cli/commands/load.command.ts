@@ -101,5 +101,6 @@ export class LoadCommand extends Command {
       console.log('-----------------------------------------');
       console.table(result.config);
     }
+    process.exit(0);
   }
 }

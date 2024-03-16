@@ -462,6 +462,7 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
       const shorthandFnResult = defOrShorthand({});
       if (!(shorthandFnResult instanceof DmnoDataType)) {
         // TODO: put this in schema error instead?
+        console.log(DmnoDataType, shorthandFnResult);
         throw new Error('invalid schema as result of fn shorthand');
       } else {
         this.type = shorthandFnResult;
