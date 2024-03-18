@@ -1,5 +1,7 @@
 import _ from 'lodash-es';
 import Debug from 'debug';
+
+import validatePackageName from 'validate-npm-package-name';
 import {
   DmnoBaseTypes, DmnoDataType, DmnoSimpleBaseTypeNames,
 } from './base-types';
@@ -212,6 +214,15 @@ export class DmnoService {
       // - disallow renaming the root service?
       // - stop naming a non-root service "root"?
       this.rawConfig = opts.rawConfig;
+
+      if (this.rawConfig.name) {
+        const validateNameResult = validatePackageName(this.rawConfig.name);
+        if (!validateNameResult.validForNewPackages) {
+          const nameErrors = _.concat([], validateNameResult.warnings, validateNameResult.errors);
+          this.schemaErrors.push(new Error(`Invalid service name "${this.rawConfig.name}" - ${nameErrors.join(', ')}`));
+        }
+      }
+
       this.serviceName = this.rawConfig.name || (opts.isRoot ? 'root' : this.packageName);
     }
   }

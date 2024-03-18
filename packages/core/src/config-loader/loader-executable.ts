@@ -23,7 +23,6 @@ import { ViteNodeServer } from 'vite-node/server';
 import { ViteNodeRunner } from 'vite-node/client';
 import { installSourcemapsSupport } from 'vite-node/source-map';
 
-
 import {
   DmnoConfigItem, DmnoPickedConfigItem, DmnoService, ServiceConfigSchema,
 } from '../config-engine/config-engine';
@@ -35,6 +34,7 @@ import { SerializedConfigItem } from './serialization-types';
 
 const debug = Debug('dmno');
 
+let devMode = false;
 
 
 const CWD = process.cwd();
@@ -98,7 +98,8 @@ const customPlugin: Plugin = {
     }
   },
   async handleHotUpdate(ctx) {
-    console.log('hot update!', ctx);
+    if (!devMode) return;
+    // console.log('hot update!', ctx);
     const startReloadAt = new Date();
 
     // clear updated modules out of the cache
@@ -150,7 +151,11 @@ console.log(server.config);
 await server.pluginContainer.buildStart({});
 
 // create vite-node server
-const node = new ViteNodeServer(server, {});
+const node = new ViteNodeServer(server, {
+  // debug: {
+  //   dumpModules: true,
+  // },
+});
 
 
 // fixes stacktraces in Errors
@@ -508,6 +513,13 @@ registerRequestHandler('generate-types', async (payload) => {
   return { tsSrc: generateTypescriptTypes(service) };
 });
 
+
+
+registerRequestHandler('start-dev-mode', async (_payload) => {
+  devMode = true;
+
+  return { success: true };
+});
 
 
 

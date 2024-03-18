@@ -8,7 +8,12 @@ export type ConfigLoaderRequestMap = {
   'generate-types': {
     payload: { service?: string, packageName?: string },
     response: { tsSrc: string },
+  },
+  'start-dev-mode': {
+    payload: undefined,
+    response: { success: true }
   }
+
 };
 
 type ConfigLoaderRequest = {
