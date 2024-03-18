@@ -14,7 +14,7 @@
     "lint:fix": "pnpm run lint --fix"
   },
   "dependencies": {
-    "vue": "^3.2.47"
+    "vue": "^3.4.21"
   },
   "devDependencies": {
     "@dmno/core": "../../../packages/core",

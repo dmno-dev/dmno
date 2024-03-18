@@ -8,23 +8,20 @@ import _ from 'lodash-es';
 import ipc from 'node-ipc';
 import Debug from 'debug';
 
+
 import { ConfigLoaderRequestMap } from '../../config-loader/ipc-requests';
 import { DeferredPromise, createDeferredPromise } from '../../lib/deferred-promise';
+
 
 const debug = Debug('dmno');
 
 const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 
-// we know the location of this file is the dist folder of @dmno/core within the project's node_modules
-// and since tsx is a dependency of @dmno/core, we can assume it will be in node_modules/.bin
-// (we will probably need to adjust this to also work with yarn/npm etc...)
-const tsxPath = path.resolve(thisFilePath, '../../../node_modules/.bin/tsx');
+// the loader code will be relative to this file, and we are going to run the already built .mjs file
+const loaderExecutablePath = path.resolve(thisFilePath, '../../../dist/config-loader/loader-executable.mjs');
 
-// the loader code will be relative to this file, and we are going to run the built mjs file
-// (we could decide to run the ts directly since we are running via tsx)
-
-const loaderExecutablePath = path.resolve(thisFilePath, '../../config-loader/loader-executable.mjs');
-
+const startAt = new Date();
+let readyAt: Date | undefined;
 
 export class ConfigLoaderProcess {
   childProcess?: ChildProcess;
@@ -74,6 +71,9 @@ export class ConfigLoaderProcess {
 
     ipc.server.on('ready', (response) => {
       debug('READY!!!');
+      readyAt = new Date();
+
+      console.log(kleur.yellow(`took ${readyAt.getTime() - startAt.getTime()} ms to boot`));
       this.isReady.resolve();
     });
 
@@ -81,7 +81,7 @@ export class ConfigLoaderProcess {
   }
   private async onIpcStarted() {
     try {
-      this.childProcess = spawn(tsxPath, [loaderExecutablePath, this.uuid], { stdio: 'inherit' });
+      this.childProcess = spawn('node', [loaderExecutablePath, this.uuid], { stdio: 'inherit' });
       this.childProcess.on('error', (err) => {
         debug('spawn error', err);
       });

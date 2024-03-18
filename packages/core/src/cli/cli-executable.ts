@@ -20,6 +20,7 @@ import {
 import { LoadCommand } from './commands/load.command';
 import { RunCommand } from './commands/run.command';
 import { TypeGenCommand } from './commands/typegen.command';
+import { DevCommand } from './commands/dev.command';
 
 
 // import packageJson from '../package.json';
@@ -40,12 +41,13 @@ const cli = new Cli({
 cli.register(LoadCommand);
 cli.register(RunCommand);
 cli.register(TypeGenCommand);
+cli.register(DevCommand);
 cli.register(Builtins.HelpCommand);
 
 
 try {
   await cli.runExit(process.argv.slice(2));
-  process.exit(0);
+  // process.exit(0);
 } catch (error) {
   console.log('unexpected error!', error);
   process.exit(1);

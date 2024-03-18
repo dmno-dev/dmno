@@ -92,6 +92,7 @@ export class DmnoDataType<T = any> {
         if (initializedDataType instanceof DmnoDataType) {
           this.parentType = initializedDataType;
         } else {
+          console.log(initializedDataType);
           throw new Error('found invalid parent (as result of fn) in extends chain');
         }
       // normal case - `extends: DmnoBaseTypes.number({ ... })`

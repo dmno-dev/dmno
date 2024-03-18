@@ -31,6 +31,7 @@ export class LoadCommand extends Command {
 
 
   async execute() {
+    console.log('execute load command');
     const configLoader = new ConfigLoaderProcess();
 
     const result = await configLoader.makeRequest('get-resolved-config', {
@@ -38,6 +39,7 @@ export class LoadCommand extends Command {
       // maybe we always automatically pass this as context info?
       packageName: process.env.npm_package_name,
     });
+    console.log('fetched resolved config!', result);
 
     // TODO: remove this all into a helper, since we'll need similar handling on a bunch of commands...
 
@@ -99,5 +101,6 @@ export class LoadCommand extends Command {
       console.log('-----------------------------------------');
       console.table(result.config);
     }
+    process.exit(0);
   }
 }
