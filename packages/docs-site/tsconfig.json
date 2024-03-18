@@ -7,5 +7,16 @@
     // "src/**/*.mdx",
     // "src/**/*.astro",
     // "src/**/*.mdx",
-  ]
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/components/*": [
+        "src/components/*"
+      ],
+      "@/utils/*": [
+        "src/utils/*"
+      ]
+    }
+  }
 }
