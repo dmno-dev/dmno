@@ -2,12 +2,12 @@ import { defineConfigSchema, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula
 import { OnePasswordSecretService } from '@dmno/1password-plugin';
 
 const DevOnePassBackend = new OnePasswordSecretService(
-  configPath('ONE_PASSWORD.DEV_SERVICE_ACCOUNT_TOKEN'),
+  configPath('OP_TOKEN'),
   { defaultVaultName: 'dev test' }
 );
 
 const ProdOnePassBackend = new OnePasswordSecretService(
-  configPath('ONE_PASSWORD.PROD_SERVICE_ACCOUNT_TOKEN'),
+  configPath('OP_TOKEN'),
   { defaultVaultName: 'dev test' }
 );
 
@@ -18,6 +18,7 @@ export default defineConfigSchema({
     'NODE_ENV',
     'DMNO_ENV',
     'ONE_PASSWORD',
+    'OP_TOKEN'
   ],
   schema: {
     SECRET_EXAMPLE: {

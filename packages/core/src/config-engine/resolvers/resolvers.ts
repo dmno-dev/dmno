@@ -28,7 +28,7 @@ export type ConfigValueOverride = {
 
   // TODO: this will get more complex, as env files can be in different levels of the project
   /** where does the value come from */
-  source: { type: 'environment' } | { type: 'file', fileName: string };
+  source: string;
   /**
    * some overrides apply only in certan envs, for example if coming from `.env.production` */
   envFlag?: string;
@@ -51,30 +51,41 @@ export abstract class ConfigValueResolver {
 
   isResolved = false;
   resolvedValue?: ConfigValue;
+  isUsingCache = false;
 
   async resolve(ctx: ResolverContext) {
     // if a cache key is set, we first check the cache and return that value if found
     if (this.cacheKey) {
-      console.log(kleur.bgMagenta(`CHECK VALUE CACHE FOR KEY: ${this.cacheKey}`));
+      // console.log(kleur.bgMagenta(`CHECK VALUE CACHE FOR KEY: ${this.cacheKey}`));
       const cachedValue = await ctx.getCacheItem(this.cacheKey);
       if (cachedValue !== undefined) {
+        // console.log(kleur.bgMagenta('> USING CACHED VALUE!'));
         this.resolvedValue = cachedValue;
         this.isResolved = true;
+        this.isUsingCache = true;
         return;
       }
     }
 
-    let resolveResult: ConfigValue | ConfigValueResolver = await this._resolve(ctx);
-    while (resolveResult instanceof ConfigValueResolver) {
-      resolveResult = await resolveResult._resolve(ctx);
+    // actually call the resolver
+    const resolutionResult = await this._resolve(ctx);
+    if (resolutionResult instanceof ConfigValueResolver) {
+      // resolutionResult is now a child resolver which must be resolved itself
+      // NOTE we have to call this recursively so that caching can be triggered on each resolver
+      await resolutionResult.resolve(ctx);
+      this.resolvedValue = resolutionResult.resolvedValue;
+      // TODO: deal with errors - and need to bubble them up...?
+    } else {
+      // what if the result is undefined?
+      this.resolvedValue = resolutionResult;
     }
-    this.resolvedValue = resolveResult;
+
     this.isResolved = true;
 
+    // save result in cache if this resolver has a cache key
     if (this.cacheKey && this.resolvedValue !== undefined && this.resolvedValue !== null) {
-      console.log(kleur.bgMagenta(`SAVE CACHED VALUE IN KEY: ${this.cacheKey}`));
+      // console.log(kleur.bgMagenta(`SAVE CACHED VALUE IN KEY: ${this.cacheKey}`));
       await ctx.setCacheItem(this.cacheKey, this.resolvedValue);
-      // save cached value
     }
   }
 }

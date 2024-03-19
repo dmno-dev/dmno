@@ -1,7 +1,10 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
+import path from 'node:path';
 import _ from 'lodash-es';
 import Debug from 'debug';
+
+import dotenv from 'dotenv';
 
 import validatePackageName from 'validate-npm-package-name';
 import graphlib from '@dagrejs/graphlib';
@@ -235,7 +238,21 @@ class CacheEntry {
   static encryptionKey: string;
 }
 
+type NestedOverrideObj<T = string> = {
+  [key: string]: NestedOverrideObj<T> | T;
+};
 
+export class OverrideSource {
+  constructor(
+    readonly type: string,
+    private values: NestedOverrideObj,
+  ) {}
+
+  /** get an env var override value using a dot notation path */
+  getOverrideForPath(path: string) {
+    return _.get(this.values, path);
+  }
+}
 
 
 
@@ -247,6 +264,8 @@ export class DmnoWorkspace {
   private rootServiceName = 'root';
   get rootService() { return this.services[this.rootServiceName]; }
   get rootPath() { return this.rootService.path; }
+
+  readonly processEnvOverrides = new OverrideSource('process.env', getConfigFromEnvVars());
 
   addService(service: DmnoService) {
     if (this.services[service.serviceName]) {
@@ -486,6 +505,7 @@ export class DmnoWorkspace {
   }
 }
 
+
 export class DmnoService {
   /** name of service according to package.json file  */
   readonly packageName: string;
@@ -506,6 +526,8 @@ export class DmnoService {
   readonly config: Record<string, DmnoConfigItem | DmnoPickedConfigItem> = {};
 
   readonly workspace: DmnoWorkspace;
+
+  private overrideSources = [] as Array<OverrideSource>;
 
   constructor(opts: {
     isRoot: boolean,
@@ -543,8 +565,6 @@ export class DmnoService {
     }
   }
 
-
-
   addConfigItem(item: DmnoConfigItem | DmnoPickedConfigItem) {
     if (item instanceof DmnoPickedConfigItem && this.rawConfig?.schema[item.key]) {
       // check if a picked item is conflicting with a regular item
@@ -558,25 +578,50 @@ export class DmnoService {
     }
   }
 
+  async loadOverrideFiles() {
+    this.overrideSources = [];
+
+    const localOverridesPath = path.resolve(this.path, '.dmno/.env.local');
+    if (fs.existsSync(localOverridesPath)) {
+      const fileRaw = await fs.promises.readFile(localOverridesPath, 'utf-8');
+      const fileObj = dotenv.parse(Buffer.from(fileRaw));
+
+      // TODO: probably want to run these through the same nested separator logic?
+      this.overrideSources.push(new OverrideSource('dotenv/local', fileObj));
+    }
+
+    // load multiple override files
+    // .env.{ENV}.local
+    // .env.local
+    // .env.{ENV}
+    // .env
+
+    // TODO: support other formats (yaml, toml, json) - probably should all be through a plugin system
+  }
+
   async resolveConfig() {
-    const configFromEnv = getConfigFromEnvVars();
+    const configFromOverrides = await this.loadOverrideFiles();
 
     for (const itemKey in this.config) {
       const configItem = this.config[itemKey];
-
-      // TODO: set overrides from files
+      const itemPath = configItem.getPath(true);
 
       // TODO: deal with nested items
 
       // set override from environment (process.env)
-      const envOverrideValue = configFromEnv[configItem.getPath(true)];
-      if (envOverrideValue !== undefined) {
-        // TODO: not sure about coercion / validation? do we want to run it early?
-        configItem.overrides.push({
-          source: { type: 'environment' },
-          value: envOverrideValue,
-        });
-      }
+
+      _.each([
+        this.workspace.processEnvOverrides,
+        ...this.overrideSources,
+      ], (overrideSource) => {
+        const overrideVal = overrideSource.getOverrideForPath(itemPath);
+        if (overrideVal !== undefined) {
+          configItem.overrides.push({
+            source: overrideSource.type,
+            value: overrideVal,
+          });
+        }
+      });
 
       // currently this resolve fn will trigger resolve on nested items
       await configItem.resolve(new ResolverContext(this, configItem.getPath()));
