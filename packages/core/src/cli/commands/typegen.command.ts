@@ -22,7 +22,7 @@ export class TypeGenCommand extends Command {
 
 
     const result = await configLoader.makeRequest('generate-types', {
-      service: this.service,
+      serviceName: this.service,
       // maybe we always automatically pass this as context info?
       packageName: process.env.npm_package_name,
     });

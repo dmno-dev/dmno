@@ -1,8 +1,9 @@
 /* eslint-disable class-methods-use-this */
 import _ from 'lodash-es';
+import kleur from 'kleur';
 import {
   DmnoConfigItemBase, ResolverContext,
-} from './config-engine/config-engine';
+} from '../config-engine';
 
 // TODO: do we allow Date?
 // what to do about null/undefined?
@@ -44,18 +45,37 @@ export abstract class ConfigValueResolver {
   abstract getPreviewLabel(): string;
   abstract _resolve(ctx: ResolverContext): Promise<ConfigValue | ConfigValueResolver>;
 
+  cacheKey: string | undefined;
+
   childBranches?: Array<ResolverBranch>;
 
   isResolved = false;
   resolvedValue?: ConfigValue;
 
   async resolve(ctx: ResolverContext) {
+    // if a cache key is set, we first check the cache and return that value if found
+    if (this.cacheKey) {
+      console.log(kleur.bgMagenta(`CHECK VALUE CACHE FOR KEY: ${this.cacheKey}`));
+      const cachedValue = await ctx.getCacheItem(this.cacheKey);
+      if (cachedValue !== undefined) {
+        this.resolvedValue = cachedValue;
+        this.isResolved = true;
+        return;
+      }
+    }
+
     let resolveResult: ConfigValue | ConfigValueResolver = await this._resolve(ctx);
     while (resolveResult instanceof ConfigValueResolver) {
       resolveResult = await resolveResult._resolve(ctx);
     }
     this.resolvedValue = resolveResult;
     this.isResolved = true;
+
+    if (this.cacheKey && this.resolvedValue !== undefined && this.resolvedValue !== null) {
+      console.log(kleur.bgMagenta(`SAVE CACHED VALUE IN KEY: ${this.cacheKey}`));
+      await ctx.setCacheItem(this.cacheKey, this.resolvedValue);
+      // save cached value
+    }
   }
 }
 
@@ -90,20 +110,6 @@ export class StaticValueResolver extends ConfigValueResolver {
 }
 
 
-export class DmnoFormulaResolver extends ConfigValueResolver {
-  constructor(readonly formula: string) {
-    super();
-  }
-  icon = 'gravity-ui:curly-brackets-function';
-  getPreviewLabel() {
-    return 'formula!';
-  }
-  async _resolve(_ctx: ResolverContext) {
-    return `${this.formula} = result`;
-  }
-}
-// create DmnoFormula helper so we can use formulas without having to call `new`
-export const dmnoFormula = (formula: string) => new DmnoFormulaResolver(formula);
 
 
 
@@ -121,48 +127,18 @@ export function processResolverDef(resolverDef: ValueResolverDef) {
   }
 }
 
+/**
+ * helper fn to add caching to a value resolver that does not have it built-in
+ * for example, a fn that generates a random number / key
+ * */
+export function cacheValue(key: string, resolverDef: ValueResolverDef) {
+  // TODO: make this also work without an explicitly set key?
+  // could either be 2 functions, or accept 1 or 2 args?
+  const processedResolver = processResolverDef(resolverDef);
+  processedResolver.cacheKey = key;
 
-type ToggleOptions = Record<string, ValueResolverDef>;
-export class ToggleResolver extends ConfigValueResolver {
-  icon = 'gravity-ui:branches-right';
-  getPreviewLabel() {
-    return `toggle by ${this.toggleByKey}`;
-  }
-  constructor(readonly toggleByKey: string, readonly toggles: ToggleOptions) {
-    super();
-
-    // TODO: something special for default case?
-    // TODO: should we use a symbol instead of "_default" ?
-    this.childBranches = _.map(toggles, (itemDef, itemKey) => {
-      return {
-        // TODO: do we want to use a special symbol? or pass default as different arg?
-        isDefault: itemKey === '_default' || itemKey === '_',
-        condition: (ctx: ResolverContext) => ctx.get(this.toggleByKey) === itemKey,
-        label: itemKey, // ex: 'staging'
-        resolver: processResolverDef(itemDef),
-      };
-    });
-  }
-
-  async _resolve(ctx: ResolverContext) {
-    // find first branch that passes
-    const matchingBranch = _.find(this.childBranches, (branch) => {
-      if (branch.isDefault) return false;
-      return branch.condition(ctx);
-    });
-    if (matchingBranch) {
-      return matchingBranch.resolver || null;
-    } else {
-      const defaultBranch = _.find(this.childBranches, (branch) => branch.isDefault);
-      return defaultBranch?.resolver || null;
-    }
-  }
+  return processedResolver;
 }
-
-export const toggleByNodeEnv = (toggles: ToggleOptions) => new ToggleResolver('NODE_ENV', toggles);
-export const toggleByEnv = (toggles: ToggleOptions) => new ToggleResolver('DMNO_ENV', toggles);
-export const toggleBy = (key: string, toggles: ToggleOptions) => new ToggleResolver(key, toggles);
-
 
 
 

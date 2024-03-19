@@ -36,7 +36,7 @@ export class RunCommand extends Command {
     const configLoader = new ConfigLoaderProcess();
 
     const config = await configLoader.makeRequest('get-resolved-config', {
-      service: this.service,
+      serviceName: this.service,
       packageName: process.env.npm_package_name,
     });
 

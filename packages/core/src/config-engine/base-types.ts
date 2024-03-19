@@ -3,7 +3,7 @@ import _ from 'lodash-es';
 import {
   ConfigItemDefinition, ResolverContext, TypeValidationResult,
 } from './config-engine';
-import { ConfigValueResolver, processResolverDef } from '../resolvers';
+import { ConfigValueResolver, processResolverDef } from './resolvers/resolvers';
 import { CoercionError, EmptyRequiredValueError, ValidationError } from './errors';
 
 // data types expose all the same options, except they additionally have a "settings schema"

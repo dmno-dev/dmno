@@ -1,18 +1,26 @@
+import fs from 'node:fs';
+import crypto from 'node:crypto';
 import _ from 'lodash-es';
 import Debug from 'debug';
 
 import validatePackageName from 'validate-npm-package-name';
+import graphlib from '@dagrejs/graphlib';
+
 import {
   DmnoBaseTypes, DmnoDataType, DmnoSimpleBaseTypeNames,
 } from './base-types';
 import {
   ConfigValue,
   ValueResolverDef, ConfigValueOverride, ConfigValueResolver, PickedValueResolver,
-} from '../resolvers';
+} from './resolvers/resolvers';
 import { getConfigFromEnvVars } from '../lib/env-vars';
 import { SerializedConfigItem, SerializedService } from '../config-loader/serialization-types';
 import { CoercionError, DmnoError, ValidationError } from './errors';
+import { decrypt, encrypt } from '../lib/encryption';
 
+
+
+const ENCRYPTION_KEY = 'MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=';
 
 const debug = Debug('dmno');
 
@@ -175,6 +183,242 @@ export const configPath = (path: string) => new ConfigPath(path);
 
 
 
+export class DmnoWorkspace {
+  private services: Record<string, DmnoService> = {};
+  private servicesArray: Array<DmnoService> = [];
+  private servicesByPackageName: Record<string, DmnoService> = {};
+
+  private rootServiceName = 'root';
+  get rootService() { return this.services[this.rootServiceName]; }
+  get rootPath() { return this.rootService.path; }
+
+  addService(service: DmnoService) {
+    if (this.services[service.serviceName]) {
+      // this should maybe be part of a workspace error rather than exploding?
+      throw new Error(`Service names must be unique - duplicate name detected "${service.serviceName}"`);
+    } else {
+      this.services[service.serviceName] = service;
+      this.servicesArray.push(service);
+      this.servicesByPackageName[service.packageName] = service;
+      if (service.isRoot) this.rootServiceName = service.serviceName;
+    }
+  }
+
+  private servicesDag = new graphlib.Graph({ directed: true });
+  initServicesDag() {
+    // initialize a services DAG
+    // note - we may want to experiment with "compound nodes" to have the services contain their config items as children?
+
+    for (const service of this.servicesArray) {
+      this.servicesDag.setNode(service.serviceName, { /* can add more metadata here */ });
+    }
+
+    // first set up graph edges based on "parent"
+    for (const service of this.servicesArray) {
+    // check if parent service is valid
+      const parentServiceName = service.rawConfig?.parent;
+      if (parentServiceName) {
+        if (!this.services[parentServiceName]) {
+          service.schemaErrors.push(new Error(`Unable to find parent service "${parentServiceName}"`));
+        } else if (parentServiceName === service.serviceName) {
+          service.schemaErrors.push(new Error('Cannot set parent to self'));
+        } else {
+        // creates a directed edge from parent to child
+          this.servicesDag.setEdge(parentServiceName, service.serviceName, { type: 'parent' });
+        }
+
+        // anything without an explicit parent set is a child of the root
+      } else if (!service.isRoot) {
+        this.servicesDag.setEdge(this.rootServiceName, service.serviceName, { type: 'parent' });
+      }
+    }
+
+    // add graph edges based on "pick"
+    // we will not process individual items yet, but this will give us a DAG of service dependencies
+    for (const service of this.servicesArray) {
+      // eslint-disable-next-line @typescript-eslint/no-loop-func
+      _.each(service.rawConfig?.pick, (rawPick) => {
+      // pick defaults to picking from "root" unless otherwise specified
+        const pickFromServiceName = _.isString(rawPick)
+          ? this.rootServiceName
+          : (rawPick.source || this.rootServiceName);
+        if (!this.services[pickFromServiceName]) {
+          service.schemaErrors.push(new Error(`Invalid service name in "pick" config - "${pickFromServiceName}"`));
+        } else if (pickFromServiceName === service.serviceName) {
+          service.schemaErrors.push(new Error('Cannot "pick" from self'));
+        } else {
+        // create directed edge from service output feeding into this one (ex: database feeeds DB_URL into api )
+          this.servicesDag.setEdge(pickFromServiceName, service.serviceName, { type: 'pick' });
+        }
+      });
+    }
+
+    // look for cycles in the services graph, add schema errors if present
+    const graphCycles = graphlib.alg.findCycles(this.servicesDag);
+    _.each(graphCycles, (cycleMemberNames) => {
+    // each cycle is just an array of node names in the cycle
+      _.each(cycleMemberNames, (name) => {
+        this.services[name].schemaErrors.push(new Error(`Detected service dependency cycle - ${cycleMemberNames.join(' + ')}`));
+      });
+    });
+
+    // if no cycles were found in the services graph, we use a topological sort to get the right order to continue loading config
+    if (!graphCycles.length) {
+      const sortedServiceNames = graphlib.alg.topsort(this.servicesDag);
+      // we'll sort the services array into dependency order
+      this.servicesArray = _.map(sortedServiceNames, (serviceName) => this.services[serviceName]);
+      debug('DEP SORTED SERVICES', sortedServiceNames);
+    }
+  }
+  processConfig() {
+    for (const service of this.servicesArray) {
+      const ancestorServiceNames = this.servicesDag.predecessors(service.serviceName) || [];
+
+      // process "picked" items
+      for (const rawPickItem of service.rawConfig?.pick || []) {
+        const pickFromServiceName = _.isString(rawPickItem)
+          ? this.rootServiceName
+          : (rawPickItem.source || this.rootServiceName);
+        const isPickingFromAncestor = ancestorServiceNames.includes(pickFromServiceName);
+        const rawPickKey = _.isString(rawPickItem) ? rawPickItem : rawPickItem.key;
+        const pickFromService = this.services[pickFromServiceName];
+        if (!pickFromService) {
+          // NOTE: we've already added a schema error if item is picking from an non-existant service
+          // while setting up the services DAG, so we can just bail on the item
+          continue;
+        }
+
+        // first we'll gather a list of the possible keys we can pick from
+        // when picking from an ancestor, we pick from all config items
+        // while non-ancestors expose only items that have `expose: true` set on them
+        const potentialKeysToPickFrom: Array<string> = [];
+
+        if (isPickingFromAncestor) {
+          potentialKeysToPickFrom.push(..._.keys(pickFromService.config));
+        } else {
+          // whereas only "exposed" items can be picked from non-ancestors
+          const exposedItems = _.pickBy(pickFromService.config, (itemConfig) => !!itemConfig.type.getDefItem('expose'));
+          potentialKeysToPickFrom.push(..._.keys(exposedItems));
+        }
+
+        const keysToPick: Array<string> = [];
+
+        // if key is a string or array of strings, we'll need to check they are valid
+        if (_.isString(rawPickKey) || _.isArray(rawPickKey)) {
+          for (const keyToCheck of _.castArray(rawPickKey)) {
+            if (!potentialKeysToPickFrom.includes(keyToCheck)) {
+              // TODO: we could include if the key exists but is not marked to "expose"?
+              service.schemaErrors.push(new Error(`Picked item ${pickFromServiceName}/${keyToCheck} was not found`));
+            } else {
+              keysToPick.push(keyToCheck);
+            }
+          }
+
+        // if it's a function, we'll be filtering from the list of potential items
+        } else if (_.isFunction(rawPickKey)) { // fn that filters keys
+          const pickKeysViaFilter = _.filter(potentialKeysToPickFrom, rawPickKey);
+
+          // we probably want to warn the user if the filter selected nothing?
+          if (!pickKeysViaFilter.length) {
+            // TODO: we may want to mark this error as a "warning" or something?
+            // or some other way of configuring / ignoring
+            service.schemaErrors.push(new Error(`Pick from ${pickFromServiceName} using key filter fn had no matches`));
+          } else {
+            keysToPick.push(...pickKeysViaFilter);
+            // console.log('pick keys by filter', pickKeysViaFilter);
+          }
+        }
+
+        for (let i = 0; i < keysToPick.length; i++) {
+          const pickKey = keysToPick[i];
+          // deal with key renaming
+          let newKeyName = pickKey;
+          if (!_.isString(rawPickItem) && rawPickItem.renameKey) {
+            // renameKey can be a static string (if dealing with a single key)
+            if (_.isString(rawPickItem.renameKey)) {
+              // deal with the case of trying to rename multiple keys to a single value
+              // TODO: might be able to discourage this in the TS typing?
+              if (keysToPick.length > 1) {
+                // add an error (once)
+                if (i === 0) {
+                  service.schemaErrors.push(new Error(`Picked multiple keys from ${pickFromServiceName} using static rename`));
+                }
+                // add an index suffix... so the items will at least still appear
+                newKeyName = `${rawPickItem.renameKey}-${i}`;
+              } else {
+                newKeyName = rawPickItem.renameKey;
+              }
+
+            // or a function to transform the existing key
+            } else {
+              newKeyName = rawPickItem.renameKey(pickKey);
+            }
+          }
+
+          service.addConfigItem(new DmnoPickedConfigItem(newKeyName, {
+            sourceItem: pickFromService.config[pickKey],
+            transformValue: _.isString(rawPickItem) ? undefined : rawPickItem.transformValue,
+          }, service));
+          // TODO: add to dag node with link to source item
+        }
+      }
+
+      // process the regular config schema items
+      for (const itemKey in service.rawConfig?.schema) {
+        const itemDef = service.rawConfig?.schema[itemKey];
+        service.addConfigItem(new DmnoConfigItem(itemKey, itemDef, service));
+        // TODO: add dag node
+      }
+    }
+  }
+  async resolveConfig() {
+    await this.loadCache();
+    // servicesArray is already sorted by dependencies
+    for (const service of this.servicesArray) {
+      if (service.schemaErrors.length) {
+        debug(`SERVICE ${service.serviceName} has schema errors: `);
+        debug(service.schemaErrors);
+      } else {
+        await service.resolveConfig();
+      }
+    }
+    await this.writeCache();
+  }
+
+
+  getService(descriptor: string | { serviceName?: string, packageName?: string }) {
+    if (_.isString(descriptor)) {
+      return this.services[descriptor];
+    } else {
+      if (descriptor.serviceName) return this.services[descriptor.serviceName];
+      if (descriptor.packageName) return this.servicesByPackageName[descriptor.packageName];
+    }
+    console.log(descriptor);
+    throw new Error(`unable to find service - ${descriptor}`);
+  }
+
+  get cacheFilePath() { return `${this.rootPath}/.dmno/cache.json`; }
+  private valueCache: Record<string, string> = {};
+  private async loadCache() {
+    if (!fs.existsSync(this.cacheFilePath)) return;
+    const cacheRawStr = await fs.promises.readFile(this.cacheFilePath, 'utf-8');
+    const cacheRawObj = JSON.parse(cacheRawStr) as Record<string, string>;
+    this.valueCache = {};
+    for (const itemCacheKey in cacheRawObj) {
+      this.valueCache[itemCacheKey] = await decrypt(ENCRYPTION_KEY, cacheRawObj[itemCacheKey]);
+    }
+  }
+  private async writeCache() {
+    const cacheJson = JSON.stringify(_.mapValues(this.valueCache, (val) => encrypt(ENCRYPTION_KEY, val)), null, 2);
+    await fs.promises.writeFile(this.cacheFilePath, cacheJson, 'utf-8');
+  }
+  async getCacheItem(key: string) {
+    return this.valueCache[key];
+  }
+  async setCacheItem(key: string, value: string) {
+    this.valueCache[key] = value;
+  }
+}
 
 export class DmnoService {
   /** name of service according to package.json file  */
@@ -195,12 +439,17 @@ export class DmnoService {
   /** processed config items - not necessarily resolved yet */
   readonly config: Record<string, DmnoConfigItem | DmnoPickedConfigItem> = {};
 
+  readonly workspace: DmnoWorkspace;
+
   constructor(opts: {
     isRoot: boolean,
     packageName: string,
     path: string,
     rawConfig: ServiceConfigSchema | Error,
+    workspace: DmnoWorkspace,
   }) {
+    this.workspace = opts.workspace;
+
     this.isRoot = opts.isRoot;
     this.packageName = opts.packageName;
     this.path = opts.path;
@@ -221,9 +470,10 @@ export class DmnoService {
           const nameErrors = _.concat([], validateNameResult.warnings, validateNameResult.errors);
           this.schemaErrors.push(new Error(`Invalid service name "${this.rawConfig.name}" - ${nameErrors.join(', ')}`));
         }
+        this.serviceName = this.rawConfig.name;
+      } else {
+        this.serviceName = opts.isRoot ? 'root' : this.packageName;
       }
-
-      this.serviceName = this.rawConfig.name || (opts.isRoot ? 'root' : this.packageName);
     }
   }
 
@@ -305,6 +555,14 @@ export class ResolverContext {
       throw new Error(`Tried to access item that was not resolved - ${item.getPath()}`);
     }
     return item.resolvedValue;
+  }
+
+  async getCacheItem(key: string) {
+    return this.service.workspace.getCacheItem(key);
+  }
+  async setCacheItem(key: string, value: ConfigValue) {
+    if (value === undefined || value === null) return;
+    return this.service.workspace.setCacheItem(key, value.toString());
   }
 }
 
