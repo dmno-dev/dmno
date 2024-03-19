@@ -1,4 +1,4 @@
-import { defineConfigSchema, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, toggleByEnv, valueCreatedDuringDeployment } from '@dmno/core';
+import { defineConfigSchema, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, toggleByEnv, valueCreatedDuringDeployment, cacheValue } from '@dmno/core';
 import { OnePasswordSecretService } from '@dmno/1password-plugin';
 
 const DevOnePassBackend = new OnePasswordSecretService(
@@ -44,6 +44,6 @@ export default defineConfigSchema({
       //   staging: valueCreatedDuringDeployment(),
       //   production: 'https://api.dmnoexampleapp.com',
       // })
-    },
+    }
   },
 });

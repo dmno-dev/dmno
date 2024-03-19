@@ -179,6 +179,62 @@ export class ConfigPath {
 export const configPath = (path: string) => new ConfigPath(path);
 
 
+type ValueCacheEntry = {
+  /** ISO timestamp of when this cache entry was last updated */
+  updatedAt: string;
+  /** encrypted value */
+  encryptedVal: string;
+  /** decrypted value */
+  val?: string;
+  /** array of full item paths where this item was used */
+  usedBy: Set<string>;
+};
+
+
+type SerializedCacheEntry = {
+  updatedAt: string,
+  encryptedValue: string;
+  usedByItems: Array<string>;
+};
+type SerializedCache = {
+  version: string;
+  items: Record<string, SerializedCacheEntry>;
+};
+class CacheEntry {
+  readonly usedByItems: Set<string>;
+  readonly updatedAt: Date;
+  constructor(
+    readonly key: string,
+    readonly value: any,
+    usedBy?: string | Array<string>,
+    updatedAt?: Date,
+  ) {
+    this.updatedAt = updatedAt || new Date();
+    this.usedByItems = new Set(_.castArray(usedBy || []));
+  }
+  getEncryptedValue() {
+    return encrypt(CacheEntry.encryptionKey, this.value);
+  }
+  toJSON(): SerializedCacheEntry {
+    return {
+      encryptedValue: this.getEncryptedValue(),
+      updatedAt: this.updatedAt.toISOString(),
+      usedByItems: Array.from(this.usedByItems),
+    };
+  }
+
+  static async fromSerialized(itemKey: string, raw: SerializedCacheEntry) {
+    // currently this setup means the encryptedValue changes on every run...
+    // we could instead store the encryptedValue and reuse it if it has not changed
+    const value = await decrypt(CacheEntry.encryptionKey, raw.encryptedValue);
+    // we are also tossing out the saved "usedBy" entries since we'll have new ones after this config run
+    return new CacheEntry(itemKey, value, undefined, new Date(raw.updatedAt));
+  }
+
+  // not sure about this... but for now it seems true that we'll use a single key at a time
+  static encryptionKey: string;
+}
+
 
 
 
@@ -398,25 +454,35 @@ export class DmnoWorkspace {
   }
 
   get cacheFilePath() { return `${this.rootPath}/.dmno/cache.json`; }
-  private valueCache: Record<string, string> = {};
+  private valueCache: Record<string, CacheEntry> = {};
   private async loadCache() {
+    // might want to attach the CacheEntry to the workspace instead to get the key?
+    // or we could always pass it around as needed
+    CacheEntry.encryptionKey = ENCRYPTION_KEY;
+
     if (!fs.existsSync(this.cacheFilePath)) return;
     const cacheRawStr = await fs.promises.readFile(this.cacheFilePath, 'utf-8');
-    const cacheRawObj = JSON.parse(cacheRawStr) as Record<string, string>;
-    this.valueCache = {};
-    for (const itemCacheKey in cacheRawObj) {
-      this.valueCache[itemCacheKey] = await decrypt(ENCRYPTION_KEY, cacheRawObj[itemCacheKey]);
+    const cacheRaw = JSON.parse(cacheRawStr) as SerializedCache;
+    for (const itemCacheKey in cacheRaw.items) {
+      this.valueCache[itemCacheKey] = await CacheEntry.fromSerialized(itemCacheKey, cacheRaw.items[itemCacheKey]);
     }
   }
   private async writeCache() {
-    const cacheJson = JSON.stringify(_.mapValues(this.valueCache, (val) => encrypt(ENCRYPTION_KEY, val)), null, 2);
-    await fs.promises.writeFile(this.cacheFilePath, cacheJson, 'utf-8');
+    const serializedCache: SerializedCache = {
+      version: '0.0.1',
+      items: _.mapValues(this.valueCache, (cacheItem) => cacheItem.toJSON()),
+    };
+    const serializedCacheStr = JSON.stringify(serializedCache, null, 2);
+    await fs.promises.writeFile(this.cacheFilePath, serializedCacheStr, 'utf-8');
   }
-  async getCacheItem(key: string) {
-    return this.valueCache[key];
+  async getCacheItem(key: string, usedBy?: string) {
+    if (key in this.valueCache) {
+      if (usedBy) this.valueCache[key].usedByItems.add(usedBy);
+      return this.valueCache[key].value;
+    }
   }
-  async setCacheItem(key: string, value: string) {
-    this.valueCache[key] = value;
+  async setCacheItem(key: string, value: string, usedBy?: string) {
+    this.valueCache[key] = new CacheEntry(key, value, usedBy);
   }
 }
 
@@ -513,7 +579,7 @@ export class DmnoService {
       }
 
       // currently this resolve fn will trigger resolve on nested items
-      await configItem.resolve(new ResolverContext(this));
+      await configItem.resolve(new ResolverContext(this, configItem.getPath()));
     }
   }
 
@@ -543,9 +609,12 @@ export class DmnoService {
 }
 
 export class ResolverContext {
-  constructor(private service: DmnoService) {
+  constructor(private service: DmnoService, private itemPath: string) {
 
   }
+
+  get fullPath() { return `${this.service.serviceName}/${this.itemPath}`; }
+
   get(itemPath: string) {
     const item = this.service.getConfigItemByPath(itemPath);
     if (!item) {
@@ -558,11 +627,11 @@ export class ResolverContext {
   }
 
   async getCacheItem(key: string) {
-    return this.service.workspace.getCacheItem(key);
+    return this.service.workspace.getCacheItem(key, this.fullPath);
   }
   async setCacheItem(key: string, value: ConfigValue) {
     if (value === undefined || value === null) return;
-    return this.service.workspace.setCacheItem(key, value.toString());
+    return this.service.workspace.setCacheItem(key, value.toString(), this.fullPath);
   }
 }
 
