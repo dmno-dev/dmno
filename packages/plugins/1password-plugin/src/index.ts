@@ -1,5 +1,8 @@
+import path from 'node:path';
+import { exec, execSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import * as _ from 'lodash-es';
-import { ConfigPath } from '@dmno/core';
+import { ConfigPath, ConfigValueResolver, ResolverContext } from '@dmno/core';
 
 type ItemId = string;
 type VaultId = string;
@@ -7,11 +10,12 @@ type VaultName = string;
 type ReferenceUrl = string;
 type ServiceAccountToken = string;
 
+
 export class OnePasswordSecretService {
   constructor(
     private serviceAccountToken: ServiceAccountToken | ConfigPath,
     private options?: {
-      defaultVaultId?: VaultId | ConfigPath,
+      defaultVaultId?: VaultId,
       // TODO: not sure if vault "name" is the right term here?
       defaultVaultName?: VaultName | ConfigPath
     },
@@ -21,15 +25,22 @@ export class OnePasswordSecretService {
   // can read items by id - need a vault id, item id
   // and then need to grab the specific data from a big json blob
   // cli command `op item get bphvvrqjegfmd5yoz4buw2aequ --vault=ut2dftalm3ugmxc6klavms6tfq --format json`
-  item(idOrIdAndVault: ItemId | { id: ItemId, vaultId: VaultId }, pathToFetch?: string) {
+  item(idOrIdAndVault: ItemId | { id: ItemId, vaultId: VaultId }, path?: string) {
     let vaultId: VaultId;
     let itemId: ItemId;
     if (_.isString(idOrIdAndVault)) {
+      itemId = idOrIdAndVault;
       if (!this.options?.defaultVaultId) throw new Error('No vault ID specified');
+      vaultId = this.options.defaultVaultId;
+    } else {
+      itemId = idOrIdAndVault.id;
+      vaultId = idOrIdAndVault.vaultId;
     }
-    return 'fetch 1pass by ids';
-
-    // return `fetch - ${vaultId}/${itemId}`;
+    return new OnePasswordResolver(this.serviceAccountToken, {
+      id: itemId,
+      vaultId,
+      path,
+    });
   }
 
 
@@ -47,7 +58,9 @@ export class OnePasswordSecretService {
       fullReference = `op://${this.options?.defaultVaultName}/${fullReference}`;
     }
 
-    return `fetch 1pass by reference - ${fullReference}`;
+    return new OnePasswordResolver(this.serviceAccountToken, {
+      reference: fullReference,
+    });
   }
 }
 
@@ -60,3 +73,85 @@ export class OnePasswordSecretService {
 // // however these are not necessarily stable...
 // // cli command `op read "op://dev test/example/username"`
 // OnePassBackend.itemByReference("op://dev test/example/username");
+
+
+const CLI_PATH = path.resolve(fileURLToPath(import.meta.url), '../../op-cli');
+class OnePasswordResolver extends ConfigValueResolver {
+  icon = 'simple-icons:1password';
+  getPreviewLabel() {
+    return this.label;
+  }
+
+  private label: string;
+  constructor(
+    private serviceAccountToken: ServiceAccountToken | ConfigPath,
+    private opts: {
+      id: ItemId,
+      vaultId: VaultId,
+      path?: string
+    } | { reference: string },
+  ) {
+    super();
+    if ('id' in opts) {
+      this.label = `${opts.vaultId}/${opts.id}`;
+      // currently this means we're not reusing the cache for the same item if fetching different paths within that item
+      this.cacheKey = `1pass:V|${opts.vaultId}/I|${opts.id}/P|${opts.path}`;
+    } else if ('reference' in opts) {
+      this.label = opts.reference;
+      this.cacheKey = `1pass:R|${opts.reference}`;
+    }
+    this.label = '-';
+  }
+
+  async _resolve(ctx: ResolverContext) {
+    console.log('Resolving 1password value!', ctx.fullPath);
+
+    let tokenValue: string | undefined;
+    if (this.serviceAccountToken instanceof ConfigPath) {
+      const resolvedTokenFromPath = await ctx.get(this.serviceAccountToken.path);
+      console.log('1pass token = ', resolvedTokenFromPath);
+      if (!resolvedTokenFromPath) {
+        throw new Error(`Unable to resolve 1password token from path ${this.serviceAccountToken.path}`);
+      }
+      if (!_.isString(resolvedTokenFromPath)) {
+        throw new Error('Resolved token is not a string');
+      }
+      tokenValue = resolvedTokenFromPath;
+    } else {
+      tokenValue = this.serviceAccountToken;
+    }
+    if (!tokenValue) {
+      throw new Error('no op token');
+    }
+
+    const injectToken = `OP_SERVICE_ACCOUNT_TOKEN=${tokenValue}`;
+
+
+    let value: string | undefined;
+    if ('reference' in this.opts) {
+      value = await execSync([
+        injectToken,
+        CLI_PATH,
+        `read "${this.opts.reference}"`,
+        '--force --no-newline',
+      ].join(' ')).toString();
+    } else {
+      const valueJsonStr = await execSync([
+        injectToken,
+        CLI_PATH,
+        `get item ${this.opts.id}`,
+        `--vault=${this.opts.vaultId}`,
+        '--format json',
+      ].join(' ')).toString();
+
+      const valueObj = JSON.parse(valueJsonStr);
+      if (this.opts.path) {
+        value = _.get(valueObj, this.opts.path);
+      }
+    }
+    if (value === undefined) {
+      throw new Error(`unable to resolve 1pass item - ${this.label}`);
+    }
+    return value;
+  }
+}

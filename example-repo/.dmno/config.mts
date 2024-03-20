@@ -16,6 +16,11 @@ export default defineWorkspaceConfig({
       value: (ctx) => `pick-test--${ctx.get('NODE_ENV')}`,
     },
 
+    OP_TOKEN: {
+      extends: 'string',
+      required: true
+    },
+
     ONE_PASSWORD: {
       description: '1password creds and vault',
       extends: DmnoBaseTypes.object({

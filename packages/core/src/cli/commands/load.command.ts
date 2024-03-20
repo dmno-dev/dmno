@@ -35,7 +35,7 @@ export class LoadCommand extends Command {
     const configLoader = new ConfigLoaderProcess();
 
     const result = await configLoader.makeRequest('get-resolved-config', {
-      service: this.service,
+      serviceName: this.service,
       // maybe we always automatically pass this as context info?
       packageName: process.env.npm_package_name,
     });
@@ -96,10 +96,7 @@ export class LoadCommand extends Command {
     if (this.format === 'json') {
       console.log(JSON.stringify(result.config));
     } else {
-      console.log('-----------------------------------------');
-      console.log(`Resolved env for service ${this.service}`);
-      console.log('-----------------------------------------');
-      console.table(result.config);
+      console.log(result.config);
     }
     process.exit(0);
   }

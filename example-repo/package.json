@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -11,6 +10,7 @@
     "node": "18.16.0",
     "pnpm": "8.5.0"
   },
+  "scripts": {},
   "devDependencies": {
     "@dmno/1password-plugin": "../packages/plugins/1password-plugin",
     "@dmno/core": "../packages/core"

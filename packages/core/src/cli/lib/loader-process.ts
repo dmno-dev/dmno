@@ -44,7 +44,7 @@ export class ConfigLoaderProcess {
     ipc.server.on('start', () => this.onIpcStarted());
 
     ipc.server.on('connect', (msg) => {
-      debug('IPC message: ', msg);
+      // debug('IPC connect: ', msg);
     });
 
     ipc.server.on('error', (err) => {

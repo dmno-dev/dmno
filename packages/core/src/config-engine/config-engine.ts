@@ -1,18 +1,29 @@
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import path from 'node:path';
 import _ from 'lodash-es';
 import Debug from 'debug';
 
+import dotenv from 'dotenv';
+
 import validatePackageName from 'validate-npm-package-name';
+import graphlib from '@dagrejs/graphlib';
+
 import {
   DmnoBaseTypes, DmnoDataType, DmnoSimpleBaseTypeNames,
 } from './base-types';
 import {
   ConfigValue,
   ValueResolverDef, ConfigValueOverride, ConfigValueResolver, PickedValueResolver,
-} from '../resolvers';
+} from './resolvers/resolvers';
 import { getConfigFromEnvVars } from '../lib/env-vars';
 import { SerializedConfigItem, SerializedService } from '../config-loader/serialization-types';
 import { CoercionError, DmnoError, ValidationError } from './errors';
+import { decrypt, encrypt } from '../lib/encryption';
 
+
+
+const ENCRYPTION_KEY = 'MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=';
 
 const debug = Debug('dmno');
 
@@ -171,9 +182,328 @@ export class ConfigPath {
 export const configPath = (path: string) => new ConfigPath(path);
 
 
+type ValueCacheEntry = {
+  /** ISO timestamp of when this cache entry was last updated */
+  updatedAt: string;
+  /** encrypted value */
+  encryptedVal: string;
+  /** decrypted value */
+  val?: string;
+  /** array of full item paths where this item was used */
+  usedBy: Set<string>;
+};
+
+
+type SerializedCacheEntry = {
+  updatedAt: string,
+  encryptedValue: string;
+  usedByItems: Array<string>;
+};
+type SerializedCache = {
+  version: string;
+  items: Record<string, SerializedCacheEntry>;
+};
+class CacheEntry {
+  readonly usedByItems: Set<string>;
+  readonly updatedAt: Date;
+  constructor(
+    readonly key: string,
+    readonly value: any,
+    usedBy?: string | Array<string>,
+    updatedAt?: Date,
+  ) {
+    this.updatedAt = updatedAt || new Date();
+    this.usedByItems = new Set(_.castArray(usedBy || []));
+  }
+  getEncryptedValue() {
+    return encrypt(CacheEntry.encryptionKey, this.value);
+  }
+  toJSON(): SerializedCacheEntry {
+    return {
+      encryptedValue: this.getEncryptedValue(),
+      updatedAt: this.updatedAt.toISOString(),
+      usedByItems: Array.from(this.usedByItems),
+    };
+  }
+
+  static async fromSerialized(itemKey: string, raw: SerializedCacheEntry) {
+    // currently this setup means the encryptedValue changes on every run...
+    // we could instead store the encryptedValue and reuse it if it has not changed
+    const value = await decrypt(CacheEntry.encryptionKey, raw.encryptedValue);
+    // we are also tossing out the saved "usedBy" entries since we'll have new ones after this config run
+    return new CacheEntry(itemKey, value, undefined, new Date(raw.updatedAt));
+  }
+
+  // not sure about this... but for now it seems true that we'll use a single key at a time
+  static encryptionKey: string;
+}
+
+type NestedOverrideObj<T = string> = {
+  [key: string]: NestedOverrideObj<T> | T;
+};
+
+export class OverrideSource {
+  constructor(
+    readonly type: string,
+    private values: NestedOverrideObj,
+  ) {}
+
+  /** get an env var override value using a dot notation path */
+  getOverrideForPath(path: string) {
+    return _.get(this.values, path);
+  }
+}
 
 
 
+export class DmnoWorkspace {
+  private services: Record<string, DmnoService> = {};
+  private servicesArray: Array<DmnoService> = [];
+  private servicesByPackageName: Record<string, DmnoService> = {};
+
+  private rootServiceName = 'root';
+  get rootService() { return this.services[this.rootServiceName]; }
+  get rootPath() { return this.rootService.path; }
+
+  readonly processEnvOverrides = new OverrideSource('process.env', getConfigFromEnvVars());
+
+  addService(service: DmnoService) {
+    if (this.services[service.serviceName]) {
+      // this should maybe be part of a workspace error rather than exploding?
+      throw new Error(`Service names must be unique - duplicate name detected "${service.serviceName}"`);
+    } else {
+      this.services[service.serviceName] = service;
+      this.servicesArray.push(service);
+      this.servicesByPackageName[service.packageName] = service;
+      if (service.isRoot) this.rootServiceName = service.serviceName;
+    }
+  }
+
+  private servicesDag = new graphlib.Graph({ directed: true });
+  initServicesDag() {
+    // initialize a services DAG
+    // note - we may want to experiment with "compound nodes" to have the services contain their config items as children?
+
+    for (const service of this.servicesArray) {
+      this.servicesDag.setNode(service.serviceName, { /* can add more metadata here */ });
+    }
+
+    // first set up graph edges based on "parent"
+    for (const service of this.servicesArray) {
+    // check if parent service is valid
+      const parentServiceName = service.rawConfig?.parent;
+      if (parentServiceName) {
+        if (!this.services[parentServiceName]) {
+          service.schemaErrors.push(new Error(`Unable to find parent service "${parentServiceName}"`));
+        } else if (parentServiceName === service.serviceName) {
+          service.schemaErrors.push(new Error('Cannot set parent to self'));
+        } else {
+        // creates a directed edge from parent to child
+          this.servicesDag.setEdge(parentServiceName, service.serviceName, { type: 'parent' });
+        }
+
+        // anything without an explicit parent set is a child of the root
+      } else if (!service.isRoot) {
+        this.servicesDag.setEdge(this.rootServiceName, service.serviceName, { type: 'parent' });
+      }
+    }
+
+    // add graph edges based on "pick"
+    // we will not process individual items yet, but this will give us a DAG of service dependencies
+    for (const service of this.servicesArray) {
+      // eslint-disable-next-line @typescript-eslint/no-loop-func
+      _.each(service.rawConfig?.pick, (rawPick) => {
+      // pick defaults to picking from "root" unless otherwise specified
+        const pickFromServiceName = _.isString(rawPick)
+          ? this.rootServiceName
+          : (rawPick.source || this.rootServiceName);
+        if (!this.services[pickFromServiceName]) {
+          service.schemaErrors.push(new Error(`Invalid service name in "pick" config - "${pickFromServiceName}"`));
+        } else if (pickFromServiceName === service.serviceName) {
+          service.schemaErrors.push(new Error('Cannot "pick" from self'));
+        } else {
+        // create directed edge from service output feeding into this one (ex: database feeeds DB_URL into api )
+          this.servicesDag.setEdge(pickFromServiceName, service.serviceName, { type: 'pick' });
+        }
+      });
+    }
+
+    // look for cycles in the services graph, add schema errors if present
+    const graphCycles = graphlib.alg.findCycles(this.servicesDag);
+    _.each(graphCycles, (cycleMemberNames) => {
+    // each cycle is just an array of node names in the cycle
+      _.each(cycleMemberNames, (name) => {
+        this.services[name].schemaErrors.push(new Error(`Detected service dependency cycle - ${cycleMemberNames.join(' + ')}`));
+      });
+    });
+
+    // if no cycles were found in the services graph, we use a topological sort to get the right order to continue loading config
+    if (!graphCycles.length) {
+      const sortedServiceNames = graphlib.alg.topsort(this.servicesDag);
+      // we'll sort the services array into dependency order
+      this.servicesArray = _.map(sortedServiceNames, (serviceName) => this.services[serviceName]);
+      debug('DEP SORTED SERVICES', sortedServiceNames);
+    }
+  }
+  processConfig() {
+    for (const service of this.servicesArray) {
+      const ancestorServiceNames = this.servicesDag.predecessors(service.serviceName) || [];
+
+      // process "picked" items
+      for (const rawPickItem of service.rawConfig?.pick || []) {
+        const pickFromServiceName = _.isString(rawPickItem)
+          ? this.rootServiceName
+          : (rawPickItem.source || this.rootServiceName);
+        const isPickingFromAncestor = ancestorServiceNames.includes(pickFromServiceName);
+        const rawPickKey = _.isString(rawPickItem) ? rawPickItem : rawPickItem.key;
+        const pickFromService = this.services[pickFromServiceName];
+        if (!pickFromService) {
+          // NOTE: we've already added a schema error if item is picking from an non-existant service
+          // while setting up the services DAG, so we can just bail on the item
+          continue;
+        }
+
+        // first we'll gather a list of the possible keys we can pick from
+        // when picking from an ancestor, we pick from all config items
+        // while non-ancestors expose only items that have `expose: true` set on them
+        const potentialKeysToPickFrom: Array<string> = [];
+
+        if (isPickingFromAncestor) {
+          potentialKeysToPickFrom.push(..._.keys(pickFromService.config));
+        } else {
+          // whereas only "exposed" items can be picked from non-ancestors
+          const exposedItems = _.pickBy(pickFromService.config, (itemConfig) => !!itemConfig.type.getDefItem('expose'));
+          potentialKeysToPickFrom.push(..._.keys(exposedItems));
+        }
+
+        const keysToPick: Array<string> = [];
+
+        // if key is a string or array of strings, we'll need to check they are valid
+        if (_.isString(rawPickKey) || _.isArray(rawPickKey)) {
+          for (const keyToCheck of _.castArray(rawPickKey)) {
+            if (!potentialKeysToPickFrom.includes(keyToCheck)) {
+              // TODO: we could include if the key exists but is not marked to "expose"?
+              service.schemaErrors.push(new Error(`Picked item ${pickFromServiceName}/${keyToCheck} was not found`));
+            } else {
+              keysToPick.push(keyToCheck);
+            }
+          }
+
+        // if it's a function, we'll be filtering from the list of potential items
+        } else if (_.isFunction(rawPickKey)) { // fn that filters keys
+          const pickKeysViaFilter = _.filter(potentialKeysToPickFrom, rawPickKey);
+
+          // we probably want to warn the user if the filter selected nothing?
+          if (!pickKeysViaFilter.length) {
+            // TODO: we may want to mark this error as a "warning" or something?
+            // or some other way of configuring / ignoring
+            service.schemaErrors.push(new Error(`Pick from ${pickFromServiceName} using key filter fn had no matches`));
+          } else {
+            keysToPick.push(...pickKeysViaFilter);
+            // console.log('pick keys by filter', pickKeysViaFilter);
+          }
+        }
+
+        for (let i = 0; i < keysToPick.length; i++) {
+          const pickKey = keysToPick[i];
+          // deal with key renaming
+          let newKeyName = pickKey;
+          if (!_.isString(rawPickItem) && rawPickItem.renameKey) {
+            // renameKey can be a static string (if dealing with a single key)
+            if (_.isString(rawPickItem.renameKey)) {
+              // deal with the case of trying to rename multiple keys to a single value
+              // TODO: might be able to discourage this in the TS typing?
+              if (keysToPick.length > 1) {
+                // add an error (once)
+                if (i === 0) {
+                  service.schemaErrors.push(new Error(`Picked multiple keys from ${pickFromServiceName} using static rename`));
+                }
+                // add an index suffix... so the items will at least still appear
+                newKeyName = `${rawPickItem.renameKey}-${i}`;
+              } else {
+                newKeyName = rawPickItem.renameKey;
+              }
+
+            // or a function to transform the existing key
+            } else {
+              newKeyName = rawPickItem.renameKey(pickKey);
+            }
+          }
+
+          service.addConfigItem(new DmnoPickedConfigItem(newKeyName, {
+            sourceItem: pickFromService.config[pickKey],
+            transformValue: _.isString(rawPickItem) ? undefined : rawPickItem.transformValue,
+          }, service));
+          // TODO: add to dag node with link to source item
+        }
+      }
+
+      // process the regular config schema items
+      for (const itemKey in service.rawConfig?.schema) {
+        const itemDef = service.rawConfig?.schema[itemKey];
+        service.addConfigItem(new DmnoConfigItem(itemKey, itemDef, service));
+        // TODO: add dag node
+      }
+    }
+  }
+  async resolveConfig() {
+    await this.loadCache();
+    // servicesArray is already sorted by dependencies
+    for (const service of this.servicesArray) {
+      if (service.schemaErrors.length) {
+        debug(`SERVICE ${service.serviceName} has schema errors: `);
+        debug(service.schemaErrors);
+      } else {
+        await service.resolveConfig();
+      }
+    }
+    await this.writeCache();
+  }
+
+
+  getService(descriptor: string | { serviceName?: string, packageName?: string }) {
+    if (_.isString(descriptor)) {
+      return this.services[descriptor];
+    } else {
+      if (descriptor.serviceName) return this.services[descriptor.serviceName];
+      if (descriptor.packageName) return this.servicesByPackageName[descriptor.packageName];
+    }
+    console.log(descriptor);
+    throw new Error(`unable to find service - ${descriptor}`);
+  }
+
+  get cacheFilePath() { return `${this.rootPath}/.dmno/cache.json`; }
+  private valueCache: Record<string, CacheEntry> = {};
+  private async loadCache() {
+    // might want to attach the CacheEntry to the workspace instead to get the key?
+    // or we could always pass it around as needed
+    CacheEntry.encryptionKey = ENCRYPTION_KEY;
+
+    if (!fs.existsSync(this.cacheFilePath)) return;
+    const cacheRawStr = await fs.promises.readFile(this.cacheFilePath, 'utf-8');
+    const cacheRaw = JSON.parse(cacheRawStr) as SerializedCache;
+    for (const itemCacheKey in cacheRaw.items) {
+      this.valueCache[itemCacheKey] = await CacheEntry.fromSerialized(itemCacheKey, cacheRaw.items[itemCacheKey]);
+    }
+  }
+  private async writeCache() {
+    const serializedCache: SerializedCache = {
+      version: '0.0.1',
+      items: _.mapValues(this.valueCache, (cacheItem) => cacheItem.toJSON()),
+    };
+    const serializedCacheStr = JSON.stringify(serializedCache, null, 2);
+    await fs.promises.writeFile(this.cacheFilePath, serializedCacheStr, 'utf-8');
+  }
+  async getCacheItem(key: string, usedBy?: string) {
+    if (key in this.valueCache) {
+      if (usedBy) this.valueCache[key].usedByItems.add(usedBy);
+      return this.valueCache[key].value;
+    }
+  }
+  async setCacheItem(key: string, value: string, usedBy?: string) {
+    this.valueCache[key] = new CacheEntry(key, value, usedBy);
+  }
+}
 
 
 export class DmnoService {
@@ -195,12 +525,19 @@ export class DmnoService {
   /** processed config items - not necessarily resolved yet */
   readonly config: Record<string, DmnoConfigItem | DmnoPickedConfigItem> = {};
 
+  readonly workspace: DmnoWorkspace;
+
+  private overrideSources = [] as Array<OverrideSource>;
+
   constructor(opts: {
     isRoot: boolean,
     packageName: string,
     path: string,
     rawConfig: ServiceConfigSchema | Error,
+    workspace: DmnoWorkspace,
   }) {
+    this.workspace = opts.workspace;
+
     this.isRoot = opts.isRoot;
     this.packageName = opts.packageName;
     this.path = opts.path;
@@ -221,13 +558,12 @@ export class DmnoService {
           const nameErrors = _.concat([], validateNameResult.warnings, validateNameResult.errors);
           this.schemaErrors.push(new Error(`Invalid service name "${this.rawConfig.name}" - ${nameErrors.join(', ')}`));
         }
+        this.serviceName = this.rawConfig.name;
+      } else {
+        this.serviceName = opts.isRoot ? 'root' : this.packageName;
       }
-
-      this.serviceName = this.rawConfig.name || (opts.isRoot ? 'root' : this.packageName);
     }
   }
-
-
 
   addConfigItem(item: DmnoConfigItem | DmnoPickedConfigItem) {
     if (item instanceof DmnoPickedConfigItem && this.rawConfig?.schema[item.key]) {
@@ -242,28 +578,53 @@ export class DmnoService {
     }
   }
 
+  async loadOverrideFiles() {
+    this.overrideSources = [];
+
+    const localOverridesPath = path.resolve(this.path, '.dmno/.env.local');
+    if (fs.existsSync(localOverridesPath)) {
+      const fileRaw = await fs.promises.readFile(localOverridesPath, 'utf-8');
+      const fileObj = dotenv.parse(Buffer.from(fileRaw));
+
+      // TODO: probably want to run these through the same nested separator logic?
+      this.overrideSources.push(new OverrideSource('dotenv/local', fileObj));
+    }
+
+    // load multiple override files
+    // .env.{ENV}.local
+    // .env.local
+    // .env.{ENV}
+    // .env
+
+    // TODO: support other formats (yaml, toml, json) - probably should all be through a plugin system
+  }
+
   async resolveConfig() {
-    const configFromEnv = getConfigFromEnvVars();
+    const configFromOverrides = await this.loadOverrideFiles();
 
     for (const itemKey in this.config) {
       const configItem = this.config[itemKey];
-
-      // TODO: set overrides from files
+      const itemPath = configItem.getPath(true);
 
       // TODO: deal with nested items
 
       // set override from environment (process.env)
-      const envOverrideValue = configFromEnv[configItem.getPath(true)];
-      if (envOverrideValue !== undefined) {
-        // TODO: not sure about coercion / validation? do we want to run it early?
-        configItem.overrides.push({
-          source: { type: 'environment' },
-          value: envOverrideValue,
-        });
-      }
+
+      _.each([
+        this.workspace.processEnvOverrides,
+        ...this.overrideSources,
+      ], (overrideSource) => {
+        const overrideVal = overrideSource.getOverrideForPath(itemPath);
+        if (overrideVal !== undefined) {
+          configItem.overrides.push({
+            source: overrideSource.type,
+            value: overrideVal,
+          });
+        }
+      });
 
       // currently this resolve fn will trigger resolve on nested items
-      await configItem.resolve(new ResolverContext(this));
+      await configItem.resolve(new ResolverContext(this, configItem.getPath()));
     }
   }
 
@@ -293,9 +654,12 @@ export class DmnoService {
 }
 
 export class ResolverContext {
-  constructor(private service: DmnoService) {
+  constructor(private service: DmnoService, private itemPath: string) {
 
   }
+
+  get fullPath() { return `${this.service.serviceName}/${this.itemPath}`; }
+
   get(itemPath: string) {
     const item = this.service.getConfigItemByPath(itemPath);
     if (!item) {
@@ -305,6 +669,14 @@ export class ResolverContext {
       throw new Error(`Tried to access item that was not resolved - ${item.getPath()}`);
     }
     return item.resolvedValue;
+  }
+
+  async getCacheItem(key: string) {
+    return this.service.workspace.getCacheItem(key, this.fullPath);
+  }
+  async setCacheItem(key: string, value: ConfigValue) {
+    if (value === undefined || value === null) return;
+    return this.service.workspace.setCacheItem(key, value.toString(), this.fullPath);
   }
 }
 
