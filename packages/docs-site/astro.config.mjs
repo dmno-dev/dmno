@@ -31,6 +31,14 @@ export default defineConfig({
               label: "Concepts",
               link: "/get-started/concepts"
             },
+            {
+              label: "Schema",
+              link: "/get-started/schema"
+            },
+            {
+              label: "Secrets",
+              link: "/get-started/secrets"
+            },
           ]
         },
         {
