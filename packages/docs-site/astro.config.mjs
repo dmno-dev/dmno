@@ -31,24 +31,58 @@ export default defineConfig({
               label: "Concepts",
               link: "/get-started/concepts"
             },
+            {
+              label: "Schema",
+              link: "/get-started/schema"
+            },
+            {
+              label: "Secrets",
+              link: "/get-started/secrets"
+            },
           ]
         },
         {
           label: "Guides",
           items: [
-            // Each item here is one entry in the navigation menu.
             {
-              label: "Next.js",
-              link: "/guides/nextjs/",
+              label: "Frameworks",
+              items: [
+                {
+                  label: "Next.js",
+                  link: "/guides/frameworks/nextjs/",
+                },
+                {
+                  label: "Nuxt.js",
+                  link: "/guides/frameworks/nuxtjs/",
+                },
+                {
+                  label: "Astro",
+                  link: "/guides/frameworks/astro/",
+                },
+              ],
             },
             {
-              label: "Nuxt.js",
-              link: "/guides/nuxtjs/",
-            },
-            {
-              label: "Astro",
-              link: "/guides/astro/",
-            },
+              label: "Deployment Platforms",
+              items: [
+                {
+                  label: "Vercel",
+                  link: "/guides/deployment/vercel/",
+                },
+                {
+                  label: "Netlify",
+                  link: "/guides/deployment/netlify/",
+                },
+                {
+                  label: "Railway",
+                  link: "/guides/deployment/railway/",
+                },
+                {
+                  label: "Render",
+                  link: "/guides/deployment/render/",
+                },
+              ],
+
+            }    
           ],
         },
         {
@@ -68,6 +102,23 @@ export default defineConfig({
                 {
                   label: 'Helper Methods',
                   link: '/reference/config-engine/helper-methods/'
+                },
+              ]
+            },
+            {
+              label: 'dmno-cli',
+              items: [
+                {
+                  label: 'Installation',
+                  link: '/reference/dmno-cli/installation/'
+                },
+                {
+                  label: 'Commands',
+                  link: '/reference/dmno-cli/commands/'
+                },
+                {
+                  label: 'Configuration',
+                  link: '/reference/dmno-cli/configuration/'
                 },
               ]
             }
