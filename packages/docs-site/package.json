@@ -10,6 +10,7 @@
     "astro": "astro",
     "deploy": "pnpm build && netlify deploy --site=dmno --dir=dist --prod",
     "docgen": "pnpm exec typedoc --options ./src/utils/typedoc/typedoc.json",
+    "clidocgen": "pnpm exec dmno --clipanion=definitions > ./src/utils/cli/cli.json",
     "lint": "eslint src --ext .ts,.cjs,.astro,.md,.mdx",
     "lint:fix": "pnpm run lint --fix"
   },
@@ -32,6 +33,8 @@
   },
   "devDependencies": {
     "netlify-cli": "^17.1.0",
-    "typedoc": "^0.25.12"
+    "typedoc": "^0.25.12",
+    "@dmno/1password-plugin": "../plugins/1password-plugin",
+    "@dmno/core": "../core"
   }
 }

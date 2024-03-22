@@ -17,18 +17,16 @@ export class RunCommand extends Command {
 
   static usage = Command.Usage({
     // category: 'My category',
-    description: 'A small description of the command.',
+    description: 'Run a command with the resolved config for a service',
     details: `
-      A longer description of the command with some \`markdown code\`.
-      
-      Multiple paragraphs are allowed. Clipanion will take care of both reindenting the content and wrapping the paragraphs as needed.
+      This command runs a command with the resolved config for a service, after all validation and coercion has been applied.
     `,
     examples: [[
-      'A basic example',
-      '$0 my-command',
+      '# For entire workspace',
+      'dmno run my-command --with-parameter',
     ], [
-      'A second example',
-      '$0 my-command --with-parameter',
+      '# For a single service',
+      'dmno run -s my-service my-command --with-parameter',
     ]],
   });
 

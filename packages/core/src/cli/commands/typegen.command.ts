@@ -10,7 +10,16 @@ export class TypeGenCommand extends Command {
     // category: 'My category',
     description: 'Generate TS types for the config',
     details: `
+      This command generates TS types for the config of a service
     `,
+    examples: [[
+      '# Generate types for a service',
+      'dmno types -s my-service',
+    ],
+    [
+      '# Generate types for a service in JSON format',
+      'dmno types -s my-service -f json',
+    ]],
   });
 
   service = Option.String('-s,--service');

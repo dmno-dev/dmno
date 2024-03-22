@@ -43,6 +43,7 @@ cli.register(RunCommand);
 cli.register(TypeGenCommand);
 cli.register(DevCommand);
 cli.register(Builtins.HelpCommand);
+cli.register(Builtins.DefinitionsCommand);
 
 
 try {

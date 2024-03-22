@@ -10,7 +10,9 @@ dist
 config.local.ts
 .env.local
 .env.local.*
+# docgen files
 packages/docs-site/src/utils/typedoc/typedoc-output.json
+packages/docs-site/src/utils/cli/cli.json
 
 # auto-generated type files
 dmno.d.ts
