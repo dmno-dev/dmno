@@ -116,10 +116,6 @@ export default defineConfig({
                   label: 'Commands',
                   link: '/reference/dmno-cli/commands/'
                 },
-                {
-                  label: 'Configuration',
-                  link: '/reference/dmno-cli/configuration/'
-                },
               ]
             }
           ]
