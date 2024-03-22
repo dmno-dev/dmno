@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 importers:
 
   .:
@@ -141,6 +145,12 @@ importers:
         specifier: ^3.3.4
         version: 3.3.4
     devDependencies:
+      '@dmno/1password-plugin':
+        specifier: ../plugins/1password-plugin
+        version: link:../plugins/1password-plugin
+      '@dmno/core':
+        specifier: ../core
+        version: link:../core
       netlify-cli:
         specifier: ^17.1.0
         version: 17.1.0(@types/node@20.11.30)

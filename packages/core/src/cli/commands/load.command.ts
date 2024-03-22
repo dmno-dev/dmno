@@ -14,18 +14,20 @@ export class LoadCommand extends Command {
 
   static usage = Command.Usage({
     // category: 'My category',
-    description: 'A small description of the command.',
+    description: 'Load the resolved config for a service',
     details: `
-      A longer description of the command with some \`markdown code\`.
-      
-      Multiple paragraphs are allowed. Clipanion will take care of both reindenting the content and wrapping the paragraphs as needed.
+      This command loads the resolved config for a service, after all validation and coercion has been applied.
     `,
     examples: [[
-      'A basic example',
-      '$0 my-command',
+      '# For entire workspace',
+      'dmno load',
     ], [
-      'A second example',
-      '$0 my-command --with-parameter',
+      '# For a specific service',
+      'dmno load -s my-service',
+    ],
+    [
+      '# For a specific service in JSON format',
+      'dmno load -s my-service -f json',
     ]],
   });
 

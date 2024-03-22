@@ -11,6 +11,17 @@ export class DevCommand extends Command {
 
   static usage = Command.Usage({
     description: 'Run dev / watch mode',
+    details: `
+    Run the service in dev mode, watching for changes and updating as necessary.
+    Not specifying a service will run dmno for the whole project.
+    `,
+    examples: [[
+      '# The entire workspace',
+      'dmno dev ',
+    ], [
+      '# For a single service',
+      'dmno dev -s my-service',
+    ]],
   });
 
   service = Option.String('-s,--service');
