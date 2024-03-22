@@ -1,9 +1,15 @@
-import { DmnoBaseTypes, defineWorkspaceConfig, configPath, toggleByEnv, dmnoFormula, createDmnoDataType, NodeEnvType } from '@dmno/core';
-import { OnePasswordSecretService } from '@dmno/1password-plugin';
+import { DmnoBaseTypes, defineWorkspaceConfig, configPath, switchByNodeEnv, dmnoFormula, createDmnoDataType, NodeEnvType, registerPlugin } from '@dmno/core';
+import { OnePasswordDmnoPlugin, OnePasswordServiceAccountToken } from '@dmno/1password-plugin';
 
-const OnePassBackend = new OnePasswordSecretService(
-  configPath('ONE_PASSWORD.SERVICE_ACCOUNT_TOKEN'),
-);
+const ProdOnePassBackend = registerPlugin(new OnePasswordDmnoPlugin({
+  token: configPath('OP_TOKEN'),
+  defaultVaultName: 'dev test'
+}));
+
+const DevOnePassBackend = registerPlugin(new OnePasswordDmnoPlugin({
+  token: configPath('OP_TOKEN'),
+  defaultVaultName: 'dev test'
+}));
 
 
 export default defineWorkspaceConfig({
@@ -17,7 +23,7 @@ export default defineWorkspaceConfig({
     },
 
     OP_TOKEN: {
-      extends: 'string',
+      extends: OnePasswordServiceAccountToken,
       required: true
     },
 
@@ -39,10 +45,10 @@ export default defineWorkspaceConfig({
 
     SEGMENT_SECRET: {
       extends: DmnoBaseTypes.string,
-      value: toggleByEnv({
+      value: switchByNodeEnv({
         _default: 'asdfasdfasdf',
-        staging: OnePassBackend.itemByReference("op://dev test/segment/staging"),
-        production: OnePassBackend.itemByReference("op://dev test/segment/prod")
+        staging: ProdOnePassBackend.itemByReference("op://dev test/segment/staging"),
+        production: ProdOnePassBackend.itemByReference("op://dev test/segment/prod")
       })
     },
 

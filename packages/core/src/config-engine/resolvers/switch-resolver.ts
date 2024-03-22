@@ -4,22 +4,22 @@ import _ from 'lodash-es';
 import { ConfigValueResolver, ValueResolverDef, processResolverDef } from './resolvers';
 import { ResolverContext } from '../config-engine';
 
-type ToggleOptions = Record<string, ValueResolverDef>;
-export class ToggleResolver extends ConfigValueResolver {
+type SwitchByResolverOptions = Record<string, ValueResolverDef>;
+export class SwitchByResolver extends ConfigValueResolver {
   icon = 'gravity-ui:branches-right';
   getPreviewLabel() {
-    return `toggle by ${this.toggleByKey}`;
+    return `switch by ${this.switchByKey}`;
   }
-  constructor(readonly toggleByKey: string, readonly toggles: ToggleOptions) {
+  constructor(readonly switchByKey: string, readonly switchOptions: SwitchByResolverOptions) {
     super();
 
     // TODO: something special for default case?
     // TODO: should we use a symbol instead of "_default" ?
-    this.childBranches = _.map(toggles, (itemDef, itemKey) => {
+    this.childBranches = _.map(switchOptions, (itemDef, itemKey) => {
       return {
         // TODO: do we want to use a special symbol? or pass default as different arg?
         isDefault: itemKey === '_default' || itemKey === '_',
-        condition: (ctx: ResolverContext) => ctx.get(this.toggleByKey) === itemKey,
+        condition: (ctx: ResolverContext) => ctx.get(this.switchByKey) === itemKey,
         label: itemKey, // ex: 'staging'
         resolver: processResolverDef(itemDef),
       };
@@ -41,7 +41,7 @@ export class ToggleResolver extends ConfigValueResolver {
   }
 }
 
-export const toggleByNodeEnv = (toggles: ToggleOptions) => new ToggleResolver('NODE_ENV', toggles);
-export const toggleByEnv = (toggles: ToggleOptions) => new ToggleResolver('DMNO_ENV', toggles);
-export const toggleBy = (key: string, toggles: ToggleOptions) => new ToggleResolver(key, toggles);
+export const switchByNodeEnv = (options: SwitchByResolverOptions) => new SwitchByResolver('NODE_ENV', options);
+export const switchByDmnoEnv = (options: SwitchByResolverOptions) => new SwitchByResolver('DMNO_ENV', options);
+export const switchBy = (key: string, options: SwitchByResolverOptions) => new SwitchByResolver(key, options);
 

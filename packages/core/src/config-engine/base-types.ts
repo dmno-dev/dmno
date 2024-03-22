@@ -110,7 +110,7 @@ export class DmnoDataType<T = any> {
         if (_.isBoolean(this.typeDef.value)) inferredType = BooleanDataType();
         else if (_.isNumber(this.typeDef.value)) inferredType = NumberDataType();
       }
-      // TODO: can probably attempt to infer type from certain kinds of resolver (like a toggle)
+      // TODO: can probably attempt to infer type from certain kinds of resolver (like a switch)
 
       this.parentType = inferredType || StringDataType({});
     }

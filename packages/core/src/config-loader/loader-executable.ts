@@ -30,6 +30,8 @@ import {
 import { ConfigLoaderRequestMap } from './ipc-requests';
 import { generateTypescriptTypes } from '../config-engine/type-generation';
 import { SerializedConfigItem } from './serialization-types';
+import { finishPluginRegistration, startPluginRegistration } from '../config-engine/plugins';
+import { ConfigLoadError } from '../config-engine/errors';
 
 
 const debug = Debug('dmno');
@@ -59,7 +61,7 @@ const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 // using `pnpm m ls` to list workspace packages
 const workspacePackagesRaw = execSync('pnpm m ls --json --depth=-1').toString();
 const workspacePackagesData = JSON.parse(workspacePackagesRaw) as Array<PnpmPackageListing>;
-console.log(workspacePackagesData);
+// console.log(workspacePackagesData);
 
 type PnpmPackageListing = {
   name: string;
@@ -145,7 +147,7 @@ const server = await createServer({
     // ssr: true,
   },
 });
-console.log(server.config);
+// console.log(server.config);
 
 // this is need to initialize the plugins
 await server.pluginContainer.buildStart({});
@@ -269,19 +271,24 @@ async function reloadAllConfig() {
 
     let service: DmnoService;
     try {
+      const plugins = startPluginRegistration(isRoot);
+
       // node-vite runs the file and returns the loaded module
       const importedConfig = await runner.executeFile(configFilePath);
+
+      finishPluginRegistration();
 
       service = new DmnoService({
         ...serviceInitOpts,
         // TODO: check if the config file actually exported the right thing and throw helpful error otherwise
         rawConfig: importedConfig.default as ServiceConfigSchema,
+        plugins,
       });
     } catch (err) {
       debug('found error when loading config');
       service = new DmnoService({
         ...serviceInitOpts,
-        rawConfig: err as Error,
+        rawConfig: new ConfigLoadError(err as Error),
       });
     }
     dmnoWorkspace.addService(service);
@@ -292,6 +299,11 @@ async function reloadAllConfig() {
   dmnoWorkspace.processConfig();
   await dmnoWorkspace.resolveConfig();
 }
+
+registerRequestHandler('load-full-schema', async (_payload) => {
+  return dmnoWorkspace.toJSON();
+});
+
 
 
 registerRequestHandler('get-resolved-config', async (payload) => {
@@ -313,7 +325,6 @@ registerRequestHandler('generate-types', async (payload) => {
 
 registerRequestHandler('start-dev-mode', async (_payload) => {
   devMode = true;
-
   return { success: true };
 });
 

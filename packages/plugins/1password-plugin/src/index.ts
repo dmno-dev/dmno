@@ -2,7 +2,11 @@ import path from 'node:path';
 import { exec, execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import * as _ from 'lodash-es';
-import { ConfigPath, ConfigValueResolver, ResolverContext } from '@dmno/core';
+import {
+  ConfigPath, ConfigValueResolver, DmnoPlugin, ResolverContext, createDmnoDataType, DmnoBaseTypes, DmnoDataType,
+  TypeExtendsDefinition,
+} from '@dmno/core';
+
 
 type ItemId = string;
 type VaultId = string;
@@ -10,16 +14,68 @@ type VaultName = string;
 type ReferenceUrl = string;
 type ServiceAccountToken = string;
 
+export const OnePasswordServiceAccountToken = createDmnoDataType({
+  extends: DmnoBaseTypes.string({ startsWith: 'ops_' }),
+  example: 'ops_a1B2c3...xyz',
+  typeDescription: 'Service account token used to authenticate with the 1password CLI',
+  externalDocs: {
+    description: '1password service accounts',
+    url: 'https://developer.1password.com/docs/service-accounts/',
+  },
+  secret: true,
+});
 
-export class OnePasswordSecretService {
+export const OnePasswordVaultId = createDmnoDataType({
+  extends: DmnoBaseTypes.string({ startsWith: 'ops_' }),
+  typeDescription: 'unique ID that identifies a 1password "vault"',
+  externalDocs: {
+    description: '1password vault basics',
+    url: 'https://support.1password.com/create-share-vaults/',
+  },
+});
+
+export const OnePasswordVaultName = createDmnoDataType({
+  extends: DmnoBaseTypes.string,
+  typeDescription: 'name that identifies a vault - is not necessarily stable',
+  externalDocs: {
+    description: '1password vault basics',
+    url: 'https://support.1password.com/create-share-vaults/',
+  },
+});
+
+
+
+
+export class OnePasswordDmnoPlugin extends DmnoPlugin {
+  // Typescript can't infer types from a parent class
+  // so unfortunately, we have to add this extra annotation
+  // see issues:
+  // - https://github.com/Microsoft/TypeScript/issues/3667
+  // - https://github.com/microsoft/TypeScript/issues/1373
+  // - https://github.com/microsoft/TypeScript/issues/23911
+
+  inputSchema: DmnoPlugin['inputSchema'] = { // <- NOTICE THE WEIRD ANNOTATION
+    token: {
+      extends: OnePasswordServiceAccountToken,
+      required: true,
+    },
+    vaultId: {
+      extends: OnePasswordVaultId,
+    },
+    vaultName: {
+      extends: OnePasswordVaultName,
+    },
+  };
+
   constructor(
-    private serviceAccountToken: ServiceAccountToken | ConfigPath,
     private options?: {
+      token: ServiceAccountToken | ConfigPath,
       defaultVaultId?: VaultId,
       // TODO: not sure if vault "name" is the right term here?
       defaultVaultName?: VaultName | ConfigPath
     },
   ) {
+    super();
   }
 
   // can read items by id - need a vault id, item id
@@ -28,6 +84,7 @@ export class OnePasswordSecretService {
   item(idOrIdAndVault: ItemId | { id: ItemId, vaultId: VaultId }, path?: string) {
     let vaultId: VaultId;
     let itemId: ItemId;
+
     if (_.isString(idOrIdAndVault)) {
       itemId = idOrIdAndVault;
       if (!this.options?.defaultVaultId) throw new Error('No vault ID specified');
@@ -36,7 +93,7 @@ export class OnePasswordSecretService {
       itemId = idOrIdAndVault.id;
       vaultId = idOrIdAndVault.vaultId;
     }
-    return new OnePasswordResolver(this.serviceAccountToken, {
+    return new OnePasswordResolver(this.options?.token || 'asdf', {
       id: itemId,
       vaultId,
       path,
@@ -58,11 +115,28 @@ export class OnePasswordSecretService {
       fullReference = `op://${this.options?.defaultVaultName}/${fullReference}`;
     }
 
-    return new OnePasswordResolver(this.serviceAccountToken, {
+    return new OnePasswordResolver(this.options?.token || 'asdf', {
       reference: fullReference,
     });
   }
 }
+
+// const OnePassPlugin = createDmnoPlugin({
+//   inputSchema: {
+//     foo: {
+//       extends: OnePasswordServiceAccountToken,
+//       required: true,
+//     },
+//   },
+//   resolvers: {
+//     itemByReference(reference: string) {
+//       return new OnePasswordResolver('asdf', {
+//         reference,
+//       });
+//     },
+//   },
+// });
+
 
 
 // // can read items by id - need a vault id, item id

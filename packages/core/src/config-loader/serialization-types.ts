@@ -11,12 +11,17 @@
 import { DmnoConfigItemBase, DmnoService } from '../config-engine/config-engine';
 
 
+export type SerializedWorkspace = {
+  services: Array<SerializedService>
+};
 
 export type SerializedService =
   Pick<DmnoService, 'packageName' | 'serviceName'>
   & {
     isValid: boolean,
     isResolved: boolean,
+    configLoadError?: SerializedDmnoError,
+    schemaErrors?: Array<SerializedDmnoError>,
     config: Record<string, SerializedConfigItem>
   };
 
@@ -35,4 +40,5 @@ export type SerializedDmnoError = {
   name: string,
   message: string,
   isUnexpected: boolean,
+  cleanedStack?: Array<string>,
 };

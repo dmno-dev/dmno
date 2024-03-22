@@ -41,7 +41,7 @@ Open the `workspace-config.mts` file in the `.dmno` directory at the root of you
 
 ```typescript  
 import {
-  DmnoBaseTypes, defineWorkspaceConfig, configPath, toggleByEnv, dmnoFormula, asdf,
+  DmnoBaseTypes, defineWorkspaceConfig, configPath, switchByNodeEnv, dmnoFormula, asdf,
 } from '@dmno/core';
 
 export default defineWorkspaceConfig({
@@ -73,7 +73,7 @@ Let's say you have a `NEXT_PUBLIC_API_URL` environment variable. You can add it 
 
 ```typescript
 import {
-  DmnoBaseTypes, defineConfigSchema, configPath, toggleByEnv, dmnoFormula,
+  DmnoBaseTypes, defineConfigSchema, configPath, switchByNodeEnv, dmnoFormula,
 } from '@dmno/core';
 
 export default defineConfigSchema({
@@ -87,7 +87,7 @@ Or if you want to use items from your root config, you can make use of dmno's `p
 
 ```typescript
 import {
-  DmnoBaseTypes, defineConfigSchema, configPath, toggleByEnv, dmnoFormula,
+  DmnoBaseTypes, defineConfigSchema, configPath, switchByNodeEnv, dmnoFormula,
 } from '@dmno/core';
 
 export default defineConfigSchema({

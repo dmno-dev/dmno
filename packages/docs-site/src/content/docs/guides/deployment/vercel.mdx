@@ -34,7 +34,7 @@ DMNO is smart enough to use your existing ENV VARs that live in Vercel.
 
 ### Vercel-specific environments
 
-Vercel has three types of [environments](https://vercel.com/docs/projects/environment-variables#environments), which are `Development`, `Preview`, and `Production`. To map config items to these environments, you can use the `toggleByEnv` option in your DMNO Schema definitions.
+Vercel has three types of [environments](https://vercel.com/docs/projects/environment-variables#environments), which are `Development`, `Preview`, and `Production`. To map config items to these environments, you can use the `switchByNodeEnv` option in your DMNO Schema definitions.
 
 ```typescript
 
@@ -42,7 +42,7 @@ Vercel has three types of [environments](https://vercel.com/docs/projects/enviro
 ```
 
 :::tip
-If you're still storing your ENV VARs in Vercel, you can still use `toggleByEnv` and benefit from schemas, type safety and improved development experience but the values will get overridden by Vercel's values when you deploy (or locally if you use `vercel dev`). 
+If you're still storing your ENV VARs in Vercel, you can still use `switchByNodeEnv` and benefit from schemas, type safety and improved development experience but the values will get overridden by Vercel's values when you deploy (or locally if you use `vercel dev`). 
 :::
 
 ## Leveling things up

@@ -1,15 +1,7 @@
-import { defineConfigSchema, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, toggleByEnv, valueCreatedDuringDeployment, cacheValue } from '@dmno/core';
-import { OnePasswordSecretService } from '@dmno/1password-plugin';
+import { defineConfigSchema, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, switchByNodeEnv, valueCreatedDuringDeployment, cacheValue, injectPlugin } from '@dmno/core';
+import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
-const DevOnePassBackend = new OnePasswordSecretService(
-  configPath('OP_TOKEN'),
-  { defaultVaultName: 'dev test' }
-);
-
-const ProdOnePassBackend = new OnePasswordSecretService(
-  configPath('OP_TOKEN'),
-  { defaultVaultName: 'dev test' }
-);
+const OnePassBackend = injectPlugin(OnePasswordDmnoPlugin);
 
 export default defineConfigSchema({
   name: 'api',
@@ -17,30 +9,31 @@ export default defineConfigSchema({
   pick: [
     'NODE_ENV',
     'DMNO_ENV',
-    'ONE_PASSWORD',
-    'OP_TOKEN'
+    'OP_TOKEN',
   ],
   schema: {
     SECRET_EXAMPLE: {
-      value: DevOnePassBackend.itemByReference("op://dev test/example/username"),
+      required: true,
+      value: OnePassBackend.itemByReference("op://dev test/example/username"),
     },
-    TOGGLED_EXAMPLE: {
-      value: toggleByEnv({
-        _default: DevOnePassBackend.itemByReference("example/username"),
-        staging: DevOnePassBackend.itemByReference("example/username"),
-        production: ProdOnePassBackend.itemByReference("example/username"),
+    SWITCHED_EXAMPLE: {
+      value: switchByNodeEnv({
+        _default: OnePassBackend.itemByReference("example/username"),
+        staging: OnePassBackend.itemByReference("example/username"),
+        production: OnePassBackend.itemByReference("example/username"),
       }),
     },
 
 
     PORT: {
-      value: 8081,
+      extends: DmnoBaseTypes.number({ max: 8080 }),
+      value: '8080',
     },
     API_URL: {
       description: 'public url of this service',
       extends: DmnoBaseTypes.string({}),
       // expose: true,
-      // value: toggleByEnv({
+      // value: switchByNodeEnv({
       //   _default: (ctx) => `http://localhost:${ctx.get('PORT')}`,
       //   staging: valueCreatedDuringDeployment(),
       //   production: 'https://api.dmnoexampleapp.com',

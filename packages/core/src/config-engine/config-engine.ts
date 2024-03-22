@@ -18,8 +18,11 @@ import {
 } from './resolvers/resolvers';
 import { getConfigFromEnvVars } from '../lib/env-vars';
 import { SerializedConfigItem, SerializedService } from '../config-loader/serialization-types';
-import { CoercionError, DmnoError, ValidationError } from './errors';
+import {
+  CoercionError, ConfigLoadError, DmnoError, SchemaError, ValidationError,
+} from './errors';
 import { decrypt, encrypt } from '../lib/encryption';
+import { ClassOf, DmnoPlugin } from './plugins';
 
 
 
@@ -63,6 +66,9 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
 
   /** description of the data type itself, rather than the instance */
   typeDescription?: string;
+
+  /** example value */
+  example?: any;
 
   /** link to external documentation */
   externalDocs?: {
@@ -206,21 +212,28 @@ type SerializedCache = {
 class CacheEntry {
   readonly usedByItems: Set<string>;
   readonly updatedAt: Date;
+  readonly encryptedValue: string;
+
   constructor(
     readonly key: string,
     readonly value: any,
-    usedBy?: string | Array<string>,
-    updatedAt?: Date,
+    more?: {
+      encryptedValue?: string,
+      usedBy?: string | Array<string>,
+      updatedAt?: Date,
+    },
   ) {
-    this.updatedAt = updatedAt || new Date();
-    this.usedByItems = new Set(_.castArray(usedBy || []));
+    this.updatedAt = more?.updatedAt || new Date();
+    this.usedByItems = new Set(_.castArray(more?.usedBy || []));
+    // we store the value passed rather than recalculating so the cache file won't churn
+    this.encryptedValue = more?.encryptedValue || this.getEncryptedValue();
   }
   getEncryptedValue() {
     return encrypt(CacheEntry.encryptionKey, this.value);
   }
   toJSON(): SerializedCacheEntry {
     return {
-      encryptedValue: this.getEncryptedValue(),
+      encryptedValue: this.encryptedValue,
       updatedAt: this.updatedAt.toISOString(),
       usedByItems: Array.from(this.usedByItems),
     };
@@ -231,7 +244,10 @@ class CacheEntry {
     // we could instead store the encryptedValue and reuse it if it has not changed
     const value = await decrypt(CacheEntry.encryptionKey, raw.encryptedValue);
     // we are also tossing out the saved "usedBy" entries since we'll have new ones after this config run
-    return new CacheEntry(itemKey, value, undefined, new Date(raw.updatedAt));
+    return new CacheEntry(itemKey, value, {
+      updatedAt: new Date(raw.updatedAt),
+      encryptedValue: raw.encryptedValue,
+    });
   }
 
   // not sure about this... but for now it seems true that we'll use a single key at a time
@@ -294,9 +310,9 @@ export class DmnoWorkspace {
       const parentServiceName = service.rawConfig?.parent;
       if (parentServiceName) {
         if (!this.services[parentServiceName]) {
-          service.schemaErrors.push(new Error(`Unable to find parent service "${parentServiceName}"`));
+          service.schemaErrors.push(new SchemaError(`Unable to find parent service "${parentServiceName}"`));
         } else if (parentServiceName === service.serviceName) {
-          service.schemaErrors.push(new Error('Cannot set parent to self'));
+          service.schemaErrors.push(new SchemaError('Cannot set parent to self'));
         } else {
         // creates a directed edge from parent to child
           this.servicesDag.setEdge(parentServiceName, service.serviceName, { type: 'parent' });
@@ -318,9 +334,9 @@ export class DmnoWorkspace {
           ? this.rootServiceName
           : (rawPick.source || this.rootServiceName);
         if (!this.services[pickFromServiceName]) {
-          service.schemaErrors.push(new Error(`Invalid service name in "pick" config - "${pickFromServiceName}"`));
+          service.schemaErrors.push(new SchemaError(`Invalid service name in "pick" config - "${pickFromServiceName}"`));
         } else if (pickFromServiceName === service.serviceName) {
-          service.schemaErrors.push(new Error('Cannot "pick" from self'));
+          service.schemaErrors.push(new SchemaError('Cannot "pick" from self'));
         } else {
         // create directed edge from service output feeding into this one (ex: database feeeds DB_URL into api )
           this.servicesDag.setEdge(pickFromServiceName, service.serviceName, { type: 'pick' });
@@ -333,7 +349,7 @@ export class DmnoWorkspace {
     _.each(graphCycles, (cycleMemberNames) => {
     // each cycle is just an array of node names in the cycle
       _.each(cycleMemberNames, (name) => {
-        this.services[name].schemaErrors.push(new Error(`Detected service dependency cycle - ${cycleMemberNames.join(' + ')}`));
+        this.services[name].schemaErrors.push(new SchemaError(`Detected service dependency cycle - ${cycleMemberNames.join(' + ')}`));
       });
     });
 
@@ -383,7 +399,7 @@ export class DmnoWorkspace {
           for (const keyToCheck of _.castArray(rawPickKey)) {
             if (!potentialKeysToPickFrom.includes(keyToCheck)) {
               // TODO: we could include if the key exists but is not marked to "expose"?
-              service.schemaErrors.push(new Error(`Picked item ${pickFromServiceName}/${keyToCheck} was not found`));
+              service.schemaErrors.push(new SchemaError(`Picked item ${pickFromServiceName} > ${keyToCheck} was not found`));
             } else {
               keysToPick.push(keyToCheck);
             }
@@ -397,7 +413,7 @@ export class DmnoWorkspace {
           if (!pickKeysViaFilter.length) {
             // TODO: we may want to mark this error as a "warning" or something?
             // or some other way of configuring / ignoring
-            service.schemaErrors.push(new Error(`Pick from ${pickFromServiceName} using key filter fn had no matches`));
+            service.schemaErrors.push(new SchemaError(`Pick from ${pickFromServiceName} using key filter fn had no matches`));
           } else {
             keysToPick.push(...pickKeysViaFilter);
             // console.log('pick keys by filter', pickKeysViaFilter);
@@ -416,7 +432,7 @@ export class DmnoWorkspace {
               if (keysToPick.length > 1) {
                 // add an error (once)
                 if (i === 0) {
-                  service.schemaErrors.push(new Error(`Picked multiple keys from ${pickFromServiceName} using static rename`));
+                  service.schemaErrors.push(new SchemaError(`Picked multiple keys from ${pickFromServiceName} using static rename`));
                 }
                 // add an index suffix... so the items will at least still appear
                 newKeyName = `${rawPickItem.renameKey}-${i}`;
@@ -474,6 +490,7 @@ export class DmnoWorkspace {
 
   get cacheFilePath() { return `${this.rootPath}/.dmno/cache.json`; }
   private valueCache: Record<string, CacheEntry> = {};
+  private cacheLastLoadedAt: Date | undefined;
   private async loadCache() {
     // might want to attach the CacheEntry to the workspace instead to get the key?
     // or we could always pass it around as needed
@@ -485,8 +502,14 @@ export class DmnoWorkspace {
     for (const itemCacheKey in cacheRaw.items) {
       this.valueCache[itemCacheKey] = await CacheEntry.fromSerialized(itemCacheKey, cacheRaw.items[itemCacheKey]);
     }
+    this.cacheLastLoadedAt = new Date();
   }
   private async writeCache() {
+    // we don't want to write a file if the cache has not changed because it will trigger vite to reload
+    if (this.cacheLastLoadedAt && _.every(this.valueCache, (item) => item.updatedAt < this.cacheLastLoadedAt!)) {
+      return;
+    }
+
     const serializedCache: SerializedCache = {
       version: '0.0.1',
       items: _.mapValues(this.valueCache, (cacheItem) => cacheItem.toJSON()),
@@ -501,7 +524,14 @@ export class DmnoWorkspace {
     }
   }
   async setCacheItem(key: string, value: string, usedBy?: string) {
-    this.valueCache[key] = new CacheEntry(key, value, usedBy);
+    this.valueCache[key] = new CacheEntry(key, value, { usedBy });
+  }
+
+
+  toJSON() {
+    return {
+      services: _.map(this.services, (s) => s.toJSON()),
+    };
   }
 }
 
@@ -518,29 +548,33 @@ export class DmnoService {
   /** unprocessed config schema pulled from config.ts */
   readonly rawConfig?: ServiceConfigSchema;
   /** error encountered while _loading_ the config schema */
-  readonly configLoadError?: Error;
+  readonly configLoadError?: ConfigLoadError;
   /** error within the schema itself */
-  readonly schemaErrors: Array<Error> = []; // TODO: probably want a specific error type...?
+  readonly schemaErrors: Array<SchemaError> = []; // TODO: probably want a specific error type...?
 
   /** processed config items - not necessarily resolved yet */
   readonly config: Record<string, DmnoConfigItem | DmnoPickedConfigItem> = {};
 
   readonly workspace: DmnoWorkspace;
 
+  private plugins: Record<string, DmnoPlugin>;
   private overrideSources = [] as Array<OverrideSource>;
 
   constructor(opts: {
     isRoot: boolean,
     packageName: string,
     path: string,
-    rawConfig: ServiceConfigSchema | Error,
+    rawConfig: ServiceConfigSchema | ConfigLoadError,
     workspace: DmnoWorkspace,
+    plugins?: Record<string, DmnoPlugin>,
   }) {
     this.workspace = opts.workspace;
 
     this.isRoot = opts.isRoot;
     this.packageName = opts.packageName;
     this.path = opts.path;
+
+    this.plugins = opts.plugins || {};
 
     if (_.isError(opts.rawConfig)) {
       this.serviceName = this.packageName;
@@ -556,7 +590,7 @@ export class DmnoService {
         const validateNameResult = validatePackageName(this.rawConfig.name);
         if (!validateNameResult.validForNewPackages) {
           const nameErrors = _.concat([], validateNameResult.warnings, validateNameResult.errors);
-          this.schemaErrors.push(new Error(`Invalid service name "${this.rawConfig.name}" - ${nameErrors.join(', ')}`));
+          this.schemaErrors.push(new SchemaError(`Invalid service name "${this.rawConfig.name}" - ${nameErrors.join(', ')}`));
         }
         this.serviceName = this.rawConfig.name;
       } else {
@@ -568,11 +602,11 @@ export class DmnoService {
   addConfigItem(item: DmnoConfigItem | DmnoPickedConfigItem) {
     if (item instanceof DmnoPickedConfigItem && this.rawConfig?.schema[item.key]) {
       // check if a picked item is conflicting with a regular item
-      this.schemaErrors.push(new Error(`Picked config key conflicting with a locally defined item - "${item.key}"`));
+      this.schemaErrors.push(new SchemaError(`Picked config key conflicting with a locally defined item - "${item.key}"`));
     } else if (this.config[item.key]) {
       // TODO: not sure if we want to add the item anyway under a different key?
       // probably want to expose more info too
-      this.schemaErrors.push(new Error(`Config keys must be unique, duplicate detected - "${item.key}"`));
+      this.schemaErrors.push(new SchemaError(`Config keys must be unique, duplicate detected - "${item.key}"`));
     } else {
       this.config[item.key] = item;
     }
@@ -642,12 +676,24 @@ export class DmnoService {
     return currentItem;
   }
 
+  get isValid() {
+    if (this.configLoadError) return false;
+    if (this.schemaErrors?.length) return false;
+    return true;
+  }
+
   toJSON(): SerializedService {
     return {
-      isValid: true,
+      isValid: this.isValid,
       isResolved: true,
       packageName: this.packageName,
       serviceName: this.serviceName,
+      configLoadError: this.configLoadError?.toJSON(),
+      schemaErrors:
+        this.schemaErrors?.length
+          ? _.map(this.schemaErrors, (err) => err.toJSON())
+          : undefined,
+
       config: _.mapValues(this.config, (item, _key) => item.toJSON()),
     };
   }
@@ -658,7 +704,7 @@ export class ResolverContext {
 
   }
 
-  get fullPath() { return `${this.service.serviceName}/${this.itemPath}`; }
+  get fullPath() { return `${this.service.serviceName}!${this.itemPath}`; }
 
   get(itemPath: string) {
     const item = this.service.getConfigItemByPath(itemPath);

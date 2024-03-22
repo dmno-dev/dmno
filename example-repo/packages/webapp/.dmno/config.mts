@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheValue, createDmnoDataType, defineConfigSchema, dmnoFormula, toggleByEnv, toggleByNodeEnv } from '@dmno/core';
+import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheValue, createDmnoDataType, defineConfigSchema, dmnoFormula, switchByDmnoEnv, switchByNodeEnv } from '@dmno/core';
 
 
 const customUrlType = createDmnoDataType({
@@ -69,8 +69,8 @@ export default defineConfigSchema({
       description: 'this does this thing!',
       value: 'static'
     },
-    TOGGLE_EXAMPLE: {
-      value: toggleByNodeEnv({
+    SWITCH_EXAMPLE: {
+      value: switchByNodeEnv({
         _default: 'default-val',
         staging: 'staging-value',
         production: (ctx) => `prod-${ctx.get('NODE_ENV')}`,
