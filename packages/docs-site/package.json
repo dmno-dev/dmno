@@ -6,7 +6,7 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro check && astro build",
-    "netlify-build": "pnpm --filter docs-site... run docgen && pnpm --filter docs-site... run clidocgen && pnpm --filter docs-site... run build",
+    "netlify-build": "pnpm run docgen && pnpm run clidocgen && pnpm run build",
     "preview": "astro preview",
     "astro": "astro",
     "deploy": "pnpm build && netlify deploy --site=dmno --dir=dist --prod",
