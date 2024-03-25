@@ -1,0 +1,4 @@
+[build]
+  base = "/"
+  publish = "packages/docs-site/dist"
+  command = "pnpm run netlify-build"
