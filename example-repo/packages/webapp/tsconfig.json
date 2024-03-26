@@ -22,7 +22,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "types": [
-      "./.dmno/dmno.d.ts"
+      "./.dmno/.typegen/global.d.ts"
     ]
   },
   "include": [

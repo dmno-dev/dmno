@@ -14,8 +14,16 @@
     "allowSyntheticDefaultImports": true,
     "outDir": "dist",
     "rootDir": "./",
+    "types": [
+      "./.dmno/.typegen/node.d.ts"
+    ]
   },
   "include": [
     "src/**/*.ts",
   ],
+  "references": [
+    // {
+    //   "path": "./.dmno/tsconfig.dmno.json"
+    // }
+  ]
 }

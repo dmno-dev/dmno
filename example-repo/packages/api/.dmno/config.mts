@@ -3,6 +3,7 @@ import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 const OnePassBackend = injectPlugin(OnePasswordDmnoPlugin);
 
+
 export default defineConfigSchema({
   name: 'api',
   parent: 'group1',
@@ -12,6 +13,9 @@ export default defineConfigSchema({
     'OP_TOKEN',
   ],
   schema: {
+    CHECK: {
+      value: (ctx) => DMNO_CONFIG.OP_TOKEN,
+    },
     SECRET_EXAMPLE: {
       required: true,
       value: OnePassBackend.itemByReference("op://dev test/example/username"),
@@ -24,10 +28,13 @@ export default defineConfigSchema({
       }),
     },
 
+    API_ONLY: {
+      value: 'api'
+    },
 
     PORT: {
-      extends: DmnoBaseTypes.number({ max: 8080 }),
-      value: '8080',
+      extends: DmnoBaseTypes.number({ max: 9999 }),
+      value: '9000',
     },
     API_URL: {
       description: 'public url of this service',

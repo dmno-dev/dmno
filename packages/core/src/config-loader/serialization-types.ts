@@ -31,6 +31,7 @@ export type SerializedConfigItem =
     children: Record<string, SerializedConfigItem>,
     coercionError?: SerializedDmnoError,
     validationErrors?: Array<SerializedDmnoError>,
+    resolutionError?: SerializedDmnoError,
   };
 
 

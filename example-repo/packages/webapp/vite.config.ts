@@ -11,9 +11,6 @@ import vue from '@vitejs/plugin-vue';
 // the commented code below
 
 import { getResolvedConfigForEnvInjection } from '@dmno/core';
-// import { DMNO_CONFIG_HASH } from './.dmno/config-hash';
-
-// console.log(DMNO_CONFIG_HASH);
 
 const injectDmnoConfigPlugin = () => ({
   name: 'inject-dmno-config',
@@ -27,7 +24,6 @@ const injectDmnoConfigPlugin = () => ({
     config.define = {
       ...config.define,
       ...dmnoConfig,
-      'DMNO_CONFIG.VITE_GLOBAL_TEST': '420',
     };
   },
 });

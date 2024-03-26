@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import stream from 'node:stream';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
 import unzip from 'unzip-stream';
 
 
@@ -25,6 +26,23 @@ async function install1passwordCli(forceVersion = 'latest') {
     version = forceVersion;
   }
 
+  // we install into module's folder so that pnpm will cache it (previously was putting into node_modules/.bin)
+  const installToPath = path.resolve(fileURLToPath(import.meta.url), '../../op-cli');
+
+  if (fs.existsSync(installToPath)) {
+    try {
+      const installedVersion = execSync(`${installToPath} -v`).toString().trim();
+      if (installedVersion === version) {
+        // console.log('correct 1pass cli version already installed');
+        return;
+      }
+    } catch (err) {
+      // can fail silently since we will re-install below
+    }
+  }
+
+
+
   const platform = os.platform();
   let arch = os.arch();
   if (arch === 'x64') arch = 'amd64'; // netlify build servers are x64
@@ -42,10 +60,8 @@ async function install1passwordCli(forceVersion = 'latest') {
     throw new Error('fetching op cli zip failed');
   }
 
-  // we install into module's folder so that pnpm will cache it (previously was putting into node_modules/.bin)
-  const unzipToPath = path.resolve(fileURLToPath(import.meta.url), '../../op-cli');
 
-  fs.openSync(unzipToPath, 'w', 0o755);
+  fs.openSync(installToPath, 'w', 0o755);
 
   // pipe the response stream through unzip
   // and write the `op` cli to our node_modules/.bin folder
@@ -55,7 +71,7 @@ async function install1passwordCli(forceVersion = 'latest') {
       objectMode: true,
       transform(entry, e, cb) {
         if (entry.type === 'File' && entry.path === 'op') {
-          entry.pipe(fs.createWriteStream(unzipToPath, { mode: 0o755 }))
+          entry.pipe(fs.createWriteStream(installToPath, { mode: 0o755 }))
             .on('finish', cb);
         } else if (entry.type === 'File' && entry.path === 'op.sig') {
           // TODO: check signature

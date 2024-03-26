@@ -71,7 +71,7 @@ export function formatError(err: SerializedDmnoError) {
   let errStr = `${icon} ${err.message}`;
   if (err.isUnexpected) {
     errStr += kleur.gray().italic(`\n   (unexpected error${whenStr ? ` ${whenStr}` : ''})`);
-    errStr += err.stack;
+    if ('stack' in err) errStr += err.stack;
   }
   return errStr;
 }

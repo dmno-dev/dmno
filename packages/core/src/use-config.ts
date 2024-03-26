@@ -24,3 +24,20 @@ export function getResolvedConfigForEnvInjection() {
     acc[`DMNO_CONFIG.${key.toString()}`] = JSON.stringify(item.resolvedValue);
   }, {} as any);
 }
+
+export function loadProcessDmnoEnv() {
+  try {
+    const configResult = execSync('pnpm exec dmno load -f json');
+    const configObj = JSON.parse(configResult.toString());
+    (process as any).dmnoEnv = configObj;
+  } catch (err) {
+    // console.log('caught error while trying to load dmno config');
+    console.log((err as any).stdout.toString());
+    throw err;
+  }
+}
+
+// // we could explicitly export a thing to import if it feels better
+// // even though it is unnecessary
+// export const DMNO_CONFIG = {};
+

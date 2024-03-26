@@ -19,10 +19,10 @@ import {
 import { getConfigFromEnvVars } from '../lib/env-vars';
 import { SerializedConfigItem, SerializedService } from '../config-loader/serialization-types';
 import {
-  CoercionError, ConfigLoadError, DmnoError, SchemaError, ValidationError,
+  CoercionError, ConfigLoadError, DmnoError, ResolutionError, SchemaError, ValidationError,
 } from './errors';
 import { decrypt, encrypt } from '../lib/encryption';
-import { ClassOf, DmnoPlugin } from './plugins';
+import { DmnoPlugin } from './plugins';
 
 
 
@@ -68,7 +68,7 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
   typeDescription?: string;
 
   /** example value */
-  example?: any;
+  exampleValue?: any;
 
   /** link to external documentation */
   externalDocs?: {
@@ -476,6 +476,9 @@ export class DmnoWorkspace {
     await this.writeCache();
   }
 
+  get allServices() {
+    return this.servicesArray;
+  }
 
   getService(descriptor: string | { serviceName?: string, packageName?: string }) {
     if (_.isString(descriptor)) {
@@ -742,7 +745,7 @@ export abstract class DmnoConfigItemBase {
   /** resolved value _before_ coercion logic applied */
   resolvedRawValue?: ConfigValue;
   /** error encountered during resolution */
-  resolutionError?: Error;
+  resolutionError?: ResolutionError;
 
   /** resolved value _after_ coercion logic applied */
   resolvedValue?: ConfigValue;
@@ -757,8 +760,10 @@ export abstract class DmnoConfigItemBase {
   /** whether the final resolved value is valid or not */
   get isValid(): boolean | undefined {
     if (this.coercionError) return false;
-    if (this.validationErrors === undefined) return undefined;
-    return this.validationErrors.length === 0;
+    if (this.validationErrors && this.validationErrors?.length > 0) return false;
+    if (this.resolutionError) return false;
+    return true;
+    // return this.validationErrors.length === 0;
   }
 
   abstract get type(): DmnoDataType;
@@ -796,9 +801,17 @@ export abstract class DmnoConfigItemBase {
       try {
         await this.valueResolver.resolve(ctx);
         this.resolvedRawValue = this.valueResolver.resolvedValue;
+
+        
+        if (this.valueResolver.resolutionError) {
+          
+          this.resolutionError = this.valueResolver.resolutionError;
+          debug('resolution failed', this.key, this.resolutionError);
+        }
+
       } catch (err) {
         debug('resolution failed', this.key, err);
-        this.resolutionError = err as Error;
+        this.resolutionError = new ResolutionError(err as Error);
       }
     }
 
@@ -860,6 +873,8 @@ export abstract class DmnoConfigItemBase {
         this.validationErrors?.length
           ? _.map(this.validationErrors, (err) => err.toJSON())
           : undefined,
+
+      resolutionError: this.resolutionError?.toJSON(),
     };
   }
 }

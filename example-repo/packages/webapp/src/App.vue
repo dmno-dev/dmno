@@ -16,7 +16,7 @@
 // so we have to pull it into a variable here first
 const randomNumFromEnv = import.meta.env.VITE_RANDOM_NUM;
 
-const rewrittenVal = DMNO_CONFIG.VITE_STATIC_VAL_NUM;
+const rewrittenVal = DMNO_CONFIG.BOOLEAN_EXAMPLE;
 console.log(rewrittenVal);
 
 

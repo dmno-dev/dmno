@@ -5,6 +5,11 @@ export * from './config-engine/base-types';
 export * from './config-engine/resolvers/resolvers';
 export * from './config-engine/resolvers/formula-resolver';
 export * from './config-engine/resolvers/switch-resolver';
-export * from './use-config-item';
 export * from './config-engine/plugins';
 export { ValidationError, CoercionError, ResolutionError } from './config-engine/errors';
+
+export let RESOLVED_CONFIG = new Proxy({} as Record<string, any>, { get(key) { return key }});
+
+export function getConfig(): any {
+  return { }
+}

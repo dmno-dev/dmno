@@ -2,7 +2,6 @@
   "name": "@dmno/core",
   "version": "1.0.0",
   "description": "",
-  "module": "esnext",
   "scripts": {
     "clean": "rm -rf dist",
     "build": "tsup",
@@ -56,6 +55,7 @@
     "kleur": "^4.1.5",
     "lodash-es": "^4.17.21",
     "node-ipc": "npm:@achrinza/node-ipc@^10.1.10",
+    "svgo": "^3.2.0",
     "typescript": "^5.4.2",
     "validate-npm-package-name": "^5.0.0",
     "vite": "^5.1.6",

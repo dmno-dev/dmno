@@ -36,14 +36,14 @@ export class LoadCommand extends Command {
 
 
   async execute() {
-    console.log('execute load command');
+    // console.log('execute load command');
     const configLoader = new ConfigLoaderProcess();
 
     // TODO: remove this all into a helper, since we'll need similar handling on a bunch of commands...
 
     const workspace = await configLoader.makeRequest('load-full-schema', undefined);
-    console.log('Services schema loaded');
-    console.log(workspace);
+    // console.log('Services schema loaded');
+    // console.log(workspace);
 
     // first display loading errors (which would likely cascade into schema errors)
     if (_.some(workspace.services, (s) => s.configLoadError)) {
@@ -105,7 +105,6 @@ export class LoadCommand extends Command {
       // maybe we always automatically pass this as context info?
       packageName: process.env.npm_package_name,
     });
-    console.log('fetched resolved config!', configResult);
 
 
     const failingItems = _.filter(configResult.config, (item) => !item.isValid);
@@ -145,6 +144,7 @@ export class LoadCommand extends Command {
         let errors = _.compact([
           item.coercionError,
           ...item.validationErrors || [],
+          item.resolutionError,
         ]);
 
         errorsTable.push([
@@ -159,9 +159,14 @@ export class LoadCommand extends Command {
       process.exit(1);
     }
 
+    
+    const valuesOnly = _.mapValues(configResult.config, (val) => {
+      return val.resolvedValue;
+    });
+
 
     if (this.format === 'json') {
-      console.log(JSON.stringify(configResult.config));
+      console.log(JSON.stringify(valuesOnly));
     } else {
       console.log(configResult.config);
     }

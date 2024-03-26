@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "types": [
+      "./.typegen/global.d.ts"
+    ],
+  },
+  "include": [
+    "./**/*.mts",
+  ]
+}

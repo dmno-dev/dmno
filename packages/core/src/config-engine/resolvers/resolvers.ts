@@ -4,11 +4,12 @@ import kleur from 'kleur';
 import {
   DmnoConfigItemBase, ResolverContext,
 } from '../config-engine';
+import { ResolutionError } from '../errors';
 
 // TODO: do we allow Date?
 // what to do about null/undefined?
 export type ConfigValue = string | number | boolean | null | { [key: string]: ConfigValue } | Array<ConfigValue>;
-type ConfigValueInlineFunction = ((ctx: any) => ConfigValue | ConfigValueResolver);
+type ConfigValueInlineFunction = ((ctx: ResolverContext) => undefined | ConfigValue | ConfigValueResolver);
 export type ValueResolverDef =
   // static value
   ConfigValue |
@@ -43,7 +44,7 @@ type ResolverBranch = {
 export abstract class ConfigValueResolver {
   abstract icon: string;
   abstract getPreviewLabel(): string;
-  abstract _resolve(ctx: ResolverContext): Promise<ConfigValue | ConfigValueResolver>;
+  abstract _resolve(ctx: ResolverContext): Promise<undefined | ConfigValue | ConfigValueResolver>;
 
   cacheKey: string | undefined;
 
@@ -52,6 +53,8 @@ export abstract class ConfigValueResolver {
   isResolved = false;
   resolvedValue?: ConfigValue;
   isUsingCache = false;
+
+  resolutionError?: ResolutionError;
 
   async resolve(ctx: ResolverContext) {
     // if a cache key is set, we first check the cache and return that value if found
@@ -68,7 +71,18 @@ export abstract class ConfigValueResolver {
     }
 
     // actually call the resolver
-    const resolutionResult = await this._resolve(ctx);
+    let resolutionResult: Awaited<ReturnType<typeof this._resolve>>;
+    try {
+      resolutionResult = await this._resolve(ctx);
+    } catch (err) {
+      if (err instanceof ResolutionError) {
+        this.resolutionError = err;
+      } else {
+        this.resolutionError = new ResolutionError(err as Error);
+      }
+      this.isResolved = false;
+      return;
+    }
     if (resolutionResult instanceof ConfigValueResolver) {
       // resolutionResult is now a child resolver which must be resolved itself
       // NOTE we have to call this recursively so that caching can be triggered on each resolver

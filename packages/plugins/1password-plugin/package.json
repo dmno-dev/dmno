@@ -1,14 +1,26 @@
 {
   "name": "@dmno/1password-plugin",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "adds ability to sync secrets with 1password to the DMNO config engine",
-  "scripts": {
-    "build": "tsup",
-    "dev": "pnpm run build --watch",
-    "lint": "eslint src --ext .ts,.cjs",
-    "lint:fix": "pnpm run lint --fix",
-    "postinstall": "node dist/install-cli.mjs"
+  "keywords": [
+    "dmno",
+    "1password",
+    "1pass",
+    "env vars",
+    "environment variables",
+    "secrets",
+    "dmno plugin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmno-dev/core.git",
+    "directory": "packages/plugins/1password-plugin"
   },
+  "bugs": {
+    "url": "https://github.com/dmno-dev/core/issues"
+  },
+  "homepage": "https://dmno.dev",
   "exports": {
     ".": {
       "default": "./dist/index.mjs"
@@ -21,8 +33,16 @@
       ]
     }
   },
-  "keywords": [],
-  "author": "",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "pnpm run build --watch",
+    "lint": "eslint src --ext .ts,.cjs",
+    "lint:fix": "pnpm run lint --fix",
+    "postinstall": "node dist/install-cli.mjs"
+  },
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",

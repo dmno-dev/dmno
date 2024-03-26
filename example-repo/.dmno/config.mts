@@ -16,10 +16,29 @@ export default defineWorkspaceConfig({
   schema: {
     NODE_ENV: NodeEnvType, 
     DMNO_ENV: {
+      typeDescription: 'standardized environment flag set by DMNO',
       value: (ctx) => ctx.get('NODE_ENV'),
     },
     PICK_TEST: {
-      value: (ctx) => `pick-test--${ctx.get('NODE_ENV')}`,
+      // value: (ctx) => `pick-test--${DMNO_CONFIG. }`,
+    },
+
+    ENUM_EXAMPLE: {  
+      ui: {
+        icon: 'bi:apple',
+        color: 'FF0000'
+      },
+      
+      extends: DmnoBaseTypes.enum([
+        { description: 'dX', value: 'before'},
+        { description: 'dX', value: 'after'},
+        { description: 'dX', value: false},
+      ]),
+    },
+
+
+    ROOT_ONLY: {
+      value: (ctx) => DMNO_CONFIG.ENUM_EXAMPLE,
     },
 
     OP_TOKEN: {

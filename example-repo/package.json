@@ -6,10 +6,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "volta": {
-    "node": "18.16.0",
-    "pnpm": "8.5.0"
-  },
   "scripts": {},
   "devDependencies": {
     "@dmno/1password-plugin": "../packages/plugins/1password-plugin",
