@@ -103,21 +103,12 @@ export default defineConfig({
                   label: 'Helper Methods',
                   link: '/reference/config-engine/helper-methods/'
                 },
+                {
+                  label: 'CLI',
+                  link: '/reference/config-engine/dmno-cli/'
+                },
               ]
             },
-            {
-              label: 'dmno-cli',
-              items: [
-                {
-                  label: 'Installation',
-                  link: '/reference/dmno-cli/installation/'
-                },
-                {
-                  label: 'Commands',
-                  link: '/reference/dmno-cli/commands/'
-                },
-              ]
-            }
           ]
         },
         {
