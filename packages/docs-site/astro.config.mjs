@@ -3,6 +3,7 @@ import starlight from "@astrojs/starlight";
 import starlightBlog from 'starlight-blog'
 import vue from "@astrojs/vue";
 import robotsTxt from "astro-robots-txt";
+import starlightLinksValidator from 'starlight-links-validator'
 
 
 // https://astro.build/config
@@ -17,7 +18,7 @@ export default defineConfig({
       social: {
         github: "https://github.com/dmno-dev",
       },
-      plugins: [starlightBlog()],
+      plugins: [starlightBlog(), starlightLinksValidator()],
       pagination: false,
       sidebar: [
         {
