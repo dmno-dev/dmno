@@ -31,21 +31,22 @@ export default defineConfig({
               label: "Concepts",
               link: "/get-started/concepts"
             },
-            {
-              label: "Schema",
-              link: "/get-started/schema"
-            },
-            {
-              label: "Secrets",
-              link: "/get-started/secrets"
-            },
           ]
         },
         {
           label: "Guides",
           items: [
             {
+              label: "Schema",
+              link: "/guides/schema"
+            },
+            {
+              label: "Secrets",
+              link: "/guides/secrets"
+            },
+            {
               label: "Frameworks",
+              collapsed: true,
               items: [
                 {
                   label: "Next.js",
@@ -63,6 +64,7 @@ export default defineConfig({
             },
             {
               label: "Deployment Platforms",
+              collapsed: true,
               items: [
                 {
                   label: "Vercel",
@@ -109,14 +111,14 @@ export default defineConfig({
                 },
               ]
             },
+            {
+              label: "Plugins",
+              autogenerate: {
+                directory: "/reference/plugins"
+              }
+            }
           ]
         },
-        {
-          label: "Plugins",
-          autogenerate: {
-            directory: "plugins"
-          }
-        }
       ],
     }),
     vue({

@@ -1,0 +1,133 @@
+---
+title: DMNO Schema Guide
+---
+
+import { FileTree } from '@astrojs/starlight/components'
+
+If you haven't already, follow our [Quickstart](/get-started/quickstart) guide to get started with DMNO. Once you're set up and ready to go, let's dive in to writing a full schema for your project.
+
+## Project Structure
+
+A typical DMNO project structure looks like this:
+
+<FileTree>
+- / (root of your project)
+  - .dmno (your workspace config)
+    - **config.mts**
+  - packages
+    - my-package
+      - .dmno 
+        - **config.mts** (config for my-package service)
+    - another-package
+      - .dmno
+        - **config.mts** (config for another-package service)
+</FileTree>
+
+## Root (workspace) config
+
+The root of your project should contain a `.dmno` directory with a `config.mts` file. This file should have the following structure:
+
+```typescript
+import { defineWorkspaceConfig } from '@dmno/dmno-core';
+
+export default defineWorkspaceConfig({
+  schema: {
+    // your schema here
+  },
+});
+```
+This root schema allows you to define items that can be shared across all services in your project. For example, you might define a `GOOGLE_ANALYTICS_ID` that is re-used across multiple services. Because of DMNO's deep flexibility, you can define as much or as little as you want in each of these schema items. Let's look at a few examples: 
+
+```typescript
+import {
+  defineWorkspaceConfig,
+  DmnoVendorTypes,
+  DmnoBaseTypes,
+  switchByDmnoEnv,
+} from '@dmno/dmno-core';
+
+export default defineWorkspaceConfig({
+  schema: {
+    GOOGLE_ANALYTICS_ID: {
+      // defaults to string
+      description: 'The Google Analytics ID for this project',
+      required: true,
+    },
+    STRIPE_PUB_KEY: {
+      // uses a custom type provided by dmno
+      extends: DmnoVendorTypes.StripePublishableKey,
+      description: 'The publishable Stripe API key for this project',
+    },
+    CUSTOMER_SERVICE_EMAIL: {
+      extends: DmnoBaseTypes.email,
+      description: 'The email address for customer service',
+      // change the value based on the environment
+      value: switchByDmnoEnv({
+        _default: 'test@test.com',
+        staging: 'staging@test.com',
+        production: 'production@test.com',
+      }),
+    },
+  },
+});
+```
+
+## Service config
+
+Given the above root schema, you can now define a service-specific schema in each service's `.dmno/config.mts` file. This file should have the following structure:
+
+```typescript
+import { defineConfigSchema } from '@dmno/dmno-core';
+
+export default defineConfigSchema({
+  name: 'my-package', // the name of the service
+  pick: [
+    'GOOGLE_ANALYTICS_ID',
+    'STRIPE_PUB_KEY',
+    'CUSTOMER_SERVICE_EMAIL',
+  ],
+  schema: {
+    // your service-specific schema here
+    SEGMENT_SERVER_KEY: {
+      description: 'The Segment server key for this service',
+      required: true,
+    },
+    API_URL: {
+      description: 'The URL for the API for this service',
+      required: true,
+      // all this config item to be 'picked' by other services
+      expose: true,
+    },
+  },
+});
+```
+Here, we're picking the `GOOGLE_ANALYTICS_ID`, `STRIPE_PUB_KEY`, and `CUSTOMER_SERVICE_EMAIL` from the root schema, and adding a few service-specific items.
+
+Now let's look at a similar example for `another-package`:
+
+```typescript
+import { defineConfigSchema } from '@dmno/dmno-core';
+
+export default defineConfigSchema({
+  name: 'another-package',
+  pick: [
+    // pick the same items as my-package from root
+    'GOOGLE_ANALYTICS_ID',
+    'STRIPE_PUB_KEY',
+    'CUSTOMER_SERVICE_EMAIL',
+    // pick the API_URL from my-package
+    {
+      source: 'my-package',
+      key: 'API_URL',
+      // rename it
+      renameKey: 'MY_PACKAGE_API_URL',
+    },
+  ],
+  schema: {
+    // your service-specific schema here
+  },
+});
+```
+This is similar to the previous example, but we're also picking the `API_URL` from `my-package` and renaming it to `MY_PACKAGE_API_URL`.
+
+For an exhaustive list of all the options available for each schema item, check out the [defineConfigSchema](/reference/config-engine/helper-methods/#defineconfigschema) reference docs.
