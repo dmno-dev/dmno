@@ -1,16 +1,13 @@
-import { DmnoBaseTypes, defineWorkspaceConfig, configPath, switchByNodeEnv, dmnoFormula, createDmnoDataType, NodeEnvType, registerPlugin } from '@dmno/core';
-import { OnePasswordDmnoPlugin, OnePasswordServiceAccountToken } from '@dmno/1password-plugin';
+import { DmnoBaseTypes, defineWorkspaceConfig, configPath, switchByNodeEnv, dmnoFormula, createDmnoDataType, NodeEnvType, registerPlugin, InjectPluginInputByType } from '@dmno/core';
+import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
+
+// TODO: figure out how to get rid of mjs extension
+import { GA4MeasurementId } from './custom-types.mjs';
 
 const ProdOnePassBackend = registerPlugin(new OnePasswordDmnoPlugin({
   token: configPath('OP_TOKEN'),
-  defaultVaultName: 'dev test'
+  defaultVaultName: 'dev test',
 }));
-
-const DevOnePassBackend = registerPlugin(new OnePasswordDmnoPlugin({
-  token: configPath('OP_TOKEN'),
-  defaultVaultName: 'dev test'
-}));
-
 
 export default defineWorkspaceConfig({
   schema: {
@@ -21,6 +18,12 @@ export default defineWorkspaceConfig({
     },
     PICK_TEST: {
       // value: (ctx) => `pick-test--${DMNO_CONFIG. }`,
+    },
+
+    GOOGLE_ANALYTICS_MEASUREMENT_ID: {
+      extends: GA4MeasurementId,
+      required: true,
+      value: 'ABC123'
     },
 
     ENUM_EXAMPLE: {  
@@ -38,11 +41,11 @@ export default defineWorkspaceConfig({
 
 
     ROOT_ONLY: {
-      value: (ctx) => DMNO_CONFIG.ENUM_EXAMPLE,
+      value: (ctx) => DMNO_CONFIG.NODE_ENV,
     },
 
     OP_TOKEN: {
-      extends: OnePasswordServiceAccountToken,
+      extends: OnePasswordTypes.serviceAccountToken,
       required: true
     },
 

@@ -19,6 +19,7 @@ export default defineConfigSchema({
   pick: [
     'NODE_ENV',
     'DMNO_ENV',
+    'GOOGLE_ANALYTICS_MEASUREMENT_ID',
     {
       source: 'api',
       key: 'API_URL',
@@ -35,9 +36,9 @@ export default defineConfigSchema({
   ],
   schema: {
 
-    EX1: {
-      value: (ctx) => DMNO_CONFIG.BOOLEAN_EXAMPLE,
-    },
+    // EX1: {
+    //   value: (ctx) => DMNO_CONFIG.BOOLEAN_EXAMPLE,
+    // },
 
     ENUM_EXAMPLE: {
   

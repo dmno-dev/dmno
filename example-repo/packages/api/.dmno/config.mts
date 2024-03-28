@@ -3,19 +3,14 @@ import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 const OnePassBackend = injectPlugin(OnePasswordDmnoPlugin);
 
-
 export default defineConfigSchema({
   name: 'api',
   parent: 'group1',
   pick: [
     'NODE_ENV',
     'DMNO_ENV',
-    'OP_TOKEN',
   ],
   schema: {
-    CHECK: {
-      value: (ctx) => DMNO_CONFIG.OP_TOKEN,
-    },
     SECRET_EXAMPLE: {
       required: true,
       value: OnePassBackend.itemByReference("op://dev test/example/username"),

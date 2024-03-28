@@ -10,13 +10,10 @@ import { getThisDirname } from './lib/this-file-path';
 
 const __dirname = getThisDirname(import.meta.url);
 
-
-
-
+console.time('dmno load');
 loadProcessDmnoEnv();
-
-console.log('loaded dmno env')
-console.log(process.dmnoEnv);
+console.timeEnd('dmno load');
+// console.log(process.dmnoEnv);
 
 // // config setup inspired by vite and other similar tools
 // // will replace with more feature complete config system later if we need

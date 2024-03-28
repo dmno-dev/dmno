@@ -662,6 +662,14 @@ export class DmnoService {
 
       // currently this resolve fn will trigger resolve on nested items
       await configItem.resolve(new ResolverContext(this, configItem.getPath()));
+
+      // notify all plugins about the resolved item in case it resolves an input
+      if (configItem.isResolved) {
+        for (const pluginKey in this.plugins) {
+          const plugin = this.plugins[pluginKey];
+          plugin.checkIfResolvedConfigItemResolvesInput(configItem);
+        }
+      }
     }
   }
 
@@ -802,13 +810,11 @@ export abstract class DmnoConfigItemBase {
         await this.valueResolver.resolve(ctx);
         this.resolvedRawValue = this.valueResolver.resolvedValue;
 
-        
+
         if (this.valueResolver.resolutionError) {
-          
           this.resolutionError = this.valueResolver.resolutionError;
           debug('resolution failed', this.key, this.resolutionError);
         }
-
       } catch (err) {
         debug('resolution failed', this.key, err);
         this.resolutionError = new ResolutionError(err as Error);

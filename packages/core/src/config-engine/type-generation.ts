@@ -77,7 +77,7 @@ async function fetchIconSvg(
   const iconPath = `${iconCacheFolder}/${iconifyName}-${ICON_SIZE}.svg`;
 
   let svgSrc: string;
-  if (fs.existsSync(iconPath) && false) {
+  if (fs.existsSync(iconPath)) {
     const svgFileBuffer = await fs.promises.readFile(iconPath, 'utf-8');
     svgSrc = svgFileBuffer.toString();
   } else {

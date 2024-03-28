@@ -4,8 +4,9 @@ import path from 'path';
 import _ from 'lodash-es';
 import {
   ConfigPath, ConfigValueResolver, DmnoPlugin, ResolverContext,
+  DmnoPluginInputSchema,
 } from '@dmno/core';
-import { OnePasswordServiceAccountToken, OnePasswordVaultId, OnePasswordVaultName } from './data-types';
+import { OnePasswordTypes } from './data-types';
 
 
 type ItemId = string;
@@ -15,54 +16,76 @@ type ReferenceUrl = string;
 type ServiceAccountToken = string;
 
 
-export class OnePasswordDmnoPlugin extends DmnoPlugin {
-  // Typescript can't infer types from a parent class
-  // so unfortunately, we have to add this extra annotation
-  // see issues:
-  // - https://github.com/Microsoft/TypeScript/issues/3667
-  // - https://github.com/microsoft/TypeScript/issues/1373
-  // - https://github.com/microsoft/TypeScript/issues/23911
 
-  inputSchema: DmnoPlugin['inputSchema'] = { // <- NOTICE THE WEIRD ANNOTATION
+
+
+
+type ExtractType<T extends DmnoPluginInputSchema> = {
+  [key in keyof T]: T[key]['extends']
+};
+type Test = ExtractType<typeof OnePasswordDmnoPlugin.inputSchema>;
+
+
+// type InferAsType<T> =
+
+// Typescript has some limitations around generics and how things work across parent/child classes
+// so unfortunately, we have to add some extra type annotations, but it's not too bad
+// see issues:
+// - https://github.com/Microsoft/TypeScript/issues/3667
+// - https://github.com/microsoft/TypeScript/issues/1373
+// - https://github.com/microsoft/TypeScript/issues/23911
+export class OnePasswordDmnoPlugin extends DmnoPlugin<typeof OnePasswordDmnoPlugin.inputSchema> {
+  // Note we are explicitly passing the input schema back in as a type arg ^^^
+  static inputSchema = {
     token: {
-      extends: OnePasswordServiceAccountToken,
+      extends: OnePasswordTypes.serviceAccountToken,
       required: true,
     },
-    vaultId: {
-      extends: OnePasswordVaultId,
+    defaultVaultId: {
+      extends: OnePasswordTypes.vaultId,
     },
-    vaultName: {
-      extends: OnePasswordVaultName,
+    defaultVaultName: {
+      extends: OnePasswordTypes.vaultName,
     },
-  };
+  } satisfies DmnoPluginInputSchema;
+  // ^^ note this explicit `satisfies` is needed to give us better typing on our inputSchema
 
-  constructor(
-    private options?: {
-      token: ServiceAccountToken | ConfigPath,
-      defaultVaultId?: VaultId,
-      // TODO: not sure if vault "name" is the right term here?
-      defaultVaultName?: VaultName | ConfigPath
-    },
-  ) {
-    super();
-  }
+
+  // TODO: this pattern of inputs always being values or paths and then
+  // feeding them to inputs could be assumed to always be the case?
+  // constructor(
+  //   private options?: {
+  //     token: ServiceAccountToken | ConfigPath,
+
+  //     defaultVaultId?: VaultId | ConfigPath,
+  //     // TODO: not sure if vault "name" is the right term here?
+  //     defaultVaultName?: VaultName | ConfigPath
+  //   },
+  // ) {
+  //   super();
+  //   if (options?.token) this.setInputValue('token', options.token);
+  //   if (options?.defaultVaultId) this.setInputValue('defaultVaultId', options.defaultVaultId);
+  //   if (options?.defaultVaultName) this.setInputValue('defaultVaultName', options.defaultVaultName);
+  // }
 
   // can read items by id - need a vault id, item id
   // and then need to grab the specific data from a big json blob
   // cli command `op item get bphvvrqjegfmd5yoz4buw2aequ --vault=ut2dftalm3ugmxc6klavms6tfq --format json`
   item(idOrIdAndVault: ItemId | { id: ItemId, vaultId: VaultId }, path?: string) {
-    let vaultId: VaultId;
+    let vaultId: ValueOrGetter<VaultId>;
     let itemId: ItemId;
 
+
+    // NOTE - will need to infer types on the inputs so we dont need these casts
     if (_.isString(idOrIdAndVault)) {
       itemId = idOrIdAndVault;
-      if (!this.options?.defaultVaultId) throw new Error('No vault ID specified');
-      vaultId = this.options.defaultVaultId;
+      if (!this.inputState.defaultVaultId.method) throw new Error('No vault ID specified');
+      vaultId = this.getInputValueGetter<VaultId>('defaultVaultId');
     } else {
       itemId = idOrIdAndVault.id;
       vaultId = idOrIdAndVault.vaultId;
     }
-    return new OnePasswordResolver(this.options?.token || 'asdf', {
+    return new OnePasswordResolver(this.getInputValueGetter<ServiceAccountToken>('token'), {
       id: itemId,
       vaultId,
       path,
@@ -74,20 +97,30 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
   // however these are not necessarily stable...
   // cli command `op read "op://dev test/example/username"`
   itemByReference(referenceUrl: ReferenceUrl) {
-    let fullReference = referenceUrl;
-    // TODO: if reference starts with "op://" then it includes the vault
-    if (!referenceUrl.startsWith('op://')) {
-      if (!this.options?.defaultVaultName) {
+    // if reference starts with "op://" then it includes the vault
+    // otherwise we'll prepend "op://vaultname/" to the value passed in
+    if (referenceUrl.startsWith('op://')) {
+      return new OnePasswordResolver(this.getInputValueGetter<ServiceAccountToken>('token'), {
+        reference: referenceUrl,
+      });
+    } else {
+      if (!this.inputState.defaultVaultName.method) {
         throw new Error('You must specify a default vault if using references names only');
       }
-      // TODO: will need to prefix the reference path with the vault name when resolving
-      fullReference = `op://${this.options?.defaultVaultName}/${fullReference}`;
-    }
+      const vaultName = this.getInputValueGetter<VaultName>('defaultVaultName');
 
-    return new OnePasswordResolver(this.options?.token || 'asdf', {
-      reference: fullReference,
-    });
+      return new OnePasswordResolver(this.getInputValueGetter<ServiceAccountToken>('token'), {
+        vaultName,
+        referencePath: referenceUrl,
+      });
+    }
   }
+}
+
+type ValueOrGetter<T> = T | (() => T);
+function unwrapGetter<T>(valOrGetter: ValueOrGetter<T>) {
+  if (_.isFunction(valOrGetter)) return valOrGetter();
+  return valOrGetter;
 }
 
 const CLI_PATH = path.resolve(fileURLToPath(import.meta.url), '../../op-cli');
@@ -99,69 +132,77 @@ export class OnePasswordResolver extends ConfigValueResolver {
 
   private label: string;
   constructor(
-    private serviceAccountToken: ServiceAccountToken | ConfigPath,
+    private serviceAccountToken: ValueOrGetter<ServiceAccountToken>,
     private opts: {
-      id: ItemId,
-      vaultId: VaultId,
+      id: ValueOrGetter<ItemId>,
+      vaultId: ValueOrGetter<VaultId>,
       path?: string
-    } | { reference: string },
+    } |
+    { reference: string } |
+    { vaultName: ValueOrGetter<VaultName>, referencePath: string },
   ) {
     super();
-    if ('id' in opts) {
-      this.label = `${opts.vaultId}/${opts.id}`;
-      // currently this means we're not reusing the cache for the same item if fetching different paths within that item
-      this.cacheKey = `1pass:V|${opts.vaultId}/I|${opts.id}/P|${opts.path}`;
-    } else if ('reference' in opts) {
-      this.label = opts.reference;
-      this.cacheKey = `1pass:R|${opts.reference}`;
-    }
-    this.label = '-';
+    this.label = 'fetch from 1pass';
   }
 
   async _resolve(ctx: ResolverContext) {
-    console.log('Resolving 1password value!', ctx.fullPath);
+    // console.log('Resolving 1password value!', ctx.fullPath);
 
-    let tokenValue: string | undefined;
-    if (this.serviceAccountToken instanceof ConfigPath) {
-      const resolvedTokenFromPath = await ctx.get(this.serviceAccountToken.path);
-      console.log('1pass token = ', resolvedTokenFromPath);
-      if (!resolvedTokenFromPath) {
-        throw new Error(`Unable to resolve 1password token from path ${this.serviceAccountToken.path}`);
-      }
-      if (!_.isString(resolvedTokenFromPath)) {
-        throw new Error('Resolved token is not a string');
-      }
-      tokenValue = resolvedTokenFromPath;
-    } else {
-      tokenValue = this.serviceAccountToken;
-    }
-    if (!tokenValue) {
-      throw new Error('no op token');
-    }
+    const opts = this.opts;
 
-    const injectToken = `OP_SERVICE_ACCOUNT_TOKEN=${tokenValue}`;
 
+
+    // if ('id' in opts) {
+    //   this.label = `${opts.vaultId}/${opts.id}`;
+    //   // currently this means we're not reusing the cache for the same item if fetching different paths within that item
+    //   this.cacheKey = `1pass:V|${opts.vaultId}/I|${opts.id}/P|${opts.path}`;
+    // } else if ('reference' in opts) {
+    //   this.label = opts.reference;
+    //   this.cacheKey = `1pass:R|${opts.reference}`;
+    // } else if ('vaultName' in opts) {
+    //   const reference = `op://${unwrapGetter(opts.vaultName)}/${unwrapGetter(opts.vaultName)}`;
+    //   this.label = reference;
+    //   this.cacheKey = `1pass:R|${reference}`;
+    // }
+
+    const token = unwrapGetter(this.serviceAccountToken);
+    console.log('token', token);
+    // this will eventually be already handled by checking input requirements
+    if (!token) throw new Error('missing 1pass service account token');
+    const injectToken = `OP_SERVICE_ACCOUNT_TOKEN=${token}`;
 
     let value: string | undefined;
-    if ('reference' in this.opts) {
+    // read a single value by "reference"
+    if ('reference' in opts) {
       value = await execSync([
         injectToken,
         CLI_PATH,
-        `read "${this.opts.reference}"`,
+        `read "${opts.reference}"`,
         '--force --no-newline',
       ].join(' ')).toString();
+    } else if ('referencePath' in opts) {
+      const reference = `op://${unwrapGetter(opts.vaultName)}/${unwrapGetter(opts.referencePath)}`;
+
+      value = await execSync([
+        injectToken,
+        CLI_PATH,
+        `read "${reference}"`,
+        '--force --no-newline',
+      ].join(' ')).toString();
+
+    // get an item by id + vault id
     } else {
       const valueJsonStr = await execSync([
         injectToken,
         CLI_PATH,
-        `get item ${this.opts.id}`,
-        `--vault=${this.opts.vaultId}`,
+        `get item ${unwrapGetter(opts.id)}`,
+        `--vault=${unwrapGetter(opts.vaultId)}`,
         '--format json',
       ].join(' ')).toString();
 
       const valueObj = JSON.parse(valueJsonStr);
-      if (this.opts.path) {
-        value = _.get(valueObj, this.opts.path);
+      if (opts.path) {
+        value = _.get(valueObj, opts.path);
       }
     }
     if (value === undefined) {

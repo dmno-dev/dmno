@@ -1,7 +1,6 @@
 {
   "recommendations": [
     "Vue.volar",
-    "Vue.vscode-typescript-vue-plugin",
     "pflannery.vscode-versionlens",
     "unifiedjs.vscode-mdx",
   ]
