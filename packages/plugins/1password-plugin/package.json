@@ -34,14 +34,15 @@
     }
   },
   "files": [
-    "/dist"
+    "/dist",
+    "/scripts"
   ],
   "scripts": {
     "build": "tsup",
     "dev": "pnpm run build --watch",
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix",
-    "postinstall": "node dist/install-cli.mjs"
+    "postinstall": "node scripts/install-cli.mjs"
   },
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",

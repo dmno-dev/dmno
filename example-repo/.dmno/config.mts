@@ -41,7 +41,7 @@ export default defineWorkspaceConfig({
 
 
     ROOT_ONLY: {
-      value: (ctx) => DMNO_CONFIG.NODE_ENV,
+      value: (ctx) => DMNO_CONFIG.DMNO_ENV,
     },
 
     OP_TOKEN: {

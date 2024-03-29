@@ -2,10 +2,15 @@
   "extends": "@dmno/tsconfig/tsconfig.node.json",
   "compilerOptions": {
     "module": "ESNext",
-    "outDir": "dist"
+    "outDir": "dist",
+    "lib": [
+      "ESNext"
+    ]
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
+    "scripts/*.mjs",
+    "./.dmno/.typegen/extension-types.d.ts"
   ]
 }

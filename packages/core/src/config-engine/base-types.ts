@@ -55,7 +55,7 @@ export type ExtractSettingsSchema<F> =
   F extends DmnoDataTypeFactoryFn<infer T> ? T : never;
 
 
-export class DmnoDataType<T = any> {
+export class DmnoDataType<InstanceOptions = any> {
   // NOTE - note quite sure about this setup yet...
   // but the idea is to provide a wrapped version of the validate/coerce (the fns that need the type instance options)
   // while providing transparent access to the rest. This is so the ConfigItem can just walk up the chain of types
@@ -65,13 +65,13 @@ export class DmnoDataType<T = any> {
   private _valueResolver?: ConfigValueResolver;
 
   constructor(
-    readonly typeDef: DmnoDataTypeOptions<T>,
-    readonly typeInstanceOptions: T,
+    readonly typeDef: DmnoDataTypeOptions<InstanceOptions>,
+    readonly typeInstanceOptions: InstanceOptions,
     /**
      * the factory function that created this item
      * Should be always defined unless this is an inline defined type from a config schema
      * */
-    readonly typeFactoryFn?: DmnoDataTypeFactoryFn<T>,
+    readonly typeFactoryFn?: DmnoDataTypeFactoryFn<InstanceOptions>,
   ) {
     // if this is already one of our primitive base types, we are done
     if (this.typeDef.extends === PrimitiveBaseType) {

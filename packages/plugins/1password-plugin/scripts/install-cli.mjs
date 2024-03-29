@@ -17,10 +17,10 @@ const SUPPORT_MATRIX = {
 };
 
 async function install1passwordCli(forceVersion = 'latest') {
-  let version: string;
+  let version;
   if (forceVersion === 'latest') {
     const checkVersionRequest = await fetch('https://app-updates.agilebits.com/check/1/0/CLI2/en/2.0.0/N');
-    const versionJson = await checkVersionRequest.json() as any;
+    const versionJson = await checkVersionRequest.json();
     version = versionJson.version;
   } else {
     version = forceVersion;
@@ -46,11 +46,11 @@ async function install1passwordCli(forceVersion = 'latest') {
   const platform = os.platform();
   let arch = os.arch();
   if (arch === 'x64') arch = 'amd64'; // netlify build servers are x64
-  if (!(SUPPORT_MATRIX as any)[platform]) {
+  if (!(SUPPORT_MATRIX)[platform]) {
     throw new Error(`Unsupported platform - ${platform}`);
   }
 
-  if (!(SUPPORT_MATRIX as any)[platform].includes(arch)) {
+  if (!(SUPPORT_MATRIX)[platform].includes(arch)) {
     throw new Error(`Unsupported architecture - ${platform}/${arch}`);
   }
 
@@ -65,7 +65,7 @@ async function install1passwordCli(forceVersion = 'latest') {
 
   // pipe the response stream through unzip
   // and write the `op` cli to our node_modules/.bin folder
-  stream.Readable.fromWeb(zipReq.body!)
+  stream.Readable.fromWeb(zipReq.body)
     .pipe(unzip.Parse())
     .pipe(new stream.Transform({
       objectMode: true,
