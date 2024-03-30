@@ -53,6 +53,10 @@ export function formattedValue(val: any, showType = false) {
 export function formatError(err: SerializedDmnoError) {
   let whenStr = '';
   let icon = '❌';
+  if (err.type === 'SchemaError') {
+    whenStr += 'during schema initialization';
+    icon = '🧰';
+  }
   if (err.type === 'ValidationError') {
     whenStr += 'during validation';
     icon = '❌';

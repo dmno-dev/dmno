@@ -97,6 +97,7 @@ export default defineConfigSchema({
 
     VITE_RANDOM_NUM: {
       extends: DmnoBaseTypes.number,
+      required: true,
       // generate a random number, will be different each time resolution runs, but caching will keep it stable
       value: cacheValue('random-number', (ctx) => Math.floor(Math.random() * 100)),
     },
@@ -106,7 +107,7 @@ export default defineConfigSchema({
         max: 100,
         min: 1
       }),
-      value: '123.45',
+      value: '12.45',
     },
     WEB_URL: {
       extends: customUrlType({ newSetting: true }),

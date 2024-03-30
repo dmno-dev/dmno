@@ -18,10 +18,10 @@ export function getResolvedConfigForEnvInjection() {
   // when injecting into vite config via the `define` option, we need the data in a certain format
   // - each key must be like `import.meta.env.KEY`
   // - values must be JSON.stringified - meaning a string include quotes, for example '"value"'
-  return _.transform(config, (acc, item, key) => {
-    acc[`import.meta.env.${key.toString()}`] = JSON.stringify(item.resolvedValue);
+  return _.transform(config, (acc, itemVal, key) => {
+    acc[`import.meta.env.${key.toString()}`] = JSON.stringify(itemVal);
 
-    acc[`DMNO_CONFIG.${key.toString()}`] = JSON.stringify(item.resolvedValue);
+    acc[`DMNO_CONFIG.${key.toString()}`] = JSON.stringify(itemVal);
   }, {} as any);
 }
 

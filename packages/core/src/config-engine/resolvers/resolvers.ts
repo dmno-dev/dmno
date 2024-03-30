@@ -1,6 +1,5 @@
 /* eslint-disable class-methods-use-this */
 import _ from 'lodash-es';
-import kleur from 'kleur';
 import {
   DmnoConfigItemBase, ResolverContext,
 } from '../config-engine';

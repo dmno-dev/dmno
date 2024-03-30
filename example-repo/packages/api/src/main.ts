@@ -41,7 +41,7 @@ if (process.env.NODE_ENV !== 'test') {
     // await prisma.$connect();
     await routesLoaded;
     app.listen(process.dmnoEnv.PORT);
-    console.log(chalk.green.bold(`Auth API listening on port ${process.dmnoEnv.PORT}`));
+    console.log(chalk.green.bold(`API available at ${process.dmnoEnv.API_URL}`));
     // await prisma.$disconnect();
   } catch (err) {
     console.log('ERROR!', err);

@@ -1,8 +1,6 @@
 import { globSync } from 'glob';
 import Router from '@koa/router';
 
-import { defineWorkspaceConfig } from '@dmno/core';
-
 import { getThisDirname } from '../lib/this-file-path';
 import { CustomAppContext, CustomAppState } from '../custom-state';
 import { createDeferredPromise } from '../lib/defer-promise';
@@ -18,9 +16,8 @@ router.get('/', async (ctx) => {
   // TODO: add something which checks redis and postgres connections are working
   ctx.body = {
     systemStatus: 'nope',
-    envCheck: process.dmnoEnv.OP_TOKEN || 'env-var-not-loaded',
+    envCheck: process.dmnoEnv.API_ONLY || 'env-var-not-loaded',
   };
-
 });
 
 // special route used to check 500 error handling is working correctly

@@ -1,10 +1,15 @@
-import _, { isSymbol } from 'lodash-es';
-import { input } from '@inquirer/prompts';
+import _ from 'lodash-es';
+import Debug from 'debug';
 import {
-  ConfigItemDefinition, ConfigPath, DmnoConfigItemBase, ResolverContext, TypeExtendsDefinition,
+  ConfigPath, DmnoConfigItemBase, TypeExtendsDefinition,
 } from './config-engine';
-import { DmnoDataType, DmnoDataTypeFactoryFn } from './base-types';
-import { ConfigValue, ConfigValueResolver } from './resolvers/resolvers';
+import { DmnoDataType } from './base-types';
+import { ConfigValue } from './resolvers/resolvers';
+import { CoercionError, SchemaError, ValidationError } from './errors';
+import { SerializedDmnoPlugin, SerializedDmnoPluginInput } from '../config-loader/serialization-types';
+
+const debug = Debug('dmno:plugins');
+
 
 export type ClassOf<T> = new (...args: Array<any>) => T;
 
@@ -26,20 +31,15 @@ export const InjectPluginInputByType = Symbol('InjectPluginInputByType');
 type PluginSchemaItemDefinition = {
   /** is this input required */
   required?: boolean;
+  /** description of the input */
+  description?: string,
   /** data type of this input */
   extends?: TypeExtendsDefinition,
+
+  // TODO: what other item schema properties do we want?
 };
 
 export type DmnoPluginInputSchema = Record<string, PluginSchemaItemDefinition>;
-
-type PluginInputStateItem<ResolvedValueType = ConfigValue> = {
-  // key: string;
-  path?: ConfigPath;
-  resolvedValue?: ResolvedValueType | undefined | null;
-  isResolved?: boolean;
-  // should be able to infer this from other data but just tracking for now
-  method?: 'path' | 'injection-by-type' | 'static';
-};
 
 type PluginInputMappingValue<StaticValueType = ConfigValue> =
   ConfigPath |
@@ -47,27 +47,165 @@ type PluginInputMappingValue<StaticValueType = ConfigValue> =
   StaticValueType;
 
 export type DmnoPluginClass<ChildClass extends DmnoPlugin = DmnoPlugin> =
-  { new (): ChildClass } & ChildClass;
+  { new (): ChildClass } & typeof DmnoPlugin<ChildClass>;
 
-export const _PluginInputTypes: unique symbol = Symbol('plugin-input-types');
+export const _PluginInputTypesSymbol: unique symbol = Symbol('plugin-input-types');
 
-export type DmnoPluginInputMap<S extends DmnoPluginInputSchema, InputTypes = unknown> =
+export type DmnoPluginInputMap<S extends DmnoPluginInputSchema> =
 MarkKeysRequired<
-Record<keyof S, PluginInputMappingValue<InputTypes> | undefined>,
+Record<keyof S, PluginInputMappingValue | undefined>,
 RequiredKeys<S>
 >;
 
 
-type PluginInputTypes<P extends DmnoPlugin> = P[typeof _PluginInputTypes];
+export type GetPluginInputTypes<P extends DmnoPlugin> = P[typeof _PluginInputTypesSymbol];
 
-// export abstract class DmnoPlugin<
-// // InputSchema extends DmnoPluginInputSchema = any,
-// // InputTypes extends { [k in keyof InputSchema]?: any } = any,
-// > {
+export class DmnoPluginInputItem<ValueType = any> {
+  readonly dataType: DmnoDataType;
+
+  schemaError?: SchemaError;
+
+  /** error encountered during coercion step */
+  coercionError?: CoercionError;
+  /** more details about the validation failure if applicable */
+  validationErrors?: Array<ValidationError>;
+
+  /** resolved value _before_ coercion logic applied */
+  resolvedRawValue?: ConfigValue;
+  resolvedValue?: ValueType;
+
+  isResolved = false;
+  resolvingConfigItems?: Array<DmnoConfigItemBase>;
+
+  get resolutionMethod() {
+    if (this.typeInjectionEnabled) return 'type';
+    if (this.configPath) return 'path';
+    if (this.resolvedRawValue) return 'static';
+  }
+
+  /** flag to enable type-based injection */
+  typeInjectionEnabled = false;
+  /** config path to use in order to fill this input */
+  configPath?: ConfigPath;
+
+
+  constructor(readonly key: string, readonly itemSchema: PluginSchemaItemDefinition) {
+    // currently the itemSchema is all data-typey stuff... but we may need to pick certain keys out
+    // in order to make it compatible with DmnoDataType
+    this.dataType = new DmnoDataType(itemSchema, undefined, undefined);
+    // not sure if we want to support the same kind of shorthands we do in the shcemea
+  }
+
+  /** used to set a static value to resolve this input */
+  setStaticValue(val: ValueType) {
+    this.typeInjectionEnabled = false;
+    this.configPath = undefined;
+    this.setValue(val);
+  }
+  /** used to enable type-based injection to resolve this input */
+  enableTypeInjection() {
+    this.configPath = undefined;
+    this.typeInjectionEnabled = true;
+  }
+  /** used to set a specific config path to resolve this input */
+  setPathInjection(configPath: ConfigPath) {
+    this.typeInjectionEnabled = false;
+    this.configPath = configPath;
+  }
+
+  /** set the value after being resolved  */
+  private setValue(val: ValueType) {
+    this.resolvedRawValue = val as any; // TODO
+
+    // run coercion
+    const coerceResult = this.dataType.coerce(_.cloneDeep(this.resolvedRawValue));
+    if (coerceResult instanceof CoercionError) {
+      this.coercionError = coerceResult;
+    } else {
+      this.resolvedValue = coerceResult;
+    }
+    this.isResolved = true;
+
+    // run validation
+    const validationResult = this.dataType?.validate(this.resolvedValue);
+    this.validationErrors = validationResult === true ? [] : validationResult;
+  }
+
+  attemptResolutionUsingConfigItem(item: DmnoConfigItemBase) {
+    // if we were waiting for this item by path, it is now resolved
+    if (this.configPath?.path === item.getPath()) {
+      debug(`PLUGIN input "${this.key}" resolved by path`, this.configPath.path);
+      this.resolvingConfigItems = [item];
+      this.setValue(item.resolvedValue as any);
+    } else if (this.resolutionMethod === 'type') {
+      if (item.type.extendsType(this.dataType.typeFactoryFn)) {
+        // TODO: also want to not enable this if type is too primitive
+        // or maybe even allow disabling injection?
+
+        debug(`PLUGIN input "${this.key}" resolved by type`, item.type.typeDef.typeLabel);
+        if (this.resolvingConfigItems?.length) {
+          this.resolvingConfigItems.push(item);
+          // TODO - might want to add a details field on our errors to put additional info?
+          const paths = _.map(this.resolvingConfigItems, (i) => i.getPath());
+          this.schemaError = new SchemaError(`Received multiple values during type-based injection - ${paths.join(', ')}`);
+        } else {
+          this.resolvingConfigItems = [item];
+          this.setValue(item.resolvedValue as any);
+        }
+      }
+    }
+  }
+
+  // meant to be called after all possible resolutions could have occurred
+  // worst case this can be when the service is done, but ideally would be earlier?
+  checkResolutionStatus() {
+    if (this.configPath && !this.isResolved) {
+      this.schemaError = new SchemaError(`Input resolution via path "${this.configPath.path}" failed`);
+    } else if (this.resolutionMethod === 'type' && !this.isResolved) {
+      this.schemaError = new SchemaError('Input resolution by type-based injection failed');
+    } else if (this.itemSchema.required) {
+      if (!this.isResolved) {
+        this.schemaError = new SchemaError('Item is required but was not resolved');
+      } else if (this.resolvedValue === undefined || this.resolvedValue === null) {
+        // I think this is a validation error? but not entirely sure
+        // also need to think about how we handle other kinds of empty-ish things - ex: "", [], {}
+        this.validationErrors?.push(new ValidationError('Input item is required but is empty'));
+      }
+    }
+  }
+
+  get isValid() {
+    if (this.schemaError) return false;
+    if (this.coercionError) return false;
+    if (this.validationErrors?.length) return false;
+    return true;
+  }
+
+  toJSON(): SerializedDmnoPluginInput {
+    return {
+      key: this.key,
+      isValid: this.isValid,
+      isResolved: this.isResolved,
+      resolvedRawValue: this.resolvedRawValue,
+      resolvedValue: this.resolvedValue,
+      coercionError: this.coercionError?.toJSON(),
+      schemaError: this.schemaError?.toJSON(),
+      validationErrors:
+        this.validationErrors?.length
+          ? _.map(this.validationErrors, (err) => err.toJSON())
+          : undefined,
+    };
+  }
+}
 
 export abstract class DmnoPlugin<
   ChildPlugin extends DmnoPlugin = NoopPlugin,
 > {
+  /** name of the plugin itself - which is the name of the class */
+  name = this.constructor.name;
+  /** name of this instance of the plugin - only used when using named injection */
+  instanceName?: string;
+
   /** schema for the inputs this plugin needs - stored on the class */
   protected static readonly inputSchema: DmnoPluginInputSchema;
   /** helper to get the inputSchema from within a instance of the class */
@@ -76,32 +214,22 @@ export abstract class DmnoPlugin<
     return PluginClass.inputSchema;
   }
 
-  // static init<P extends DmnoPlugin>(
-  //   this: DmnoPluginClass<P>,
-  //   inputs: DmnoPluginClass<P>['inputSchema'],
-  // ): P {
-  //   const PluginClass = this.constructor as any;
-  //   return new PluginClass();
-  // }
-  // constructor(inputs: DmnoPluginInputMap<typeof OnePasswordDmnoPlugin.inputSchema>) {
-  //   super();
-  //   this.setInputMap(inputs);
-  // }
-
   /**
    * tracks the status of each input
    * how it will be resolved, status of that resolution, and the resolvedValue
    * */
-  private inputState: {
-    [K in keyof PluginInputTypes<ChildPlugin>]: PluginInputStateItem<PluginInputTypes<ChildPlugin>[K]>
-  } = _.mapValues(this.inputSchema, () => ({})) as any;
+  readonly inputItems: {
+    [K in keyof GetPluginInputTypes<ChildPlugin>]-?:
+    // PluginInputStateItem<PluginInputTypes<ChildPlugin>[K]>
+    DmnoPluginInputItem<GetPluginInputTypes<ChildPlugin>[K]>
+  } = _.mapValues(this.inputSchema, (itemSchema, itemKey) => new DmnoPluginInputItem(itemKey, itemSchema)) as any; // TODO: would be nice to remove this any
 
 
-  getInputState<K extends keyof PluginInputTypes<ChildPlugin>>(
+  getInputItem<K extends keyof GetPluginInputTypes<ChildPlugin>>(
     key: K,
     // TS wasn't quite happy unless I explicitly added this return type
-  ): PluginInputStateItem<PluginInputTypes<ChildPlugin>[K]> {
-    return this.inputState[key];
+  ) {
+    return this.inputItems[key];
   }
 
   private _inputsAllResolved = false;
@@ -109,54 +237,22 @@ export abstract class DmnoPlugin<
 
   protected setInputMap(
     inputMapping: DmnoPluginInputMap<DmnoPluginClass<ChildPlugin>['inputSchema']
-    // inputMapping: DmnoPluginInputMap<DmnoPluginClass<P>['inputSchema']
     >,
   ) {
     for (const itemKey in this.inputSchema) {
       // const itemSchema = this.inputSchema[itemKey];
-      this.setInputValue(itemKey, inputMapping[itemKey] as any);
+      const val = inputMapping[itemKey];
+
+      if (val instanceof ConfigPath) {
+        this.inputItems[itemKey].setPathInjection(val);
+      } else if (val === InjectPluginInputByType) {
+        this.inputItems[itemKey].enableTypeInjection();
+      } else if (val !== undefined && val !== null) {
+        // TODO: remove this any
+        this.inputItems[itemKey].setStaticValue(val as any);
+      }
     }
   }
-
-  setInputValue<
-    K extends keyof PluginInputTypes<ChildPlugin>,
-  >(
-    key: K,
-    inputValueOrMapping?: ConfigPath | typeof InjectPluginInputByType | PluginInputTypes<ChildPlugin>[K],
-  ) {
-    // if no mapping, we'll at least initialize an object here
-    // so we can later store an error on it
-    if (inputValueOrMapping === undefined) {
-      this.inputState[key] = {
-        isResolved: false,
-      };
-
-    // this input will be filled using a config path within the service it was initialized in
-    } else if (inputValueOrMapping instanceof ConfigPath) {
-      this.inputState[key] = {
-        path: inputValueOrMapping,
-        isResolved: false,
-        method: 'path',
-      };
-
-    // user is opting into auto-injection of the value based on its type
-    } else if (inputValueOrMapping === InjectPluginInputByType) {
-      this.inputState[key] = {
-        isResolved: false,
-        method: 'injection-by-type',
-      };
-
-    // otherwise we assume a value was passed in, so we store the value and mark it as resolved
-    } else {
-      this.inputState[key] = {
-        resolvedValue: inputValueOrMapping,
-        isResolved: true,
-        method: 'static',
-      };
-    }
-  }
-
-
 
 
   /**
@@ -166,16 +262,16 @@ export abstract class DmnoPlugin<
    * */
   // we use a symbol here so it doesn't show up in autocomplete (it doesn't actually exist)
   // it is just used to type many other things in the class
-  [_PluginInputTypes]: Record<string, any> = {};
+  [_PluginInputTypesSymbol]: Record<string, any> = {};
 
-  inputValues = new Proxy<PluginInputTypes<ChildPlugin>>({}, {
+  inputValues = new Proxy<GetPluginInputTypes<ChildPlugin>>({}, {
     get: (target, inputKey) => {
       if (_.isSymbol(inputKey)) return;
-      return this.inputState[inputKey]?.resolvedValue;
+      return this.inputItems[inputKey]?.resolvedValue;
     },
-    set(target, name, value) {
-      return true;
-    },
+    // set(target, name, value) {
+    //   return true;
+    // },
   });
 
 
@@ -183,59 +279,29 @@ export abstract class DmnoPlugin<
   // when each (or all?) inputs are resolved. This would let us for example
   // make an api request to validate that all the settings together are valid?
 
-  checkIfResolvedConfigItemResolvesInput(item: DmnoConfigItemBase) {
-    const inputSchema = this.inputSchema;
-
-    const PLUGIN_NAME = this.constructor.name;
-
-    for (const inputKey in inputSchema) {
-      const inputSchemaItem = inputSchema[inputKey];
-
-      const inputMappingState = this.inputState[inputKey];
-
-      // normally users will call setInputMap which will fill all inputs
-      if (!inputMappingState) return;
-
-      // if we were waiting for this item by path, it is now resolved
-      if (inputMappingState?.path?.path === item.getPath()) {
-        console.log(`${PLUGIN_NAME}: input "${inputKey}" resolved by path`, item.resolvedValue);
-        inputMappingState.resolvedValue = item.resolvedValue as any;
-        inputMappingState.isResolved = true;
-
-      // check if there was no input value and the type matches
-      } else if (
-        inputMappingState.method === 'injection-by-type'
-        && !inputMappingState.isResolved
-        // beacuse extends can be a few forms, here we are narrowing it down to something like `extends: SomeCustomType`
-        // so we know its just a raw type itself
-        && inputSchemaItem.extends
-        && !_.isString(inputSchemaItem.extends)
-        && _.isFunction(inputSchemaItem.extends)
-      ) {
-        // console.log(inputSchemaItem.extends().)
-
-        // note - this is all very fragile and making specific assumptions
-        // so will need to be made more flexible...
-
-        // currently I'm assuming the item is an inline defined type
-        // which "extends" our type in question
-
-        // console.log(item.type.parentType?.typeDef.typeLabel, inputSchemaItem.extends({}).typeDef.typeLabel);
-
-        // here we check if that parent type extends the type from the input schema
-
-        // we'll also want to make this only apply if it's not a primitive type
-        // and apply some "auto-inject" option to enable/disable
-        // potentially that should be toggle-able on the datatype AND on the input
-
-        if (item.type.parentType?.extendsType(inputSchemaItem.extends)) {
-          console.log(`${PLUGIN_NAME}: input "${inputKey}" resolved by type`, item.type.parentType.typeDef.typeLabel);
-
-          inputMappingState.isResolved = true;
-          inputMappingState.resolvedValue = item.resolvedValue as any;
-        }
-      }
+  attemptInputResolutionsUsingConfigItem(item: DmnoConfigItemBase) {
+    for (const inputKey in this.inputItems) {
+      this.inputItems[inputKey].attemptResolutionUsingConfigItem(item);
     }
+  }
+
+  checkItemsResolutions() {
+    for (const inputKey in this.inputItems) {
+      this.inputItems[inputKey].checkResolutionStatus();
+    }
+  }
+
+  get isValid() {
+    return _.every(this.inputItems, (i) => i.isValid);
+  }
+
+  toJSON(): SerializedDmnoPlugin {
+    return {
+      name: this.name,
+      instanceName: this.instanceName,
+      isValid: this.isValid,
+      inputs: _.mapValues(this.inputItems, (i) => i.toJSON()),
+    };
   }
 }
 

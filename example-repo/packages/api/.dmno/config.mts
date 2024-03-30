@@ -24,22 +24,24 @@ export default defineConfigSchema({
     },
 
     API_ONLY: {
-      value: 'api'
+      value: 'set via dmno'
     },
 
     PORT: {
+      description: 'port number to listen on',
       extends: DmnoBaseTypes.number({ max: 9999 }),
-      value: '9000',
+      required: true,
+      value: 9000,
     },
     API_URL: {
       description: 'public url of this service',
       extends: DmnoBaseTypes.string({}),
-      // expose: true,
-      // value: switchByNodeEnv({
-      //   _default: (ctx) => `http://localhost:${ctx.get('PORT')}`,
-      //   staging: valueCreatedDuringDeployment(),
-      //   production: 'https://api.dmnoexampleapp.com',
-      // })
+      expose: true,
+      value: switchByNodeEnv({
+        _default: (ctx) => `http://localhost:${DMNO_CONFIG.PORT}`,
+        // staging: valueCreatedDuringDeployment(),
+        production: 'https://api.dmnoexampleapp.com',
+      })
     }
   },
 });

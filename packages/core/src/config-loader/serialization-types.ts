@@ -9,6 +9,7 @@
 */
 
 import { DmnoConfigItemBase, DmnoService } from '../config-engine/config-engine';
+import { DmnoPlugin, DmnoPluginInputItem } from '../config-engine/plugins';
 
 
 export type SerializedWorkspace = {
@@ -22,8 +23,21 @@ export type SerializedService =
     isResolved: boolean,
     configLoadError?: SerializedDmnoError,
     schemaErrors?: Array<SerializedDmnoError>,
-    config: Record<string, SerializedConfigItem>
+    plugins: Array<SerializedDmnoPlugin>,
+    config: Record<string, SerializedConfigItem>,
   };
+
+export type SerializedDmnoPlugin = Pick<DmnoPlugin, 'name' | 'instanceName' | 'isValid'>
+& {
+  inputs: Record<string, SerializedDmnoPluginInput>,
+};
+export type SerializedDmnoPluginInput = Pick<DmnoPluginInputItem, 'key' | 'isValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved'> & {
+  isValid: boolean,
+  coercionError?: SerializedDmnoError,
+  validationErrors?: Array<SerializedDmnoError>,
+  schemaError?: SerializedDmnoError,
+};
+
 
 export type SerializedConfigItem =
   Pick<DmnoConfigItemBase, 'key' | 'isValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved'>
@@ -33,6 +47,8 @@ export type SerializedConfigItem =
     validationErrors?: Array<SerializedDmnoError>,
     resolutionError?: SerializedDmnoError,
   };
+
+
 
 
 /** shape of how we will serialize our errors when sending over the wire */

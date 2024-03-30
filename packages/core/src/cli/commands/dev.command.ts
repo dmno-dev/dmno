@@ -33,7 +33,7 @@ export class DevCommand extends Command {
     const configLoader = new ConfigLoaderProcess();
     await configLoader.isReady.promise;
 
-    const result = await configLoader.makeRequest('start-dev-mode', undefined);
+    await configLoader.makeRequest('start-dev-mode', undefined);
 
     // const result = await configLoader.makeRequest('get-resolved-config', {
     //   service: this.service,

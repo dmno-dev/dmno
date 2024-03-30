@@ -43,7 +43,6 @@ export class LoadCommand extends Command {
 
     const workspace = await configLoader.makeRequest('load-full-schema', undefined);
     // console.log('Services schema loaded');
-    // console.log(workspace);
 
     // first display loading errors (which would likely cascade into schema errors)
     if (_.some(workspace.services, (s) => s.configLoadError)) {
@@ -61,6 +60,68 @@ export class LoadCommand extends Command {
 
         console.log(service.configLoadError.cleanedStack?.join('\n'), '\n');
       });
+      process.exit(1);
+    }
+
+    // now show plugin errors - which would also likely cause further errors
+    if (_.some(workspace.services, (s) => _.some(s.plugins, (p) => !p.isValid))) {
+      console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your plugins were unable to initialize correctly')}  🚨 🚨 🚨\n`);
+
+      const errorsTable = new CliTable({
+        // TODO: make helper to get column widths based on percentages
+        colWidths: [
+          Math.floor(TERMINAL_COLS * 0.25),
+          Math.floor(TERMINAL_COLS * 0.25),
+          Math.floor(TERMINAL_COLS * 0.5),
+        ],
+        wordWrap: true,
+      });
+
+      // header row
+      errorsTable.push(
+        [
+          'Path',
+          'Value',
+          'Error(s)',
+        ].map((t) => kleur.bold().magenta(t)),
+      );
+
+      _.each(workspace.services, (service) => {
+        _.each(service.plugins, (plugin) => {
+          _.each(plugin.inputs, (item) => {
+            if (item.isValid) return;
+
+            const pathCellContents = [
+              service.serviceName,
+              ` ${plugin.name}${plugin.instanceName ? `/${plugin.instanceName}` : ''}`,
+              `  ${item.key}`,
+            ].join('\n');
+
+
+            let valueCellContents = formattedValue(item.resolvedValue, false);
+            if (item.resolvedRawValue !== item.resolvedValue) {
+              valueCellContents += kleur.gray().italic('\n------\ncoerced from\n');
+              valueCellContents += formattedValue(item.resolvedRawValue, false);
+            }
+
+            const errors = _.compact([
+              item.coercionError,
+              ...item.validationErrors || [],
+              item.schemaError,
+            ]);
+
+            errorsTable.push([
+              pathCellContents,
+              valueCellContents,
+              errors?.map((err) => formatError(err)).join('\n'),
+            ]);
+          });
+        });
+      });
+
+
+
+      console.log(errorsTable.toString());
       process.exit(1);
     }
 
@@ -141,7 +202,7 @@ export class LoadCommand extends Command {
           valueCellContents += formattedValue(item.resolvedRawValue, false);
         }
 
-        let errors = _.compact([
+        const errors = _.compact([
           item.coercionError,
           ...item.validationErrors || [],
           item.resolutionError,
@@ -159,7 +220,7 @@ export class LoadCommand extends Command {
       process.exit(1);
     }
 
-    
+
     const valuesOnly = _.mapValues(configResult.config, (val) => {
       return val.resolvedValue;
     });

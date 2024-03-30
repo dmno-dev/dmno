@@ -24,12 +24,11 @@ import { ViteNodeRunner } from 'vite-node/client';
 import { installSourcemapsSupport } from 'vite-node/source-map';
 
 import {
-  DmnoConfigItem, DmnoPickedConfigItem, DmnoService, DmnoWorkspace, ServiceConfigSchema,
+  DmnoService, DmnoWorkspace, ServiceConfigSchema,
 } from '../config-engine/config-engine';
 
 import { ConfigLoaderRequestMap } from './ipc-requests';
 import { generateServiceTypes, generateTypescriptTypes } from '../config-engine/type-generation';
-import { SerializedConfigItem } from './serialization-types';
 import { finishPluginRegistration, startPluginRegistration } from '../config-engine/plugins';
 import { ConfigLoadError } from '../config-engine/errors';
 
@@ -104,7 +103,7 @@ const customPlugin: Plugin = {
     // fairly naive way of doing this... but for now we are replacing `DMNO_CONFIG.SOME_KEY` with `ctx.get('SOME_KEY')`
     // TODO: we probably should limit which files this applies in
     // TODO: this also assumes the user is only calling this within a resolver that has a `(ctx) => ` call signature...
-    return code.replaceAll(/DMNO_CONFIG\.([\w\d\.]+)/g, 'ctx.get(\'$1\')');
+    return code.replaceAll(/DMNO_CONFIG\.([\w\d.]+)/g, 'ctx.get(\'$1\')');
   },
 
   async handleHotUpdate(ctx) {
@@ -153,7 +152,7 @@ const server = await createServer({
     //   },
     // ssr: true,
   },
-  
+
 });
 // console.log(server.config);
 

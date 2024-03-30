@@ -14,7 +14,7 @@
 
 // NOTE - using `import.meta.env.XXX` doesnt work within vue templates
 // so we have to pull it into a variable here first
-const randomNumFromEnv = import.meta.env.VITE_RANDOM_NUM;
+const randomNumFromEnv = DMNO_CONFIG.VITE_RANDOM_NUM;
 
 const GA_ID = DMNO_CONFIG.GOOGLE_ANALYTICS_MEASUREMENT_ID;
 

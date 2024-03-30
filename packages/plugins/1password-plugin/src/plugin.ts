@@ -3,11 +3,12 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import _ from 'lodash-es';
 import {
-  ConfigPath, ConfigValueResolver, DmnoPlugin, ResolverContext,
+  ConfigValueResolver, DmnoPlugin, ResolverContext,
   DmnoPluginInputSchema,
   DmnoPluginInputMap,
-  InjectPluginInputByType,
-  _PluginInputTypes,
+  ResolutionError,
+  SchemaError,
+  GetPluginInputTypes,
 } from '@dmno/core';
 import { OnePasswordTypes } from './data-types';
 
@@ -29,26 +30,32 @@ type ServiceAccountToken = string;
 export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   static readonly inputSchema = {
     token: {
+      description: 'this service account token will be used via the CLI to communicate with 1password',
       extends: OnePasswordTypes.serviceAccountToken,
       required: true,
     },
     defaultVaultId: {
+      description: 'default vault id - only needed if using the .item() helper passing only an id',
       extends: OnePasswordTypes.vaultId,
     },
     defaultVaultName: {
+      description: 'default vault name - only needed if using the .itemByReference() helper without full reference URLs',
       extends: OnePasswordTypes.vaultName,
     },
   } satisfies DmnoPluginInputSchema;
+  // ^^ note this explicit `satisfies` is needed to give us better typing on our inputSchema
 
   // this is likely the default for most plugins...
   // accept a mapping of how to fill inputs - each can be set to a
   // static value, config path, or use type-based injection
-  constructor(inputs: DmnoPluginInputMap<typeof OnePasswordDmnoPlugin.inputSchema>) {
+  constructor(
+    // TODO: this is still not giving me types on the static input values... :(
+    inputs: DmnoPluginInputMap<typeof OnePasswordDmnoPlugin.inputSchema>,
+  ) {
     super();
     this.setInputMap(inputs);
   }
 
-  // ^^ note this explicit `satisfies` is needed to give us better typing on our inputSchema
 
   // can read items by id - need a vault id, item id
   // and then need to grab the specific data from a big json blob
@@ -59,7 +66,9 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
 
     if (_.isString(idOrIdAndVault)) {
       itemId = idOrIdAndVault;
-      if (!this.getInputState('defaultVaultId').method) throw new Error('No vault ID specified');
+      if (!this.inputItems.defaultVaultId.resolutionMethod) {
+        throw new SchemaError('No vault ID specified');
+      }
     } else {
       itemId = idOrIdAndVault.id;
       vaultId = idOrIdAndVault.vaultId;
@@ -76,31 +85,17 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   // however these are not necessarily stable...
   // cli command `op read "op://dev test/example/username"`
   itemByReference(referenceUrl: ReferenceUrl) {
-    // this.inputValues
-
-    // this.setInputValue('token', true);
-    // this.setInputValue('token', 'asdf');
-
-    // .this.getInputState('defaultVaultId');
-    // this.getInputState('');
-
-    // if reference starts with "op://" then it includes the vault
+    // if reference starts with "op://" then it includes the vault name already
     // otherwise we'll prepend "op://vaultname/" to the value passed in
     if (!referenceUrl.startsWith('op://')) {
-      if (!this.getInputState('defaultVaultName').method) {
-        throw new Error('You must specify a default vault if using references names only');
+      if (!this.inputItems.defaultVaultName.resolutionMethod) {
+        throw new SchemaError('You must specify a default vault if using references names only');
       }
     }
     return new OnePasswordResolver(this.inputValues, {
       reference: referenceUrl,
     });
   }
-}
-
-type ValueOrGetter<T> = T | (() => T | undefined);
-function unwrapGetter<T>(valOrGetter: ValueOrGetter<T>) {
-  if (_.isFunction(valOrGetter)) return valOrGetter();
-  return valOrGetter;
 }
 
 const CLI_PATH = path.resolve(fileURLToPath(import.meta.url), '../../op-cli');
@@ -110,9 +105,10 @@ export class OnePasswordResolver extends ConfigValueResolver {
     return this.label;
   }
 
-  private label: string;
+  private label = '';
   constructor(
-    private pluginInputs: OnePasswordDmnoPlugin[typeof _PluginInputTypes],
+    private pluginInputs: GetPluginInputTypes<OnePasswordDmnoPlugin>,
+
     private opts: {
       itemId: ItemId,
       vaultId?: VaultId,
@@ -121,33 +117,12 @@ export class OnePasswordResolver extends ConfigValueResolver {
     { reference: string },
   ) {
     super();
-    this.label = 'fetch from 1pass';
   }
 
   async _resolve(ctx: ResolverContext) {
-    // console.log('Resolving 1password value!', ctx.fullPath);
+    const injectToken = `OP_SERVICE_ACCOUNT_TOKEN=${this.pluginInputs.token}`;
 
     const opts = this.opts;
-
-
-
-
-    // if ('id' in opts) {
-    //   this.label = `${opts.vaultId}/${opts.id}`;
-    //   // currently this means we're not reusing the cache for the same item if fetching different paths within that item
-    //   this.cacheKey = `1pass:V|${opts.vaultId}/I|${opts.id}/P|${opts.path}`;
-    // } else if ('reference' in opts) {
-    //   this.label = opts.reference;
-    //   this.cacheKey = `1pass:R|${opts.reference}`;
-    // } else if ('vaultName' in opts) {
-    //   const reference = `op://${unwrapGetter(opts.vaultName)}/${unwrapGetter(opts.vaultName)}`;
-    //   this.label = reference;
-    //   this.cacheKey = `1pass:R|${reference}`;
-    // }
-
-    // this will eventually be already handled by checking input requirements
-    if (!this.pluginInputs.token) throw new Error('missing 1pass service account token');
-    const injectToken = `OP_SERVICE_ACCOUNT_TOKEN=${this.pluginInputs.token}`;
 
     let value: string | undefined;
     // read a single value by "reference"
@@ -155,27 +130,44 @@ export class OnePasswordResolver extends ConfigValueResolver {
       let fullReference = opts.reference;
       // if a partial path was passed in, we'll use a default vault name from the plugin settings
       if (!opts.reference.startsWith('op://')) {
+        if (!this.pluginInputs.defaultVaultName) {
+          throw new ResolutionError('Plugin input `defaultVaultName` was not resolved and is needed');
+        }
         fullReference = `op://${this.pluginInputs.defaultVaultName}/${fullReference}`;
       }
+      this.label = fullReference;
 
-      value = await execSync([
-        injectToken,
-        CLI_PATH,
-        `read "${fullReference}"`,
-        '--force --no-newline',
-      ].join(' ')).toString();
+      value = await ctx.getOrSetCacheItem(`1pass:R|${opts.reference}`, async () => {
+        return await execSync([
+          injectToken,
+          CLI_PATH,
+          `read "${fullReference}"`,
+          '--force --no-newline',
+        ].join(' ')).toString();
+      });
 
     // get an item by id + vault id
     } else {
-      const vaultId = opts.vaultId || this.pluginInputs.defaultVaultId;
+      if (!opts.vaultId && !this.pluginInputs.defaultVaultId) {
+        throw new ResolutionError('Plugin input `defaultVaultId` was not resolved and is needed');
+      }
 
-      const valueJsonStr = await execSync([
-        injectToken,
-        CLI_PATH,
-        `get item ${opts.itemId}`,
-        `--vault=${vaultId}`,
-        '--format json',
-      ].join(' ')).toString();
+      const vaultId = opts.vaultId || this.pluginInputs.defaultVaultId;
+      this.label = _.compact([
+        `Vault: ${vaultId}`,
+        `Item: ${opts.itemId}`,
+        opts.path && `Path: ${opts.path}`,
+      ]).join(', ');
+
+      const valueJsonStr = await ctx.getOrSetCacheItem(`1pass:V|${vaultId}/I|${opts.itemId}`, async () => {
+        return await execSync([
+          injectToken,
+          CLI_PATH,
+          `get item ${opts.itemId}`,
+          `--vault=${vaultId}`,
+          '--format json',
+        ].join(' ')).toString();
+      });
 
       const valueObj = JSON.parse(valueJsonStr);
       if (opts.path) {
@@ -183,12 +175,10 @@ export class OnePasswordResolver extends ConfigValueResolver {
       }
     }
     if (value === undefined) {
-      throw new Error(`unable to resolve 1pass item - ${this.label}`);
+      throw new ResolutionError(`unable to resolve 1pass item - ${this.label}`);
     }
     return value;
   }
 }
-
-// OnePasswordDmnoPlugin.init({ token: 'asdf' });
 
 

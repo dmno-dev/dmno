@@ -4,12 +4,10 @@
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "types": [
-      "./.dmno/.typegen/node.d.ts"
-    ]
+    "allowSyntheticDefaultImports": true
   },
   "include": [
-    "vite.config.ts"
+    "vite.config.ts",
+    "./.dmno/.typegen/node.d.ts"
   ]
 }
