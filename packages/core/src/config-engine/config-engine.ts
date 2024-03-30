@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import crypto from 'node:crypto';
 import path from 'node:path';
 import _ from 'lodash-es';
 import Debug from 'debug';
@@ -19,10 +18,10 @@ import {
 import { getConfigFromEnvVars } from '../lib/env-vars';
 import { SerializedConfigItem, SerializedService } from '../config-loader/serialization-types';
 import {
-  CoercionError, ConfigLoadError, DmnoError, SchemaError, ValidationError,
+  CoercionError, ConfigLoadError, ResolutionError, SchemaError, ValidationError,
 } from './errors';
 import { decrypt, encrypt } from '../lib/encryption';
-import { ClassOf, DmnoPlugin } from './plugins';
+import { DmnoPlugin } from './plugins';
 
 
 
@@ -68,7 +67,7 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
   typeDescription?: string;
 
   /** example value */
-  example?: any;
+  exampleValue?: any;
 
   /** link to external documentation */
   externalDocs?: {
@@ -186,18 +185,6 @@ export class ConfigPath {
   constructor(readonly path: string) { }
 }
 export const configPath = (path: string) => new ConfigPath(path);
-
-
-type ValueCacheEntry = {
-  /** ISO timestamp of when this cache entry was last updated */
-  updatedAt: string;
-  /** encrypted value */
-  encryptedVal: string;
-  /** decrypted value */
-  val?: string;
-  /** array of full item paths where this item was used */
-  usedBy: Set<string>;
-};
 
 
 type SerializedCacheEntry = {
@@ -476,6 +463,9 @@ export class DmnoWorkspace {
     await this.writeCache();
   }
 
+  get allServices() {
+    return this.servicesArray;
+  }
 
   getService(descriptor: string | { serviceName?: string, packageName?: string }) {
     if (_.isString(descriptor)) {
@@ -484,7 +474,6 @@ export class DmnoWorkspace {
       if (descriptor.serviceName) return this.services[descriptor.serviceName];
       if (descriptor.packageName) return this.servicesByPackageName[descriptor.packageName];
     }
-    console.log(descriptor);
     throw new Error(`unable to find service - ${descriptor}`);
   }
 
@@ -526,7 +515,6 @@ export class DmnoWorkspace {
   async setCacheItem(key: string, value: string, usedBy?: string) {
     this.valueCache[key] = new CacheEntry(key, value, { usedBy });
   }
-
 
   toJSON() {
     return {
@@ -634,7 +622,7 @@ export class DmnoService {
   }
 
   async resolveConfig() {
-    const configFromOverrides = await this.loadOverrideFiles();
+    await this.loadOverrideFiles();
 
     for (const itemKey in this.config) {
       const configItem = this.config[itemKey];
@@ -659,6 +647,20 @@ export class DmnoService {
 
       // currently this resolve fn will trigger resolve on nested items
       await configItem.resolve(new ResolverContext(this, configItem.getPath()));
+
+      // notify all plugins about the resolved item in case it resolves an input
+      if (configItem.isResolved) {
+        for (const pluginKey in this.plugins) {
+          const plugin = this.plugins[pluginKey];
+          plugin.attemptInputResolutionsUsingConfigItem(configItem);
+        }
+      }
+    }
+
+    // final check on all plugins
+    for (const pluginKey in this.plugins) {
+      const plugin = this.plugins[pluginKey];
+      plugin.checkItemsResolutions();
     }
   }
 
@@ -694,6 +696,7 @@ export class DmnoService {
           ? _.map(this.schemaErrors, (err) => err.toJSON())
           : undefined,
 
+      plugins: _.map(this.plugins, (p) => p.toJSON()),
       config: _.mapValues(this.config, (item, _key) => item.toJSON()),
     };
   }
@@ -724,6 +727,13 @@ export class ResolverContext {
     if (value === undefined || value === null) return;
     return this.service.workspace.setCacheItem(key, value.toString(), this.fullPath);
   }
+  async getOrSetCacheItem(key: string, getValToWrite: () => Promise<string>) {
+    const cachedValue = await this.getCacheItem(key);
+    if (cachedValue) return cachedValue;
+    const val = await getValToWrite();
+    await this.setCacheItem(key, val);
+    return val;
+  }
 }
 
 
@@ -742,7 +752,7 @@ export abstract class DmnoConfigItemBase {
   /** resolved value _before_ coercion logic applied */
   resolvedRawValue?: ConfigValue;
   /** error encountered during resolution */
-  resolutionError?: Error;
+  resolutionError?: ResolutionError;
 
   /** resolved value _after_ coercion logic applied */
   resolvedValue?: ConfigValue;
@@ -757,8 +767,10 @@ export abstract class DmnoConfigItemBase {
   /** whether the final resolved value is valid or not */
   get isValid(): boolean | undefined {
     if (this.coercionError) return false;
-    if (this.validationErrors === undefined) return undefined;
-    return this.validationErrors.length === 0;
+    if (this.validationErrors && this.validationErrors?.length > 0) return false;
+    if (this.resolutionError) return false;
+    return true;
+    // return this.validationErrors.length === 0;
   }
 
   abstract get type(): DmnoDataType;
@@ -796,9 +808,15 @@ export abstract class DmnoConfigItemBase {
       try {
         await this.valueResolver.resolve(ctx);
         this.resolvedRawValue = this.valueResolver.resolvedValue;
+
+
+        if (this.valueResolver.resolutionError) {
+          this.resolutionError = this.valueResolver.resolutionError;
+          debug('resolution failed', this.key, this.resolutionError);
+        }
       } catch (err) {
         debug('resolution failed', this.key, err);
-        this.resolutionError = err as Error;
+        this.resolutionError = new ResolutionError(err as Error);
       }
     }
 
@@ -860,6 +878,8 @@ export abstract class DmnoConfigItemBase {
         this.validationErrors?.length
           ? _.map(this.validationErrors, (err) => err.toJSON())
           : undefined,
+
+      resolutionError: this.resolutionError?.toJSON(),
     };
   }
 }

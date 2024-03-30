@@ -2,6 +2,7 @@
   "name": "@example/api",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "dev": "node --watch --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm ./src/main.ts",
     "build": "tsc --incremental false -p tsconfig-build.json",
@@ -57,8 +58,5 @@
     "@types/uuid": "^9.0.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.3.3"
-  },
-  "volta": {
-    "extends": "../../package.json"
   }
 }

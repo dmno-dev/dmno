@@ -3,7 +3,6 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: [ // Entry point(s)
     'src/index.ts', // main lib, users will import from here
-    'src/install-cli.ts', // used to install the `op` cli into our node_modules/.bin folder
   ], 
 
   dts: true, // Generate .d.ts files

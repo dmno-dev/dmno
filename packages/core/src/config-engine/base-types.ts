@@ -55,7 +55,7 @@ export type ExtractSettingsSchema<F> =
   F extends DmnoDataTypeFactoryFn<infer T> ? T : never;
 
 
-export class DmnoDataType<T = any> {
+export class DmnoDataType<InstanceOptions = any> {
   // NOTE - note quite sure about this setup yet...
   // but the idea is to provide a wrapped version of the validate/coerce (the fns that need the type instance options)
   // while providing transparent access to the rest. This is so the ConfigItem can just walk up the chain of types
@@ -65,13 +65,13 @@ export class DmnoDataType<T = any> {
   private _valueResolver?: ConfigValueResolver;
 
   constructor(
-    readonly typeDef: DmnoDataTypeOptions<T>,
-    readonly typeInstanceOptions: T,
+    readonly typeDef: DmnoDataTypeOptions<InstanceOptions>,
+    readonly typeInstanceOptions: InstanceOptions,
     /**
      * the factory function that created this item
      * Should be always defined unless this is an inline defined type from a config schema
      * */
-    readonly typeFactoryFn?: DmnoDataTypeFactoryFn<T>,
+    private _typeFactoryFn?: DmnoDataTypeFactoryFn<InstanceOptions>,
   ) {
     // if this is already one of our primitive base types, we are done
     if (this.typeDef.extends === PrimitiveBaseType) {
@@ -123,7 +123,7 @@ export class DmnoDataType<T = any> {
 
     // if we are dealing with one of our schema inline-defined types (instead of via a reusable data type)
     // we must adjust validate/coerce functions because they do not accept any settings
-    if (!typeFactoryFn) {
+    if (this.isInlineDefinedType) {
       if (this.typeDef.validate) {
         const originalValidate = this.typeDef.validate;
         this.typeDef.validate = (val, _settings, ctx) => (originalValidate as any)(val, ctx as any);
@@ -349,12 +349,30 @@ export class DmnoDataType<T = any> {
 
   /** checks if this data type is directly an instance of the data type (not via inheritance) */
   isType(factoryFn: DmnoDataTypeFactoryFn<any>): boolean {
+    // we jump straight to the parent if we are dealing with an inline defined type
     return this.typeFactoryFn === factoryFn;
   }
+
+  /** getter to retrieve the last type in the chain */
+  get typeFactoryFn(): DmnoDataTypeFactoryFn<any> {
+    if (this._typeFactoryFn) return this._typeFactoryFn;
+
+    // if this was created inline, we have no type factory fn so we return the parent instead
+    if (!this.parentType) throw new Error('inline defined types must have a parent');
+    // if (this.parentType.typeFactoryFn) throw new Error('inline defined type parent must have a typeFactoryFn set');
+    return this.parentType.typeFactoryFn;
+  }
+
   /** checks if this data type is an instance of the data type, whether directly or via inheritance */
   extendsType(factoryFn: DmnoDataTypeFactoryFn<any>): boolean {
     // follows up the chain checking for the type we passed in
     return this.isType(factoryFn) || this.parentType?.extendsType(factoryFn) || false;
+  }
+
+  /** helper to determine if the type was defined inline in a schema */
+  get isInlineDefinedType() {
+    // these get initialized without passing in a typeFactoryFn
+    return !this.typeFactoryFn;
   }
 
   // TODO: these names need to be thought through...

@@ -1,4 +1,4 @@
-import { SerializedConfigItem, SerializedService, SerializedWorkspace } from './serialization-types';
+import { SerializedService, SerializedWorkspace } from './serialization-types';
 
 export type ConfigLoaderRequestMap = {
   'load-full-schema': {
@@ -19,9 +19,3 @@ export type ConfigLoaderRequestMap = {
   }
 
 };
-
-type ConfigLoaderRequest = {
-  [K in keyof ConfigLoaderRequestMap]: (
-    { key: K } & ConfigLoaderRequestMap[K]
-  )
-}[keyof ConfigLoaderRequestMap];

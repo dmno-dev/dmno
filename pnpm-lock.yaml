@@ -50,6 +50,9 @@ importers:
       node-ipc:
         specifier: npm:@achrinza/node-ipc@^10.1.10
         version: /@achrinza/node-ipc@10.1.10
+      svgo:
+        specifier: ^3.2.0
+        version: 3.2.0
       typescript:
         specifier: ^5.4.2
         version: 5.4.2

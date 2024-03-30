@@ -1,5 +1,4 @@
 import _ from 'lodash-es';
-import kleur from 'kleur';
 
 export class DmnoError extends Error {
   originalError?: Error;
@@ -66,6 +65,6 @@ export class EmptyRequiredValueError extends ValidationError {
     if (val === null) valStr = 'null';
     if (val === '') valStr = '""';
 
-    super('Value is required but is currently empty');
+    super(`Value is required but is currently empty (${valStr})`);
   }
 }

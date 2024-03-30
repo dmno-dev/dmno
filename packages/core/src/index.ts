@@ -5,6 +5,7 @@ export * from './config-engine/base-types';
 export * from './config-engine/resolvers/resolvers';
 export * from './config-engine/resolvers/formula-resolver';
 export * from './config-engine/resolvers/switch-resolver';
-export * from './use-config-item';
 export * from './config-engine/plugins';
-export { ValidationError, CoercionError, ResolutionError } from './config-engine/errors';
+export {
+  ValidationError, CoercionError, ResolutionError, SchemaError,
+} from './config-engine/errors';

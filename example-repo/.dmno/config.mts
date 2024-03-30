@@ -1,29 +1,53 @@
-import { DmnoBaseTypes, defineWorkspaceConfig, configPath, switchByNodeEnv, dmnoFormula, createDmnoDataType, NodeEnvType, registerPlugin } from '@dmno/core';
-import { OnePasswordDmnoPlugin, OnePasswordServiceAccountToken } from '@dmno/1password-plugin';
+import { DmnoBaseTypes, defineWorkspaceConfig, configPath, switchByNodeEnv, dmnoFormula, createDmnoDataType, NodeEnvType, registerPlugin, InjectPluginInputByType, ConfigPath } from '@dmno/core';
+import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
+
+// TODO: figure out how to get rid of mjs extension
+import { GA4MeasurementId } from './custom-types.mjs';
 
 const ProdOnePassBackend = registerPlugin(new OnePasswordDmnoPlugin({
   token: configPath('OP_TOKEN'),
-  defaultVaultName: 'dev test'
+  // token: InjectPluginInputByType,
+  // token: 'asdf',
+  defaultVaultName: 'dev test',
 }));
-
-const DevOnePassBackend = registerPlugin(new OnePasswordDmnoPlugin({
-  token: configPath('OP_TOKEN'),
-  defaultVaultName: 'dev test'
-}));
-
 
 export default defineWorkspaceConfig({
   schema: {
     NODE_ENV: NodeEnvType, 
     DMNO_ENV: {
+      typeDescription: 'standardized environment flag set by DMNO',
       value: (ctx) => ctx.get('NODE_ENV'),
     },
     PICK_TEST: {
-      value: (ctx) => `pick-test--${ctx.get('NODE_ENV')}`,
+      // value: (ctx) => `pick-test--${DMNO_CONFIG. }`,
+    },
+
+    GOOGLE_ANALYTICS_MEASUREMENT_ID: {
+      extends: GA4MeasurementId,
+      // required: true,
+      // value: 'ABC123'
+    },
+
+    ENUM_EXAMPLE: {  
+      ui: {
+        icon: 'bi:apple',
+        color: 'FF0000'
+      },
+      
+      extends: DmnoBaseTypes.enum([
+        { description: 'dX', value: 'before'},
+        { description: 'dX', value: 'after'},
+        { description: 'dX', value: false},
+      ]),
+    },
+
+
+    ROOT_ONLY: {
+      value: (ctx) => DMNO_CONFIG.DMNO_ENV,
     },
 
     OP_TOKEN: {
-      extends: OnePasswordServiceAccountToken,
+      extends: OnePasswordTypes.serviceAccountToken,
       required: true
     },
 

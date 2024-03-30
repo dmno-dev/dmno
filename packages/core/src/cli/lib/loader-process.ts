@@ -73,7 +73,7 @@ export class ConfigLoaderProcess {
       debug('READY!!!');
       readyAt = new Date();
 
-      console.log(kleur.yellow(`took ${readyAt.getTime() - startAt.getTime()} ms to boot`));
+      debug(kleur.yellow(`took ${readyAt.getTime() - startAt.getTime()} ms to boot`));
       this.isReady.resolve();
     });
 

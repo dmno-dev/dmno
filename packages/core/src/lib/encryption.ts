@@ -26,10 +26,10 @@ export async function importEncryptionKey(keyData: JsonWebKey) {
 const IV_LENGTH = 12; // For GCM a nonce length of 12 bytes is recommended!
 
 export function encrypt(key: string, rawValue: string) {
-  let nonce = crypto.randomBytes(IV_LENGTH);
+  const nonce = crypto.randomBytes(IV_LENGTH);
 
-  let cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(key, 'base64'), nonce);
-  let nonceCiphertextTag = Buffer.concat([
+  const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(key, 'base64'), nonce);
+  const nonceCiphertextTag = Buffer.concat([
     nonce,
     cipher.update(Buffer.from(rawValue, 'utf8')),
     cipher.final(),
@@ -40,9 +40,9 @@ export function encrypt(key: string, rawValue: string) {
 
 
 export async function decrypt(key: string, base64EncryptedVal: string) {
-  let nonceCiphertextTag = new Uint8Array(base64ToArrayBuffer(base64EncryptedVal));
-  let nonce = nonceCiphertextTag.subarray(0, IV_LENGTH);
-  let ciphertextTag = nonceCiphertextTag.subarray(IV_LENGTH);
+  const nonceCiphertextTag = new Uint8Array(base64ToArrayBuffer(base64EncryptedVal));
+  const nonce = nonceCiphertextTag.subarray(0, IV_LENGTH);
+  const ciphertextTag = nonceCiphertextTag.subarray(IV_LENGTH);
 
   const aesKey = await crypto.subtle.importKey(
     'raw',
@@ -51,15 +51,15 @@ export async function decrypt(key: string, base64EncryptedVal: string) {
     true,
     ['encrypt', 'decrypt'],
   );
-  let decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: nonce }, aesKey, ciphertextTag);
+  const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: nonce }, aesKey, ciphertextTag);
   return new TextDecoder().decode(decrypted);
 }
 
 // https://stackoverflow.com/a/21797381/9014097
 function base64ToArrayBuffer(base64: string) {
-  let binary_string = atob(base64);
-  let len = binary_string.length;
-  let bytes = new Uint8Array(len);
+  const binary_string = atob(base64);
+  const len = binary_string.length;
+  const bytes = new Uint8Array(len);
   for (let i = 0; i < len; i++) {
     bytes[i] = binary_string.charCodeAt(i);
   }

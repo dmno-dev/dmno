@@ -1,6 +1,6 @@
 import {
-  defineConfigSchema, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, switchByDmnoEnv, switchByNodeEnv,
-  valueCreatedDuringDeployment, createDmnoDataType, injectPlugin, ValidationError, registerPlugin,
+  defineConfigSchema, DmnoBaseTypes, configPath, dmnoFormula,switchByNodeEnv,
+  createDmnoDataType, injectPlugin, ValidationError,
   EncryptedFileStorePlugin
 } from '@dmno/core';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
@@ -69,7 +69,7 @@ export default defineConfigSchema({
     },
   ],
   
-  // services also define more config items relevant to only themselves and to be picked by other services
+  // services also define more config items relevant to only themselves and to be picked by others
   schema: {
 
     // SETTING ITEM TYPE  -----------------------------------------------------------------
@@ -130,7 +130,7 @@ export default defineConfigSchema({
       value: onePassSync.itemByReference("op://dev test/example/username"),
     },
 
-    // or switched based on another value (usually an env flag, but not always)
+    // or switched based on another value (often an env flag, but not always)
     // and a "value resolver" can always return another resolver, which lets you easily compose functionality 
     // NOTE - it's easy to author your own reusable resolvers to create whatever functionality you need
     SWITCHED_ENV_EXAMPLE: {
@@ -141,7 +141,7 @@ export default defineConfigSchema({
       }),
     },
 
-    // COMPLEX TYPE (object, arrays, maps) //////////////////////////
+    // COMPLEX TYPES (object, arrays, maps) //////////////////////////
     OBJECT_EXAMPLE: {
       extends: DmnoBaseTypes.object({
         CHILD1: { },
@@ -190,18 +190,14 @@ export default defineConfigSchema({
     // NOTE - these will be triggered on-demand rather than run constantly like regular validations
     ASYNC_VALIDATE_EXAMPLE: {
       asyncValidate: async (val, ctx) => {
-        try {
-          // if the request succeeds, we know the value was ok
-          await fetch(`https://example.com/api/items/${val}`);
-          return true;
-        } catch (err) {
-          return false;
-        }
+        // if the request succeeds, we know the value was ok
+        await fetch(`https://example.com/api/items/${val}`);
+        return true;
       }
     },
 
 
-    // OTHER SETTINGS //////////////////////////////////////////////
+    // MORE SETTINGS //////////////////////////////////////////////
     KITCHEN_SINK: {
       // some basic info will help within the UI and be included in generated ts types
       // as well as help other devs understand what this env var is for :)
@@ -234,7 +230,7 @@ const MyCustomPostgresConnectionUrlType = createDmnoDataType({
   // all normal config item settings are supported
   secret: true,
 
-  // a few settings are docs related and make more sense in the context of a reusable type (although they can still be set directly on items)
+  // a few docs related settings made for reusable types (although they can still be set directly on items)
   // these will show up within the UI and generated types in various ways
   typeDescription: 'Postgres connection url',
   externalDocs: {
@@ -253,7 +249,7 @@ const MyCustomPostgresConnectionUrlType = createDmnoDataType({
   // - DmnoBaseTypes.url - makes sure that string looks like a URL
   // - PostgresConnectionUrlType - checks that url against some custom logic
   validate(val, ctx) {
-    // check this url looks like a postgres connection url
+    // TODO: check this url looks like a postgres connection url
   },
   // but you can alter the exection order, or disable the parent altogether
   runParentValidate: 'after', // set to `false` to disable running the parent's validate

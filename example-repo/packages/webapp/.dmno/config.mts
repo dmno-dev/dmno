@@ -1,5 +1,4 @@
-import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheValue, createDmnoDataType, defineConfigSchema, dmnoFormula, switchByDmnoEnv, switchByNodeEnv } from '@dmno/core';
-
+import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheValue, createDmnoDataType, defineConfigSchema, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from '@dmno/core';
 
 const customUrlType = createDmnoDataType({
   typeLabel: 'my-custom-url',
@@ -14,30 +13,13 @@ const customUrlType = createDmnoDataType({
   },
 });
 
-// const customizedStringType = createDmnoDataType({
-//   typeLabel: 'my-custom-url',
-//   extends: (settings) => DmnoBaseTypes.string({
-//     ...settings,
-//   }),
-//   summary: 'summary from custom type',
-  
-//   settingsSchema: Object as {
-//     newSetting?: boolean,
-//   } & ExtractSettingsSchema<typeof DmnoBaseTypes.string>,
-
-//   validate(val, settings) {
-//     console.log(settings.newSetting);
-//     console.log(settings.minLength);
-//   }
-// });
-
-
 export default defineConfigSchema({
   name: 'web',
   parent: 'group1',
   pick: [
     'NODE_ENV',
     'DMNO_ENV',
+    'GOOGLE_ANALYTICS_MEASUREMENT_ID',
     {
       source: 'api',
       key: 'API_URL',
@@ -53,38 +35,69 @@ export default defineConfigSchema({
     }
   ],
   schema: {
-    OBJECT_EXAMPLE: {
-      extends: DmnoBaseTypes.object({
-        child1: {
-          value: 121
-        },
-        child2: {
-          value: true,
-        },
-      })
+
+    // EX1: {
+    //   value: (ctx) => DMNO_CONFIG.BOOLEAN_EXAMPLE,
+    // },
+
+    ENUM_EXAMPLE: {
+  
+      ui: {
+        icon: 'bi:apple',
+        color: 'FF0000'
+      },
+      extends: DmnoBaseTypes.enum([
+        { description: 'dX', value: 'before'},
+        { description: 'dX', value: 'after'},
+        { description: 'dX', value: false},
+      ]),
     },
 
     VITE_STATIC_VAL_STR: {
+      summary: 'cool neat thing',
+      secret: true,
       // extends: DmnoBaseTypes.string({ startsWith: 'foo_' }),
-      description: 'this does this thing!',
-      value: 'static'
+      description: 'longer text about what this super cool thing is for!',
+      value: 'static',
+      externalDocs: {
+        description: 'explanation from prisma docs',
+        url: 'https://www.prisma.io/dataguide/postgresql/short-guides/connection-uris#a-quick-overview'
+      },
+      ui: {
+        // uses iconify names, see https://icones.js.org for options
+        icon: 'akar-icons:postgresql-fill',
+        color: '336791', // postgres brand color :)
+      },
     },
     SWITCH_EXAMPLE: {
       value: switchByNodeEnv({
         _default: 'default-val',
         staging: 'staging-value',
-        production: (ctx) => `prod-${ctx.get('NODE_ENV')}`,
+        production: (ctx) => `prod-${DMNO_CONFIG.NODE_ENV}`,
       })
     },
 
     BOOLEAN_EXAMPLE: {
       description: 'this is a required boolean config item',
       required: true,
+      value: false,
+      ui: {
+        icon: 'mdi:minus-circle',
+        color: '00FF00'
+      }
+    },
+    BOOLEAN_OPPOSITE: {
+      extends: 'boolean',
       value: true,
+    },
+    BOOLEAN_OPPOSITE2: {
+      extends: 'boolean',
+      value: (ctx) => !ctx.get('BOOLEAN_OPPOSITE'),
     },
 
     VITE_RANDOM_NUM: {
       extends: DmnoBaseTypes.number,
+      required: true,
       // generate a random number, will be different each time resolution runs, but caching will keep it stable
       value: cacheValue('random-number', (ctx) => Math.floor(Math.random() * 100)),
     },
@@ -94,7 +107,7 @@ export default defineConfigSchema({
         max: 100,
         min: 1
       }),
-      value: '123.45',
+      value: '12.45',
     },
     WEB_URL: {
       extends: customUrlType({ newSetting: true }),

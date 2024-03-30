@@ -9,7 +9,6 @@ export default defineConfigSchema({
   pick: [
     'NODE_ENV',
     'DMNO_ENV',
-    'OP_TOKEN',
   ],
   schema: {
     SECRET_EXAMPLE: {
@@ -24,20 +23,25 @@ export default defineConfigSchema({
       }),
     },
 
+    API_ONLY: {
+      value: 'set via dmno'
+    },
 
     PORT: {
-      extends: DmnoBaseTypes.number({ max: 8080 }),
-      value: '8080',
+      description: 'port number to listen on',
+      extends: DmnoBaseTypes.number({ max: 9999 }),
+      required: true,
+      value: 9000,
     },
     API_URL: {
       description: 'public url of this service',
       extends: DmnoBaseTypes.string({}),
-      // expose: true,
-      // value: switchByNodeEnv({
-      //   _default: (ctx) => `http://localhost:${ctx.get('PORT')}`,
-      //   staging: valueCreatedDuringDeployment(),
-      //   production: 'https://api.dmnoexampleapp.com',
-      // })
+      expose: true,
+      value: switchByNodeEnv({
+        _default: (ctx) => `http://localhost:${DMNO_CONFIG.PORT}`,
+        // staging: valueCreatedDuringDeployment(),
+        production: 'https://api.dmnoexampleapp.com',
+      })
     }
   },
 });

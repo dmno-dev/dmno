@@ -11,23 +11,17 @@ import vue from '@vitejs/plugin-vue';
 // the commented code below
 
 import { getResolvedConfigForEnvInjection } from '@dmno/core';
-// import { DMNO_CONFIG_HASH } from './.dmno/config-hash';
-
-// console.log(DMNO_CONFIG_HASH);
 
 const injectDmnoConfigPlugin = () => ({
   name: 'inject-dmno-config',
   config(config /* , env: { mode: string, command: string } */) {
     const dmnoConfig = getResolvedConfigForEnvInjection();
 
-    console.log(dmnoConfig);
-
     // TODO: we could check for conflicts between existing config.define and our resolved config?
     // TODO: need to make sure we dont pick any "secret" items
     config.define = {
       ...config.define,
       ...dmnoConfig,
-      'DMNO_CONFIG.VITE_GLOBAL_TEST': '420',
     };
   },
 });

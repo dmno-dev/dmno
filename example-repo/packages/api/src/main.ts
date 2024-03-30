@@ -15,8 +15,6 @@ import { httpRequestLoggingMiddleware } from './lib/request-logger';
 import { detectClientIp } from './lib/client-ip';
 import { CustomAppContext, CustomAppState } from './custom-state';
 
-import './lib/posthog';
-
 export const app = new Koa<CustomAppState, CustomAppContext>();
 
 app.proxy = true;
@@ -42,8 +40,8 @@ if (process.env.NODE_ENV !== 'test') {
   try {
     // await prisma.$connect();
     await routesLoaded;
-    app.listen(process.env.PORT);
-    console.log(chalk.green.bold(`Auth API listening on port ${process.env.PORT}`));
+    app.listen(process.dmnoEnv.PORT);
+    console.log(chalk.green.bold(`API available at ${process.dmnoEnv.API_URL}`));
     // await prisma.$disconnect();
   } catch (err) {
     console.log('ERROR!', err);

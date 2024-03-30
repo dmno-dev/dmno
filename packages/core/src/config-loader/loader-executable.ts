@@ -24,12 +24,11 @@ import { ViteNodeRunner } from 'vite-node/client';
 import { installSourcemapsSupport } from 'vite-node/source-map';
 
 import {
-  DmnoConfigItem, DmnoPickedConfigItem, DmnoService, DmnoWorkspace, ServiceConfigSchema,
+  DmnoService, DmnoWorkspace, ServiceConfigSchema,
 } from '../config-engine/config-engine';
 
 import { ConfigLoaderRequestMap } from './ipc-requests';
-import { generateTypescriptTypes } from '../config-engine/type-generation';
-import { SerializedConfigItem } from './serialization-types';
+import { generateServiceTypes, generateTypescriptTypes } from '../config-engine/type-generation';
 import { finishPluginRegistration, startPluginRegistration } from '../config-engine/plugins';
 import { ConfigLoadError } from '../config-engine/errors';
 
@@ -99,8 +98,19 @@ const customPlugin: Plugin = {
       };
     }
   },
+
+  transform(code, id, options) {
+    // fairly naive way of doing this... but for now we are replacing `DMNO_CONFIG.SOME_KEY` with `ctx.get('SOME_KEY')`
+    // TODO: we probably should limit which files this applies in
+    // TODO: this also assumes the user is only calling this within a resolver that has a `(ctx) => ` call signature...
+    return code.replaceAll(/DMNO_CONFIG\.([\w\d.]+)/g, 'ctx.get(\'$1\')');
+  },
+
   async handleHotUpdate(ctx) {
     if (!devMode) return;
+    // ignore updates to the generated type files
+    if (ctx.file.includes('/.dmno/.typegen/')) return;
+
     // console.log('hot update!', ctx);
     const startReloadAt = new Date();
 
@@ -116,17 +126,13 @@ const customPlugin: Plugin = {
 
     const endReloadAt = new Date();
 
-    console.log(kleur.yellow(`Reload took ${endReloadAt.getTime() - startReloadAt.getTime()}ms`));
+    debug(kleur.yellow(`Reload took ${endReloadAt.getTime() - startReloadAt.getTime()}ms`));
   },
 };
 
 // create vite server
 const server = await createServer({
   root: WORKSPACE_ROOT_PATH,
-  optimizeDeps: {
-    // It's recommended to disable deps optimization
-    disabled: true,
-  },
   appType: 'custom',
   clearScreen: false,
 
@@ -146,6 +152,7 @@ const server = await createServer({
     //   },
     // ssr: true,
   },
+
 });
 // console.log(server.config);
 
@@ -297,14 +304,23 @@ async function reloadAllConfig() {
 
   dmnoWorkspace.initServicesDag();
   dmnoWorkspace.processConfig();
+  if (devMode) await regenerateAllTypeFiles();
   await dmnoWorkspace.resolveConfig();
 }
+
+
+async function regenerateAllTypeFiles() {
+  for (const service of dmnoWorkspace.allServices) {
+    await generateServiceTypes(service, true);
+  }
+}
+
+
+// IPC request handlers ////////////////////////////////////////////////
 
 registerRequestHandler('load-full-schema', async (_payload) => {
   return dmnoWorkspace.toJSON();
 });
-
-
 
 registerRequestHandler('get-resolved-config', async (payload) => {
   const service = dmnoWorkspace.getService(payload);
@@ -318,13 +334,16 @@ registerRequestHandler('generate-types', async (payload) => {
   const service = dmnoWorkspace.getService(payload);
   if (!service) throw new Error('Unable to select a service');
 
-  return { tsSrc: generateTypescriptTypes(service) };
+  return { tsSrc: await generateTypescriptTypes(service) };
 });
 
 
 
 registerRequestHandler('start-dev-mode', async (_payload) => {
   devMode = true;
+  // somewhat wasteful to reload... but this will then trigger some extra behaviour
+  // TODO: refactor how dev mode starts and the loading process... probably pass in a dev mode flag on boot
+  await reloadAllConfig();
   return { success: true };
 });
 
