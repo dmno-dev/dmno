@@ -14,6 +14,9 @@ importers:
       '@dmno/core':
         specifier: ../packages/core
         version: link:../packages/core
+      '@dmno/encrypted-vault-plugin':
+        specifier: ../packages/plugins/encrypted-vault-plugin
+        version: link:../packages/plugins/encrypted-vault-plugin
 
   packages/api:
     dependencies:

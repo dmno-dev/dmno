@@ -1,5 +1,6 @@
-import { DmnoBaseTypes, defineWorkspaceConfig, configPath, switchByNodeEnv, dmnoFormula, createDmnoDataType, NodeEnvType, registerPlugin, InjectPluginInputByType, ConfigPath } from '@dmno/core';
+import { DmnoBaseTypes, defineWorkspaceConfig, configPath, switchByNodeEnv, dmnoFormula, NodeEnvType, registerPlugin } from '@dmno/core';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
+import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
 // TODO: figure out how to get rid of mjs extension
 import { GA4MeasurementId } from './custom-types.mjs';
@@ -11,8 +12,32 @@ const ProdOnePassBackend = registerPlugin(new OnePasswordDmnoPlugin({
   defaultVaultName: 'dev test',
 }));
 
+const NonProdVault = registerPlugin(new EncryptedVaultDmnoPlugin({
+  key: configPath('DMNO_VAULT_KEY'),
+}));
+const ProdVault = registerPlugin('prod', new EncryptedVaultDmnoPlugin({
+  name: 'prod',
+  key: configPath('DMNO_VAULT_KEY'),
+}));
+
 export default defineWorkspaceConfig({
+  name: 'root',
   schema: {
+    OP_TOKEN: {
+      extends: OnePasswordTypes.serviceAccountToken,
+      required: true
+    },
+
+    DMNO_VAULT_KEY: {
+      extends: EncryptedVaultTypes.encryptionKey,
+      required: true,
+      value: 'asdf',
+    },
+
+    VAULT_TEST: {
+      value: NonProdVault.item(),
+    },
+
     NODE_ENV: NodeEnvType, 
     DMNO_ENV: {
       typeDescription: 'standardized environment flag set by DMNO',
@@ -41,30 +66,8 @@ export default defineWorkspaceConfig({
       ]),
     },
 
-
     ROOT_ONLY: {
       value: (ctx) => DMNO_CONFIG.DMNO_ENV,
-    },
-
-    OP_TOKEN: {
-      extends: OnePasswordTypes.serviceAccountToken,
-      required: true
-    },
-
-    ONE_PASSWORD: {
-      description: '1password creds and vault',
-      extends: DmnoBaseTypes.object({
-        SERVICE_ACCOUNT_TOKEN: {
-          description: 'token used to access a 1password service account',
-          extends: DmnoBaseTypes.string({}),
-          // required: true,
-        },
-        VAULT_ID: {
-          description: 'ID of the vault we store our secrets in',
-          extends: DmnoBaseTypes.string(),
-        },
-      }),
-      // required: true,
     },
 
     SEGMENT_SECRET: {
