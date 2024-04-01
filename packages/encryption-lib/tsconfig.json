@@ -4,9 +4,6 @@
   "compilerOptions": {
     "composite": true,
     "lib": [
-      // TODO: added this so setTimeout gets resolved properly but this is supposed to be shared utils for browser and node
-      // so I'm not sure what the right types to include are...
-      "DOM",
       "ESNext",
     ],
   },

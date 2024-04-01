@@ -274,43 +274,6 @@ importers:
         specifier: ^5.4.2
         version: 5.4.2
 
-  packages/plugins/encryped-vault-plugin:
-    dependencies:
-      '@dmno/core':
-        specifier: workspace:*
-        version: link:../../core
-      '@dmno/encryption-lib':
-        specifier: workspace:*
-        version: link:../../encryption-lib
-      async:
-        specifier: ^3.2.5
-        version: 3.2.5
-      lodash-es:
-        specifier: ^4.17.21
-        version: 4.17.21
-    devDependencies:
-      '@dmno/eslint-config':
-        specifier: workspace:*
-        version: link:../../eslint-config
-      '@dmno/tsconfig':
-        specifier: workspace:*
-        version: link:../../tsconfig
-      '@types/async':
-        specifier: ^3.2.24
-        version: 3.2.24
-      '@types/lodash-es':
-        specifier: ^4.17.12
-        version: 4.17.12
-      '@types/node':
-        specifier: ^20.11.30
-        version: 20.11.30
-      tsup:
-        specifier: ^8.0.2
-        version: 8.0.2(typescript@5.4.2)
-      typescript:
-        specifier: ^5.4.2
-        version: 5.4.2
-
   packages/plugins/encrypted-vault-plugin:
     dependencies:
       '@dmno/core':
@@ -13633,7 +13596,7 @@ packages:
       astro: '>=4.0.0'
     dependencies:
       '@astrojs/starlight': 0.21.1(astro@4.5.0)
-      astro: 4.5.0(@types/node@20.11.30)(typescript@5.3.3)
+      astro: 4.5.0(@types/node@20.12.2)(typescript@5.3.3)
       github-slugger: 2.0.0
       hast-util-from-html: 2.0.1
       hast-util-has-property: 3.0.0

@@ -70,19 +70,5 @@ export async function decrypt(key: crypto.webcrypto.CryptoKey, base64EncryptedVa
   const decryptedStr = new TextDecoder().decode(decrypted);
   const decryptedValue = JSON.parse(decryptedStr);
   return decryptedValue;
-
-  // const nonceCiphertextTag = new Uint8Array(base64ToArrayBuffer(base64EncryptedVal));
-  // const nonce = nonceCiphertextTag.subarray(0, IV_LENGTH);
-  // const ciphertextTag = nonceCiphertextTag.subarray(IV_LENGTH);
-
-  // const aesKey = await crypto.subtle.importKey(
-  //   'raw',
-  //   base64ToArrayBuffer(key),
-  //   'AES-GCM',
-  //   true,
-  //   ['encrypt', 'decrypt'],
-  // );
-  // const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: nonce }, aesKey, ciphertextTag);
-  // return new TextDecoder().decode(decrypted);
 }
 

@@ -147,7 +147,7 @@ export class DmnoDataType<InstanceOptions = any> {
   validate(val: any, ctx?: ResolverContext): true | Array<ValidationError> {
     // first we'll deal with empty values, and we'll check al
     // we'll check all the way up the chain for required setting and deal with that first
-    if (val === undefined || val === null || val === '') {
+    if (val === undefined || val === null) {
       if (this.getDefItem('required')) {
         // maybe pass through the value so we know which "empty" it is?
         return [new EmptyRequiredValueError(val)];
@@ -237,7 +237,7 @@ export class DmnoDataType<InstanceOptions = any> {
 
     // TODO: not sure if we want to run the async validation if the value is empty?
     // maybe want to return something else than true?
-    if (val === undefined || val === null || val === '') {
+    if (val === undefined || val === null) {
       return true;
     }
 
@@ -410,34 +410,23 @@ export function createDmnoDataType<T>(opts: DmnoDataTypeOptions<T>): DmnoDataTyp
 // we'll use this to mark our primitive types in a way that end users can't do by accident
 const PrimitiveBaseType = createDmnoDataType({});
 
-/** String base type settings
+/**
+ * String base type settings
  * @category BaseTypes
  */
 export type StringDataTypeSettings = {
-  /**
-     * The minimum length of the string.
-     */
+  /** The minimum length of the string. */
   minLength?: number;
-  /**
-     * The maximum length of the string.
-     */
+  /** The maximum length of the string. */
   maxLength?: number;
-  /**
-     * The exact length of the string.
-     */
+  /** The exact length of the string. */
   isLength?: number;
-  /**
-     * The required starting substring of the string.
-     */
+  /** The required starting substring of the string. */
   startsWith?: string;
-  /**
-     * The required ending substring of the string.
-     */
+  /** The required ending substring of the string. */
   endsWith?: string;
 
-  /**
-     * The regular expression or string pattern that the string must match.
-     */
+  /** The regular expression or string pattern that the string must match. */
   matches?: RegExp | string;
   // isUpperCase?: boolean;
   // isLowerCase?: boolean;
@@ -449,13 +438,15 @@ export type StringDataTypeSettings = {
   toUpperCase?: boolean;
   /** converts to lower case */
   toLowerCase?: boolean;
+
+  /** allow empty string as a valid string (default is to NOT allow it) */
+  allowEmpty?: boolean;
 };
 
 /**
  * Represents a generic string data type.
  * @category Base Types
  */
-
 const StringDataType = createDmnoDataType({
   typeLabel: 'dmno/string',
   extends: PrimitiveBaseType,
@@ -464,7 +455,7 @@ const StringDataType = createDmnoDataType({
   settingsSchema: Object as undefined | StringDataTypeSettings,
 
   coerce(rawVal, settings) {
-    if (_.isNil(rawVal)) return '';
+    if (_.isNil(rawVal)) return undefined;
     let val = _.isString(rawVal) ? rawVal : rawVal.toString();
 
     if (settings?.toUpperCase) val = val.toUpperCase();
@@ -474,11 +465,15 @@ const StringDataType = createDmnoDataType({
   },
 
   validate(val: string, settings) {
-    if (_.isEmpty(settings)) return true;
-
     // we support returning multiple errors and our base types use this pattern
     // but many user defined types should just throw the first error they encounter
     const errors = [] as Array<ValidationError>;
+
+    // special handling to not allow empty strings (unless explicitly allowed)
+    if (val === '' && !settings.allowEmpty) {
+      return [new ValidationError('If set, string must not be empty')];
+    }
+
     if (settings.minLength !== undefined && val.length < settings.minLength) {
       errors.push(new ValidationError(`Length must be more than ${settings.minLength}`));
     }

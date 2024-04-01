@@ -19,8 +19,6 @@ type VaultName = string;
 type ReferenceUrl = string;
 type ServiceAccountToken = string;
 
-const ICON = 'simple-icons:1password';
-
 // Typescript has some limitations around generics and how things work across parent/child classes
 // so unfortunately, we have to add some extra type annotations, but it's not too bad
 // see issues:
@@ -31,7 +29,7 @@ const ICON = 'simple-icons:1password';
 // typeof OnePasswordDmnoPlugin.inputSchema, typeof OnePasswordDmnoPlugin.INPUT_TYPES
 // > {
 export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
-  icon = ICON;
+  icon = 'simple-icons:1password';
 
   static readonly inputSchema = {
     token: {
@@ -72,7 +70,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     if (_.isString(idOrObj)) {
       itemId = idOrObj;
       if (!this.inputItems.defaultVaultId.resolutionMethod) {
-        throw new SchemaError('No vault ID specified');
+        throw new SchemaError('Plugin must have defaultVaultId specified if using item id only');
       }
     } else {
       itemId = idOrObj.id;
@@ -80,20 +78,19 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     }
 
     return createResolver({
-      icon: ICON,
-      label: '1pass item',
+      createdByPlugin: this,
+      label: (ctx) => {
+        return _.compact([
+          `Vault: ${vaultId || this.inputValues.defaultVaultId!}`,
+          `Item: ${itemId}`,
+          path && `Path: ${path}`,
+        ]).join(', ');
+      },
       resolve: async (ctx) => {
-        // again not sure if we need this error?
-        if (!vaultId && !this.inputValues.defaultVaultId) {
-          throw new ResolutionError('Plugin input `defaultVaultId` was not resolved and is needed');
-        }
+        // we've already checked that the defaultVaultId is set above if it's needed
+        // and the plugin will have a schema error if the resolution failed
+        const vaultIdWithDefault = vaultId || this.inputValues.defaultVaultId!;
 
-        const vaultIdWithDefault = vaultId || this.inputValues.defaultVaultId;
-        // this.label = _.compact([
-        //   `Vault: ${vaultIdWithDefault}`,
-        //   `Item: ${opts.itemId}`,
-        //   opts.path && `Path: ${opts.path}`,
-        // ]).join(', ');
 
         const valueJsonStr = await ctx.getOrSetCacheItem(`1pass:V|${vaultIdWithDefault}/I|${itemId}`, async () => {
           return await execSync([
@@ -133,23 +130,24 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     // and we are throwing a schema error early if no default vault name was set up
     if (!referenceUrl.startsWith('op://')) {
       if (!this.inputItems.defaultVaultName.resolutionMethod) {
-        throw new SchemaError('You must specify a default vault if using references names only');
+        throw new SchemaError('Plugin must have defaultVaultName if using partial reference paths');
       }
     }
 
     return createResolver({
-      icon: ICON,
-      label: '1pass item',
+      createdByPlugin: this,
+      label: (ctx) => {
+        let fullReference = referenceUrl;
+        if (!fullReference.startsWith('op://')) {
+          fullReference = `op://${this.inputValues.defaultVaultName!}/${fullReference}`;
+        }
+        return fullReference;
+      },
       resolve: async (ctx) => {
         let fullReference = referenceUrl;
         // if a partial path was passed in, we'll use a default vault name from the plugin settings
         if (!fullReference.startsWith('op://')) {
-          // TODO: not sure we need to do this? we've already throw an error early if no mapping was set up
-          // and if the mapping was unsuccessful I think we should get an error before reaching here
-          if (!this.inputValues.defaultVaultName) {
-            throw new ResolutionError('Plugin input `defaultVaultName` was not resolved and is needed');
-          }
-          fullReference = `op://${this.inputValues.defaultVaultName}/${fullReference}`;
+          fullReference = `op://${this.inputValues.defaultVaultName!}/${fullReference}`;
         }
 
         const value = await ctx.getOrSetCacheItem(`1pass:R|${fullReference}`, async () => {

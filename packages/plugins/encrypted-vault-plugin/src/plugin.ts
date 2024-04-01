@@ -79,7 +79,6 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
     this.vaultFilePath = `${this.service.path}/.dmno/${this.inputValues.name || 'default'}.vault.json`;
     const vaultFileRaw = await fs.promises.readFile(this.vaultFilePath, 'utf-8');
     const vaultFileObj = parseJSONC(vaultFileRaw.toString());
-    console.log(vaultFileObj);
     for (const key in vaultFileObj.items) {
       const vaultFileItem = vaultFileObj.items[key];
       const [serviceName, path] = key.split('!');
@@ -104,7 +103,6 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
   private vaultKey?: crypto.webcrypto.CryptoKey;
   private getVaultItem(fullPath: string) {
     const itemKey = [this.service!.serviceName, path].join('!');
-    console.log('get vault item', itemKey);
     return;
   }
 

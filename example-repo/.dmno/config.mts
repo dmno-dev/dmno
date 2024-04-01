@@ -12,14 +12,10 @@ const ProdOnePassBackend = registerPlugin(new OnePasswordDmnoPlugin({
   defaultVaultName: 'dev test',
 }))
 
+
 const NonProdVault = registerPlugin(new EncryptedVaultDmnoPlugin({
   key: configPath('DMNO_VAULT_KEY'),
 }));
-const ProdVault = registerPlugin('prod', new EncryptedVaultDmnoPlugin({
-  name: 'prod',
-  key: configPath('DMNO_VAULT_KEY'),
-}));
-
 
 export default defineWorkspaceConfig({
   name: 'root',
@@ -31,8 +27,6 @@ export default defineWorkspaceConfig({
 
     DMNO_VAULT_KEY: {
       extends: EncryptedVaultTypes.encryptionKey,
-      required: true,
-      value: 'asdf',
     },
 
     VAULT_TEST: {
@@ -46,7 +40,7 @@ export default defineWorkspaceConfig({
     },
 
     ROOT_ONLY: {
-      value: 'ROOTONLY',
+      value: 'rootonly',
     },
 
     PICK_TEST: {

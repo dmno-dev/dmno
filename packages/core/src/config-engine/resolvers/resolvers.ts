@@ -4,6 +4,7 @@ import {
   DmnoConfigItemBase, ResolverContext,
 } from '../config-engine';
 import { ResolutionError } from '../errors';
+import { DmnoPlugin } from '../plugins';
 
 // TODO: do we allow Date?
 // what to do about null/undefined?
@@ -43,8 +44,16 @@ type ValueOrValueGetter<T> = T | ((ctx: ResolverContext) => T);
 type MaybePromise<T> = T | Promise<T>;
 
 type ResolverDefinition = {
+  /** reference back to the plugin which created the resolver (if applicable) */
+  createdByPlugin?: DmnoPlugin,
+  /** set a specific icon for the resolver, will default to the plugin's icon if set */
   icon?: ValueOrValueGetter<string>,
+  /** label for the resolver */
   label: ValueOrValueGetter<string>,
+  /**
+   * caching key for the final value
+   * this is just a convenience to avoid having to explicityl interact with the caching logic directly
+   * */
   cacheKey?: ValueOrValueGetter<string>,
 } &
 ({
@@ -70,8 +79,6 @@ type ResolverBranch = {
 export class ConfigValueResolver {
   constructor(readonly def: ResolverDefinition) {}
 
-  cacheKey: string | undefined;
-
   isResolved = false;
   resolvedValue?: ConfigValue;
   isUsingCache = false;
@@ -79,10 +86,17 @@ export class ConfigValueResolver {
   resolutionError?: ResolutionError;
 
   async resolve(ctx: ResolverContext) {
+    // optional cache key can be static or a fn
+    let cacheKey: string | undefined;
+    if (_.isString(this.def.cacheKey)) cacheKey = this.def.cacheKey;
+    else if (_.isFunction(this.def.cacheKey)) {
+      // TODO: should add error handling here
+      cacheKey = await this.def.cacheKey(ctx);
+    }
     // if a cache key is set, we first check the cache and return that value if found
-    if (this.cacheKey) {
+    if (cacheKey) {
       // console.log(kleur.bgMagenta(`CHECK VALUE CACHE FOR KEY: ${this.cacheKey}`));
-      const cachedValue = await ctx.getCacheItem(this.cacheKey);
+      const cachedValue = await ctx.getCacheItem(cacheKey);
       if (cachedValue !== undefined) {
         // console.log(kleur.bgMagenta('> USING CACHED VALUE!'));
         this.resolvedValue = cachedValue;
@@ -141,9 +155,9 @@ export class ConfigValueResolver {
     this.isResolved = true;
 
     // save result in cache if this resolver has a cache key
-    if (this.cacheKey && this.resolvedValue !== undefined && this.resolvedValue !== null) {
+    if (cacheKey && this.resolvedValue !== undefined && this.resolvedValue !== null) {
       // console.log(kleur.bgMagenta(`SAVE CACHED VALUE IN KEY: ${this.cacheKey}`));
-      await ctx.setCacheItem(this.cacheKey, this.resolvedValue);
+      await ctx.setCacheItem(cacheKey, this.resolvedValue);
     }
   }
 }
@@ -179,13 +193,21 @@ export function processInlineResolverDef(resolverDef: InlineValueResolverDef) {
  * helper fn to add caching to a value resolver that does not have it built-in
  * for example, a fn that generates a random number / key
  * */
-export function cacheValue(key: string, resolverDef: InlineValueResolverDef) {
-  // TODO: make this also work without an explicitly set key?
-  // could either be 2 functions, or accept 1 or 2 args?
-  const processedResolver = processInlineResolverDef(resolverDef);
-  processedResolver.cacheKey = key;
+export function cacheFunctionResult(resolverFn: ConfigValueInlineFunction): ConfigValueResolver;
+export function cacheFunctionResult(cacheKey: string, resolverFn: ConfigValueInlineFunction): ConfigValueResolver;
+export function cacheFunctionResult(
+  cacheKeyOrResolverFn: string | ConfigValueInlineFunction,
+  resolverFn?: ConfigValueInlineFunction,
+): ConfigValueResolver {
+  const explicitCacheKey = _.isString(cacheKeyOrResolverFn) ? cacheKeyOrResolverFn : undefined;
+  const fn = _.isString(cacheKeyOrResolverFn) ? resolverFn! : cacheKeyOrResolverFn;
 
-  return processedResolver;
+  return createResolver({
+    icon: 'asdf',
+    label: 'cached fn',
+    cacheKey: explicitCacheKey || ((ctx) => ctx.fullPath),
+    resolve: fn,
+  });
 }
 
 

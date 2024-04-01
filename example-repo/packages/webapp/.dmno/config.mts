@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheValue, createDmnoDataType, defineConfigSchema, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from '@dmno/core';
+import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheFunctionResult, createDmnoDataType, defineConfigSchema, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from '@dmno/core';
 
 const customUrlType = createDmnoDataType({
   typeLabel: 'my-custom-url',
@@ -99,7 +99,7 @@ export default defineConfigSchema({
       extends: DmnoBaseTypes.number,
       required: true,
       // generate a random number, will be different each time resolution runs, but caching will keep it stable
-      value: cacheValue('random-number', (ctx) => Math.floor(Math.random() * 100)),
+      value: cacheFunctionResult((ctx) => Math.floor(Math.random() * 100)),
     },
     VITE_STATIC_VAL_NUM: {
       extends: DmnoBaseTypes.number({
