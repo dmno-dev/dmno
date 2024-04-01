@@ -206,6 +206,9 @@ export abstract class DmnoPlugin<
   /** name of this instance of the plugin - only used when using named injection */
   instanceName?: string;
 
+  /** iconify icon name */
+  icon?: string;
+
   /**
    * reference back to the service this plugin was initialized in
    * NOTE - when using injection, it will still be the original initializing service
@@ -302,9 +305,9 @@ export abstract class DmnoPlugin<
   }
 
 
-  private hooks?: {
-    onInitComplete?: () => Promise<void>;
-  };
+  // private hooks?: {
+  //   onInitComplete?: () => Promise<void>;
+  // };
 
   toJSON(): SerializedDmnoPlugin {
     return {
@@ -316,27 +319,8 @@ export abstract class DmnoPlugin<
   }
 }
 
-
-// export function createDmnoPlugin<Resolvers extends { [fnName: string]: (...args: Array<any>) => ConfigValueResolver }>(
-//   opts: {
-//     inputSchema?: Record<string, PluginSchemaItemDefinition>,
-//     resolvers: Resolvers,
-//   }) {
-//   return {
-//     init() {
-//       return { ...opts.resolvers };
-//     },
-
-//   };
-// }
-// class DmnoPluginInternal<Inputs> {
-
-// }
-
-
-
 // TODO: this is a pretty naive approach to capturing the plugins while loading config
-// probably should move to something like AsnycLocalStorage to create a more flexible
+// probably should move to something like AsnycLocalStorage to make it more flexible
 
 let injectablePlugins: Record<string, DmnoPlugin> = {};
 let currentPlugins: Record<string, DmnoPlugin> = {};

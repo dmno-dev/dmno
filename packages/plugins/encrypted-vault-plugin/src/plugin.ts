@@ -12,6 +12,7 @@ import {
   ResolutionError,
   SchemaError,
   GetPluginInputTypes,
+  createResolver,
 } from '@dmno/core';
 import {
   decrypt, encrypt, generateEncryptionKeyString, importEncryptionKeyString,
@@ -38,12 +39,10 @@ export class EncryptedVaultItem {
     }
   }
 
-  async getRawValue() {
-    if (!this.key) throw new Error('Key must be set first!');
-
+  async getRawValue(key: crypto.webcrypto.CryptoKey) {
     if (this.rawValue) return this.rawValue;
     if (!this.encryptedValue) throw new Error('item is empty');
-    this.rawValue = await decrypt(this.key, this.encryptedValue);
+    this.rawValue = await decrypt(key, this.encryptedValue, 'theo@dmno.dev/1711996015385');
     return this.rawValue;
   }
 }
@@ -73,8 +72,10 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
   private vaultFileLoaded = false;
   private vaultItems: Record<string, EncryptedVaultItem> = {};
   private async loadVaultFile() {
-    if (this.vaultFileLoaded) return;
     if (!this.service) throw new Error('Cannot load vault file unless connected to a service');
+
+    this.vaultKey = await importEncryptionKeyString(this.inputValues.key);
+
     this.vaultFilePath = `${this.service.path}/.dmno/${this.inputValues.name || 'default'}.vault.json`;
     const vaultFileRaw = await fs.promises.readFile(this.vaultFilePath, 'utf-8');
     const vaultFileObj = parseJSONC(vaultFileRaw.toString());
@@ -91,44 +92,35 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
     }
   }
 
-  hooks = {
-    onInitComplete: async () => {
-      this.vaultKey = await importEncryptionKeyString(this.inputValues.key);
-      _.each(this.vaultItems, (vi) => {
-        vi.key = this.vaultKey;
-      });
-    },
-  };
+  // private hooks = {
+  //   onInitComplete: async () => {
+  //
+  //     _.each(this.vaultItems, (vi) => {
+  //       vi.key = this.vaultKey;
+  //     });
+  //   },
+  // };
 
   private vaultKey?: crypto.webcrypto.CryptoKey;
-  private getVaultItem(serviceName: string, path: string) {
-    const itemKey = [serviceName, path].join('!');
-    return this.vaultItems[itemKey];
+  private getVaultItem(fullPath: string) {
+    const itemKey = [this.service!.serviceName, path].join('!');
+    console.log('get vault item', itemKey);
+    return;
   }
 
   item() {
-    return new EncryptedVaultItemResolver(this.getVaultItem);
+    return createResolver({
+      icon: 'mdi:archive-lock', // also mdi:file-lock ?
+      label: 'encrypted vault item',
+      resolve: async (ctx) => {
+        // probably should be triggered by some lifecycle hook rather than here?
+        if (!this.vaultFileLoaded) await this.loadVaultFile();
+
+        const vaultItem = this.vaultItems[ctx.fullPath];
+        if (!vaultItem) throw new ResolutionError(`Item not found - ${ctx.serviceName} / ${ctx.fullPath}`);
+        return await vaultItem.getRawValue(this.vaultKey!);
+      },
+    });
   }
 }
-
-export class EncryptedVaultItemResolver extends ConfigValueResolver {
-  icon = 'mdi:archive-lock'; // also mdi:file-lock ?
-  getPreviewLabel() {
-    return this.label;
-  }
-
-  private label = '';
-  constructor(
-    private itemGetter: (serviceName: string, path: string) => EncryptedVaultItem,
-  ) {
-    super();
-  }
-
-  async _resolve(ctx: ResolverContext) {
-    const item = this.itemGetter(ctx.serviceName, ctx.fullPath);
-    if (!item) throw new ResolutionError(`Item not found - ${ctx.serviceName} / ${ctx.fullPath}`);
-    return await item.getRawValue();
-  }
-}
-
 

@@ -44,8 +44,13 @@ export default defineWorkspaceConfig({
       typeDescription: 'standardized environment flag set by DMNO',
       value: (ctx) => ctx.get('NODE_ENV'),
     },
+
+    ROOT_ONLY: {
+      value: 'ROOTONLY',
+    },
+
     PICK_TEST: {
-      // value: (ctx) => `pick-test--${DMNO_CONFIG. }`,
+      value: (ctx) => `pick-test--${DMNO_CONFIG.ROOT_ONLY}`,
     },
 
     GOOGLE_ANALYTICS_MEASUREMENT_ID: {
@@ -65,10 +70,6 @@ export default defineWorkspaceConfig({
         { description: 'dX', value: 'after'},
         { description: 'dX', value: false},
       ]),
-    },
-
-    ROOT_ONLY: {
-      value: (ctx) => DMNO_CONFIG.DMNO_ENV,
     },
 
     SEGMENT_SECRET: {

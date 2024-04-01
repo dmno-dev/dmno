@@ -1,7 +1,12 @@
-import { defineConfigSchema, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, switchByNodeEnv, valueCreatedDuringDeployment, cacheValue, injectPlugin } from '@dmno/core';
+import { defineConfigSchema, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, switchByNodeEnv, cacheValue, injectPlugin, createDmnoDataType } from '@dmno/core';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 const OnePassBackend = injectPlugin(OnePasswordDmnoPlugin);
+
+
+const newtype = createDmnoDataType({
+
+})
 
 export default defineConfigSchema({
   name: 'api',
@@ -12,6 +17,7 @@ export default defineConfigSchema({
   ],
   schema: {
     SECRET_EXAMPLE: {
+      extends: DmnoBaseTypes.string,
       required: true,
       value: OnePassBackend.itemByReference("op://dev test/example/username"),
     },

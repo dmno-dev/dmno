@@ -18,7 +18,7 @@ import {
 } from './base-types';
 import {
   ConfigValue,
-  ValueResolverDef, ConfigValueOverride, ConfigValueResolver, PickedValueResolver,
+  InlineValueResolverDef, ConfigValueOverride, ConfigValueResolver, createdPickedValueResolver,
 } from './resolvers/resolvers';
 import { getConfigFromEnvVars } from '../lib/env-vars';
 import { SerializedConfigItem, SerializedService } from '../config-loader/serialization-types';
@@ -112,7 +112,7 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
 
   /** set the value, can be static, or a function, or use helpers */
   // value?: ValueOrValueFromContextFn<any>
-  value?: ValueResolverDef;
+  value?: InlineValueResolverDef;
 
   /** import value a env variable with a different name */
   importEnvKey?: string;
@@ -1034,7 +1034,7 @@ export class DmnoPickedConfigItem extends DmnoConfigItemBase {
     this.initializeChildren();
 
     // each item in the chain could have a value transformer, so we must follow the entire chain
-    this.valueResolver = new PickedValueResolver(this.def.sourceItem, this.def.transformValue);
+    this.valueResolver = createdPickedValueResolver(this.def.sourceItem, this.def.transformValue);
   }
 
   /** the real source config item - which defines most of the settings */

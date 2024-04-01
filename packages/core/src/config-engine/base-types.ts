@@ -3,7 +3,7 @@ import _ from 'lodash-es';
 import {
   ConfigItemDefinition, ResolverContext, TypeValidationResult,
 } from './config-engine';
-import { ConfigValueResolver, processResolverDef } from './resolvers/resolvers';
+import { ConfigValueResolver, processInlineResolverDef } from './resolvers/resolvers';
 import { CoercionError, EmptyRequiredValueError, ValidationError } from './errors';
 
 // data types expose all the same options, except they additionally have a "settings schema"
@@ -118,7 +118,7 @@ export class DmnoDataType<InstanceOptions = any> {
     // value resolvers have shorthands that can be passed in (static value, functions)
     // so we'll make sure those are initialized properly as well
     if (this.typeDef.value !== undefined) {
-      this._valueResolver = processResolverDef(this.typeDef.value);
+      this._valueResolver = processInlineResolverDef(this.typeDef.value);
     }
 
     // if we are dealing with one of our schema inline-defined types (instead of via a reusable data type)
