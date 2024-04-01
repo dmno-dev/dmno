@@ -1,7 +1,7 @@
 ---
-title: Welcome to DMNO
+title: DMNO
 description: The easiest way to configure, run, and deploy your apps
-template: splash
+template: 'splash'
 hero:
   tagline: The easiest way to configure, run, and deploy your apps
   image:
@@ -16,21 +16,44 @@ hero:
       icon: github
 ---
 
-import { Card,   CardGrid   } from   '@astrojs/starlight/components'  ;
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-Next steps
+<Card title="Features" icon="approve-check">
+
+- **Typesafe Configuration**: Define your configuration in TypeScript and get full type safety, autocompletion, and documentation.
+- **Schema Driven**: Define your schema and let DMNO handle the rest, including validation and coercion.
+- **Deploy Anywhere**: Deploy on your existing platforms, powered by DMNO's typesafe configuration.
+</Card>
 
 <CardGrid>
-  <Card title="Update content" icon="pencil">
-    Edit `src/content/docs/index.mdx` to see this page change.
+  <Card title="Start here" icon="pencil">
+    Install DMNO and get started with your first schema. 
+    <LinkCard
+      title="Let's get started!"
+      href="/get-started/quickstart"
+    />
   </Card >
-  <Card title="Add new content" icon="add-document">
-    Add Markdown or MDX files to `src/content/docs` to create new pages.
+  <Card title="Frameworks" icon="add-document">
+    Integrate DMNO with your favorite framework.
+    <LinkCard
+      title="Let's integrate!"
+      href="/guides/frameworks/nextjs"
+    />
   </Card>
-  <Card title="Configure your site" icon="setting">
-    Edit your `sidebar` and other config in `astro.config.mjs`.
+  <Card title="Deployments" icon="setting">
+    Deploy on your existing platforms, powered by DMNO's typesafe configuration.
+    <LinkCard
+      title="Let's deploy!"
+      href="/guides/deployment/vercel"
+    />
   </Card>
-  <Card title="Read the docs" icon="open-book">
-    Learn more in [the Starlight Docs](https://starlight.astro.build/).
+  <Card title="Reference" icon="open-book">
+    Read our full set of reference docs to unlock the full potential of DMNO.
+    <LinkCard
+      title="Let's learn!"
+      href="/reference/config-engine/installation"
+    />
   </Card>
 </CardGrid>
+
+

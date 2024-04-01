@@ -27,15 +27,17 @@
     "astro-robots-txt": "^1.0.0",
     "eslint-plugin-astro": "^0.31.4",
     "eslint-plugin-mdx": "^3.1.5",
+    "nanostores": "^0.10.0",
     "sharp": "^0.32.5",
     "starlight-blog": "^0.5.0",
+    "starlight-links-validator": "^0.6.0",
     "typescript": "^5.3.3",
     "vue": "^3.3.4"
   },
   "devDependencies": {
-    "netlify-cli": "^17.1.0",
-    "typedoc": "^0.25.12",
     "@dmno/1password-plugin": "../plugins/1password-plugin",
-    "@dmno/core": "../core"
+    "@dmno/core": "../core",
+    "netlify-cli": "^17.1.0",
+    "typedoc": "^0.25.12"
   }
 }

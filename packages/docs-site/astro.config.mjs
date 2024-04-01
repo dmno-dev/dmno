@@ -3,6 +3,7 @@ import starlight from "@astrojs/starlight";
 import starlightBlog from 'starlight-blog'
 import vue from "@astrojs/vue";
 import robotsTxt from "astro-robots-txt";
+import starlightLinksValidator from 'starlight-links-validator'
 
 
 // https://astro.build/config
@@ -17,7 +18,7 @@ export default defineConfig({
       social: {
         github: "https://github.com/dmno-dev",
       },
-      plugins: [starlightBlog()],
+      plugins: [starlightBlog(), starlightLinksValidator()],
       pagination: false,
       sidebar: [
         {
@@ -31,21 +32,22 @@ export default defineConfig({
               label: "Concepts",
               link: "/get-started/concepts"
             },
-            {
-              label: "Schema",
-              link: "/get-started/schema"
-            },
-            {
-              label: "Secrets",
-              link: "/get-started/secrets"
-            },
           ]
         },
         {
           label: "Guides",
           items: [
             {
+              label: "Schema",
+              link: "/guides/schema"
+            },
+            {
+              label: "Secrets",
+              link: "/guides/secrets"
+            },
+            {
               label: "Frameworks",
+              collapsed: true,
               items: [
                 {
                   label: "Next.js",
@@ -63,6 +65,7 @@ export default defineConfig({
             },
             {
               label: "Deployment Platforms",
+              collapsed: true,
               items: [
                 {
                   label: "Vercel",
@@ -103,29 +106,20 @@ export default defineConfig({
                   label: 'Helper Methods',
                   link: '/reference/config-engine/helper-methods/'
                 },
+                {
+                  label: 'CLI',
+                  link: '/reference/config-engine/dmno-cli/'
+                },
               ]
             },
             {
-              label: 'dmno-cli',
-              items: [
-                {
-                  label: 'Installation',
-                  link: '/reference/dmno-cli/installation/'
-                },
-                {
-                  label: 'Commands',
-                  link: '/reference/dmno-cli/commands/'
-                },
-              ]
+              label: "Plugins",
+              autogenerate: {
+                directory: "/reference/plugins"
+              }
             }
           ]
         },
-        {
-          label: "Plugins",
-          autogenerate: {
-            directory: "plugins"
-          }
-        }
       ],
     }),
     vue({

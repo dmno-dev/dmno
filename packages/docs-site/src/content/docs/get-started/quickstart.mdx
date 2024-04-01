@@ -1,0 +1,47 @@
+---
+title: DMNO Quickstart
+
+---
+
+import { Steps, FileTree } from '@astrojs/starlight/components';
+import TabbedCode from '@/components/TabbedCode.astro'
+
+<Steps>
+
+1. **Install `dmno-core`**
+    <TabbedCode packageName="@dmno/dmno-core" />
+
+2. **Create a new dmno project**
+
+    Run this command in the root of your project:
+    <TabbedCode command="dmno init" />
+    This will create a `.dmno` folder in the root of your project with a `config.mts` file. It will produce a file tree that looks something like this:
+
+    <FileTree>
+    - / (root of your project)
+      - .dmno (your workspace config)
+        - **config.mts**
+      - packages
+        - my-package
+          - .dmno 
+            - **config.mts** (config for my-package service)
+        - another-package
+          - .dmno
+            - **config.mts** (config for another-package service)
+
+    </FileTree>
+
+3. **Start the development server**
+    <TabbedCode command="dmno dev" />
+
+4. **Write your schema**
+
+    At the root of your project in a `.dmno` folder there will be a `config.mts` file. This is where you define your schema. There is a [sample](/get-started/sample) that covers many of the different options and a full [schema guide](/guides/schema).
+
+5. **Deploy your project**
+
+    Follow the deployment guides for the platform of your choice. 
+
+</Steps>
+
+
