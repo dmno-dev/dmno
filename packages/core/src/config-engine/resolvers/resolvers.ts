@@ -34,20 +34,26 @@ export type ConfigValueOverride = {
   envFlag?: string;
 };
 
-type ResolverBranch = {
-  label: string;
-  resolver: ConfigValueResolver;
-  condition: (ctx: ResolverContext) => boolean;
-  isDefault: boolean;
+
+
+type ValueOrValueGetter<T> = T | ((ctx: ResolverContext) => T);
+
+type ResolverDefinition = {
+  icon: ValueOrValueGetter<string>,
+  label: ValueOrValueGetter<string>,
+  resolve: (ctx: ResolverContext) => Promise<ConfigValue | ResolverDefinition>
 };
+
+export function createResolver(def: ResolverDefinition) {
+  return def;
+}
+
 export abstract class ConfigValueResolver {
   abstract icon: string;
   abstract getPreviewLabel(): string;
   abstract _resolve(ctx: ResolverContext): Promise<undefined | ConfigValue | ConfigValueResolver>;
 
   cacheKey: string | undefined;
-
-  childBranches?: Array<ResolverBranch>;
 
   isResolved = false;
   resolvedValue?: ConfigValue;

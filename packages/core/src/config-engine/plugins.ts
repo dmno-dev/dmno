@@ -301,6 +301,11 @@ export abstract class DmnoPlugin<
     return _.every(this.inputItems, (i) => i.isValid);
   }
 
+
+  private hooks?: {
+    onInitComplete?: () => Promise<void>;
+  };
+
   toJSON(): SerializedDmnoPlugin {
     return {
       name: this.name,

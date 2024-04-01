@@ -372,7 +372,7 @@ export class DmnoDataType<InstanceOptions = any> {
   /** helper to determine if the type was defined inline in a schema */
   get isInlineDefinedType() {
     // these get initialized without passing in a typeFactoryFn
-    return !this.typeFactoryFn;
+    return !this._typeFactoryFn;
   }
 
   // TODO: these names need to be thought through...

@@ -23,8 +23,9 @@ import { EncryptedVaultTypes } from './data-types';
 export class EncryptedVaultItem {
   private encryptedValue?: string;
   private rawValue?: any;
+  key?: crypto.webcrypto.CryptoKey;
+
   constructor(
-    private plugin: EncryptedVaultDmnoPlugin,
     readonly serviceName: string,
     readonly path: string,
     val: { encrypted: string } | { raw: any },
@@ -35,6 +36,15 @@ export class EncryptedVaultItem {
     } else {
       this.rawValue = val.raw;
     }
+  }
+
+  async getRawValue() {
+    if (!this.key) throw new Error('Key must be set first!');
+
+    if (this.rawValue) return this.rawValue;
+    if (!this.encryptedValue) throw new Error('item is empty');
+    this.rawValue = await decrypt(this.key, this.encryptedValue);
+    return this.rawValue;
   }
 }
 
@@ -59,10 +69,10 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
   }
 
 
-  vaultFilePath?: string;
-  vaultFileLoaded = false;
-  vaultItems: Record<string, EncryptedVaultItem> = {};
-  async loadVaultFile() {
+  private vaultFilePath?: string;
+  private vaultFileLoaded = false;
+  private vaultItems: Record<string, EncryptedVaultItem> = {};
+  private async loadVaultFile() {
     if (this.vaultFileLoaded) return;
     if (!this.service) throw new Error('Cannot load vault file unless connected to a service');
     this.vaultFilePath = `${this.service.path}/.dmno/${this.inputValues.name || 'default'}.vault.json`;
@@ -73,7 +83,6 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
       const vaultFileItem = vaultFileObj.items[key];
       const [serviceName, path] = key.split('!');
       this.vaultItems[key] = new EncryptedVaultItem(
-        this,
         serviceName,
         path,
         { encrypted: vaultFileItem.encryptedValue },
@@ -82,9 +91,23 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
     }
   }
 
+  hooks = {
+    onInitComplete: async () => {
+      this.vaultKey = await importEncryptionKeyString(this.inputValues.key);
+      _.each(this.vaultItems, (vi) => {
+        vi.key = this.vaultKey;
+      });
+    },
+  };
+
+  private vaultKey?: crypto.webcrypto.CryptoKey;
+  private getVaultItem(serviceName: string, path: string) {
+    const itemKey = [serviceName, path].join('!');
+    return this.vaultItems[itemKey];
+  }
+
   item() {
-    console.log(this.inputItems);
-    return new EncryptedVaultItemResolver(this);
+    return new EncryptedVaultItemResolver(this.getVaultItem);
   }
 }
 
@@ -96,31 +119,15 @@ export class EncryptedVaultItemResolver extends ConfigValueResolver {
 
   private label = '';
   constructor(
-    private plugin: EncryptedVaultDmnoPlugin,
-    // private opts: {
-    //   itemId: ItemId,
-    //   vaultId?: VaultId,
-    //   path?: string
-    // } |
-    // { reference: string },
+    private itemGetter: (serviceName: string, path: string) => EncryptedVaultItem,
   ) {
     super();
   }
 
   async _resolve(ctx: ResolverContext) {
-    await this.plugin.loadVaultFile();
-    // const opts = this.opts;
-    console.log(this.plugin.inputItems);
-    const key = await importEncryptionKeyString(this.plugin.inputValues.key);
-
-
-
-    return 'encrypted value!';
-
-    // if (value === undefined) {
-    //   throw new ResolutionError(`unable to resolve 1pass item - ${this.label}`);
-    // }
-    // return value;
+    const item = this.itemGetter(ctx.serviceName, ctx.fullPath);
+    if (!item) throw new ResolutionError(`Item not found - ${ctx.serviceName} / ${ctx.fullPath}`);
+    return await item.getRawValue();
   }
 }
 

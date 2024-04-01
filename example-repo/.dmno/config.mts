@@ -10,7 +10,7 @@ const ProdOnePassBackend = registerPlugin(new OnePasswordDmnoPlugin({
   // token: InjectPluginInputByType,
   // token: 'asdf',
   defaultVaultName: 'dev test',
-}));
+}))
 
 const NonProdVault = registerPlugin(new EncryptedVaultDmnoPlugin({
   key: configPath('DMNO_VAULT_KEY'),
@@ -19,6 +19,7 @@ const ProdVault = registerPlugin('prod', new EncryptedVaultDmnoPlugin({
   name: 'prod',
   key: configPath('DMNO_VAULT_KEY'),
 }));
+
 
 export default defineWorkspaceConfig({
   name: 'root',

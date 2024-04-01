@@ -764,6 +764,7 @@ export class ResolverContext {
 
   }
 
+  get serviceName() { return this.service.serviceName; }
   get fullPath() { return `${this.service.serviceName}!${this.itemPath}`; }
 
   get(itemPath: string) {

@@ -4,8 +4,35 @@ import _ from 'lodash-es';
 import { ConfigValueResolver, ValueResolverDef, processResolverDef } from './resolvers';
 import { ResolverContext } from '../config-engine';
 
+
+
+type ResolverBranch = {
+  label: string;
+  resolver: ConfigValueResolver;
+  condition: (ctx: ResolverContext) => boolean;
+  isDefault: boolean;
+};
+
+export abstract class BranchedResolver extends ConfigValueResolver {
+  childBranches?: Array<ResolverBranch>;
+  async _resolve(ctx: ResolverContext) {
+    // find first branch that passes
+    const matchingBranch = _.find(this.childBranches, (branch) => {
+      if (branch.isDefault) return false;
+      return branch.condition(ctx);
+    });
+    if (matchingBranch) {
+      return matchingBranch.resolver || null;
+    } else {
+      const defaultBranch = _.find(this.childBranches, (branch) => branch.isDefault);
+      return defaultBranch?.resolver || null;
+    }
+  }
+}
+
+
 type SwitchByResolverOptions = Record<string, ValueResolverDef>;
-export class SwitchByResolver extends ConfigValueResolver {
+export class SwitchByResolver extends BranchedResolver {
   icon = 'gravity-ui:branches-right';
   getPreviewLabel() {
     return `switch by ${this.switchByKey}`;
@@ -24,20 +51,6 @@ export class SwitchByResolver extends ConfigValueResolver {
         resolver: processResolverDef(itemDef),
       };
     });
-  }
-
-  async _resolve(ctx: ResolverContext) {
-    // find first branch that passes
-    const matchingBranch = _.find(this.childBranches, (branch) => {
-      if (branch.isDefault) return false;
-      return branch.condition(ctx);
-    });
-    if (matchingBranch) {
-      return matchingBranch.resolver || null;
-    } else {
-      const defaultBranch = _.find(this.childBranches, (branch) => branch.isDefault);
-      return defaultBranch?.resolver || null;
-    }
   }
 }
 
