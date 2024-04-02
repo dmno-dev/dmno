@@ -848,6 +848,32 @@ const IsoDateDataType = createDmnoDataType({
   },
 });
 
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UuidDataType = createDmnoDataType({
+  typeLabel: 'dmno/uuid',
+  extends: StringDataType,
+  typeDescription: 'UUID string V1-V5 per RFC4122, including NIL',
+  validate(val) {
+    const result = UUID_REGEX.test(val);
+    if (result) return true;
+    return new ValidationError('Value must be a valid UUID string');
+  },
+});
+
+const MD5_REGEX = /^[a-f0-9]{32}$/;
+const Md5DataType = createDmnoDataType({
+  typeLabel: 'dmno/md5',
+  extends: StringDataType,
+  typeDescription: 'MD5 hash string',
+  validate(val) {
+    const result = MD5_REGEX.test(val);
+    if (result) return true;
+    return new ValidationError('Value must be a valid MD5 hash string');
+  },
+});
+
+
 // TODO consider splitting into base and utility types
 export const DmnoBaseTypes = {
   string: StringDataType,
@@ -861,6 +887,12 @@ export const DmnoBaseTypes = {
   port: PortDataType,
   semver: SemverDataType,
   isoDate: IsoDateDataType,
+  uuid: UuidDataType,
+  md5: Md5DataType,
+
+  // TODO
+  // locale
+  // iso 3166
 
   // "compound" types /////////////////
   object: ObjectDataType,

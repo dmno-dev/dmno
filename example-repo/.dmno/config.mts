@@ -84,13 +84,24 @@ export default defineWorkspaceConfig({
       value: new Date().toISOString()
     },
 
+    SOME_UUID: {
+      extends: DmnoBaseTypes.uuid,
+      required: true,
+      value: '550e8400-e29b-41d4-a716-446655440000'
+    },
+
+    SOME_MD5: {
+      extends: DmnoBaseTypes.md5,
+      required: true,
+      value: 'd41d8cd98f00b204e9800998ecf8427e'
+    },
+
     ROOT_ONLY: {
       value: (ctx) => DMNO_CONFIG.DMNO_ENV,
     },
 
     OP_TOKEN: {
       extends: OnePasswordTypes.serviceAccountToken,
-      secret: true,
       required: true
     },
 
