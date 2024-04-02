@@ -1,0 +1,61 @@
+{
+  "name": "@dmno/encrypted-vault-plugin",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "adds ability to store secrets securely (encrypted) committed to your repo",
+  "keywords": [
+    "dmno",
+    "encrypted",
+    "vault",
+    "env vars",
+    "environment variables",
+    "secrets",
+    "dmno plugin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmno-dev/core.git",
+    "directory": "packages/plugins/encrypted-vault-plugin"
+  },
+  "bugs": {
+    "url": "https://github.com/dmno-dev/core/issues"
+  },
+  "homepage": "https://dmno.dev",
+  "exports": {
+    ".": {
+      "default": "./dist/index.mjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "index": [
+        "./dist/index.d.mts"
+      ]
+    }
+  },
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "pnpm run build --watch",
+    "lint": "eslint src --ext .ts,.cjs",
+    "lint:fix": "pnpm run lint --fix"
+  },
+  "devDependencies": {
+    "@dmno/eslint-config": "workspace:*",
+    "@dmno/tsconfig": "workspace:*",
+    "@types/async": "^3.2.24",
+    "@types/lodash-es": "^4.17.12",
+    "@types/node": "^20.11.30",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.2"
+  },
+  "dependencies": {
+    "@dmno/core": "workspace:*",
+    "@dmno/encryption-lib": "workspace:*",
+    "async": "^3.2.5",
+    "jsonc-parser": "^3.2.1",
+    "lodash-es": "^4.17.21"
+  }
+}

@@ -1,40 +1,31 @@
 /* eslint-disable no-console */
+import crypto, { JsonWebKey } from 'node:crypto';
 import kleur from 'kleur';
+import * as b64ab from 'base64-arraybuffer';
 import { DmnoBaseTypes, createDmnoDataType } from './config-engine/base-types';
+import {
+  decrypt, encrypt, importEncryptionKeyString,
+} from './lib/encryption';
 
 
+const KEY_EXPORT_FORMAT = 'jwk';
+const ENCRYPTION_ALGO = 'AES-GCM';
+const KEY_USAGES = ['encrypt', 'decrypt'] as const;
+const IV_LENGTH = 12; // For GCM a nonce length of 12 bytes is recommended!
 
-const MyCustomUrl = createDmnoDataType({
-  extends: DmnoBaseTypes.url({ prependProtocol: true }),
-});
+const key = await crypto.subtle.generateKey(
+  { name: ENCRYPTION_ALGO, length: 256 },
+  true,
+  KEY_USAGES,
+);
 
-const MyUrlInstance = MyCustomUrl();
+const exportedKey = await crypto.subtle.exportKey(KEY_EXPORT_FORMAT, key);
+console.log(exportedKey.k);
+const importedKey = await importEncryptionKeyString(exportedKey.k!);
 
-console.log(MyUrlInstance.coerce('GOOGLE.com'));
+const rawData = { foo: 1, bar: 2, someMoreData: 'herllkasdf lkajsdf lkajsd flkja sdflkj asdlkfj alskdfj alksdj flaksdjf ' };
 
-console.log('is MyCustomUrl?', MyUrlInstance.isType(MyCustomUrl));
-console.log('is url?', MyUrlInstance.isType(DmnoBaseTypes.url));
-console.log('is string?', MyUrlInstance.isType(DmnoBaseTypes.string));
-console.log('is number?', MyUrlInstance.isType(DmnoBaseTypes.number));
-
-console.log('extends MyCustomUrl?', MyUrlInstance.extendsType(DmnoBaseTypes.url));
-console.log('extends url?', MyUrlInstance.extendsType(DmnoBaseTypes.url));
-console.log('extends string?', MyUrlInstance.extendsType(DmnoBaseTypes.string));
-console.log('extends number?', MyUrlInstance.extendsType(DmnoBaseTypes.number));
-
-
-const sType = DmnoBaseTypes.string({
-  minLength: 2,
-  maxLength: 5,
-});
-
-function checkValid(val: any) {
-  const result = sType.validate(val);
-  console.log('Check valid', val, result === true ? kleur.green('VALID!') : kleur.red(`ERROR: ${result[0]?.message}`));
-}
-
-checkValid('a');
-checkValid('aa');
-checkValid('aaaaa');
-checkValid('aaaaaa');
-checkValid('aaaaaaaaaaaa');
+const encryptedStr = await encrypt(importedKey, rawData, 'u123');
+console.log(encryptedStr);
+const decryptedData = await decrypt(importedKey, encryptedStr, 'u123');
+console.log(decryptedData);

@@ -9,6 +9,7 @@ import {
   ResolutionError,
   SchemaError,
   GetPluginInputTypes,
+  createResolver,
 } from '@dmno/core';
 import { OnePasswordTypes } from './data-types';
 
@@ -28,6 +29,8 @@ type ServiceAccountToken = string;
 // typeof OnePasswordDmnoPlugin.inputSchema, typeof OnePasswordDmnoPlugin.INPUT_TYPES
 // > {
 export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
+  icon = 'simple-icons:1password';
+
   static readonly inputSchema = {
     token: {
       description: 'this service account token will be used via the CLI to communicate with 1password',
@@ -60,23 +63,60 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   // can read items by id - need a vault id, item id
   // and then need to grab the specific data from a big json blob
   // cli command `op item get bphvvrqjegfmd5yoz4buw2aequ --vault=ut2dftalm3ugmxc6klavms6tfq --format json`
-  item(idOrIdAndVault: ItemId | { id: ItemId, vaultId: VaultId }, path?: string) {
+  item(idOrObj: ItemId | { id: ItemId, vaultId: VaultId }, path?: string) {
     let vaultId: VaultId | undefined;
     let itemId: ItemId;
 
-    if (_.isString(idOrIdAndVault)) {
-      itemId = idOrIdAndVault;
+    if (_.isString(idOrObj)) {
+      itemId = idOrObj;
       if (!this.inputItems.defaultVaultId.resolutionMethod) {
-        throw new SchemaError('No vault ID specified');
+        throw new SchemaError('Plugin must have defaultVaultId specified if using item id only');
       }
     } else {
-      itemId = idOrIdAndVault.id;
-      vaultId = idOrIdAndVault.vaultId;
+      itemId = idOrObj.id;
+      vaultId = idOrObj.vaultId;
     }
-    return new OnePasswordResolver(this.inputValues, {
-      itemId,
-      vaultId,
-      path,
+
+    return createResolver({
+      createdByPlugin: this,
+      label: (ctx) => {
+        return _.compact([
+          `Vault: ${vaultId || this.inputValues.defaultVaultId!}`,
+          `Item: ${itemId}`,
+          path && `Path: ${path}`,
+        ]).join(', ');
+      },
+      resolve: async (ctx) => {
+        // we've already checked that the defaultVaultId is set above if it's needed
+        // and the plugin will have a schema error if the resolution failed
+        const vaultIdWithDefault = vaultId || this.inputValues.defaultVaultId!;
+
+
+        const valueJsonStr = await ctx.getOrSetCacheItem(`1pass:V|${vaultIdWithDefault}/I|${itemId}`, async () => {
+          return await execSync([
+            `OP_SERVICE_ACCOUNT_TOKEN=${this.inputValues.token}`,
+            CLI_PATH,
+            `get item ${itemId}`,
+            `--vault=${vaultIdWithDefault}`,
+            '--format json',
+          ].join(' ')).toString();
+        });
+
+        const valueObj = JSON.parse(valueJsonStr);
+        if (!valueObj) {
+          throw new Error('Unable to resolve item');
+        }
+
+        if (path) {
+          const valueAtPath = _.get(valueObj, path);
+          if (!valueAtPath) {
+            throw new Error(`Unable to resolve value from path ${path}`);
+          }
+          return valueAtPath;
+        }
+
+        return valueObj;
+      },
     });
   }
 
@@ -87,98 +127,46 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   itemByReference(referenceUrl: ReferenceUrl) {
     // if reference starts with "op://" then it includes the vault name already
     // otherwise we'll prepend "op://vaultname/" to the value passed in
+    // and we are throwing a schema error early if no default vault name was set up
     if (!referenceUrl.startsWith('op://')) {
       if (!this.inputItems.defaultVaultName.resolutionMethod) {
-        throw new SchemaError('You must specify a default vault if using references names only');
+        throw new SchemaError('Plugin must have defaultVaultName if using partial reference paths');
       }
     }
-    return new OnePasswordResolver(this.inputValues, {
-      reference: referenceUrl,
+
+    return createResolver({
+      createdByPlugin: this,
+      label: (ctx) => {
+        let fullReference = referenceUrl;
+        if (!fullReference.startsWith('op://')) {
+          fullReference = `op://${this.inputValues.defaultVaultName!}/${fullReference}`;
+        }
+        return fullReference;
+      },
+      resolve: async (ctx) => {
+        let fullReference = referenceUrl;
+        // if a partial path was passed in, we'll use a default vault name from the plugin settings
+        if (!fullReference.startsWith('op://')) {
+          fullReference = `op://${this.inputValues.defaultVaultName!}/${fullReference}`;
+        }
+
+        const value = await ctx.getOrSetCacheItem(`1pass:R|${fullReference}`, async () => {
+          return await execSync([
+            `OP_SERVICE_ACCOUNT_TOKEN=${this.inputValues.token}`,
+            CLI_PATH,
+            `read "${fullReference}"`,
+            '--force --no-newline',
+          ].join(' ')).toString();
+        });
+
+        if (value === undefined) {
+          throw new ResolutionError(`unable to resolve 1pass item - ${fullReference}`);
+        }
+        return value;
+      },
     });
   }
 }
 
 const CLI_PATH = path.resolve(fileURLToPath(import.meta.url), '../../op-cli');
-export class OnePasswordResolver extends ConfigValueResolver {
-  icon = 'simple-icons:1password';
-  getPreviewLabel() {
-    return this.label;
-  }
-
-  private label = '';
-  constructor(
-    private pluginInputs: GetPluginInputTypes<OnePasswordDmnoPlugin>,
-
-    private opts: {
-      itemId: ItemId,
-      vaultId?: VaultId,
-      path?: string
-    } |
-    { reference: string },
-  ) {
-    super();
-  }
-
-  async _resolve(ctx: ResolverContext) {
-    const injectToken = `OP_SERVICE_ACCOUNT_TOKEN=${this.pluginInputs.token}`;
-
-    const opts = this.opts;
-
-    let value: string | undefined;
-    // read a single value by "reference"
-    if ('reference' in opts) {
-      let fullReference = opts.reference;
-      // if a partial path was passed in, we'll use a default vault name from the plugin settings
-      if (!opts.reference.startsWith('op://')) {
-        if (!this.pluginInputs.defaultVaultName) {
-          throw new ResolutionError('Plugin input `defaultVaultName` was not resolved and is needed');
-        }
-        fullReference = `op://${this.pluginInputs.defaultVaultName}/${fullReference}`;
-      }
-      this.label = fullReference;
-
-      value = await ctx.getOrSetCacheItem(`1pass:R|${opts.reference}`, async () => {
-        return await execSync([
-          injectToken,
-          CLI_PATH,
-          `read "${fullReference}"`,
-          '--force --no-newline',
-        ].join(' ')).toString();
-      });
-
-    // get an item by id + vault id
-    } else {
-      if (!opts.vaultId && !this.pluginInputs.defaultVaultId) {
-        throw new ResolutionError('Plugin input `defaultVaultId` was not resolved and is needed');
-      }
-
-      const vaultId = opts.vaultId || this.pluginInputs.defaultVaultId;
-      this.label = _.compact([
-        `Vault: ${vaultId}`,
-        `Item: ${opts.itemId}`,
-        opts.path && `Path: ${opts.path}`,
-      ]).join(', ');
-
-      const valueJsonStr = await ctx.getOrSetCacheItem(`1pass:V|${vaultId}/I|${opts.itemId}`, async () => {
-        return await execSync([
-          injectToken,
-          CLI_PATH,
-          `get item ${opts.itemId}`,
-          `--vault=${vaultId}`,
-          '--format json',
-        ].join(' ')).toString();
-      });
-
-      const valueObj = JSON.parse(valueJsonStr);
-      if (opts.path) {
-        value = _.get(valueObj, opts.path);
-      }
-    }
-    if (value === undefined) {
-      throw new ResolutionError(`unable to resolve 1pass item - ${this.label}`);
-    }
-    return value;
-  }
-}
-
 

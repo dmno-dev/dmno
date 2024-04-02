@@ -1,7 +1,7 @@
 import _ from 'lodash-es';
 import Debug from 'debug';
 import {
-  ConfigPath, DmnoConfigItemBase, TypeExtendsDefinition,
+  ConfigPath, DmnoConfigItemBase, DmnoService, TypeExtendsDefinition,
 } from './config-engine';
 import { DmnoDataType } from './base-types';
 import { ConfigValue } from './resolvers/resolvers';
@@ -206,6 +206,15 @@ export abstract class DmnoPlugin<
   /** name of this instance of the plugin - only used when using named injection */
   instanceName?: string;
 
+  /** iconify icon name */
+  icon?: string;
+
+  /**
+   * reference back to the service this plugin was initialized in
+   * NOTE - when using injection, it will still be the original initializing service
+   * */
+  service?: DmnoService;
+
   /** schema for the inputs this plugin needs - stored on the class */
   protected static readonly inputSchema: DmnoPluginInputSchema;
   /** helper to get the inputSchema from within a instance of the class */
@@ -295,6 +304,11 @@ export abstract class DmnoPlugin<
     return _.every(this.inputItems, (i) => i.isValid);
   }
 
+
+  // private hooks?: {
+  //   onInitComplete?: () => Promise<void>;
+  // };
+
   toJSON(): SerializedDmnoPlugin {
     return {
       name: this.name,
@@ -305,27 +319,8 @@ export abstract class DmnoPlugin<
   }
 }
 
-
-// export function createDmnoPlugin<Resolvers extends { [fnName: string]: (...args: Array<any>) => ConfigValueResolver }>(
-//   opts: {
-//     inputSchema?: Record<string, PluginSchemaItemDefinition>,
-//     resolvers: Resolvers,
-//   }) {
-//   return {
-//     init() {
-//       return { ...opts.resolvers };
-//     },
-
-//   };
-// }
-// class DmnoPluginInternal<Inputs> {
-
-// }
-
-
-
 // TODO: this is a pretty naive approach to capturing the plugins while loading config
-// probably should move to something like AsnycLocalStorage to create a more flexible
+// probably should move to something like AsnycLocalStorage to make it more flexible
 
 let injectablePlugins: Record<string, DmnoPlugin> = {};
 let currentPlugins: Record<string, DmnoPlugin> = {};
@@ -345,12 +340,22 @@ export function finishPluginRegistration() {
 }
 
 export function registerPlugin<T extends DmnoPlugin>(plugin: T) : T;
-export function registerPlugin<T extends DmnoPlugin>(name: string, plugin: T): T;
-export function registerPlugin<T extends DmnoPlugin>(nameOrPlugin: string | T, pluginOrUndefined?: T) {
-  const name = _.isString(nameOrPlugin) ? nameOrPlugin : undefined;
-  const plugin = _.isString(nameOrPlugin) ? pluginOrUndefined! : nameOrPlugin;
+export function registerPlugin<T extends DmnoPlugin>(instanceName: string, plugin: T): T;
+export function registerPlugin<T extends DmnoPlugin>(instanceNameOrPlugin: string | T, pluginOrUndefined?: T) {
+  const instanceName = _.isString(instanceNameOrPlugin) ? instanceNameOrPlugin : undefined;
+  const plugin = _.isString(instanceNameOrPlugin) ? pluginOrUndefined! : instanceNameOrPlugin;
 
-  const injectionName = _.compact([plugin.constructor.name, name]).join('/');
+  // set injection / instance name if one is set
+  if (instanceName) plugin.instanceName = instanceName;
+
+  const injectionName = _.compact([plugin.constructor.name, instanceName]).join('/');
+  if (currentPlugins[injectionName]) {
+    if (!instanceName) {
+      throw new SchemaError('You cannot register 2 instances of the same plugin twice without using a name');
+    } else {
+      throw new SchemaError('Plugin instances of the same type must have unique names');
+    }
+  }
   currentPlugins[injectionName] = plugin;
 
   return plugin;
@@ -358,21 +363,22 @@ export function registerPlugin<T extends DmnoPlugin>(nameOrPlugin: string | T, p
 
 
 export function injectPlugin<T extends DmnoPlugin>(pluginClass: ClassOf<T>) : T;
-export function injectPlugin<T extends DmnoPlugin>(name: string, pluginClass: ClassOf<T>): T;
+export function injectPlugin<T extends DmnoPlugin>(instanceName: string, pluginClass: ClassOf<T>): T;
 export function injectPlugin<T extends DmnoPlugin>(
-  nameOrPluginClass: string | ClassOf<T>,
+  instanceNameOrPluginClass: string | ClassOf<T>,
   pluginClassOrUndefined?: ClassOf<T>,
 ) {
-  const name = _.isString(nameOrPluginClass) ? nameOrPluginClass : undefined;
-  const pluginClass = _.isString(nameOrPluginClass) ? pluginClassOrUndefined! : nameOrPluginClass;
+  const instanceName = _.isString(instanceNameOrPluginClass) ? instanceNameOrPluginClass : undefined;
+  const pluginClass = _.isString(instanceNameOrPluginClass) ? pluginClassOrUndefined! : instanceNameOrPluginClass;
 
-  const injectionName = _.compact([pluginClass.name, name]).join('/');
+  const injectionName = _.compact([pluginClass.name, instanceName]).join('/');
 
   const pluginToInject = injectablePlugins[injectionName];
   // console.log('try to inject plugin', injectionName, injectablePlugins, pluginToInject ? 'FOUND!' : 'not found :(');
   if (!pluginToInject) {
     throw new Error(`Unable to inject plugin ${injectionName}`);
   }
+  if (instanceName) pluginToInject.instanceName = instanceName;
 
   return pluginToInject as T;
 }

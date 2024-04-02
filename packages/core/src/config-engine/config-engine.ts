@@ -1,31 +1,32 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
+import { execSync } from 'node:child_process';
 import _ from 'lodash-es';
 import Debug from 'debug';
-
+import async from 'async';
 import dotenv from 'dotenv';
-
 import validatePackageName from 'validate-npm-package-name';
 import graphlib from '@dagrejs/graphlib';
+import {
+  decrypt, encrypt, generateEncryptionKeyString, importEncryptionKeyString,
+} from '@dmno/encryption-lib';
 
+import { parse as parseJSONC } from 'jsonc-parser';
 import {
   DmnoBaseTypes, DmnoDataType, DmnoSimpleBaseTypeNames,
 } from './base-types';
 import {
   ConfigValue,
-  ValueResolverDef, ConfigValueOverride, ConfigValueResolver, PickedValueResolver,
+  InlineValueResolverDef, ConfigValueOverride, ConfigValueResolver, createdPickedValueResolver,
 } from './resolvers/resolvers';
 import { getConfigFromEnvVars } from '../lib/env-vars';
 import { SerializedConfigItem, SerializedService } from '../config-loader/serialization-types';
 import {
   CoercionError, ConfigLoadError, ResolutionError, SchemaError, ValidationError,
 } from './errors';
-import { decrypt, encrypt } from '../lib/encryption';
 import { DmnoPlugin } from './plugins';
-
-
-
-const ENCRYPTION_KEY = 'MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=';
+import { stringifyJsonWithCommentBanner } from '../lib/json-utils';
 
 const debug = Debug('dmno');
 
@@ -111,7 +112,7 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
 
   /** set the value, can be static, or a function, or use helpers */
   // value?: ValueOrValueFromContextFn<any>
-  value?: ValueResolverDef;
+  value?: InlineValueResolverDef;
 
   /** import value a env variable with a different name */
   importEnvKey?: string;
@@ -143,6 +144,10 @@ type ConfigItemDefinitionOrShorthand = ConfigItemDefinition | TypeExtendsDefinit
  */
 
 export type WorkspaceConfig = {
+  /**
+   * override root service name, will default to name from package.json
+   */
+  name?: string,
   /**
    * root property that holds all the of schema items
    */
@@ -194,12 +199,18 @@ type SerializedCacheEntry = {
 };
 type SerializedCache = {
   version: string;
+  keyId: string;
   items: Record<string, SerializedCacheEntry>;
+};
+type SerializedCacheKey = {
+  version: string;
+  keyId: string;
+  key: string;
 };
 class CacheEntry {
   readonly usedByItems: Set<string>;
   readonly updatedAt: Date;
-  readonly encryptedValue: string;
+  readonly encryptedValue?: string;
 
   constructor(
     readonly key: string,
@@ -213,14 +224,15 @@ class CacheEntry {
     this.updatedAt = more?.updatedAt || new Date();
     this.usedByItems = new Set(_.castArray(more?.usedBy || []));
     // we store the value passed rather than recalculating so the cache file won't churn
-    this.encryptedValue = more?.encryptedValue || this.getEncryptedValue();
+    this.encryptedValue = more?.encryptedValue;
   }
-  getEncryptedValue() {
-    return encrypt(CacheEntry.encryptionKey, this.value);
+  async getEncryptedValue() {
+    return encrypt(CacheEntry.encryptionKey, this.value, CacheEntry.encryptionKeyId);
   }
-  toJSON(): SerializedCacheEntry {
+  // have to make this async because of the encryption call
+  async getJSON(): Promise<SerializedCacheEntry> {
     return {
-      encryptedValue: this.encryptedValue,
+      encryptedValue: this.encryptedValue || await this.getEncryptedValue(),
       updatedAt: this.updatedAt.toISOString(),
       usedByItems: Array.from(this.usedByItems),
     };
@@ -229,7 +241,7 @@ class CacheEntry {
   static async fromSerialized(itemKey: string, raw: SerializedCacheEntry) {
     // currently this setup means the encryptedValue changes on every run...
     // we could instead store the encryptedValue and reuse it if it has not changed
-    const value = await decrypt(CacheEntry.encryptionKey, raw.encryptedValue);
+    const value = await decrypt(CacheEntry.encryptionKey, raw.encryptedValue, CacheEntry.encryptionKeyId);
     // we are also tossing out the saved "usedBy" entries since we'll have new ones after this config run
     return new CacheEntry(itemKey, value, {
       updatedAt: new Date(raw.updatedAt),
@@ -238,7 +250,8 @@ class CacheEntry {
   }
 
   // not sure about this... but for now it seems true that we'll use a single key at a time
-  static encryptionKey: string;
+  static encryptionKey: crypto.webcrypto.CryptoKey;
+  static encryptionKeyId: string;
 }
 
 type NestedOverrideObj<T = string> = {
@@ -478,16 +491,53 @@ export class DmnoWorkspace {
   }
 
   get cacheFilePath() { return `${this.rootPath}/.dmno/cache.json`; }
+  get cacheKeyFilePath() { return `${this.rootPath}/.dmno/cache-key.json`; }
   private valueCache: Record<string, CacheEntry> = {};
   private cacheLastLoadedAt: Date | undefined;
   private async loadCache() {
     // might want to attach the CacheEntry to the workspace instead to get the key?
     // or we could always pass it around as needed
-    CacheEntry.encryptionKey = ENCRYPTION_KEY;
+
+    // currently we are creating a cache key automatically if one does not exist
+    // is that what we want to do? or have the user take more manual steps? not sure
+    if (!fs.existsSync(this.cacheKeyFilePath)) {
+      const keyStr = await generateEncryptionKeyString();
+
+      const gitUserEmail = execSync('git config user.email').toString().trim();
+
+      CacheEntry.encryptionKey = await importEncryptionKeyString(keyStr);
+      CacheEntry.encryptionKeyId = `${gitUserEmail}/${new Date().getTime()}`;
+
+      const cacheKeyData: SerializedCacheKey = {
+        version: '0.0.1',
+        // TODO: not sure about this...? eventually we could link this to being logged into dmno somehow?
+        // this will just be passed along with the encrypt/decrypt calls as "additional data"
+        keyId: CacheEntry.encryptionKeyId,
+        key: keyStr,
+      };
+      await fs.promises.writeFile(this.cacheKeyFilePath, stringifyJsonWithCommentBanner(cacheKeyData));
+
+      if (fs.existsSync(this.cacheFilePath)) {
+        // destroy the cache file, since it will not match the new key...
+        // should we confirm this with the user? probably doesn't matter?
+        await fs.promises.unlink(this.cacheFilePath);
+      }
+    } else {
+      const cacheKeyRawStr = await fs.promises.readFile(this.cacheKeyFilePath, 'utf-8');
+      const cacheKeyRaw = parseJSONC(cacheKeyRawStr) as SerializedCacheKey;
+      CacheEntry.encryptionKey = await importEncryptionKeyString(cacheKeyRaw.key);
+      CacheEntry.encryptionKeyId = cacheKeyRaw.keyId;
+    }
 
     if (!fs.existsSync(this.cacheFilePath)) return;
     const cacheRawStr = await fs.promises.readFile(this.cacheFilePath, 'utf-8');
-    const cacheRaw = JSON.parse(cacheRawStr) as SerializedCache;
+    const cacheRaw = parseJSONC(cacheRawStr) as SerializedCache;
+
+    // check if the ID in the cache file matches the cache key
+    if (CacheEntry.encryptionKeyId !== cacheRaw.keyId) {
+      throw new Error('DMNO cache file does not match cache key');
+    }
+
     for (const itemCacheKey in cacheRaw.items) {
       this.valueCache[itemCacheKey] = await CacheEntry.fromSerialized(itemCacheKey, cacheRaw.items[itemCacheKey]);
     }
@@ -501,9 +551,10 @@ export class DmnoWorkspace {
 
     const serializedCache: SerializedCache = {
       version: '0.0.1',
-      items: _.mapValues(this.valueCache, (cacheItem) => cacheItem.toJSON()),
+      keyId: CacheEntry.encryptionKeyId,
+      items: await async.mapValues(this.valueCache, async (cacheItem) => cacheItem.getJSON()),
     };
-    const serializedCacheStr = JSON.stringify(serializedCache, null, 2);
+    const serializedCacheStr = stringifyJsonWithCommentBanner(serializedCache);
     await fs.promises.writeFile(this.cacheFilePath, serializedCacheStr, 'utf-8');
   }
   async getCacheItem(key: string, usedBy?: string) {
@@ -562,7 +613,13 @@ export class DmnoService {
     this.packageName = opts.packageName;
     this.path = opts.path;
 
+    // plugins
     this.plugins = opts.plugins || {};
+
+    // add reference back to this service on each plugin
+    _.each(this.plugins, (p) => {
+      p.service = this;
+    });
 
     if (_.isError(opts.rawConfig)) {
       this.serviceName = this.packageName;
@@ -707,6 +764,7 @@ export class ResolverContext {
 
   }
 
+  get serviceName() { return this.service.serviceName; }
   get fullPath() { return `${this.service.serviceName}!${this.itemPath}`; }
 
   get(itemPath: string) {
@@ -976,7 +1034,7 @@ export class DmnoPickedConfigItem extends DmnoConfigItemBase {
     this.initializeChildren();
 
     // each item in the chain could have a value transformer, so we must follow the entire chain
-    this.valueResolver = new PickedValueResolver(this.def.sourceItem, this.def.transformValue);
+    this.valueResolver = createdPickedValueResolver(this.def.sourceItem, this.def.transformValue);
   }
 
   /** the real source config item - which defines most of the settings */
