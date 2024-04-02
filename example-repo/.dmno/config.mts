@@ -41,6 +41,48 @@ export default defineWorkspaceConfig({
       ]),
     },
 
+    CONTACT_EMAIL: {
+      extends: DmnoBaseTypes.email({
+        normalize: true,
+      }),
+      // required: true,
+      value: 'Test@test.com'
+    },
+
+    SOME_IPV4: {
+      extends: DmnoBaseTypes.ipAddress,
+      required: true,
+      value: '100.200.1.1'
+    },
+
+    SOME_IPV6: {
+      extends: DmnoBaseTypes.ipAddress({
+        version: 6,
+        normalize: true,
+      }),
+      required: true,
+      value: '2001:0DB8:85a3:0000:0000:8a2e:0370:7334'
+    },
+
+    SOME_PORT: {
+      extends: DmnoBaseTypes.port,
+      required: true,
+      value: '8080'
+    },
+
+    SOME_SEMVER: {
+      extends: DmnoBaseTypes.semver({
+        normalize: true,
+      }),
+      required: true,
+      value: '1.2.3-ALPHA.1'
+    },
+
+    SOME_DATE: {
+      extends: DmnoBaseTypes.isoDate,
+      required: true,
+      value: new Date().toISOString()
+    },
 
     ROOT_ONLY: {
       value: (ctx) => DMNO_CONFIG.DMNO_ENV,
@@ -48,6 +90,7 @@ export default defineWorkspaceConfig({
 
     OP_TOKEN: {
       extends: OnePasswordTypes.serviceAccountToken,
+      secret: true,
       required: true
     },
 
