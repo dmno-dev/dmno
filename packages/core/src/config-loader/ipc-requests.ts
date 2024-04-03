@@ -6,11 +6,13 @@ export type ConfigLoaderRequestMap = {
     response: SerializedWorkspace,
   },
   'get-resolved-config': {
-    payload: { serviceName?: string, packageName?: string },
+    payload: {
+      serviceName?: string,
+    },
     response: SerializedService,
   },
   'generate-types': {
-    payload: { serviceName?: string, packageName?: string },
+    payload: { serviceName?: string },
     response: { tsSrc: string },
   },
   'start-dev-mode': {

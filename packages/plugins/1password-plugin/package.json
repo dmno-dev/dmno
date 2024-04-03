@@ -39,6 +39,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
     "dev": "pnpm run build --watch",
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix",

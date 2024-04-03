@@ -159,18 +159,20 @@ export class DmnoPluginInputItem<ValueType = any> {
   // meant to be called after all possible resolutions could have occurred
   // worst case this can be when the service is done, but ideally would be earlier?
   checkResolutionStatus() {
+    // TODO: figure out what does "isResolved" mean
+
     if (this.configPath && !this.isResolved) {
       this.schemaError = new SchemaError(`Input resolution via path "${this.configPath.path}" failed`);
     } else if (this.resolutionMethod === 'type' && !this.isResolved) {
       this.schemaError = new SchemaError('Input resolution by type-based injection failed');
-    } else if (this.itemSchema.required) {
+    }
+
+
+    if (this.itemSchema.required) {
       if (!this.isResolved) {
         this.schemaError = new SchemaError('Item is required but was not resolved');
-      } else if (this.resolvedValue === undefined || this.resolvedValue === null) {
-        // I think this is a validation error? but not entirely sure
-        // also need to think about how we handle other kinds of empty-ish things - ex: "", [], {}
-        this.validationErrors?.push(new ValidationError('Input item is required but is empty'));
       }
+      // the input item should already be throwing a validation error for being empty
     }
   }
 
@@ -201,19 +203,39 @@ export class DmnoPluginInputItem<ValueType = any> {
 export abstract class DmnoPlugin<
   ChildPlugin extends DmnoPlugin = NoopPlugin,
 > {
-  /** name of the plugin itself - which is the name of the class */
-  name = this.constructor.name;
-  /** name of this instance of the plugin - only used when using named injection */
-  instanceName?: string;
+  constructor(readonly instanceName: string) {
+    // see below, we are registering the plugin in a singleton object
+    if (currentPlugins[instanceName]) {
+      throw new SchemaError(`Plugin instance names must be unique! Duplicate name: ${instanceName}`);
+    }
+    currentPlugins[instanceName] = this;
 
+    // const callStack = new Error('').stack!.split('\n');
+    // const pluginDefinitionPath = callStack[2]
+    //   .replace(/.*\(/, '')
+    //   .replace(/:.*\)/, '');
+    // // special case for local dev when we have the plugins symlinked by pnpm
+    // if (pluginDefinitionPath.includes('/core/packages/plugins/')) {
+    //   const pluginPackageName
+    // } else {
+
+    // }
+    // console.log(pluginDefinitionPath);
+  }
+
+  /** name of the plugin itself - which is the name of the class */
+  pluginType = this.constructor.name;
   /** iconify icon name */
   icon?: string;
+
+  static cliPath?: string;
 
   /**
    * reference back to the service this plugin was initialized in
    * NOTE - when using injection, it will still be the original initializing service
    * */
-  service?: DmnoService;
+  initByService?: DmnoService;
+  injectedByServices?: Array<DmnoService>;
 
   /** schema for the inputs this plugin needs - stored on the class */
   protected static readonly inputSchema: DmnoPluginInputSchema;
@@ -301,7 +323,7 @@ export abstract class DmnoPlugin<
   }
 
   get isValid() {
-    return _.every(this.inputItems, (i) => i.isValid);
+    return _.every(_.values(this.inputItems), (i) => i.isValid);
   }
 
 
@@ -311,11 +333,30 @@ export abstract class DmnoPlugin<
 
   toJSON(): SerializedDmnoPlugin {
     return {
-      name: this.name,
+      pluginType: this.pluginType,
+      cliPath: (this.constructor as any).cliPath,
       instanceName: this.instanceName,
       isValid: this.isValid,
+      initializedInService: this.initByService?.serviceName,
+      injectedIntoServices: _.map(this.injectedByServices, (s) => s.serviceName),
       inputs: _.mapValues(this.inputItems, (i) => i.toJSON()),
     };
+  }
+
+
+  static injectInstance<T extends DmnoPlugin>(
+    this: new (...args: Array<any>) => T,
+    instanceName: string,
+  ) {
+    const pluginToInject = injectablePlugins[instanceName];
+    if (!pluginToInject) {
+      throw new SchemaError(`Plugin injection failed - no plugin named "${instanceName}" exists in root`);
+    }
+
+    if (!(pluginToInject instanceof this)) {
+      throw new SchemaError(`Type of plugin being injected does not match. Requested = ${this.name}, Injected = ${(pluginToInject as any).constructor.name}`);
+    }
+    return pluginToInject as T;
   }
 }
 
@@ -337,50 +378,6 @@ export function finishPluginRegistration() {
     injectablePlugins = currentPlugins;
     processingRootConfig = false;
   }
-}
-
-export function registerPlugin<T extends DmnoPlugin>(plugin: T) : T;
-export function registerPlugin<T extends DmnoPlugin>(instanceName: string, plugin: T): T;
-export function registerPlugin<T extends DmnoPlugin>(instanceNameOrPlugin: string | T, pluginOrUndefined?: T) {
-  const instanceName = _.isString(instanceNameOrPlugin) ? instanceNameOrPlugin : undefined;
-  const plugin = _.isString(instanceNameOrPlugin) ? pluginOrUndefined! : instanceNameOrPlugin;
-
-  // set injection / instance name if one is set
-  if (instanceName) plugin.instanceName = instanceName;
-
-  const injectionName = _.compact([plugin.constructor.name, instanceName]).join('/');
-  if (currentPlugins[injectionName]) {
-    if (!instanceName) {
-      throw new SchemaError('You cannot register 2 instances of the same plugin twice without using a name');
-    } else {
-      throw new SchemaError('Plugin instances of the same type must have unique names');
-    }
-  }
-  currentPlugins[injectionName] = plugin;
-
-  return plugin;
-}
-
-
-export function injectPlugin<T extends DmnoPlugin>(pluginClass: ClassOf<T>) : T;
-export function injectPlugin<T extends DmnoPlugin>(instanceName: string, pluginClass: ClassOf<T>): T;
-export function injectPlugin<T extends DmnoPlugin>(
-  instanceNameOrPluginClass: string | ClassOf<T>,
-  pluginClassOrUndefined?: ClassOf<T>,
-) {
-  const instanceName = _.isString(instanceNameOrPluginClass) ? instanceNameOrPluginClass : undefined;
-  const pluginClass = _.isString(instanceNameOrPluginClass) ? pluginClassOrUndefined! : instanceNameOrPluginClass;
-
-  const injectionName = _.compact([pluginClass.name, instanceName]).join('/');
-
-  const pluginToInject = injectablePlugins[injectionName];
-  // console.log('try to inject plugin', injectionName, injectablePlugins, pluginToInject ? 'FOUND!' : 'not found :(');
-  if (!pluginToInject) {
-    throw new Error(`Unable to inject plugin ${injectionName}`);
-  }
-  if (instanceName) pluginToInject.instanceName = instanceName;
-
-  return pluginToInject as T;
 }
 
 class NoopPlugin extends DmnoPlugin {}

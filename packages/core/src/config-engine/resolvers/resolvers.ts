@@ -203,7 +203,7 @@ export function cacheFunctionResult(
   const fn = _.isString(cacheKeyOrResolverFn) ? resolverFn! : cacheKeyOrResolverFn;
 
   return createResolver({
-    icon: 'asdf',
+    icon: 'f7:function', // TODO: different fn for cached?
     label: 'cached fn',
     cacheKey: explicitCacheKey || ((ctx) => ctx.fullPath),
     resolve: fn,

@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: [ // Entry point(s)
     'src/index.ts', // main lib, users will import from here
-    'src/cli/cli-executable.ts', // cli that gets run via `dmno` command
+    'src/cli/commander-cli.ts', // cli that gets run via `dmno` command
     'src/config-loader/loader-executable.ts' // entry point for config-loader process
   ], 
 

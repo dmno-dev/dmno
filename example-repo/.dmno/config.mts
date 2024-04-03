@@ -1,21 +1,23 @@
-import { DmnoBaseTypes, defineWorkspaceConfig, configPath, switchByNodeEnv, dmnoFormula, NodeEnvType, registerPlugin } from '@dmno/core';
+import { DmnoBaseTypes, defineWorkspaceConfig, configPath, switchByNodeEnv, dmnoFormula, NodeEnvType } from '@dmno/core';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
 // TODO: figure out how to get rid of mjs extension
 import { GA4MeasurementId } from './custom-types.mjs';
 
-const ProdOnePassBackend = registerPlugin(new OnePasswordDmnoPlugin({
+const ProdOnePassBackend = new OnePasswordDmnoPlugin('1pass', {
   token: configPath('OP_TOKEN'),
   // token: InjectPluginInputByType,
   // token: 'asdf',
   defaultVaultName: 'dev test',
-}))
+});
 
-
-const NonProdVault = registerPlugin(new EncryptedVaultDmnoPlugin({
+const ProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
   key: configPath('DMNO_VAULT_KEY'),
-}));
+});
+const NonProdVault = new EncryptedVaultDmnoPlugin('vault/dev', {
+  key: configPath('DMNO_VAULT_KEY'),
+});
 
 export default defineWorkspaceConfig({
   name: 'root',
@@ -27,6 +29,7 @@ export default defineWorkspaceConfig({
 
     DMNO_VAULT_KEY: {
       extends: EncryptedVaultTypes.encryptionKey,
+      // required: true
     },
 
     VAULT_TEST: {

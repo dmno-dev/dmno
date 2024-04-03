@@ -1,17 +1,15 @@
 import {
   defineConfigSchema, DmnoBaseTypes, configPath, dmnoFormula,switchByNodeEnv,
-  createDmnoDataType, injectPlugin, ValidationError,
+  createDmnoDataType, ValidationError,
   EncryptedFileStorePlugin
 } from '@dmno/core';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 // plugins can be used to create reusable functionality and can reference config items in their initialization
-const encryptedSecrets = new EncryptedFileStorePlugin({ name: 'local-secrets', key: configPath('LOCAL_SECRETS_KEY') });
+const encryptedSecrets = new EncryptedFileStorePlugin('vault', { name: 'local-secrets', key: configPath('LOCAL_SECRETS_KEY') });
 
 // pre-configured plugins can be auto-injected from those that were initialized in the workspace root
-// just by type if there is only one instance, or with an aditional instance name if needed
-const onePassSync = injectPlugin(OnePasswordDmnoPlugin);
-// const onePassProdVault = injectPlugin('prod-vault', OnePasswordDmnoPlugin); // example with a name
+const onePassSync = OnePasswordDmnoPlugin.injectInstance('1pass');
 
 export default defineConfigSchema({
   // each service can be explicitly named or will default to the name from its package.json

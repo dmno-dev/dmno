@@ -51,11 +51,12 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   // this is likely the default for most plugins...
   // accept a mapping of how to fill inputs - each can be set to a
   // static value, config path, or use type-based injection
+  // TODO: this is still not giving me types on the static input values... :(
   constructor(
-    // TODO: this is still not giving me types on the static input values... :(
+    instanceName: string,
     inputs: DmnoPluginInputMap<typeof OnePasswordDmnoPlugin.inputSchema>,
   ) {
-    super();
+    super(instanceName);
     this.setInputMap(inputs);
   }
 

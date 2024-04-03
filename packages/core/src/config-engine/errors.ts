@@ -1,13 +1,17 @@
+import kleur from 'kleur';
 import _ from 'lodash-es';
 
 export class DmnoError extends Error {
   originalError?: Error;
   get isUnexpected() { return !!this.originalError; }
 
+  icon = '❌';
+
   constructor(err: string | Error) {
     if (_.isError(err)) {
       super(err.message);
       this.originalError = err;
+      this.icon = '💥';
     } else {
       super(err);
     }
@@ -16,6 +20,7 @@ export class DmnoError extends Error {
 
   toJSON() {
     return {
+      icon: this.icon,
       type: this.name,
       name: this.name,
       message: this.message,
@@ -53,18 +58,22 @@ export class ConfigLoadError extends DmnoError {
     };
   }
 }
-export class SchemaError extends DmnoError {}
-export class ValidationError extends DmnoError {}
-export class CoercionError extends DmnoError {}
-export class ResolutionError extends DmnoError {}
+export class SchemaError extends DmnoError {
+  icon = '🧰';
+}
+export class ValidationError extends DmnoError {
+  icon = '❌';
+}
+export class CoercionError extends DmnoError {
+  icon = '🛑';
+}
+export class ResolutionError extends DmnoError {
+  icon = '⛔';
+}
 
 export class EmptyRequiredValueError extends ValidationError {
-  constructor(val: undefined | null | '') {
-    let valStr: string = '';
-    if (val === undefined) valStr = 'undefined';
-    if (val === null) valStr = 'null';
-    if (val === '') valStr = '""';
-
-    super(`Value is required but is currently empty (${valStr})`);
+  icon = '❓';
+  constructor(_val: undefined | null | '') {
+    super('Value is required but is currently empty');
   }
 }

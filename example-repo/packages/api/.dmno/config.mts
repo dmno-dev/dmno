@@ -1,7 +1,9 @@
-import { defineConfigSchema, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, switchByNodeEnv, injectPlugin, createDmnoDataType } from '@dmno/core';
+import { defineConfigSchema, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, switchByNodeEnv, createDmnoDataType } from '@dmno/core';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
+import { EncryptedVaultDmnoPlugin } from '@dmno/encrypted-vault-plugin';
 
-const OnePassBackend = injectPlugin(OnePasswordDmnoPlugin);
+const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
+const VaultPlugin = EncryptedVaultDmnoPlugin.injectInstance('vault/prod');
 
 export default defineConfigSchema({
   name: 'api',
@@ -25,7 +27,8 @@ export default defineConfigSchema({
     },
 
     API_ONLY: {
-      value: 'set via dmno'
+      // value: 'set via dmno'
+      value: VaultPlugin.item(),
     },
 
     PORT: {

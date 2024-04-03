@@ -618,7 +618,7 @@ export class DmnoService {
 
     // add reference back to this service on each plugin
     _.each(this.plugins, (p) => {
-      p.service = this;
+      p.initByService = this;
     });
 
     if (_.isError(opts.rawConfig)) {
@@ -747,6 +747,7 @@ export class DmnoService {
       isResolved: true,
       packageName: this.packageName,
       serviceName: this.serviceName,
+      path: this.path,
       configLoadError: this.configLoadError?.toJSON(),
       schemaErrors:
         this.schemaErrors?.length

@@ -38,6 +38,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
     "dev": "pnpm run build --watch",
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix"
@@ -55,6 +56,7 @@
     "@dmno/core": "workspace:*",
     "@dmno/encryption-lib": "workspace:*",
     "async": "^3.2.5",
+    "commander": "^12.0.0",
     "jsonc-parser": "^3.2.1",
     "lodash-es": "^4.17.21"
   }

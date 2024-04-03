@@ -31,6 +31,7 @@ import { ConfigLoaderRequestMap } from './ipc-requests';
 import { generateServiceTypes, generateTypescriptTypes } from '../config-engine/type-generation';
 import { finishPluginRegistration, startPluginRegistration } from '../config-engine/plugins';
 import { ConfigLoadError } from '../config-engine/errors';
+import { debugTimer } from '../cli/lib/debug-timer';
 
 
 const debug = Debug('dmno');
@@ -57,6 +58,8 @@ const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 // if (IS_PNPM) console.log('detected pnpm');
 // if (!IS_PNPM) throw new Error('Must be run in a pnpm-based monorepo');
 
+debugTimer('begin loader executable');
+
 // using `pnpm m ls` to list workspace packages
 const workspacePackagesRaw = execSync('pnpm m ls --json --depth=-1').toString();
 const workspacePackagesData = JSON.parse(workspacePackagesRaw) as Array<PnpmPackageListing>;
@@ -72,7 +75,7 @@ type PnpmPackageListing = {
 // workspace root should have the shortest path, since the others will all be nested
 const workspaceRootEntry = _.minBy(workspacePackagesData, (w) => w.path.length)!;
 const WORKSPACE_ROOT_PATH = workspaceRootEntry.path;
-
+debugTimer('loaded workspace services via pnpm cli');
 
 
 const customPlugin: Plugin = {
@@ -190,6 +193,9 @@ const runner = new ViteNodeRunner({
   },
 });
 
+
+debugTimer('init vite');
+
 // This can be used to test if we are importing @dmno/core correctly
 // const testImport = await runner.executeFile('/Users/theo/dmno/core/example-repo/packages/webapp/.dmno/test.mts');
 // console.log(testImport.DmnoService === DmnoService);
@@ -221,21 +227,19 @@ if (!processUuid) {
   throw new Error('Missing process IPC UUID');
 }
 
+debugTimer('begin ipc client connection');
 ipc.connectTo('dmno', `/tmp/${processUuid}.dmno.sock`, function () {
+  debugTimer('ipc client connectTo callback');
+
   ipc.of.dmno.on('connect', function () {
+    debugTimer('ipc client connect event + emit ready');
     ipc.log('## connected to dmno ##', ipc.config.retry);
+    ipc.of.dmno.emit('ready');
   });
 
   ipc.of.dmno.on('disconnect', function () {
     ipc.log('disconnected from dmno');
   });
-
-  ipc.of.dmno.on(
-    'message', // any event or message type your server listens for
-    function (data) {
-      ipc.log('got a message from dmno : ', data);
-    },
-  );
 
   ipc.of.dmno.on('request', async (message: any) => {
     const handler = (requestHandlers as any)[message.requestType];
@@ -252,6 +256,7 @@ ipc.connectTo('dmno', `/tmp/${processUuid}.dmno.sock`, function () {
 
 
 let dmnoWorkspace: DmnoWorkspace;
+let schemaLoaded = false;
 
 async function reloadAllConfig() {
   dmnoWorkspace = new DmnoWorkspace();
@@ -304,8 +309,11 @@ async function reloadAllConfig() {
 
   dmnoWorkspace.initServicesDag();
   dmnoWorkspace.processConfig();
-  if (devMode) await regenerateAllTypeFiles();
-  await dmnoWorkspace.resolveConfig();
+  if (devMode) {
+    await regenerateAllTypeFiles();
+    await dmnoWorkspace.resolveConfig();
+  }
+  schemaLoaded = true;
 }
 
 
@@ -319,10 +327,15 @@ async function regenerateAllTypeFiles() {
 // IPC request handlers ////////////////////////////////////////////////
 
 registerRequestHandler('load-full-schema', async (_payload) => {
+  if (!schemaLoaded) await reloadAllConfig();
+  // TODO: do we always want to resolve? not sure?
+  await dmnoWorkspace.resolveConfig();
   return dmnoWorkspace.toJSON();
 });
 
 registerRequestHandler('get-resolved-config', async (payload) => {
+  if (!schemaLoaded) await reloadAllConfig();
+  await dmnoWorkspace.resolveConfig();
   const service = dmnoWorkspace.getService(payload);
   if (!service) throw new Error('Unable to select a service');
 
@@ -331,6 +344,7 @@ registerRequestHandler('get-resolved-config', async (payload) => {
 
 
 registerRequestHandler('generate-types', async (payload) => {
+  if (!schemaLoaded) await reloadAllConfig();
   const service = dmnoWorkspace.getService(payload);
   if (!service) throw new Error('Unable to select a service');
 
@@ -346,12 +360,3 @@ registerRequestHandler('start-dev-mode', async (_payload) => {
   await reloadAllConfig();
   return { success: true };
 });
-
-
-
-// TODO: we're assuming here that IPC connection is already booted...
-// and this should probably happen earlier (before loading/resolving config)
-
-await reloadAllConfig();
-ipc.of.dmno.emit('ready');
-

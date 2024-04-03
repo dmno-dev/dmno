@@ -32,12 +32,15 @@ importers:
       base64-arraybuffer:
         specifier: ^1.0.2
         version: 1.0.2
+      caller-path:
+        specifier: ^4.0.0
+        version: 4.0.0
       cli-table3:
         specifier: ^0.6.3
         version: 0.6.3
-      clipanion:
-        specifier: 4.0.0-rc.3
-        version: 4.0.0-rc.3(typanion@3.14.0)
+      commander:
+        specifier: ^12.0.0
+        version: 12.0.0
       debug:
         specifier: ^4.3.4
         version: 4.3.4(supports-color@9.4.0)
@@ -285,6 +288,9 @@ importers:
       async:
         specifier: ^3.2.5
         version: 3.2.5
+      commander:
+        specifier: ^12.0.0
+        version: 12.0.0
       jsonc-parser:
         specifier: ^3.2.1
         version: 3.2.1
@@ -5640,6 +5646,20 @@ packages:
       set-function-length: 1.2.1
     dev: true
 
+  /caller-callsite@5.0.0:
+    resolution: {integrity: sha512-l3+xZHsuNlFjchy1nl1kpQwi7PhKHgtQ7MOx5ijHwlouAjnwRNjq3AlxH8SGuWiF5XAhb/mSH+c90LIDFjJKtA==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dependencies:
+      callsites: 4.1.0
+    dev: false
+
+  /caller-path@4.0.0:
+    resolution: {integrity: sha512-18JFq7TTe4+cDKsyZETRk/IS9Xka3dRcU9VWm1C6XlkAjKPSR2bskpDSUHVQw7gvef34bi1gltzmCxToUw1oQw==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dependencies:
+      caller-callsite: 5.0.0
+    dev: false
+
   /callsite@1.0.0:
     resolution: {integrity: sha512-0vdNRFXn5q+dtOqjfFtmtlI9N2eVZ7LMyEV2iKC5mEEFvSg/69Ml6b/WU2qF8W1nLRa0wiSrDT3Y5jOHZCwKPQ==}
     dev: true
@@ -5647,6 +5667,11 @@ packages:
   /callsites@3.1.0:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
     engines: {node: '>=6'}
+
+  /callsites@4.1.0:
+    resolution: {integrity: sha512-aBMbD1Xxay75ViYezwT40aQONfr+pSXTHwNKvIXhXD6+LY3F1dLIcceoC5OZKBVHbXcysz1hL9D2w0JJIMXpUw==}
+    engines: {node: '>=12.20'}
+    dev: false
 
   /camelcase@6.3.0:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
@@ -5884,14 +5909,6 @@ packages:
     engines: {node: '>= 12'}
     dev: false
 
-  /clipanion@4.0.0-rc.3(typanion@3.14.0):
-    resolution: {integrity: sha512-+rJOJMt2N6Oikgtfqmo/Duvme7uz3SIedL2b6ycgCztQMiTfr3aQh2DDyLHl+QUPClKMNpSg3gDJFvNQYIcq1g==}
-    peerDependencies:
-      typanion: '*'
-    dependencies:
-      typanion: 3.14.0
-    dev: false
-
   /cliui@8.0.1:
     resolution: {integrity: sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ==}
     engines: {node: '>=12'}
@@ -6015,6 +6032,11 @@ packages:
     resolution: {integrity: sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug==}
     engines: {node: '>=14'}
     dev: true
+
+  /commander@12.0.0:
+    resolution: {integrity: sha512-MwVNWlYjDTtOjX5PiD7o5pK0UrFU/OYgcJfjjK4RaHZETNtjJqrZa9Y9ds88+A+f+d5lv+561eZ+yCKoS3gbAA==}
+    engines: {node: '>=18'}
+    dev: false
 
   /commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
@@ -14347,10 +14369,6 @@ packages:
     requiresBuild: true
     dependencies:
       safe-buffer: 5.2.1
-    dev: false
-
-  /typanion@3.14.0:
-    resolution: {integrity: sha512-ZW/lVMRabETuYCd9O9ZvMhAh8GslSqaUjxmK/JLPCh6l73CvLBiuXswj/+7LdnWOgYsQ130FqLzFz5aGT4I3Ug==}
     dev: false
 
   /type-check@0.4.0:

@@ -42,7 +42,8 @@ export class EncryptedVaultItem {
   async getRawValue(key: crypto.webcrypto.CryptoKey) {
     if (this.rawValue) return this.rawValue;
     if (!this.encryptedValue) throw new Error('item is empty');
-    this.rawValue = await decrypt(key, this.encryptedValue, 'theo@dmno.dev/1711996015385');
+    // TODO: add additionalData to include with each item?
+    this.rawValue = await decrypt(key, this.encryptedValue);
     return this.rawValue;
   }
 }
@@ -60,10 +61,13 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
     },
   } satisfies DmnoPluginInputSchema;
 
+  static cliPath = `${__dirname}/cli`;
+
   constructor(
+    instanceName: string,
     inputs: DmnoPluginInputMap<typeof EncryptedVaultDmnoPlugin.inputSchema>,
   ) {
-    super();
+    super(instanceName);
     this.setInputMap(inputs);
   }
 
@@ -72,11 +76,11 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
   private vaultFileLoaded = false;
   private vaultItems: Record<string, EncryptedVaultItem> = {};
   private async loadVaultFile() {
-    if (!this.service) throw new Error('Cannot load vault file unless connected to a service');
+    if (!this.initByService) throw new Error('Cannot load vault file unless connected to a service');
 
     this.vaultKey = await importEncryptionKeyString(this.inputValues.key);
 
-    this.vaultFilePath = `${this.service.path}/.dmno/${this.inputValues.name || 'default'}.vault.json`;
+    this.vaultFilePath = `${this.initByService.path}/.dmno/${this.inputValues.name || 'default'}.vault.json`;
     const vaultFileRaw = await fs.promises.readFile(this.vaultFilePath, 'utf-8');
     const vaultFileObj = parseJSONC(vaultFileRaw.toString());
     for (const key in vaultFileObj.items) {
@@ -102,7 +106,7 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
 
   private vaultKey?: crypto.webcrypto.CryptoKey;
   private getVaultItem(fullPath: string) {
-    const itemKey = [this.service!.serviceName, path].join('!');
+    const itemKey = [this.initByService!.serviceName, path].join('!');
     return;
   }
 

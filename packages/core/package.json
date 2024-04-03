@@ -5,6 +5,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "build": "tsup",
+    "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
     "dev": "pnpm run build --watch",
     "test": "vite-node ./src/test.ts",
     "lint": "eslint src --ext .ts,.cjs",
@@ -34,7 +35,7 @@
     }
   },
   "bin": {
-    "dmno": "./dist/cli/cli-executable.mjs"
+    "dmno": "./dist/cli/commander-cli.mjs"
   },
   "keywords": [],
   "author": "",
@@ -57,8 +58,9 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "async": "^3.2.5",
     "base64-arraybuffer": "^1.0.2",
+    "caller-path": "^4.0.0",
     "cli-table3": "^0.6.3",
-    "clipanion": "4.0.0-rc.3",
+    "commander": "^12.0.0",
     "debug": "^4.3.4",
     "dotenv": "^16.4.5",
     "execa": "^8.0.1",

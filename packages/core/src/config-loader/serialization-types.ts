@@ -17,7 +17,7 @@ export type SerializedWorkspace = {
 };
 
 export type SerializedService =
-  Pick<DmnoService, 'packageName' | 'serviceName'>
+  Pick<DmnoService, 'packageName' | 'serviceName' | 'path'>
   & {
     isValid: boolean,
     isResolved: boolean,
@@ -27,8 +27,11 @@ export type SerializedService =
     config: Record<string, SerializedConfigItem>,
   };
 
-export type SerializedDmnoPlugin = Pick<DmnoPlugin, 'name' | 'instanceName' | 'isValid'>
+export type SerializedDmnoPlugin = Pick<DmnoPlugin, 'pluginType' | 'instanceName' | 'isValid'>
 & {
+  cliPath?: string,
+  initializedInService?: string,
+  injectedIntoServices?: Array<string>,
   inputs: Record<string, SerializedDmnoPluginInput>,
 };
 export type SerializedDmnoPluginInput = Pick<DmnoPluginInputItem, 'key' | 'isValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved'> & {
@@ -53,6 +56,7 @@ export type SerializedConfigItem =
 
 /** shape of how we will serialize our errors when sending over the wire */
 export type SerializedDmnoError = {
+  icon: string,
   type: string, // TODO: maybe narrow this down?
   name: string,
   message: string,
