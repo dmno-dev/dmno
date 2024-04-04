@@ -13,16 +13,20 @@ export default defineConfigSchema({
     'DMNO_ENV',
   ],
   schema: {
+    OP_ITEM_1: {
+      value: OnePassBackend.item(),
+    },
+
     SECRET_EXAMPLE: {
       extends: DmnoBaseTypes.string,
       required: true,
-      value: OnePassBackend.itemByReference("op://dev test/example/username"),
+      value: OnePassBackend.itemByLink("https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequ&h=dmnoinc.1password.com"),
     },
     SWITCHED_EXAMPLE: {
       value: switchByNodeEnv({
-        _default: OnePassBackend.itemByReference("example/username"),
-        staging: OnePassBackend.itemByReference("example/username"),
-        production: OnePassBackend.itemByReference("example/username"),
+        _default: OnePassBackend.itemByReference("op://dev test/example/username"),
+        staging: OnePassBackend.itemByReference("op://dev test/example/username"),
+        production: OnePassBackend.itemByReference("op://dev test/example/username"),
       }),
     },
 

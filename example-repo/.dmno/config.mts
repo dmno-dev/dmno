@@ -5,12 +5,17 @@ import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-v
 // TODO: figure out how to get rid of mjs extension
 import { GA4MeasurementId } from './custom-types.mjs';
 
-const ProdOnePassBackend = new OnePasswordDmnoPlugin('1pass', {
+
+
+
+
+const OnePassBackend = new OnePasswordDmnoPlugin('1pass', {
   token: configPath('OP_TOKEN'),
+  envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=n4wmgfq77mydg5lebtroa3ykvm&h=dmnoinc.1password.com'
   // token: InjectPluginInputByType,
   // token: 'asdf',
-  defaultVaultName: 'dev test',
 });
+
 
 const ProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
   key: configPath('DMNO_VAULT_KEY'),
@@ -24,7 +29,9 @@ export default defineWorkspaceConfig({
   schema: {
     OP_TOKEN: {
       extends: OnePasswordTypes.serviceAccountToken,
-      required: true
+    },
+    OP_TOKEN_PROD: {
+      extends: OnePasswordTypes.serviceAccountToken,
     },
 
     DMNO_VAULT_KEY: {
@@ -32,8 +39,8 @@ export default defineWorkspaceConfig({
       // required: true
     },
 
-    VAULT_TEST: {
-      value: NonProdVault.item(),
+    OP_ITEM_1: {
+      value: OnePassBackend.item(),
     },
 
     NODE_ENV: NodeEnvType, 
@@ -72,9 +79,11 @@ export default defineWorkspaceConfig({
     SEGMENT_SECRET: {
       extends: DmnoBaseTypes.string,
       value: switchByNodeEnv({
-        _default: 'asdfasdfasdf',
-        staging: ProdOnePassBackend.itemByReference("op://dev test/segment/staging"),
-        production: ProdOnePassBackend.itemByReference("op://dev test/segment/prod")
+        // from non prod vault
+        _default: OnePassBackend.itemByLink("https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequ&h=dmnoinc.1password.com", 'username'),
+        
+        // from prod vault
+        production: OnePassBackend.itemByLink("https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequ&h=dmnoinc.1password.com", 'username')
       })
     },
 

@@ -35,7 +35,7 @@ export function addServiceSelection(program: Command, selectionRequired = true) 
       //   await fallingDmnoLoader(750),
       //   await ctx.configLoader.makeRequest('load-full-schema'),
       // ]);
-      const workspace = await ctx.configLoader.makeRequest('load-full-schema');
+      const workspace = await ctx.configLoader.makeRequest('load-full-schema', {});
 
 
       const namesMaxLen = getMaxLength(_.map(workspace.services, (s) => s.serviceName));
@@ -151,7 +151,7 @@ export function addPluginSelection(program: Command) {
     .hook('preAction', async (thisCommand, actionCommand) => {
       const ctx = getCliRunCtx();
 
-      const workspace = ctx.workspace || await ctx.configLoader.makeRequest('load-full-schema');
+      const workspace = ctx.workspace || await ctx.configLoader.makeRequest('load-full-schema', { resolve: true });
 
       const allPlugins = _.flatMap(workspace.services, (service) => {
         return _.map(service.plugins);

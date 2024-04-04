@@ -2,7 +2,7 @@ import { SerializedService, SerializedWorkspace } from './serialization-types';
 
 export type ConfigLoaderRequestMap = {
   'load-full-schema': {
-    payload: undefined,
+    payload: undefined | { resolve?: boolean },
     response: SerializedWorkspace,
   },
   'get-resolved-config': {

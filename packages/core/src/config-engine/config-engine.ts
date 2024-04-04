@@ -761,7 +761,7 @@ export class DmnoService {
 }
 
 export class ResolverContext {
-  constructor(private service: DmnoService, private itemPath: string) {
+  constructor(private service: DmnoService, readonly itemPath: string) {
 
   }
 
@@ -779,18 +779,26 @@ export class ResolverContext {
     return item.resolvedValue;
   }
 
+
+  // TODO: probably dont want to pull cache disable setting from the workspace/service/etc
   async getCacheItem(key: string) {
+    if (process.env.DISABLE_DMNO_CACHE) return undefined;
     return this.service.workspace.getCacheItem(key, this.fullPath);
   }
   async setCacheItem(key: string, value: ConfigValue) {
+    if (process.env.DISABLE_DMNO_CACHE) return;
     if (value === undefined || value === null) return;
     return this.service.workspace.setCacheItem(key, value.toString(), this.fullPath);
   }
   async getOrSetCacheItem(key: string, getValToWrite: () => Promise<string>) {
-    const cachedValue = await this.getCacheItem(key);
-    if (cachedValue) return cachedValue;
+    if (!process.env.DISABLE_DMNO_CACHE) {
+      const cachedValue = await this.getCacheItem(key);
+      if (cachedValue) return cachedValue;
+    }
     const val = await getValToWrite();
-    await this.setCacheItem(key, val);
+    if (!process.env.DISABLE_DMNO_CACHE) {
+      await this.setCacheItem(key, val);
+    }
     return val;
   }
 }
@@ -854,6 +862,9 @@ export abstract class DmnoConfigItemBase {
   }
 
   async resolve(ctx: ResolverContext) {
+    // TODO: not sure if we want to bail here or what it means to be "resolved" as things are changing?
+    if (this.isResolved) return;
+
     // resolve children of objects... this will need to be thought through and adjusted
 
     for (const childKey in this.children) {

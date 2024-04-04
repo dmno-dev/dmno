@@ -25,7 +25,7 @@ program.action(async (opts: {
 }, thisCommand) => {
   const ctx = getCliRunCtx();
 
-  const workspace = ctx.workspace!;
+  const workspace = await ctx.configLoader.makeRequest('load-full-schema', { resolve: true });
 
   // first display loading errors (which would likely cascade into schema errors)
   if (_.some(workspace.services, (s) => s.configLoadError)) {

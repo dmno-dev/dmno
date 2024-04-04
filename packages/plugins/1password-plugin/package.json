@@ -58,6 +58,7 @@
   "dependencies": {
     "@dmno/core": "workspace:*",
     "async": "^3.2.5",
+    "dotenv": "^16.4.5",
     "lodash-es": "^4.17.21",
     "unzip-stream": "^0.3.1"
   }

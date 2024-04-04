@@ -1,4 +1,7 @@
 import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheFunctionResult, createDmnoDataType, defineConfigSchema, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from '@dmno/core';
+import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
+
+const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
 
 const customUrlType = createDmnoDataType({
   typeLabel: 'my-custom-url',
@@ -35,6 +38,10 @@ export default defineConfigSchema({
     }
   ],
   schema: {
+    OP_ITEM_1: {
+      // value: OnePassBackend.item(),
+      value: OnePassBackend.itemByLink('https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequ&h=dmnoinc.1password.com'),
+    },
 
     // EX1: {
     //   value: (ctx) => DMNO_CONFIG.BOOLEAN_EXAMPLE,

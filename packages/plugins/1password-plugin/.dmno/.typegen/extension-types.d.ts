@@ -7,9 +7,8 @@ declare module '../../src/plugin' {
     [_PluginInputTypesSymbol]: {
       /** token to be used... more jsdoc info... */
       token: string,
-    
-      defaultVaultId?: string,
-      defaultVaultName?: string,
+      /** private link to item containing dotenv style values */
+      envItemLink?: string;
     }
   }
 

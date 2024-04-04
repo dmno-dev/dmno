@@ -88,7 +88,7 @@ export default defineConfigSchema({
     DEFAULTS_TO_STRING: { value: 'cool' },   // infers string
     FALLBACK_TO_STRING_NO_INFO: { },         // assumes string
     FALLBACK_TO_STRING_UNABLE_TO_INFER: {    // assumes string
-      value: onePassSync.item('secret-id-12345'),  
+      value: onePassSync.item('https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequ&h=dmnoinc.1password.com'),
     },
 
     // an additional shorthand is provided for config items with no settings other than extends/type
@@ -135,7 +135,7 @@ export default defineConfigSchema({
       value: switchByNodeEnv({
         _default: 'default-value',
         staging: (ctx) => `${ctx.get('NODE_ENV')}-value`,
-        production: onePassSync.item("asdf1234zxcv6789"),
+        production: onePassSync.item("https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequ&h=dmnoinc.1password.com"),
       }),
     },
 

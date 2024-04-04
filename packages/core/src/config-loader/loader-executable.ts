@@ -326,10 +326,9 @@ async function regenerateAllTypeFiles() {
 
 // IPC request handlers ////////////////////////////////////////////////
 
-registerRequestHandler('load-full-schema', async (_payload) => {
+registerRequestHandler('load-full-schema', async (payload) => {
   if (!schemaLoaded) await reloadAllConfig();
-  // TODO: do we always want to resolve? not sure?
-  await dmnoWorkspace.resolveConfig();
+  if (payload?.resolve) await dmnoWorkspace.resolveConfig();
   return dmnoWorkspace.toJSON();
 });
 
