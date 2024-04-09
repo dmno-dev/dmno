@@ -22,7 +22,7 @@ export default defineConfigSchema({
   pick: [
     'NODE_ENV',
     'DMNO_ENV',
-    'GOOGLE_ANALYTICS_MEASUREMENT_ID',
+    // 'GOOGLE_ANALYTICS_MEASUREMENT_ID',
     {
       source: 'api',
       key: 'API_URL',
@@ -39,8 +39,7 @@ export default defineConfigSchema({
   ],
   schema: {
     OP_ITEM_1: {
-      // value: OnePassBackend.item(),
-      value: OnePassBackend.itemByLink('https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequ&h=dmnoinc.1password.com'),
+      value: OnePassBackend.item(),
     },
 
     // EX1: {
@@ -114,7 +113,7 @@ export default defineConfigSchema({
         max: 100,
         min: 1
       }),
-      value: '12.45',
+      value: '123.45',
     },
     WEB_URL: {
       extends: customUrlType({ newSetting: true }),

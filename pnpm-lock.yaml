@@ -20,6 +20,9 @@ importers:
       '@dmno/encryption-lib':
         specifier: workspace:*
         version: link:../encryption-lib
+      '@dmno/ts-lib':
+        specifier: workspace:*
+        version: link:../ts-lib
       '@inquirer/prompts':
         specifier: ^4.3.0
         version: 4.3.0
@@ -288,12 +291,15 @@ importers:
       '@dmno/encryption-lib':
         specifier: workspace:*
         version: link:../../encryption-lib
+      '@dmno/ts-lib':
+        specifier: workspace:*
+        version: link:../../ts-lib
+      '@inquirer/prompts':
+        specifier: ^4.3.0
+        version: 4.3.0
       async:
         specifier: ^3.2.5
         version: 3.2.5
-      commander:
-        specifier: ^12.0.0
-        version: 12.0.0
       jsonc-parser:
         specifier: ^3.2.1
         version: 3.2.1

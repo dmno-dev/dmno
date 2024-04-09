@@ -1,7 +1,7 @@
 import path from 'node:path';
 import crypto from 'crypto';
 import {
-  ChildProcess, spawn,
+  ChildProcess, fork, spawn,
 } from 'node:child_process';
 import kleur from 'kleur';
 import _ from 'lodash-es';
@@ -9,10 +9,11 @@ import ipc from 'node-ipc';
 import Debug from 'debug';
 
 
+import { DeferredPromise, createDeferredPromise } from '@dmno/ts-lib';
 import { ConfigLoaderRequestMap } from '../../config-loader/ipc-requests';
-import { DeferredPromise, createDeferredPromise } from '../../lib/deferred-promise';
-import { debugTimer } from './debug-timer';
+import { createDebugTimer } from './debug-timer';
 
+const debugTimer = createDebugTimer('dmno:loader-process');
 
 
 const debug = Debug('dmno');
@@ -30,7 +31,8 @@ export class ConfigLoaderProcess {
   readyAt: Date | undefined;
 
   childProcess?: ChildProcess;
-  isReady: DeferredPromise = createDeferredPromise();
+  private isReadyDeferred: DeferredPromise = createDeferredPromise();
+  get isReady() { return this.isReadyDeferred.promise; }
   uuid = crypto.randomUUID();
 
   constructor() {
@@ -70,7 +72,7 @@ export class ConfigLoaderProcess {
       this.readyAt = new Date();
 
       debug(kleur.yellow(`took ${+this.readyAt - +this.startAt} ms to boot`));
-      this.isReady.resolve();
+      this.isReadyDeferred.resolve();
     });
 
     debugTimer('ipc server start!');
@@ -81,6 +83,7 @@ export class ConfigLoaderProcess {
     try {
       this.childProcess = spawn('node', [loaderExecutablePath, this.uuid], { stdio: 'inherit' });
       debugTimer('spawn loader executable');
+
       this.childProcess.on('error', (err) => {
         debug('spawn error', err);
       });
@@ -120,7 +123,7 @@ export class ConfigLoaderProcess {
 
     const payload = args?.[0];
     // make sure IPC and the process is booted before we do anything
-    await this.isReady.promise;
+    await this.isReadyDeferred.promise;
 
 
     // in order to make multiple concurrent requests, we create a "request id"

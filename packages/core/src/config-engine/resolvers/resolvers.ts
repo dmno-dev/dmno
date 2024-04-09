@@ -5,12 +5,13 @@ import {
 } from '../config-engine';
 import { ResolutionError } from '../errors';
 import { DmnoPlugin } from '../plugins';
+import { SerializedResolver } from '../../config-loader/serialization-types';
 
 // TODO: do we allow Date?
 // what to do about null/undefined?
 export type ConfigValue = string | number | boolean | null | { [key: string]: ConfigValue } | Array<ConfigValue>;
 
-type ValueResolverResult = undefined | ConfigValue | ConfigValueResolver;
+type ValueResolverResult = undefined | ConfigValue;
 type ConfigValueInlineFunction =
   (ctx: ResolverContext) => MaybePromise<ValueResolverResult>;
 export type InlineValueResolverDef =
@@ -70,14 +71,31 @@ export function createResolver(def: ResolverDefinition) {
 
 
 type ResolverBranch = {
+  id: string,
   label: string;
   resolver: ConfigValueResolver;
   condition: (ctx: ResolverContext) => boolean;
   isDefault: boolean;
+  isActive?: boolean;
 };
 
 export class ConfigValueResolver {
-  constructor(readonly def: ResolverDefinition) {}
+  constructor(readonly def: ResolverDefinition) {
+    // TODO: figure out this pattern... we'll have several bits of setings that
+    // are either static or need some basic resolution
+    if (_.isString(this.def.icon)) this.icon = this.def.icon;
+    if (_.isString(this.def.label)) this.label = this.def.label;
+
+    // link the branch resolvers back to their branch definition
+    // and to this parent resolver
+    // so they can access the branch path if needed
+    if ('resolveBranches' in this.def) {
+      _.each(this.def.resolveBranches, (branchDef) => {
+        branchDef.resolver.branchDef = branchDef;
+        branchDef.resolver.parentResolver = this;
+      });
+    }
+  }
 
   isResolved = false;
   resolvedValue?: ConfigValue;
@@ -85,7 +103,48 @@ export class ConfigValueResolver {
 
   resolutionError?: ResolutionError;
 
+  icon?: string;
+  label?: string;
+
+  private _configItem?: DmnoConfigItemBase;
+  set configItem(configItem: DmnoConfigItemBase | undefined) {
+    this._configItem = configItem;
+    if ('resolveBranches' in this.def) {
+      _.each(this.def.resolveBranches, (branch) => {
+        branch.resolver.configItem = configItem;
+      });
+    }
+  }
+  get configItem() {
+    return this._configItem;
+  }
+
+  parentResolver?: ConfigValueResolver;
+  branchDef?: ResolverBranch;
+
+  get branchIdPath(): string | undefined {
+    if (!this.branchDef) return undefined;
+    if (this.parentResolver) {
+      const parentBranchIdPath = this.parentResolver.branchIdPath;
+      if (parentBranchIdPath) {
+        return `${this.parentResolver.branchIdPath}/${this.branchDef.id}`;
+      }
+    }
+    return this.branchDef?.id;
+  }
+
+  getFullPath() {
+    return _.compact([
+      this.configItem?.getFullPath(),
+      this.branchIdPath,
+    ]).join('#');
+  }
+
+
   async resolve(ctx: ResolverContext) {
+    if (_.isFunction(this.def.icon)) this.icon = this.def.icon(ctx);
+    if (_.isFunction(this.def.label)) this.label = this.def.label(ctx);
+
     // optional cache key can be static or a fn
     let cacheKey: string | undefined;
     if (_.isString(this.def.cacheKey)) cacheKey = this.def.cacheKey;
@@ -106,7 +165,7 @@ export class ConfigValueResolver {
       }
     }
 
-    let resolutionResult: ValueResolverResult;
+    let resolutionResult: ConfigValueResolver | ValueResolverResult;
 
     // deal with branched case (ex: switch / if-else)
     if ('resolveBranches' in this.def) {
@@ -118,6 +177,11 @@ export class ConfigValueResolver {
       if (!matchingBranch) {
         matchingBranch = _.find(this.def.resolveBranches, (branch) => branch.isDefault);
       }
+
+      _.each(this.def.resolveBranches, (branch) => {
+        branch.isActive = branch === matchingBranch;
+      });
+
       // TODO: might be able to force a default to be defined?
       if (!matchingBranch) {
         throw new Error('no matching resolver branch found and no default');
@@ -144,7 +208,8 @@ export class ConfigValueResolver {
     if (resolutionResult instanceof ConfigValueResolver) {
       // resolutionResult is now a child resolver which must be resolved itself
       // NOTE we have to call this recursively so that caching can be triggered on each resolver
-      await resolutionResult.resolve(ctx);
+      const childCtx = new ResolverContext(resolutionResult);
+      await resolutionResult.resolve(childCtx);
       this.resolvedValue = resolutionResult.resolvedValue;
       // TODO: deal with errors - and need to bubble them up...?
     } else {
@@ -159,6 +224,28 @@ export class ConfigValueResolver {
       // console.log(kleur.bgMagenta(`SAVE CACHED VALUE IN KEY: ${this.cacheKey}`));
       await ctx.setCacheItem(cacheKey, this.resolvedValue);
     }
+  }
+
+  toJSON(): SerializedResolver {
+    return {
+      isResolved: this.isResolved,
+      icon: this.icon,
+      label: this.label,
+      createdByPluginInstanceName: this.def.createdByPlugin?.instanceName,
+      // itemPath: this.configItem?.getFullPath(),
+      // branchIdPath: this.branchIdPath,
+      ...'resolveBranches' in this.def && {
+        branches: _.map(this.def.resolveBranches, (b) => ({
+          id: b.id,
+          label: b.label,
+          isDefault: b.isDefault,
+          isActive: b.isActive,
+          resolver: b.resolver.toJSON(),
+        })),
+      },
+      resolvedValue: this.resolvedValue,
+      resolutionError: this.resolutionError?.toJSON(),
+    };
   }
 }
 
@@ -205,7 +292,7 @@ export function cacheFunctionResult(
   return createResolver({
     icon: 'f7:function', // TODO: different fn for cached?
     label: 'cached fn',
-    cacheKey: explicitCacheKey || ((ctx) => ctx.fullPath),
+    cacheKey: explicitCacheKey || ((ctx) => ctx.resolverFullPath),
     resolve: fn,
   });
 }

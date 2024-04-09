@@ -11,7 +11,8 @@
  * watching the config files for changes, and then reloading them and firing off updates to the CLI
  */
 
-import { execSync } from 'node:child_process';
+import { exec } from 'node:child_process';
+import util from 'node:util';
 import _ from 'lodash-es';
 
 import ipc from 'node-ipc';
@@ -23,24 +24,26 @@ import { ViteNodeServer } from 'vite-node/server';
 import { ViteNodeRunner } from 'vite-node/client';
 import { installSourcemapsSupport } from 'vite-node/source-map';
 
+import { createDeferredPromise } from '@dmno/ts-lib';
 import {
   DmnoService, DmnoWorkspace, ServiceConfigSchema,
 } from '../config-engine/config-engine';
 
 import { ConfigLoaderRequestMap } from './ipc-requests';
 import { generateServiceTypes, generateTypescriptTypes } from '../config-engine/type-generation';
-import { finishPluginRegistration, startPluginRegistration } from '../config-engine/plugins';
+import { finishServiceLoadPlugins, beginServiceLoadPlugins, beginWorkspaceLoadPlugins } from '../config-engine/plugins';
 import { ConfigLoadError } from '../config-engine/errors';
-import { debugTimer } from '../cli/lib/debug-timer';
+import { createDebugTimer } from '../cli/lib/debug-timer';
 
+const execAsync = util.promisify(exec);
 
 const debug = Debug('dmno');
+const debugTimer = createDebugTimer('dmno:loader-executable');
 
-let devMode = false;
+const viteServerReadyDeferred = createDeferredPromise();
 
-
-const CWD = process.cwd();
-const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
+// const CWD = process.cwd();
+// const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 
 // console.log({
 //   cwd: process.cwd(),
@@ -50,6 +53,107 @@ const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 //   'process.env.PNPM_PACKAGE_NAME': process.env.PNPM_PACKAGE_NAME,
 // });
 
+debugTimer('begin loader executable');
+
+const requestHandlers = {} as Record<keyof ConfigLoaderRequestMap, any>;
+function registerRequestHandler<K extends keyof ConfigLoaderRequestMap>(
+  requestType: K,
+  handler: (payload: ConfigLoaderRequestMap[K]['payload']) => Promise<ConfigLoaderRequestMap[K]['response']>,
+) {
+  // console.log(`registered handler for requestType: ${requestType}`);
+  if (requestHandlers[requestType]) {
+    throw new Error(`Duplicate IPC request handler detected for requestType "${requestType}"`);
+  }
+  requestHandlers[requestType] = handler;
+}
+
+
+// IPC request handlers ////////////////////////////////////////////////
+
+registerRequestHandler('load-full-schema', async (payload) => {
+  if (!schemaLoaded) await reloadAllConfig();
+  if (payload?.resolve) await dmnoWorkspace.resolveConfig();
+  return dmnoWorkspace.toJSON();
+});
+
+registerRequestHandler('get-resolved-config', async (payload) => {
+  if (!schemaLoaded) await reloadAllConfig();
+  await dmnoWorkspace.resolveConfig();
+  const service = dmnoWorkspace.getService(payload);
+  if (!service) throw new Error('Unable to select a service');
+
+  return service.toJSON();
+});
+
+
+registerRequestHandler('generate-types', async (payload) => {
+  if (!schemaLoaded) await reloadAllConfig();
+  const service = dmnoWorkspace.getService(payload);
+  if (!service) throw new Error('Unable to select a service');
+
+  return { tsSrc: await generateTypescriptTypes(service) };
+});
+
+
+
+registerRequestHandler('start-dev-mode', async (_payload) => {
+  devMode = true;
+  // somewhat wasteful to reload... but this will then trigger some extra behaviour
+  // TODO: refactor how dev mode starts and the loading process... probably pass in a dev mode flag on boot
+  await reloadAllConfig();
+  return { success: true };
+});
+
+
+function initIpcClient() {
+  // const ipc = new Nodeipc.IPC();
+  ipc.config.id = 'dmno';
+  ipc.config.retry = 1500;
+  ipc.config.silent = true;
+
+  // we pass in a uuid to identify the running process IPC socket
+  // this allows us to run multiple concurrent loaders...
+  // TBD whether that makes sense or if we should share a single process?
+  const processUuid = process.argv[2];
+  if (!processUuid) {
+    throw new Error('Missing process IPC UUID');
+  }
+
+  debugTimer('begin ipc client connection');
+  ipc.connectTo('dmno', `/tmp/${processUuid}.dmno.sock`, function () {
+    debugTimer('ipc client connectTo callback');
+
+    ipc.of.dmno.on('connect', function () {
+      debugTimer('ipc client connect event + emit ready');
+      ipc.log('## connected to dmno ##', ipc.config.retry);
+      ipc.of.dmno.emit('ready');
+    });
+
+    ipc.of.dmno.on('disconnect', function () {
+      ipc.log('disconnected from dmno');
+    });
+
+    ipc.of.dmno.on('request', async (message: any) => {
+      const handler = (requestHandlers as any)[message.requestType];
+      if (!handler) {
+        throw new Error(`No handler for request type: ${message.requestType}`);
+      }
+      // we may receive a request before the vite server is ready
+      await viteServerReadyDeferred.promise;
+      const result = await handler(message.payload);
+      ipc.of.dmno.emit('request-response', {
+        requestId: message.requestId,
+        response: result,
+      });
+    });
+  });
+}
+
+// trigger this early so it can begin while other things are getting set up
+initIpcClient();
+
+
+
 // currently assuming we are using pnpm, and piggybacking off of their definition of "services" in pnpm-workspace.yaml
 // we'll want to to do smarter detection and also support yarn/npm/etc as well as our own list of services defined at the root
 
@@ -58,12 +162,6 @@ const thisFilePath = import.meta.url.replace(/^file:\/\//, '');
 // if (IS_PNPM) console.log('detected pnpm');
 // if (!IS_PNPM) throw new Error('Must be run in a pnpm-based monorepo');
 
-debugTimer('begin loader executable');
-
-// using `pnpm m ls` to list workspace packages
-const workspacePackagesRaw = execSync('pnpm m ls --json --depth=-1').toString();
-const workspacePackagesData = JSON.parse(workspacePackagesRaw) as Array<PnpmPackageListing>;
-// console.log(workspacePackagesData);
 
 type PnpmPackageListing = {
   name: string;
@@ -72,6 +170,9 @@ type PnpmPackageListing = {
   private: boolean;
 };
 
+// using `pnpm m ls` to list workspace packages
+const workspacePackagesRaw = await execAsync('pnpm m ls --json --depth=-1');
+const workspacePackagesData = JSON.parse(workspacePackagesRaw.stdout) as Array<PnpmPackageListing>;
 // workspace root should have the shortest path, since the others will all be nested
 const workspaceRootEntry = _.minBy(workspacePackagesData, (w) => w.path.length)!;
 const WORKSPACE_ROOT_PATH = workspaceRootEntry.path;
@@ -192,7 +293,7 @@ const runner = new ViteNodeRunner({
     return node.resolveId(id, importer);
   },
 });
-
+viteServerReadyDeferred.resolve();
 
 debugTimer('init vite');
 
@@ -202,64 +303,13 @@ debugTimer('init vite');
 // process.exit(0);
 
 
-// const ipc = new Nodeipc.IPC();
-ipc.config.id = 'dmno';
-ipc.config.retry = 1500;
-ipc.config.silent = true;
-
-const requestHandlers = {} as Record<keyof ConfigLoaderRequestMap, any>;
-function registerRequestHandler<K extends keyof ConfigLoaderRequestMap>(
-  requestType: K,
-  handler: (payload: ConfigLoaderRequestMap[K]['payload']) => Promise<ConfigLoaderRequestMap[K]['response']>,
-) {
-  // console.log(`registered handler for requestType: ${requestType}`);
-  if (requestHandlers[requestType]) {
-    throw new Error(`Duplicate IPC request handler detected for requestType "${requestType}"`);
-  }
-  requestHandlers[requestType] = handler;
-}
-
-// we pass in a uuid to identify the running process IPC socket
-// this allows us to run multiple concurrent loaders...
-// TBD whether that makes sense or if we should share a single process?
-const processUuid = process.argv[2];
-if (!processUuid) {
-  throw new Error('Missing process IPC UUID');
-}
-
-debugTimer('begin ipc client connection');
-ipc.connectTo('dmno', `/tmp/${processUuid}.dmno.sock`, function () {
-  debugTimer('ipc client connectTo callback');
-
-  ipc.of.dmno.on('connect', function () {
-    debugTimer('ipc client connect event + emit ready');
-    ipc.log('## connected to dmno ##', ipc.config.retry);
-    ipc.of.dmno.emit('ready');
-  });
-
-  ipc.of.dmno.on('disconnect', function () {
-    ipc.log('disconnected from dmno');
-  });
-
-  ipc.of.dmno.on('request', async (message: any) => {
-    const handler = (requestHandlers as any)[message.requestType];
-    if (!handler) {
-      throw new Error(`No handler for request type: ${message.requestType}`);
-    }
-    const result = await handler(message.payload);
-    ipc.of.dmno.emit('request-response', {
-      requestId: message.requestId,
-      response: result,
-    });
-  });
-});
-
-
 let dmnoWorkspace: DmnoWorkspace;
 let schemaLoaded = false;
+let devMode = false;
 
 async function reloadAllConfig() {
   dmnoWorkspace = new DmnoWorkspace();
+  beginWorkspaceLoadPlugins(dmnoWorkspace);
 
   // TODO: we may want to set up an initial sort of the services so at least root is first?
   for (const w of workspacePackagesData) {
@@ -283,19 +333,29 @@ async function reloadAllConfig() {
 
     let service: DmnoService;
     try {
-      const plugins = startPluginRegistration(isRoot);
+      beginServiceLoadPlugins();
 
       // node-vite runs the file and returns the loaded module
-      const importedConfig = await runner.executeFile(configFilePath);
 
-      finishPluginRegistration();
+
+      // when dealing with hot reloads in dev mode, the files that are in the cache are not retriggered
+      // so we need to be aware that no side-effects would be re-triggered...
+      // for example the plugin loading trick of using a singleton to capture those plugins breaks :(
+      // the naive solution is to just clear the config files from the cache, but we may want to do something smarter
+      // we probably want to clear all user authored files (in the .dmno folder) rather than just the config files
+
+      // CLEAR EACH CONFIG FILE FROM THE CACHE SO WE RELOAD THEM ALL
+      runner.moduleCache.deleteByModuleId(configFilePath);
+
+      const importedConfig = await runner.executeFile(configFilePath);
 
       service = new DmnoService({
         ...serviceInitOpts,
         // TODO: check if the config file actually exported the right thing and throw helpful error otherwise
         rawConfig: importedConfig.default as ServiceConfigSchema,
-        plugins,
       });
+
+      finishServiceLoadPlugins(service);
     } catch (err) {
       debug('found error when loading config');
       service = new DmnoService({
@@ -324,38 +384,3 @@ async function regenerateAllTypeFiles() {
 }
 
 
-// IPC request handlers ////////////////////////////////////////////////
-
-registerRequestHandler('load-full-schema', async (payload) => {
-  if (!schemaLoaded) await reloadAllConfig();
-  if (payload?.resolve) await dmnoWorkspace.resolveConfig();
-  return dmnoWorkspace.toJSON();
-});
-
-registerRequestHandler('get-resolved-config', async (payload) => {
-  if (!schemaLoaded) await reloadAllConfig();
-  await dmnoWorkspace.resolveConfig();
-  const service = dmnoWorkspace.getService(payload);
-  if (!service) throw new Error('Unable to select a service');
-
-  return service.toJSON();
-});
-
-
-registerRequestHandler('generate-types', async (payload) => {
-  if (!schemaLoaded) await reloadAllConfig();
-  const service = dmnoWorkspace.getService(payload);
-  if (!service) throw new Error('Unable to select a service');
-
-  return { tsSrc: await generateTypescriptTypes(service) };
-});
-
-
-
-registerRequestHandler('start-dev-mode', async (_payload) => {
-  devMode = true;
-  // somewhat wasteful to reload... but this will then trigger some extra behaviour
-  // TODO: refactor how dev mode starts and the loading process... probably pass in a dev mode flag on boot
-  await reloadAllConfig();
-  return { success: true };
-});

@@ -5,6 +5,7 @@ import CliTable from 'cli-table3';
 import { ConfigLoaderProcess } from '../lib/loader-process';
 import { formatError, formattedValue } from '../lib/formatting';
 import { executeCommandWithEnv } from '../lib/execute-command';
+import { getCliRunCtx } from '../lib/cli-ctx';
 
 const program = new Command('dev')
   .summary('dev / watch mode')
@@ -14,10 +15,8 @@ Not specifying a service will run dmno for the whole project.
   `);
 
 program.action(async (opts, more) => {
-  const configLoader = new ConfigLoaderProcess();
-  await configLoader.isReady.promise;
-
-  await configLoader.makeRequest('start-dev-mode');
+  const ctx = getCliRunCtx();
+  await ctx.configLoader.makeRequest('start-dev-mode');
 });
 
 export const DevCommand = program;

@@ -2,14 +2,11 @@ import { Command } from 'commander';
 import kleur from 'kleur';
 import _ from 'lodash-es';
 import CliTable from 'cli-table3';
-import { ConfigLoaderProcess } from '../lib/loader-process';
 import { formatError, formattedValue } from '../lib/formatting';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 
 const TERMINAL_COLS = process.stdout.columns - 10 || 100;
-
-
 
 const program = new Command('load')
   .summary('load and resolve config')
@@ -28,7 +25,7 @@ program.action(async (opts: {
   const workspace = await ctx.configLoader.makeRequest('load-full-schema', { resolve: true });
 
   // first display loading errors (which would likely cascade into schema errors)
-  if (_.some(workspace.services, (s) => s.configLoadError)) {
+  if (_.some(_.values(workspace.services), (s) => s.configLoadError)) {
     console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('We were unable to load all of your config')}  🚨 🚨 🚨\n`);
     console.log(kleur.gray('The following services are failing to load:\n'));
 
@@ -46,8 +43,11 @@ program.action(async (opts: {
     process.exit(1);
   }
 
+  // console.dir(workspace.services.root.config, { depth: null });
+  console.dir(workspace.plugins, { depth: null });
+
   // now show plugin errors - which would also likely cause further errors
-  if (_.some(workspace.services, (s) => _.some(s.plugins, (p) => !p.isValid))) {
+  if (_.some(_.values(workspace.plugins), (p) => !p.isValid)) {
     console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your plugins were unable to initialize correctly')}  🚨 🚨 🚨\n`);
 
     const errorsTable = new CliTable({
@@ -69,36 +69,35 @@ program.action(async (opts: {
       ].map((t) => kleur.bold().magenta(t)),
     );
 
-    _.each(workspace.services, (service) => {
-      _.each(service.plugins, (plugin) => {
-        _.each(plugin.inputs, (item) => {
-          if (item.isValid) return;
 
-          const pathCellContents = [
-            service.serviceName,
-            ` ${plugin.instanceName}`,
-            `  ${item.key}`,
-          ].join('\n');
+    _.each(workspace.plugins, (plugin) => {
+      _.each(plugin.inputs, (item) => {
+        if (item.isValid) return;
+
+        const pathCellContents = [
+          plugin.initializedInService,
+          ` ${plugin.instanceName}`,
+          `  ${item.key}`,
+        ].join('\n');
 
 
-          let valueCellContents = formattedValue(item.resolvedValue, false);
-          if (item.resolvedRawValue !== item.resolvedValue) {
-            valueCellContents += kleur.gray().italic('\n------\ncoerced from\n');
-            valueCellContents += formattedValue(item.resolvedRawValue, false);
-          }
+        let valueCellContents = formattedValue(item.resolvedValue, false);
+        if (item.resolvedRawValue !== item.resolvedValue) {
+          valueCellContents += kleur.gray().italic('\n------\ncoerced from\n');
+          valueCellContents += formattedValue(item.resolvedRawValue, false);
+        }
 
-          const errors = _.compact([
-            item.coercionError,
-            ...item.validationErrors || [],
-            item.schemaError,
-          ]);
+        const errors = _.compact([
+          item.coercionError,
+          ...item.validationErrors || [],
+          item.schemaError,
+        ]);
 
-          errorsTable.push([
-            pathCellContents,
-            valueCellContents,
-            errors?.map((err) => formatError(err)).join('\n'),
-          ]);
-        });
+        errorsTable.push([
+          pathCellContents,
+          valueCellContents,
+          errors?.map((err) => formatError(err)).join('\n'),
+        ]);
       });
     });
 
@@ -109,7 +108,7 @@ program.action(async (opts: {
   }
 
   // now show schema errors
-  if (_.some(workspace.services, (s) => s.schemaErrors?.length)) {
+  if (_.some(_.values(workspace.services), (s) => s.schemaErrors?.length)) {
     console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your config schema is invalid')}  🚨 🚨 🚨\n`);
     console.log(kleur.gray('The following services have issues:\n'));
 
@@ -210,7 +209,7 @@ program.action(async (opts: {
   if (opts.format === 'json') {
     console.log(JSON.stringify(valuesOnly));
   } else {
-    console.log(configResult.config);
+    console.dir(configResult.config, { depth: null });
   }
   process.exit(0);
 });

@@ -15,7 +15,7 @@ import {
   createResolver,
 } from '@dmno/core';
 import {
-  decrypt, encrypt, generateEncryptionKeyString, importEncryptionKeyString,
+  decrypt, encrypt, generateEncryptionKeyString, importDmnoEncryptionKeyString,
 } from '@dmno/encryption-lib';
 
 import { EncryptedVaultTypes } from './data-types';
@@ -39,11 +39,10 @@ export class EncryptedVaultItem {
     }
   }
 
-  async getRawValue(key: crypto.webcrypto.CryptoKey) {
+  async getRawValue(key: crypto.webcrypto.CryptoKey, keyName: string) {
     if (this.rawValue) return this.rawValue;
     if (!this.encryptedValue) throw new Error('item is empty');
-    // TODO: add additionalData to include with each item?
-    this.rawValue = await decrypt(key, this.encryptedValue);
+    this.rawValue = await decrypt(key, this.encryptedValue, keyName);
     return this.rawValue;
   }
 }
@@ -61,7 +60,7 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
     },
   } satisfies DmnoPluginInputSchema;
 
-  static cliPath = `${__dirname}/cli`;
+  static cliPath = `${__dirname}/cli/cli`;
 
   constructor(
     instanceName: string,
@@ -78,7 +77,9 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
   private async loadVaultFile() {
     if (!this.initByService) throw new Error('Cannot load vault file unless connected to a service');
 
-    this.vaultKey = await importEncryptionKeyString(this.inputValues.key);
+    const importedKey = await importDmnoEncryptionKeyString(this.inputValues.key);
+    this.vaultKey = importedKey.key;
+    this.vaultKeyName = importedKey.keyName;
 
     this.vaultFilePath = `${this.initByService.path}/.dmno/${this.inputValues.name || 'default'}.vault.json`;
     const vaultFileRaw = await fs.promises.readFile(this.vaultFilePath, 'utf-8');
@@ -105,22 +106,22 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
   // };
 
   private vaultKey?: crypto.webcrypto.CryptoKey;
-  private getVaultItem(fullPath: string) {
-    const itemKey = [this.initByService!.serviceName, path].join('!');
-    return;
-  }
+  private vaultKeyName?: string;
 
   item() {
-    return createResolver({
+    return this.createResolver({
       icon: 'mdi:archive-lock', // also mdi:file-lock ?
       label: 'encrypted vault item',
       resolve: async (ctx) => {
         // probably should be triggered by some lifecycle hook rather than here?
         if (!this.vaultFileLoaded) await this.loadVaultFile();
 
-        const vaultItem = this.vaultItems[ctx.fullPath];
-        if (!vaultItem) throw new ResolutionError(`Item not found - ${ctx.serviceName} / ${ctx.fullPath}`);
-        return await vaultItem.getRawValue(this.vaultKey!);
+
+        // console.log(ctx);
+
+        const vaultItem = this.vaultItems[ctx.resolverFullPath];
+        if (!vaultItem) throw new ResolutionError(`Item not found - ${ctx.serviceName} / ${ctx.resolverFullPath}`);
+        return await vaultItem.getRawValue(this.vaultKey!, this.vaultKeyName!);
       },
     });
   }

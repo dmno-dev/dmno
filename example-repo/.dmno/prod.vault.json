@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "keyName": "prod-2024-04-09",
+  "items": {
+    "root!VAULT_ITEM_1": {
+      "encryptedValue": "/PuweI2ACtQS7MQks2iXxOjtGHIRQ8/ULHkaOxyRTIXebQ==",
+      "updatedAt": "2024-04-09T01:20:31.530Z"
+    },
+    "root!VAULT_ITEM_WITH_SWITCH#staging": {
+      "encryptedValue": "4jVf1HAajgf7MVzkskWIWr5qrvaOf2mmn6sbj5X/zSdh5CYhfVJevI8PLVYrx/yqgOA0aP7aS1m9Rg==",
+      "updatedAt": "2024-04-09T03:25:16.127Z"
+    },
+    "root!VAULT_ITEM_WITH_SWITCH#_default": {
+      "encryptedValue": "Iq+fcJzoJGM/lu64Oo3dEMfKlk5+g25ZMhavZbUYxNfy4sBdY2sxLAo=",
+      "updatedAt": "2024-04-09T03:58:06.075Z"
+    }
+  }
+}

@@ -9,7 +9,7 @@ import dotenv from 'dotenv';
 import validatePackageName from 'validate-npm-package-name';
 import graphlib from '@dagrejs/graphlib';
 import {
-  decrypt, encrypt, generateEncryptionKeyString, importEncryptionKeyString,
+  decrypt, encrypt, generateDmnoEncryptionKeyString, generateEncryptionKeyString, importDmnoEncryptionKeyString,
 } from '@dmno/encryption-lib';
 
 import { parse as parseJSONC } from 'jsonc-parser';
@@ -21,7 +21,7 @@ import {
   InlineValueResolverDef, ConfigValueOverride, ConfigValueResolver, createdPickedValueResolver,
 } from './resolvers/resolvers';
 import { getConfigFromEnvVars } from '../lib/env-vars';
-import { SerializedConfigItem, SerializedService } from '../config-loader/serialization-types';
+import { SerializedConfigItem, SerializedService, SerializedWorkspace } from '../config-loader/serialization-types';
 import {
   CoercionError, ConfigLoadError, ResolutionError, SchemaError, ValidationError,
 } from './errors';
@@ -199,12 +199,11 @@ type SerializedCacheEntry = {
 };
 type SerializedCache = {
   version: string;
-  keyId: string;
+  keyName: string;
   items: Record<string, SerializedCacheEntry>;
 };
 type SerializedCacheKey = {
   version: string;
-  keyId: string;
   key: string;
 };
 class CacheEntry {
@@ -227,7 +226,7 @@ class CacheEntry {
     this.encryptedValue = more?.encryptedValue;
   }
   async getEncryptedValue() {
-    return encrypt(CacheEntry.encryptionKey, this.value, CacheEntry.encryptionKeyId);
+    return encrypt(CacheEntry.encryptionKey, this.value, CacheEntry.encryptionKeyName);
   }
   // have to make this async because of the encryption call
   async getJSON(): Promise<SerializedCacheEntry> {
@@ -241,7 +240,7 @@ class CacheEntry {
   static async fromSerialized(itemKey: string, raw: SerializedCacheEntry) {
     // currently this setup means the encryptedValue changes on every run...
     // we could instead store the encryptedValue and reuse it if it has not changed
-    const value = await decrypt(CacheEntry.encryptionKey, raw.encryptedValue, CacheEntry.encryptionKeyId);
+    const value = await decrypt(CacheEntry.encryptionKey, raw.encryptedValue, CacheEntry.encryptionKeyName);
     // we are also tossing out the saved "usedBy" entries since we'll have new ones after this config run
     return new CacheEntry(itemKey, value, {
       updatedAt: new Date(raw.updatedAt),
@@ -251,7 +250,7 @@ class CacheEntry {
 
   // not sure about this... but for now it seems true that we'll use a single key at a time
   static encryptionKey: crypto.webcrypto.CryptoKey;
-  static encryptionKeyId: string;
+  static encryptionKeyName: string;
 }
 
 type NestedOverrideObj<T = string> = {
@@ -501,19 +500,18 @@ export class DmnoWorkspace {
     // currently we are creating a cache key automatically if one does not exist
     // is that what we want to do? or have the user take more manual steps? not sure
     if (!fs.existsSync(this.cacheKeyFilePath)) {
-      const keyStr = await generateEncryptionKeyString();
-
       const gitUserEmail = execSync('git config user.email').toString().trim();
+      const keyName = `${gitUserEmail}/${new Date().toISOString()}`;
+      const dmnoKeyStr = await generateDmnoEncryptionKeyString(keyName);
 
-      CacheEntry.encryptionKey = await importEncryptionKeyString(keyStr);
-      CacheEntry.encryptionKeyId = `${gitUserEmail}/${new Date().getTime()}`;
+      const reimportedDmnoKey = await importDmnoEncryptionKeyString(dmnoKeyStr);
+      if (reimportedDmnoKey.keyName !== keyName) throw new Error('reimported key name doesnt match');
+      CacheEntry.encryptionKey = reimportedDmnoKey.key;
+      CacheEntry.encryptionKeyName = keyName;
 
       const cacheKeyData: SerializedCacheKey = {
         version: '0.0.1',
-        // TODO: not sure about this...? eventually we could link this to being logged into dmno somehow?
-        // this will just be passed along with the encrypt/decrypt calls as "additional data"
-        keyId: CacheEntry.encryptionKeyId,
-        key: keyStr,
+        key: dmnoKeyStr,
       };
       await fs.promises.writeFile(this.cacheKeyFilePath, stringifyJsonWithCommentBanner(cacheKeyData));
 
@@ -525,8 +523,9 @@ export class DmnoWorkspace {
     } else {
       const cacheKeyRawStr = await fs.promises.readFile(this.cacheKeyFilePath, 'utf-8');
       const cacheKeyRaw = parseJSONC(cacheKeyRawStr) as SerializedCacheKey;
-      CacheEntry.encryptionKey = await importEncryptionKeyString(cacheKeyRaw.key);
-      CacheEntry.encryptionKeyId = cacheKeyRaw.keyId;
+      const importedDmnoKey = await importDmnoEncryptionKeyString(cacheKeyRaw.key);
+      CacheEntry.encryptionKey = importedDmnoKey.key;
+      CacheEntry.encryptionKeyName = importedDmnoKey.keyName;
     }
 
     if (!fs.existsSync(this.cacheFilePath)) return;
@@ -534,7 +533,7 @@ export class DmnoWorkspace {
     const cacheRaw = parseJSONC(cacheRawStr) as SerializedCache;
 
     // check if the ID in the cache file matches the cache key
-    if (CacheEntry.encryptionKeyId !== cacheRaw.keyId) {
+    if (CacheEntry.encryptionKeyName !== cacheRaw.keyName) {
       throw new Error('DMNO cache file does not match cache key');
     }
 
@@ -551,7 +550,7 @@ export class DmnoWorkspace {
 
     const serializedCache: SerializedCache = {
       version: '0.0.1',
-      keyId: CacheEntry.encryptionKeyId,
+      keyName: CacheEntry.encryptionKeyName,
       items: await async.mapValues(this.valueCache, async (cacheItem) => cacheItem.getJSON()),
     };
     const serializedCacheStr = stringifyJsonWithCommentBanner(serializedCache);
@@ -567,9 +566,15 @@ export class DmnoWorkspace {
     this.valueCache[key] = new CacheEntry(key, value, { usedBy });
   }
 
-  toJSON() {
+  plugins: Record<string, DmnoPlugin> = {};
+
+  toJSON(): SerializedWorkspace {
     return {
-      services: _.map(this.services, (s) => s.toJSON()),
+      plugins: _.mapValues(this.plugins, (p) => p.toJSON()),
+      services: _.mapValues(
+        _.keyBy(this.services, (s) => s.serviceName),
+        (s) => s.toJSON(),
+      ),
     };
   }
 }
@@ -596,7 +601,10 @@ export class DmnoService {
 
   readonly workspace: DmnoWorkspace;
 
-  private plugins: Record<string, DmnoPlugin>;
+  injectedPlugins: Array<DmnoPlugin> = [];
+  ownedPlugins: Array<DmnoPlugin> = [];
+
+
   private overrideSources = [] as Array<OverrideSource>;
 
   constructor(opts: {
@@ -605,21 +613,12 @@ export class DmnoService {
     path: string,
     rawConfig: ServiceConfigSchema | ConfigLoadError,
     workspace: DmnoWorkspace,
-    plugins?: Record<string, DmnoPlugin>,
   }) {
     this.workspace = opts.workspace;
 
     this.isRoot = opts.isRoot;
     this.packageName = opts.packageName;
     this.path = opts.path;
-
-    // plugins
-    this.plugins = opts.plugins || {};
-
-    // add reference back to this service on each plugin
-    _.each(this.plugins, (p) => {
-      p.initByService = this;
-    });
 
     if (_.isError(opts.rawConfig)) {
       this.serviceName = this.packageName;
@@ -685,16 +684,21 @@ export class DmnoService {
       const configItem = this.config[itemKey];
       const itemPath = configItem.getPath(true);
 
-      // TODO: deal with nested items
 
+
+      // reset overrides
+      configItem.overrides = [];
       // set override from environment (process.env)
-
       _.each([
+        // process.env overrides exist at the workspace root
         this.workspace.processEnvOverrides,
+        // other override sources - (just env files for now)
         ...this.overrideSources,
       ], (overrideSource) => {
         const overrideVal = overrideSource.getOverrideForPath(itemPath);
         if (overrideVal !== undefined) {
+          // TODO: deal with nested items
+
           configItem.overrides.push({
             source: overrideSource.type,
             value: overrideVal,
@@ -703,20 +707,20 @@ export class DmnoService {
       });
 
       // currently this resolve fn will trigger resolve on nested items
-      await configItem.resolve(new ResolverContext(this, configItem.getPath()));
+      await configItem.resolve();
 
       // notify all plugins about the resolved item in case it resolves an input
       if (configItem.isResolved) {
-        for (const pluginKey in this.plugins) {
-          const plugin = this.plugins[pluginKey];
+        for (const plugin of this.ownedPlugins) {
+          // const plugin = this.workspace.plugins[pluginKey];
           plugin.attemptInputResolutionsUsingConfigItem(configItem);
         }
       }
     }
 
     // final check on all plugins
-    for (const pluginKey in this.plugins) {
-      const plugin = this.plugins[pluginKey];
+    for (const plugin of this.ownedPlugins) {
+      // const plugin = this.workspace.plugins[pluginKey];
       plugin.checkItemsResolutions();
     }
   }
@@ -754,22 +758,52 @@ export class DmnoService {
           ? _.map(this.schemaErrors, (err) => err.toJSON())
           : undefined,
 
-      plugins: _.map(this.plugins, (p) => p.toJSON()),
+      ownedPluginNames: _.map(this.ownedPlugins, (p) => p.instanceName),
+      injectedPluginNames: _.map(this.injectedPlugins, (p) => p.instanceName),
+
       config: _.mapValues(this.config, (item, _key) => item.toJSON()),
     };
   }
 }
 
 export class ResolverContext {
-  constructor(private service: DmnoService, readonly itemPath: string) {
-
+  // TODO: the item has everything we need, but is it what we want to pass in?
+  // lots of ? and ! on ts types here because data doesn't exist at init time...
+  private resolver?: ConfigValueResolver;
+  private configItem: DmnoConfigItemBase;
+  constructor(
+    // private configItem: DmnoConfigItemBase,
+    resolverOrItem: ConfigValueResolver | DmnoConfigItemBase,
+  ) {
+    if (resolverOrItem instanceof ConfigValueResolver) {
+      this.resolver = resolverOrItem;
+      this.configItem = this.resolver.configItem!;
+    } else {
+      this.configItem = resolverOrItem;
+    }
   }
 
-  get serviceName() { return this.service.serviceName; }
-  get fullPath() { return `${this.service.serviceName}!${this.itemPath}`; }
+  get service() {
+    return this.configItem.parentService;
+  }
+  get serviceName() {
+    return this.service?.serviceName;
+  }
+  get itemPath() {
+    return this.configItem.getPath();
+  }
+  get itemFullPath() {
+    return this.configItem.getFullPath();
+  }
+  get resolverFullPath() {
+    return this.resolver ? this.resolver.getFullPath() : this.itemFullPath;
+  }
+  get resolverBranchIdPath() {
+    return this.resolver?.branchIdPath;
+  }
 
   get(itemPath: string) {
-    const item = this.service.getConfigItemByPath(itemPath);
+    const item = this.service?.getConfigItemByPath(itemPath);
     if (!item) {
       throw new Error(`Tried to get item that does not exist ${itemPath}`);
     }
@@ -783,12 +817,12 @@ export class ResolverContext {
   // TODO: probably dont want to pull cache disable setting from the workspace/service/etc
   async getCacheItem(key: string) {
     if (process.env.DISABLE_DMNO_CACHE) return undefined;
-    return this.service.workspace.getCacheItem(key, this.fullPath);
+    return this.service?.workspace.getCacheItem(key, this.itemFullPath);
   }
   async setCacheItem(key: string, value: ConfigValue) {
     if (process.env.DISABLE_DMNO_CACHE) return;
     if (value === undefined || value === null) return;
-    return this.service.workspace.setCacheItem(key, value.toString(), this.fullPath);
+    return this.service?.workspace.setCacheItem(key, value.toString(), this.itemFullPath);
   }
   async getOrSetCacheItem(key: string, getValToWrite: () => Promise<string>) {
     if (!process.env.DISABLE_DMNO_CACHE) {
@@ -816,10 +850,18 @@ export abstract class DmnoConfigItemBase {
   valueResolver?: ConfigValueResolver;
 
   isResolved = false;
-  /** resolved value _before_ coercion logic applied */
-  resolvedRawValue?: ConfigValue;
+
+  get resolvedRawValue(): ConfigValue | undefined {
+    if (this.overrides.length) {
+      return this.overrides[0].value;
+    }
+    return this.valueResolver?.resolvedValue;
+  }
+
   /** error encountered during resolution */
-  resolutionError?: ResolutionError;
+  get resolutionError(): ResolutionError | undefined {
+    return this.valueResolver?.resolutionError;
+  }
 
   /** resolved value _after_ coercion logic applied */
   resolvedValue?: ConfigValue;
@@ -860,41 +902,33 @@ export abstract class DmnoConfigItemBase {
     }
     return itemKey;
   }
+  getFullPath(respectImportOverride = false): string {
+    if (!this.parentService?.serviceName) {
+      throw new Error('unable to get full path - this item is not attached to a service');
+    }
+    return `${this.parentService.serviceName}!${this.getPath(respectImportOverride)}`;
+  }
 
-  async resolve(ctx: ResolverContext) {
+
+  async resolve() {
     // TODO: not sure if we want to bail here or what it means to be "resolved" as things are changing?
     if (this.isResolved) return;
 
+    const itemResolverCtx = new ResolverContext(this.valueResolver || this);
+
     // resolve children of objects... this will need to be thought through and adjusted
 
-    for (const childKey in this.children) {
-      // note - this isn't right, each resolve will probably need a new context object?
-      // an we'll need to deal with merging values set by the parent with values set in the child
-      await this.children[childKey].resolve(ctx);
-    }
+    // TODO: re-enable children / objects
+
+    // for (const childKey in this.children) {
+    //   // note - this isn't right, each resolve will probably need a new context object?
+    //   // an we'll need to deal with merging values set by the parent with values set in the child
+    //   await this.children[childKey].resolve(ctx);
+    // }
 
     // console.log(`> resolving ${this.parentService?.serviceName}/${this.key}`);
     if (this.valueResolver) {
-      try {
-        await this.valueResolver.resolve(ctx);
-        this.resolvedRawValue = this.valueResolver.resolvedValue;
-
-
-        if (this.valueResolver.resolutionError) {
-          this.resolutionError = this.valueResolver.resolutionError;
-          debug('resolution failed', this.key, this.resolutionError);
-        }
-      } catch (err) {
-        debug('resolution failed', this.key, err);
-        this.resolutionError = new ResolutionError(err as Error);
-      }
-    }
-
-    // take into account overrides
-    if (this.overrides.length) {
-      // console.log('found overrides', this.overrides);
-      // TODO: filter out for env-specific overrides
-      this.resolvedRawValue = this.overrides[0].value;
+      await this.valueResolver.resolve(itemResolverCtx);
     }
 
     this.isResolved = true;
@@ -908,7 +942,7 @@ export abstract class DmnoConfigItemBase {
     // need to think through errors + overrides + empty values...
     if (this.resolvedRawValue !== undefined) {
       try {
-        const coerceResult = this.type.coerce(_.cloneDeep(this.resolvedRawValue), ctx);
+        const coerceResult = this.type.coerce(_.cloneDeep(this.resolvedRawValue), itemResolverCtx);
         if (coerceResult instanceof CoercionError) {
           this.coercionError = coerceResult;
         } else {
@@ -920,7 +954,7 @@ export abstract class DmnoConfigItemBase {
     }
 
     // run validation logic
-    const validationResult = this.type.validate(_.cloneDeep(this.resolvedValue), ctx);
+    const validationResult = this.type.validate(_.cloneDeep(this.resolvedValue), itemResolverCtx);
     this.validationErrors = validationResult === true ? [] : validationResult;
 
     debug(
@@ -940,6 +974,9 @@ export abstract class DmnoConfigItemBase {
       resolvedValue: this.resolvedValue,
       isResolved: this.isResolved,
       children: _.mapValues(this.children, (c) => c.toJSON()),
+
+      resolver: this.valueResolver?.toJSON(),
+      overrides: this.overrides,
 
       // schemaErrors
       coercionError: this.coercionError?.toJSON(),
@@ -1005,6 +1042,7 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
     }
 
     this.valueResolver = this.type.valueResolver;
+    if (this.valueResolver) this.valueResolver.configItem = this;
   }
 
   private initializeChildren() {
@@ -1047,6 +1085,7 @@ export class DmnoPickedConfigItem extends DmnoConfigItemBase {
 
     // each item in the chain could have a value transformer, so we must follow the entire chain
     this.valueResolver = createdPickedValueResolver(this.def.sourceItem, this.def.transformValue);
+    this.valueResolver.configItem = this;
   }
 
   /** the real source config item - which defines most of the settings */

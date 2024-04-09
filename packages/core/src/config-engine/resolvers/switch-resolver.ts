@@ -16,7 +16,8 @@ export const switchBy = (switchByKey: string, branches: SwitchByResolverOptions)
       // TODO: do we want to use a special symbol? or pass default as different arg?
       isDefault: itemKey === '_default' || itemKey === '_',
       condition: (ctx: ResolverContext) => ctx.get(switchByKey) === itemKey,
-      label: itemKey, // ex: 'staging'
+      id: itemKey,
+      label: `${switchByKey} === "${itemKey}"`,
       resolver: processInlineResolverDef(itemDef),
     })),
   });

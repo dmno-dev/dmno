@@ -1,7 +1,7 @@
 import _ from 'lodash-es';
 import kleur from 'kleur';
+import { createDeferredPromise } from '@dmno/ts-lib';
 
-import { createDeferredPromise } from '../../lib/deferred-promise';
 
 const TERMINAL_COLS = Math.floor(process.stdout.columns * 0.5);
 

@@ -18,19 +18,17 @@
     ".": {
       "default": "./dist/index.mjs"
     },
-    "./encryption": {
-      "default": "./src/lib/encryption.ts"
+    "./cli-lib": {
+      "default": "./dist/cli/plugin-cli-lib.mjs"
     }
   },
   "typesVersions": {
     "*": {
       "index": [
         "./dist/index.d.mts"
-      ]
-    },
-    "./encryption": {
-      "index": [
-        "./src/lib/encryption.ts"
+      ],
+      "cli-lib": [
+        "./dist/cli/plugin-cli-lib.d.mts"
       ]
     }
   },
@@ -54,6 +52,7 @@
   "dependencies": {
     "@dagrejs/graphlib": "^2.2.1",
     "@dmno/encryption-lib": "workspace:*",
+    "@dmno/ts-lib": "workspace:*",
     "@inquirer/prompts": "^4.3.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "async": "^3.2.5",

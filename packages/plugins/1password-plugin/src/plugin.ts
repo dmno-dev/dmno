@@ -78,7 +78,6 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
       ].join(' ')).toString();
     });
     const envItemsObj = JSON.parse(envItemJsonStr);
-    console.log(JSON.stringify(envItemsObj.fields));
 
     const loadedEnvByService: typeof this.envItemsByService = {};
     _.each(envItemsObj.fields, (field) => {
@@ -103,18 +102,14 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
       throw new SchemaError('You must set an `envItemLink` plugin input to use the .item() resolver');
     }
 
-    return createResolver({
-      createdByPlugin: this,
+    return this.createResolver({
       label: (ctx) => {
         return `env blob item > ${ctx.serviceName} > ${ctx.itemPath}`;
       },
       resolve: async (ctx) => {
-        console.log('RESOLVING 1PASS .item!', ctx.serviceName, ctx.itemPath);
         if (!this.envItemsByService) await this.loadEnvItems(ctx);
 
-        // console.log('checking op env items', this.envItemsByService, ctx.serviceName, ctx.itemPath);
-
-        const itemValue = this.envItemsByService?.[ctx.serviceName]?.[ctx.itemPath]
+        const itemValue = this.envItemsByService?.[ctx.serviceName!]?.[ctx.itemPath]
           // the label "_" is used to signal a fallback / default to apply to all services
           || this.envItemsByService?._default?.[ctx.itemPath];
 
@@ -152,8 +147,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   // and then need to grab the specific data from a big json blob
   // cli command `op item get bphvvrqjegfmd5yoz4buw2aequ --vault=ut2dftalm3ugmxc6klavms6tfq --format json`
   itemById(vaultId: VaultId, itemId: ItemId, path?: string) {
-    return createResolver({
-      createdByPlugin: this,
+    return this.createResolver({
       label: (ctx) => {
         return _.compact([
           `Vault: ${vaultId}`,
@@ -203,8 +197,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   itemByReference(referenceUrl: ReferenceUrl) {
     // TODO: validate the reference url looks ok?
 
-    return createResolver({
-      createdByPlugin: this,
+    return this.createResolver({
       label: referenceUrl,
       resolve: async (ctx) => {
         const value = await ctx.getOrSetCacheItem(`1pass:R|${referenceUrl}`, async () => {

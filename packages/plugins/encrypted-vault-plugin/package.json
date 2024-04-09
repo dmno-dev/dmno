@@ -55,8 +55,9 @@
   "dependencies": {
     "@dmno/core": "workspace:*",
     "@dmno/encryption-lib": "workspace:*",
+    "@dmno/ts-lib": "workspace:*",
+    "@inquirer/prompts": "^4.3.0",
     "async": "^3.2.5",
-    "commander": "^12.0.0",
     "jsonc-parser": "^3.2.1",
     "lodash-es": "^4.17.21"
   }

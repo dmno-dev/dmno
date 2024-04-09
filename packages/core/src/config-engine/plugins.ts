@@ -1,10 +1,10 @@
 import _ from 'lodash-es';
 import Debug from 'debug';
 import {
-  ConfigPath, DmnoConfigItemBase, DmnoService, TypeExtendsDefinition,
+  ConfigPath, DmnoConfigItemBase, DmnoService, DmnoWorkspace, TypeExtendsDefinition,
 } from './config-engine';
 import { DmnoDataType } from './base-types';
-import { ConfigValue } from './resolvers/resolvers';
+import { ConfigValue, ConfigValueResolver, createResolver } from './resolvers/resolvers';
 import { CoercionError, SchemaError, ValidationError } from './errors';
 import { SerializedDmnoPlugin, SerializedDmnoPluginInput } from '../config-loader/serialization-types';
 
@@ -186,9 +186,12 @@ export class DmnoPluginInputItem<ValueType = any> {
   toJSON(): SerializedDmnoPluginInput {
     return {
       key: this.key,
+      resolutionMethod: this.resolutionMethod,
       isValid: this.isValid,
       isResolved: this.isResolved,
-      resolvedRawValue: this.resolvedRawValue,
+      // TODO: in the future we may have an array case so we may want to make this an array
+      // but it will likely be a single 90+% of the time...
+      mappedToItemPath: this.resolvingConfigItems?.[0]?.getFullPath(),
       resolvedValue: this.resolvedValue,
       coercionError: this.coercionError?.toJSON(),
       schemaError: this.schemaError?.toJSON(),
@@ -205,10 +208,12 @@ export abstract class DmnoPlugin<
 > {
   constructor(readonly instanceName: string) {
     // see below, we are registering the plugin in a singleton object
-    if (currentPlugins[instanceName]) {
+    if (allPlugins[instanceName]) {
       throw new SchemaError(`Plugin instance names must be unique! Duplicate name: ${instanceName}`);
     }
-    currentPlugins[instanceName] = this;
+    allPlugins[instanceName] = this;
+
+    initializedPluginInstanceNames.push(instanceName);
 
     // const callStack = new Error('').stack!.split('\n');
     // const pluginDefinitionPath = callStack[2]
@@ -327,6 +332,16 @@ export abstract class DmnoPlugin<
   }
 
 
+  resolvers: Array<ConfigValueResolver> = [];
+  createResolver(def: Parameters<typeof createResolver>[0]): ReturnType<typeof createResolver> {
+    const r = createResolver({
+      createdByPlugin: this,
+      ...def,
+    });
+    this.resolvers.push(r);
+    return r;
+  }
+
   // private hooks?: {
   //   onInitComplete?: () => Promise<void>;
   // };
@@ -337,9 +352,10 @@ export abstract class DmnoPlugin<
       cliPath: (this.constructor as any).cliPath,
       instanceName: this.instanceName,
       isValid: this.isValid,
-      initializedInService: this.initByService?.serviceName,
+      initializedInService: this.initByService?.serviceName || '',
       injectedIntoServices: _.map(this.injectedByServices, (s) => s.serviceName),
       inputs: _.mapValues(this.inputItems, (i) => i.toJSON()),
+      usedByConfigItemResolverPaths: _.map(this.resolvers, (r) => r.getFullPath()),
     };
   }
 
@@ -348,14 +364,18 @@ export abstract class DmnoPlugin<
     this: new (...args: Array<any>) => T,
     instanceName: string,
   ) {
-    const pluginToInject = injectablePlugins[instanceName];
+    const pluginToInject = allPlugins[instanceName];
     if (!pluginToInject) {
-      throw new SchemaError(`Plugin injection failed - no plugin named "${instanceName}" exists in root`);
+      throw new SchemaError(`Plugin injection failed - no plugin named "${instanceName}" exists`);
+    }
+    if (!pluginToInject.initByService || pluginToInject.initByService.serviceName !== 'root') {
+      throw new SchemaError(`Plugin injection failed for "${instanceName}" - you can only inject plugins from the root`);
     }
 
     if (!(pluginToInject instanceof this)) {
       throw new SchemaError(`Type of plugin being injected does not match. Requested = ${this.name}, Injected = ${(pluginToInject as any).constructor.name}`);
     }
+    injectedPluginInstanceNames.push(instanceName);
     return pluginToInject as T;
   }
 }
@@ -363,21 +383,29 @@ export abstract class DmnoPlugin<
 // TODO: this is a pretty naive approach to capturing the plugins while loading config
 // probably should move to something like AsnycLocalStorage to make it more flexible
 
-let injectablePlugins: Record<string, DmnoPlugin> = {};
-let currentPlugins: Record<string, DmnoPlugin> = {};
-let processingRootConfig = false;
+let allPlugins: Record<string, DmnoPlugin> = {};
+let initializedPluginInstanceNames: Array<string> = [];
+let injectedPluginInstanceNames: Array<string> = [];
 
-export function startPluginRegistration(isRoot = false) {
-  processingRootConfig = isRoot;
-  currentPlugins = {};
-  // return a reference so the loader executable can have a reference to all the plugins after loading a service
-  return currentPlugins;
+export function beginWorkspaceLoadPlugins(workspace: DmnoWorkspace) {
+  allPlugins = workspace.plugins;
 }
-export function finishPluginRegistration() {
-  if (processingRootConfig) {
-    injectablePlugins = currentPlugins;
-    processingRootConfig = false;
-  }
+
+export function beginServiceLoadPlugins() {
+  initializedPluginInstanceNames = [];
+  injectedPluginInstanceNames = [];
+}
+export function finishServiceLoadPlugins(service: DmnoService) {
+  service.injectedPlugins = _.values(_.pick(allPlugins, injectedPluginInstanceNames));
+  service.ownedPlugins = _.values(_.pick(allPlugins, initializedPluginInstanceNames));
+
+  _.each(injectedPluginInstanceNames, (pName) => {
+    allPlugins[pName].injectedByServices ||= [];
+    allPlugins[pName].injectedByServices?.push(service);
+  });
+  _.each(initializedPluginInstanceNames, (pName) => {
+    allPlugins[pName].initByService = service;
+  });
 }
 
 class NoopPlugin extends DmnoPlugin {}

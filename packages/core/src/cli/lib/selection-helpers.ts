@@ -45,7 +45,7 @@ export function addServiceSelection(program: Command, selectionRequired = true) 
 
 
       // first display loading errors (which would likely cascade into schema errors)
-      if (_.some(workspace.services, (s) => s.configLoadError)) {
+      if (_.some(_.values(workspace.services), (s) => s.configLoadError)) {
         console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('We were unable to load all of your config')}  🚨 🚨 🚨\n`);
         console.log(kleur.gray('The following services are failing to load:\n'));
 
@@ -152,23 +152,19 @@ export function addPluginSelection(program: Command) {
       const ctx = getCliRunCtx();
 
       const workspace = ctx.workspace || await ctx.configLoader.makeRequest('load-full-schema', { resolve: true });
+      const pluginsArray = _.values(workspace.plugins);
 
-      const allPlugins = _.flatMap(workspace.services, (service) => {
-        return _.map(service.plugins);
-      });
-      const allPluginsByInstanceName = _.keyBy(allPlugins, (p) => p.instanceName);
-
-      const namesMaxLen = getMaxLength(_.map(allPlugins, (p) => p.instanceName));
+      const namesMaxLen = getMaxLength(_.map(pluginsArray, (p) => p.instanceName));
 
       const explicitSelection = thisCommand.opts().plugin;
       if (explicitSelection) {
-        ctx.selectedPlugin = allPluginsByInstanceName[explicitSelection];
+        ctx.selectedPlugin = workspace.plugins[explicitSelection];
         if (!ctx.selectedPlugin) {
           exitWithErrorMessage(
             `Invalid plugin selection: ${kleur.bold(explicitSelection)}`,
             [
               'Maybe you meant one of:',
-              ..._.map(allPlugins, (p) => getPluginLabel(p, namesMaxLen)),
+              ..._.map(pluginsArray, (p) => getPluginLabel(p, namesMaxLen)),
             ],
           );
         }
@@ -177,17 +173,15 @@ export function addPluginSelection(program: Command) {
 
       const menuSelection = await select({
         message: 'Which plugin instance?',
-        choices: _.flatMap(workspace.services, (service) => {
-          return _.map(service.plugins, (plugin) => ({
-            name: getPluginLabel(plugin, namesMaxLen),
-            // description: getPluginDescription(plugin),
-            value: plugin.instanceName,
-          }));
-        }),
+        choices: _.map(pluginsArray, (plugin) => ({
+          name: getPluginLabel(plugin, namesMaxLen),
+          // description: getPluginDescription(plugin),
+          value: plugin.instanceName,
+        })),
         // default: autoSelectService?.serviceName,
       });
       thisCommand.opts().plugin = menuSelection;
-      ctx.selectedPlugin = allPluginsByInstanceName[menuSelection];
+      ctx.selectedPlugin = workspace.plugins[menuSelection];
     });
 }
 
