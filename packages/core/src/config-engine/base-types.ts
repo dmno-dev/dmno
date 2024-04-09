@@ -759,22 +759,135 @@ const EnumDataType = createDmnoDataType({
     ),
 });
 
+const EMAIL_REGEX = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+const emailDataType = createDmnoDataType({
+  typeLabel: 'dmno/email',
+  extends: (settings) => StringDataType({
+    ...settings.normalize && { toLowerCase: true },
+  }),
+  typeDescription: 'standard email address',
+  settingsSchema: Object as undefined | {
+    // customDomainValidationFn: () => boolean,
+    normalize?: boolean,
 
+  },
+  validate(val) {
+    // check if it's a valid email
+    const result = EMAIL_REGEX.test(val);
+    if (result) return true;
+    return new ValidationError('Value must be a valid email address');
+  },
+});
+
+const IP_V4_ADDRESS_REGEX = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/;
+const IP_V6_ADDRESS_REGEX = /^(?:(?:[a-fA-F\d]{1,4}:){7}(?:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){6}(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){5}(?::(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,2}|:)|(?:[a-fA-F\d]{1,4}:){4}(?:(?::[a-fA-F\d]{1,4}){0,1}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,3}|:)|(?:[a-fA-F\d]{1,4}:){3}(?:(?::[a-fA-F\d]{1,4}){0,2}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,4}|:)|(?:[a-fA-F\d]{1,4}:){2}(?:(?::[a-fA-F\d]{1,4}){0,3}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,5}|:)|(?:[a-fA-F\d]{1,4}:){1}(?:(?::[a-fA-F\d]{1,4}){0,4}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,6}|:)|(?::(?:(?::[a-fA-F\d]{1,4}){0,5}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,7}|:)))(?:%[0-9a-zA-Z]{1,})?$/;
+const ipAddressDataType = createDmnoDataType({
+  typeLabel: 'dmno/ipAddress',
+  extends: (settings) => StringDataType({
+    ...settings.normalize && { toLowerCase: true },
+  }),
+  typeDescription: 'ip v4 or v6 address',
+  settingsSchema: Object as undefined | {
+    version?: 4 | 6,
+    normalize?: boolean,
+  },
+  validate(val, settings) {
+    // default to v4
+    const regex = settings.version === 6 ? IP_V6_ADDRESS_REGEX : IP_V4_ADDRESS_REGEX;
+    const result = regex.test(val);
+    if (result) return true;
+    return new ValidationError('Value must be a valid IP address');
+  },
+});
+
+const PortDataType = createDmnoDataType({
+  typeLabel: 'dmno/port',
+  extends: NumberDataType({
+    min: 0,
+    max: 65535,
+  }),
+  typeDescription: 'valid port number between 0 and 65535',
+  validate(val) {
+    if (val >= 0 && val <= 65535) return true;
+    return new ValidationError('Value must be a valid port number (0-65535)');
+  },
+});
+
+const SEMVER_REGEX = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
+const SemverDataType = createDmnoDataType({
+  typeLabel: 'dmno/semver',
+  extends: (settings) => StringDataType({
+    ...settings.normalize && { toLowerCase: true },
+  }),
+  typeDescription: 'semantic version string',
+  settingsSchema: Object as undefined | {
+    normalize?: boolean,
+  },
+  validate(val) {
+    const result = SEMVER_REGEX.test(val);
+    if (result) return true;
+    return new ValidationError('Value must be a valid semantic version string');
+  },
+});
+
+// https://rgxdb.com/r/526K7G5W
+const ISO_DATE_REGEX = /^(?:[\+-]?\d{4}(?!\d{2}\b))(?:(-?)(?:(?:0[1-9]|1[0-2])(?:\1(?:[12]\d|0[1-9]|3[01]))?|W(?:[0-4]\d|5[0-2])(?:-?[1-7])?|(?:00[1-9]|0[1-9]\d|[12]\d{2}|3(?:[0-5]\d|6[1-6])))(?:[T\s](?:(?:(?:[01]\d|2[0-3])(?:(:?)[0-5]\d)?|24\:?00)(?:[\.,]\d+(?!:))?)?(?:\2[0-5]\d(?:[\.,]\d+)?)?(?:[zZ]|(?:[\+-])(?:[01]\d|2[0-3]):?(?:[0-5]\d)?)?)?)?$/;
+const IsoDateDataType = createDmnoDataType({
+  typeLabel: 'dmno/isoDate',
+  extends: StringDataType,
+  typeDescription: 'ISO 8601 date string with optional time and milliseconds',
+  validate(val) {
+    const result = ISO_DATE_REGEX.test(val);
+    if (result) return true;
+    return new ValidationError('Value must be a valid ISO 8601 date string');
+  },
+});
+
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UuidDataType = createDmnoDataType({
+  typeLabel: 'dmno/uuid',
+  extends: StringDataType,
+  typeDescription: 'UUID string V1-V5 per RFC4122, including NIL',
+  validate(val) {
+    const result = UUID_REGEX.test(val);
+    if (result) return true;
+    return new ValidationError('Value must be a valid UUID string');
+  },
+});
+
+const MD5_REGEX = /^[a-f0-9]{32}$/;
+const Md5DataType = createDmnoDataType({
+  typeLabel: 'dmno/md5',
+  extends: StringDataType,
+  typeDescription: 'MD5 hash string',
+  validate(val) {
+    const result = MD5_REGEX.test(val);
+    if (result) return true;
+    return new ValidationError('Value must be a valid MD5 hash string');
+  },
+});
+
+
+// TODO consider splitting into base and utility types
 export const DmnoBaseTypes = {
   string: StringDataType,
   number: NumberDataType,
   boolean: BooleanDataType,
 
   enum: EnumDataType,
-
+  email: emailDataType,
   url: UrlDataType,
-  // TODO:
-  // - email
-  // - url
-  // - ip address
-  // - port number
-  // - semver range
-  // - date / timestamp / etc
+  ipAddress: ipAddressDataType,
+  port: PortDataType,
+  semver: SemverDataType,
+  isoDate: IsoDateDataType,
+  uuid: UuidDataType,
+  md5: Md5DataType,
+
+  // TODO
+  // locale
+  // iso 3166
 
   // "compound" types /////////////////
   object: ObjectDataType,
