@@ -12,7 +12,7 @@ const program = new Command('load')
   .summary('load and resolve config')
   .description('Load the resolved config for a service')
   .option('-f, --format <format>', 'format to output resolved config')
-  .option('--public', 'only load public (non-secret) values');
+  .option('--public', 'only load public (non-sensitive) values');
 
 addServiceSelection(program);
 
