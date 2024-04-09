@@ -11,7 +11,8 @@ const TERMINAL_COLS = process.stdout.columns - 10 || 100;
 const program = new Command('load')
   .summary('load and resolve config')
   .description('Load the resolved config for a service')
-  .option('-f, --format <format>', 'format to output resolved config');
+  .option('-f, --format <format>', 'format to output resolved config')
+  .option('--public', 'only load public (non-secret) values');
 
 addServiceSelection(program);
 
@@ -19,6 +20,7 @@ addServiceSelection(program);
 program.action(async (opts: {
   service?: string,
   format?: string,
+  public?: boolean,
 }, thisCommand) => {
   const ctx = getCliRunCtx();
 
@@ -44,7 +46,7 @@ program.action(async (opts: {
   }
 
   // console.dir(workspace.services.root.config, { depth: null });
-  console.dir(workspace.plugins, { depth: null });
+  // console.dir(workspace.plugins, { depth: null });
 
   // now show plugin errors - which would also likely cause further errors
   if (_.some(_.values(workspace.plugins), (p) => !p.isValid)) {
@@ -201,7 +203,11 @@ program.action(async (opts: {
   }
 
 
-  const valuesOnly = _.mapValues(configResult.config, (val) => {
+  let exposedConfig = configResult.config;
+  if (opts.public) {
+    exposedConfig = _.pickBy(exposedConfig, (c) => !c.dataType.sensitive);
+  }
+  const valuesOnly = _.mapValues(exposedConfig, (val) => {
     return val.resolvedValue;
   });
 
@@ -209,7 +215,7 @@ program.action(async (opts: {
   if (opts.format === 'json') {
     console.log(JSON.stringify(valuesOnly));
   } else {
-    console.dir(configResult.config, { depth: null });
+    console.dir(exposedConfig, { depth: null });
   }
   process.exit(0);
 });

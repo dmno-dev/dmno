@@ -6,9 +6,10 @@ import _ from 'lodash-es';
 const execAsync = util.promisify(exec);
 
 
-export function getResolvedConfig() {
+export function getResolvedConfig(publicOnly = false) {
   try {
-    const configResult = execSync('pnpm exec dmno load -f json');
+    // TODO: we'll need a way of loading the config and info about which items are public
+    const configResult = execSync(`pnpm exec dmno load -f json${publicOnly ? ' --public' : ''}`);
     const configObj = JSON.parse(configResult.toString());
     return configObj;
   } catch (err) {
@@ -18,15 +19,21 @@ export function getResolvedConfig() {
   }
 }
 
-export function getResolvedConfigForEnvInjection() {
-  const config = getResolvedConfig();
+export function getResolvedConfigForEnvInjection(publicOnly = true) {
+  const config = getResolvedConfig(publicOnly);
   // when injecting into vite config via the `define` option, we need the data in a certain format
   // - each key must be like `import.meta.env.KEY`
   // - values must be JSON.stringified - meaning a string include quotes, for example '"value"'
   return _.transform(config, (acc, itemVal, key) => {
-    acc[`import.meta.env.${key.toString()}`] = JSON.stringify(itemVal);
+    // currently we are NOT going to mess with import.meta.env
+    // but we may want to enable some options that would let you inject there too
+    // acc[`import.meta.env.${key.toString()}`] = JSON.stringify(itemVal);
 
-    acc[`DMNO_CONFIG.${key.toString()}`] = JSON.stringify(itemVal);
+    if (publicOnly) {
+      acc[`DMNO_PUBLIC_CONFIG.${key.toString()}`] = JSON.stringify(itemVal);
+    } else {
+      acc[`DMNO_CONFIG.${key.toString()}`] = JSON.stringify(itemVal);
+    }
   }, {} as any);
 }
 

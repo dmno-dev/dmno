@@ -61,7 +61,7 @@ export default defineConfigSchema({
 
     VITE_STATIC_VAL_STR: {
       summary: 'cool neat thing',
-      secret: true,
+      sensitive: true,
       // extends: DmnoBaseTypes.string({ startsWith: 'foo_' }),
       description: 'longer text about what this super cool thing is for!',
       value: 'static',
@@ -113,7 +113,7 @@ export default defineConfigSchema({
         max: 100,
         min: 1
       }),
-      value: '123.45',
+      value: '12.45',
     },
     WEB_URL: {
       extends: customUrlType({ newSetting: true }),

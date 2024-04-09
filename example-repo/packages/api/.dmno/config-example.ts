@@ -205,7 +205,7 @@ export default defineConfigSchema({
       required: true,
       // mark an item as secret so we know it must be handled sensitively!
       // for example, it will not be logged or injected into front-end builds
-      secret: true,
+      sensitive: true,
       // understand when this value is used, which lets us parallelize run/deploy
       // and know when a missing item should be considered a critical problem or be ignored
       useAt: ['build', 'boot', 'deploy'],
@@ -226,7 +226,7 @@ const MyCustomPostgresConnectionUrlType = createDmnoDataType({
   extends: DmnoBaseTypes.url,
 
   // all normal config item settings are supported
-  secret: true,
+  sensitive: true,
 
   // a few docs related settings made for reusable types (although they can still be set directly on items)
   // these will show up within the UI and generated types in various ways

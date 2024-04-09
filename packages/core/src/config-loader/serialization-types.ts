@@ -8,7 +8,8 @@
   and force us to use the same name internally and when we send over the wire
 */
 
-import { DmnoConfigItemBase, DmnoService } from '../config-engine/config-engine';
+import { DmnoDataType } from '../config-engine/base-types';
+import { ConfigItemDefinition, DmnoConfigItemBase, DmnoService } from '../config-engine/config-engine';
 import { DmnoPlugin, DmnoPluginInputItem } from '../config-engine/plugins';
 import { ConfigValueOverride, ConfigValueResolver } from '../config-engine/resolvers/resolvers';
 
@@ -50,6 +51,7 @@ export type SerializedDmnoPluginInput = Pick<DmnoPluginInputItem, 'key' | 'isVal
 export type SerializedConfigItem =
   Pick<DmnoConfigItemBase, 'key' | 'isValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved'>
   & {
+    dataType: SerializedDmnoDataType,
     children: Record<string, SerializedConfigItem>,
     coercionError?: SerializedDmnoError,
     validationErrors?: Array<SerializedDmnoError>,
@@ -78,6 +80,11 @@ export type SerializedResolverBranch = {
   resolver: SerializedResolver,
 };
 
+export type SerializedDmnoDataType = Pick<
+ConfigItemDefinition,
+'summary' | 'description' | 'typeDescription' | 'externalDocs' | 'ui' |
+'required' | 'sensitive' | 'expose' | 'useAt'
+>;
 
 
 
