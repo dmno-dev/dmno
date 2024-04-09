@@ -43,7 +43,16 @@ export default defineConfig({
             },
             {
               label: "Secrets",
-              link: "/guides/secrets"
+              items: [
+                {
+                  label: "Encrypted Vaults",
+                  link: "/guides/secrets/encrypted-vaults"
+                },
+                {
+                  label: "1Password",
+                  link: "/guides/secrets/1password"
+                },
+              ]
             },
             {
               label: "Frameworks",
