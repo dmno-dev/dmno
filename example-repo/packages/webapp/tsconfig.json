@@ -27,7 +27,7 @@
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
-    "./.dmno/.typegen/global.d.ts"
+    "./.dmno/.typegen/global-public.d.ts"
   ],
   "references": [
     {

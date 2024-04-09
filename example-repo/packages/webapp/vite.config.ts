@@ -15,7 +15,7 @@ import { getResolvedConfigForEnvInjection } from '@dmno/core';
 const injectDmnoConfigPlugin = () => ({
   name: 'inject-dmno-config',
   config(config /* , env: { mode: string, command: string } */) {
-    const dmnoConfig = getResolvedConfigForEnvInjection();
+    const dmnoConfig = getResolvedConfigForEnvInjection(true);
 
     // TODO: we could check for conflicts between existing config.define and our resolved config?
     // TODO: need to make sure we dont pick any "secret" items
