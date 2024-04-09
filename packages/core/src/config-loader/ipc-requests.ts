@@ -2,15 +2,17 @@ import { SerializedService, SerializedWorkspace } from './serialization-types';
 
 export type ConfigLoaderRequestMap = {
   'load-full-schema': {
-    payload: undefined,
+    payload: undefined | { resolve?: boolean },
     response: SerializedWorkspace,
   },
   'get-resolved-config': {
-    payload: { serviceName?: string, packageName?: string },
+    payload: {
+      serviceName?: string,
+    },
     response: SerializedService,
   },
   'generate-types': {
-    payload: { serviceName?: string, packageName?: string },
+    payload: { serviceName?: string },
     response: { tsSrc: string },
   },
   'start-dev-mode': {

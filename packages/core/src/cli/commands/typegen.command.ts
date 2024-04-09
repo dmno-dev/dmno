@@ -1,44 +1,32 @@
-/* eslint-disable class-methods-use-this */
-
-import { Command, Option } from 'clipanion';
+import { Command } from 'commander';
+import kleur from 'kleur';
+import _ from 'lodash-es';
+import CliTable from 'cli-table3';
 import { ConfigLoaderProcess } from '../lib/loader-process';
+import { formatError, formattedValue } from '../lib/formatting';
+import { executeCommandWithEnv } from '../lib/execute-command';
+import { addServiceSelection } from '../lib/selection-helpers';
 
-export class TypeGenCommand extends Command {
-  static paths = [['types']];
+const program = new Command('types')
+  .summary('generate types for a service')
+  .description('Generate TS types for the config')
+  .addHelpText('after', `
+More stuff!
+`);
 
-  static usage = Command.Usage({
-    // category: 'My category',
-    description: 'Generate TS types for the config',
-    details: `
-      This command generates TS types for the config of a service
-    `,
-    examples: [[
-      '# Generate types for a service',
-      'dmno types -s my-service',
-    ],
-    [
-      '# Generate types for a service in JSON format',
-      'dmno types -s my-service -f json',
-    ]],
+addServiceSelection(program, false);
+
+program.action(async (opts, more) => {
+  const configLoader = new ConfigLoaderProcess();
+
+  // TODO: support generating types for all services?
+  const config = await configLoader.makeRequest('generate-types', {
+    serviceName: opts.service,
   });
 
-  service = Option.String('-s,--service');
-  format = Option.String('-f,--format');
+  const commandArgs = more.args;
+  await executeCommandWithEnv(commandArgs, config);
+  process.exit(0);
+});
 
-
-  async execute() {
-    const configLoader = new ConfigLoaderProcess();
-
-
-    const result = await configLoader.makeRequest('generate-types', {
-      serviceName: this.service,
-      // maybe we always automatically pass this as context info?
-      packageName: process.env.npm_package_name,
-    });
-
-    console.log('-----------------------------------------');
-    console.log(`Generated TS src for service ${this.service}`);
-    console.log('-----------------------------------------');
-    console.log(result.tsSrc);
-  }
-}
+export const RunCommand = program;

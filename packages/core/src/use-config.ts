@@ -1,5 +1,10 @@
-import { execSync } from 'child_process';
+import util from 'node:util';
+import { execSync, exec } from 'child_process';
 import _ from 'lodash-es';
+
+
+const execAsync = util.promisify(exec);
+
 
 export function getResolvedConfig() {
   try {
@@ -25,7 +30,18 @@ export function getResolvedConfigForEnvInjection() {
   }, {} as any);
 }
 
-export function loadProcessDmnoEnv() {
+export async function loadProcessDmnoEnv() {
+  try {
+    const configResult = await execAsync('pnpm exec dmno load -f json');
+    const configObj = JSON.parse(configResult.stdout.toString());
+    (process as any).dmnoEnv = configObj;
+  } catch (err) {
+    // console.log('caught error while trying to load dmno config');
+    console.log((err as any).stdout.toString());
+    throw err;
+  }
+}
+export async function loadProcessDmnoEnvSync() {
   try {
     const configResult = execSync('pnpm exec dmno load -f json');
     const configObj = JSON.parse(configResult.toString());
@@ -36,6 +52,7 @@ export function loadProcessDmnoEnv() {
     throw err;
   }
 }
+
 
 // // we could explicitly export a thing to import if it feels better
 // // even though it is unnecessary

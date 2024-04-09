@@ -5,6 +5,7 @@ const KEY_EXPORT_FORMAT = 'jwk';
 const ENCRYPTION_ALGO = 'AES-GCM';
 const IV_LENGTH = 12; // For GCM a nonce length of 12 bytes is recommended!
 const KEY_USAGES = ['encrypt', 'decrypt'] as const;
+const KEY_SPLIT_SEP = '//';
 
 export async function generateEncryptionKeyString() {
   const key = await crypto.subtle.generateKey(
@@ -33,6 +34,27 @@ export async function importEncryptionKeyString(keyStr: string) {
     k: keyStr,
     alg: 'A256GCM',
   });
+}
+
+
+export async function generateDmnoEncryptionKeyString(keyName: string) {
+  if (keyName.includes(KEY_SPLIT_SEP)) {
+    throw new Error(`dmno encryption key name must not include separator "${KEY_SPLIT_SEP}"`);
+  }
+  const key = await generateEncryptionKeyString();
+  return `dmno${KEY_SPLIT_SEP}${keyName}${KEY_SPLIT_SEP}${key}`;
+}
+
+export async function importDmnoEncryptionKeyString(dmnoKeyStr: string) {
+  if (!dmnoKeyStr.startsWith(`dmno${KEY_SPLIT_SEP}`)) {
+    throw new Error(`dmno keys must start with dmno${KEY_SPLIT_SEP}`);
+  }
+  const [,keyName, keyStr] = dmnoKeyStr.split(KEY_SPLIT_SEP);
+  if (!keyStr) throw new Error('dmno keys must have a key name');
+
+  const cryptoKey = await importEncryptionKeyString(keyStr);
+
+  return { key: cryptoKey, keyName };
 }
 
 export async function encrypt(key: crypto.webcrypto.CryptoKey, rawValue: any, additionalData?: string) {

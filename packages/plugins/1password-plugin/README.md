@@ -13,7 +13,7 @@ Provides 1password integration for the @dmno config engine
 ### Initialization
 
 ```typescript
-const onePassVault = registerPlugin(new OnePasswordDmnoPlugin());
+const onePassVault = new OnePasswordDmnoPlugin('1pass');
 ```
 
 

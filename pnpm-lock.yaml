@@ -20,6 +20,9 @@ importers:
       '@dmno/encryption-lib':
         specifier: workspace:*
         version: link:../encryption-lib
+      '@dmno/ts-lib':
+        specifier: workspace:*
+        version: link:../ts-lib
       '@inquirer/prompts':
         specifier: ^4.3.0
         version: 4.3.0
@@ -32,12 +35,15 @@ importers:
       base64-arraybuffer:
         specifier: ^1.0.2
         version: 1.0.2
+      caller-path:
+        specifier: ^4.0.0
+        version: 4.0.0
       cli-table3:
         specifier: ^0.6.3
         version: 0.6.3
-      clipanion:
-        specifier: 4.0.0-rc.3
-        version: 4.0.0-rc.3(typanion@3.14.0)
+      commander:
+        specifier: ^12.0.0
+        version: 12.0.0
       debug:
         specifier: ^4.3.4
         version: 4.3.4(supports-color@9.4.0)
@@ -242,6 +248,9 @@ importers:
       async:
         specifier: ^3.2.5
         version: 3.2.5
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.5
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -282,6 +291,12 @@ importers:
       '@dmno/encryption-lib':
         specifier: workspace:*
         version: link:../../encryption-lib
+      '@dmno/ts-lib':
+        specifier: workspace:*
+        version: link:../../ts-lib
+      '@inquirer/prompts':
+        specifier: ^4.3.0
+        version: 4.3.0
       async:
         specifier: ^3.2.5
         version: 3.2.5
@@ -1778,19 +1793,19 @@ packages:
   /@humanwhocodes/object-schema@2.0.2:
     resolution: {integrity: sha512-6EwiSjwWYP7pTckG6I5eyFANjPhmPjUX9JRLUSfNPC7FX7zK9gyZAfUEaECL6ALTpGX5AjnBq3C9XmVWPitNpw==}
 
-  /@iconify/tools@4.0.2:
-    resolution: {integrity: sha512-vd/VruPQT1j6id1jpTH/+y0tgPPeoavdI2aSJB3KaplhgJXpl7IkeH/cCHMXM+x87HDtgMaGg2EzTDwe4FZuDg==}
+  /@iconify/tools@4.0.4:
+    resolution: {integrity: sha512-hX1Z3i1Tm6JxyrDv45jNEijPpepZZfal/4leFGtUC04H9LsgRo597BOBFB9PUZsQdFGLOxVUUfv6lqU/dC+xXw==}
     dependencies:
       '@iconify/types': 2.0.0
       '@iconify/utils': 2.1.22
-      '@types/tar': 6.1.11
-      axios: 1.6.7(debug@4.3.4)
+      '@types/tar': 6.1.12
+      axios: 1.6.8
       cheerio: 1.0.0-rc.12
       extract-zip: 2.0.1
       local-pkg: 0.5.0
       pathe: 1.1.2
       svgo: 3.2.0
-      tar: 6.2.0
+      tar: 6.2.1
     transitivePeerDependencies:
       - debug
       - supports-color
@@ -3808,8 +3823,8 @@ packages:
     resolution: {integrity: sha512-Hy6UMpxhE3j1tLpl27exp1XqHD7n8chAiNPzWfz16LPZoMMoSc4dzLl6w9qijkEb/r5O1ozdu1CWGA2L83ZeZg==}
     dev: false
 
-  /@types/tar@6.1.11:
-    resolution: {integrity: sha512-ThA1WD8aDdVU4VLuyq5NEqriwXErF5gEIJeyT6gHBWU7JtSmW2a5qjNv3/vR82O20mW+1vhmeZJfBQPT3HCugg==}
+  /@types/tar@6.1.12:
+    resolution: {integrity: sha512-FwbJPi9YuovB6ilnHrz8Y4pb0Fh6N7guFkbnlCl39ua893Qi5gkXui7LSDpTQMJCmA4z5f6SeSrTPQEWLdtFVw==}
     dependencies:
       '@types/node': 20.12.2
       minipass: 4.2.8
@@ -5138,7 +5153,7 @@ packages:
   /astro-iconify@1.2.0:
     resolution: {integrity: sha512-arLDiSop3DAHHS30raZysspkz5MO9moJJZ4rJk1Ty+4W1jZDa00Jme0LrnRJRDB6BB2EDTxC553fo20yz3MeYw==}
     dependencies:
-      '@iconify/tools': 4.0.2
+      '@iconify/tools': 4.0.4
       node-fetch: 3.3.2
       resolve-pkg: 2.0.0
       svgo: 3.2.0
@@ -5302,6 +5317,17 @@ packages:
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
+    dev: true
+
+  /axios@1.6.8:
+    resolution: {integrity: sha512-v/ZHtJDU39mDpyBoFVkETcd/uNdxrWRrg3bKpOKzXFA6Bvqopts6ALSMU3y6ijYxbw2B+wPrIv46egTzJXCLGQ==}
+    dependencies:
+      follow-redirects: 1.15.6
+      form-data: 4.0.0
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+    dev: false
 
   /axobject-query@4.0.0:
     resolution: {integrity: sha512-+60uv1hiVFhHZeO+Lz0RYzsVHy5Wr1ayX0mwda9KPDVLNJgZ1T9Ny7VmFbLDzxsH0D87I86vgj3gFrjTJUYznw==}
@@ -5640,6 +5666,20 @@ packages:
       set-function-length: 1.2.1
     dev: true
 
+  /caller-callsite@5.0.0:
+    resolution: {integrity: sha512-l3+xZHsuNlFjchy1nl1kpQwi7PhKHgtQ7MOx5ijHwlouAjnwRNjq3AlxH8SGuWiF5XAhb/mSH+c90LIDFjJKtA==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dependencies:
+      callsites: 4.1.0
+    dev: false
+
+  /caller-path@4.0.0:
+    resolution: {integrity: sha512-18JFq7TTe4+cDKsyZETRk/IS9Xka3dRcU9VWm1C6XlkAjKPSR2bskpDSUHVQw7gvef34bi1gltzmCxToUw1oQw==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dependencies:
+      caller-callsite: 5.0.0
+    dev: false
+
   /callsite@1.0.0:
     resolution: {integrity: sha512-0vdNRFXn5q+dtOqjfFtmtlI9N2eVZ7LMyEV2iKC5mEEFvSg/69Ml6b/WU2qF8W1nLRa0wiSrDT3Y5jOHZCwKPQ==}
     dev: true
@@ -5647,6 +5687,11 @@ packages:
   /callsites@3.1.0:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
     engines: {node: '>=6'}
+
+  /callsites@4.1.0:
+    resolution: {integrity: sha512-aBMbD1Xxay75ViYezwT40aQONfr+pSXTHwNKvIXhXD6+LY3F1dLIcceoC5OZKBVHbXcysz1hL9D2w0JJIMXpUw==}
+    engines: {node: '>=12.20'}
+    dev: false
 
   /camelcase@6.3.0:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
@@ -5884,14 +5929,6 @@ packages:
     engines: {node: '>= 12'}
     dev: false
 
-  /clipanion@4.0.0-rc.3(typanion@3.14.0):
-    resolution: {integrity: sha512-+rJOJMt2N6Oikgtfqmo/Duvme7uz3SIedL2b6ycgCztQMiTfr3aQh2DDyLHl+QUPClKMNpSg3gDJFvNQYIcq1g==}
-    peerDependencies:
-      typanion: '*'
-    dependencies:
-      typanion: 3.14.0
-    dev: false
-
   /cliui@8.0.1:
     resolution: {integrity: sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ==}
     engines: {node: '>=12'}
@@ -6015,6 +6052,11 @@ packages:
     resolution: {integrity: sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug==}
     engines: {node: '>=14'}
     dev: true
+
+  /commander@12.0.0:
+    resolution: {integrity: sha512-MwVNWlYjDTtOjX5PiD7o5pK0UrFU/OYgcJfjjK4RaHZETNtjJqrZa9Y9ds88+A+f+d5lv+561eZ+yCKoS3gbAA==}
+    engines: {node: '>=18'}
+    dev: false
 
   /commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
@@ -8032,6 +8074,17 @@ packages:
         optional: true
     dependencies:
       debug: 4.3.4(supports-color@9.4.0)
+    dev: true
+
+  /follow-redirects@1.15.6:
+    resolution: {integrity: sha512-wWN62YITEaOpSK584EZXJafH1AGpO8RVgElfkuXbTOrPX4fIfOyEpW/CsiNd8JdYrAoOvafRTOEnvsO++qCqFA==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+    dev: false
 
   /for-each@0.3.3:
     resolution: {integrity: sha512-jqYfLp7mo9vIyQf8ykW2v7A+2N4QjeCeI5+Dz9XraiO1ign81wjiH7Fb9vSOWvQfNtmSa4H2RoQTrrXivdUZmw==}
@@ -13997,6 +14050,19 @@ packages:
       minizlib: 2.1.2
       mkdirp: 1.0.4
       yallist: 4.0.0
+    dev: true
+
+  /tar@6.2.1:
+    resolution: {integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==}
+    engines: {node: '>=10'}
+    dependencies:
+      chownr: 2.0.0
+      fs-minipass: 2.1.0
+      minipass: 5.0.0
+      minizlib: 2.1.2
+      mkdirp: 1.0.4
+      yallist: 4.0.0
+    dev: false
 
   /temp-dir@2.0.0:
     resolution: {integrity: sha512-aoBAniQmmwtcKp/7BzsH8Cxzv8OL736p7v1ihGb5e9DJ9kTwGWHrQrVB5+lfVDzfGrdRzXch+ig7LHaY1JTOrg==}
@@ -14347,10 +14413,6 @@ packages:
     requiresBuild: true
     dependencies:
       safe-buffer: 5.2.1
-    dev: false
-
-  /typanion@3.14.0:
-    resolution: {integrity: sha512-ZW/lVMRabETuYCd9O9ZvMhAh8GslSqaUjxmK/JLPCh6l73CvLBiuXswj/+7LdnWOgYsQ130FqLzFz5aGT4I3Ug==}
     dev: false
 
   /type-check@0.4.0:

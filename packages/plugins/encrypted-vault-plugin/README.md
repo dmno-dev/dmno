@@ -9,7 +9,7 @@ Provides functionality to encrypt and store secrets committed to your repo for t
 ### Initialization
 
 ```typescript
-const onePassVault = registerPlugin(new OnePasswordDmnoPlugin());
+const vaultPlugin = new EncryptedVaultPlugin('vault', {});
 ```
 
 

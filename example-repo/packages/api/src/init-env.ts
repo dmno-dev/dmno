@@ -11,7 +11,7 @@ import { getThisDirname } from './lib/this-file-path';
 const __dirname = getThisDirname(import.meta.url);
 
 console.time('dmno load');
-loadProcessDmnoEnv();
+await loadProcessDmnoEnv();
 console.timeEnd('dmno load');
 // console.log(process.dmnoEnv);
 

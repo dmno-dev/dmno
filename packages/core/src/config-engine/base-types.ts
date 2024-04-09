@@ -149,7 +149,7 @@ export class DmnoDataType<InstanceOptions = any> {
     // we'll check all the way up the chain for required setting and deal with that first
     if (val === undefined || val === null) {
       if (this.getDefItem('required')) {
-        // maybe pass through the value so we know which "empty" it is?
+        // we pass through the value so we know which "empty" it is
         return [new EmptyRequiredValueError(val)];
       } else {
         // maybe want to return something else than true?

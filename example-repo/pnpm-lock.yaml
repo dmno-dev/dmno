@@ -20,6 +20,12 @@ importers:
 
   packages/api:
     dependencies:
+      '@dmno/1password-plugin':
+        specifier: ../../packages/plugins/1password-plugin
+        version: link:../plugins/1password-plugin
+      '@dmno/core':
+        specifier: ../../../packages/core
+        version: link:../../../packages/core
       '@koa/cors':
         specifier: ^4.0.0
         version: 4.0.0
@@ -93,9 +99,6 @@ importers:
         specifier: ^3.21.4
         version: 3.21.4
     devDependencies:
-      '@dmno/core':
-        specifier: ../../../packages/core
-        version: link:../../../packages/core
       '@dmno/eslint-config':
         specifier: ../../../packages/eslint-config
         version: link:../../../packages/eslint-config

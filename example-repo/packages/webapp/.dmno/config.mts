@@ -1,4 +1,7 @@
 import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheFunctionResult, createDmnoDataType, defineConfigSchema, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from '@dmno/core';
+import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
+
+const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
 
 const customUrlType = createDmnoDataType({
   typeLabel: 'my-custom-url',
@@ -19,7 +22,7 @@ export default defineConfigSchema({
   pick: [
     'NODE_ENV',
     'DMNO_ENV',
-    'GOOGLE_ANALYTICS_MEASUREMENT_ID',
+    // 'GOOGLE_ANALYTICS_MEASUREMENT_ID',
     {
       source: 'api',
       key: 'API_URL',
@@ -35,6 +38,9 @@ export default defineConfigSchema({
     }
   ],
   schema: {
+    OP_ITEM_1: {
+      value: OnePassBackend.item(),
+    },
 
     // EX1: {
     //   value: (ctx) => DMNO_CONFIG.BOOLEAN_EXAMPLE,
@@ -107,7 +113,7 @@ export default defineConfigSchema({
         max: 100,
         min: 1
       }),
-      value: '12.45',
+      value: '123.45',
     },
     WEB_URL: {
       extends: customUrlType({ newSetting: true }),

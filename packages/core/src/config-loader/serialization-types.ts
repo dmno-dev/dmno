@@ -10,34 +10,42 @@
 
 import { DmnoConfigItemBase, DmnoService } from '../config-engine/config-engine';
 import { DmnoPlugin, DmnoPluginInputItem } from '../config-engine/plugins';
+import { ConfigValueOverride, ConfigValueResolver } from '../config-engine/resolvers/resolvers';
 
 
 export type SerializedWorkspace = {
-  services: Array<SerializedService>
+  services: Record<string, SerializedService>,
+  plugins: Record<string, SerializedDmnoPlugin>,
+
 };
 
 export type SerializedService =
-  Pick<DmnoService, 'packageName' | 'serviceName'>
+  Pick<DmnoService, 'packageName' | 'serviceName' | 'path'>
   & {
     isValid: boolean,
     isResolved: boolean,
     configLoadError?: SerializedDmnoError,
     schemaErrors?: Array<SerializedDmnoError>,
-    plugins: Array<SerializedDmnoPlugin>,
+    ownedPluginNames: Array<string>,
+    injectedPluginNames: Array<string>,
     config: Record<string, SerializedConfigItem>,
   };
 
-export type SerializedDmnoPlugin = Pick<DmnoPlugin, 'name' | 'instanceName' | 'isValid'>
+export type SerializedDmnoPlugin = Pick<DmnoPlugin, 'pluginType' | 'instanceName' | 'isValid'>
 & {
+  cliPath?: string,
+  initializedInService: string,
+  injectedIntoServices: Array<string>,
   inputs: Record<string, SerializedDmnoPluginInput>,
+  usedByConfigItemResolverPaths?: Array<string>,
 };
-export type SerializedDmnoPluginInput = Pick<DmnoPluginInputItem, 'key' | 'isValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved'> & {
+export type SerializedDmnoPluginInput = Pick<DmnoPluginInputItem, 'key' | 'isValid' | 'resolvedValue' | 'isResolved' | 'resolutionMethod'> & {
   isValid: boolean,
+  mappedToItemPath?: string,
   coercionError?: SerializedDmnoError,
   validationErrors?: Array<SerializedDmnoError>,
   schemaError?: SerializedDmnoError,
 };
-
 
 export type SerializedConfigItem =
   Pick<DmnoConfigItemBase, 'key' | 'isValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved'>
@@ -45,14 +53,39 @@ export type SerializedConfigItem =
     children: Record<string, SerializedConfigItem>,
     coercionError?: SerializedDmnoError,
     validationErrors?: Array<SerializedDmnoError>,
+    // TODO: dedupe some items from the resolver
     resolutionError?: SerializedDmnoError,
+    resolver?: SerializedResolver,
+    overrides?: Array<ConfigValueOverride>,
   };
+
+export type SerializedResolver =
+  Pick<ConfigValueResolver, 'isResolved'>
+  & {
+    icon?: string,
+    label?: string,
+    resolvedValue?: any,
+    createdByPluginInstanceName?: string,
+    branches?: Array<SerializedResolverBranch>,
+    resolutionError?: SerializedDmnoError,
+    // itemPath?: string;
+    // branchIdPath?: string;
+  };
+export type SerializedResolverBranch = {
+  label: string,
+  isDefault: boolean,
+  isActive: boolean | undefined,
+  resolver: SerializedResolver,
+};
+
+
 
 
 
 
 /** shape of how we will serialize our errors when sending over the wire */
 export type SerializedDmnoError = {
+  icon: string,
   type: string, // TODO: maybe narrow this down?
   name: string,
   message: string,

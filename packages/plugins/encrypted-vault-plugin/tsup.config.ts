@@ -3,6 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: [ // Entry point(s)
     'src/index.ts', // main lib, users will import from here
+    'src/cli/cli.ts', // cli entry-point
   ], 
 
   // imported as TS directly, so we have to tell tsup to compile it instead of leaving it external

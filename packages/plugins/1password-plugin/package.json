@@ -39,6 +39,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
     "dev": "pnpm run build --watch",
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix",
@@ -57,6 +58,7 @@
   "dependencies": {
     "@dmno/core": "workspace:*",
     "async": "^3.2.5",
+    "dotenv": "^16.4.5",
     "lodash-es": "^4.17.21",
     "unzip-stream": "^0.3.1"
   }

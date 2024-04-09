@@ -52,27 +52,20 @@ export function formattedValue(val: any, showType = false) {
 
 export function formatError(err: SerializedDmnoError) {
   let whenStr = '';
-  let icon = '❌';
   if (err.type === 'SchemaError') {
     whenStr += 'during schema initialization';
-    icon = '🧰';
   }
   if (err.type === 'ValidationError') {
     whenStr += 'during validation';
-    icon = '❌';
   }
   if (err.type === 'CoercionError') {
     whenStr += 'during coercion';
-    icon = '🛑';
   }
   if (err.type === 'ResolutionError') {
     whenStr += 'during resolution';
-    icon = '⛔';
   }
 
-  if (err.isUnexpected) icon = '💥';
-
-  let errStr = `${icon} ${err.message}`;
+  let errStr = `${err.icon} ${err.message}`;
   if (err.isUnexpected) {
     errStr += kleur.gray().italic(`\n   (unexpected error${whenStr ? ` ${whenStr}` : ''})`);
     if ('stack' in err) errStr += err.stack;

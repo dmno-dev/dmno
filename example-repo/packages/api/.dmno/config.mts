@@ -1,7 +1,9 @@
-import { defineConfigSchema, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, switchByNodeEnv, injectPlugin, createDmnoDataType } from '@dmno/core';
+import { defineConfigSchema, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, switchByNodeEnv, createDmnoDataType } from '@dmno/core';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
+import { EncryptedVaultDmnoPlugin } from '@dmno/encrypted-vault-plugin';
 
-const OnePassBackend = injectPlugin(OnePasswordDmnoPlugin);
+const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
+const VaultPlugin = EncryptedVaultDmnoPlugin.injectInstance('vault/prod');
 
 export default defineConfigSchema({
   name: 'api',
@@ -11,21 +13,26 @@ export default defineConfigSchema({
     'DMNO_ENV',
   ],
   schema: {
+    OP_ITEM_1: {
+      value: OnePassBackend.item(),
+    },
+
     SECRET_EXAMPLE: {
       extends: DmnoBaseTypes.string,
       required: true,
-      value: OnePassBackend.itemByReference("op://dev test/example/username"),
+      value: OnePassBackend.itemByLink("https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequ&h=dmnoinc.1password.com"),
     },
     SWITCHED_EXAMPLE: {
       value: switchByNodeEnv({
-        _default: OnePassBackend.itemByReference("example/username"),
-        staging: OnePassBackend.itemByReference("example/username"),
-        production: OnePassBackend.itemByReference("example/username"),
+        _default: OnePassBackend.itemByReference("op://dev test/example/username"),
+        staging: OnePassBackend.itemByReference("op://dev test/example/username"),
+        production: OnePassBackend.itemByReference("op://dev test/example/username"),
       }),
     },
 
     API_ONLY: {
-      value: 'set via dmno'
+      // value: 'set via dmno'
+      value: VaultPlugin.item(),
     },
 
     PORT: {

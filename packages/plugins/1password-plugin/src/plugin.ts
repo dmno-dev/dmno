@@ -2,6 +2,7 @@ import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import _ from 'lodash-es';
+import dotenv from 'dotenv';
 import {
   ConfigValueResolver, DmnoPlugin, ResolverContext,
   DmnoPluginInputSchema,
@@ -18,6 +19,7 @@ type VaultId = string;
 type VaultName = string;
 type ReferenceUrl = string;
 type ServiceAccountToken = string;
+
 
 // Typescript has some limitations around generics and how things work across parent/child classes
 // so unfortunately, we have to add some extra type annotations, but it's not too bad
@@ -37,51 +39,118 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
       extends: OnePasswordTypes.serviceAccountToken,
       required: true,
     },
-    defaultVaultId: {
-      description: 'default vault id - only needed if using the .item() helper passing only an id',
-      extends: OnePasswordTypes.vaultId,
+    envItemLink: {
+      description: 'link to secure note item containing dotenv style values',
+      extends: OnePasswordTypes.itemLink,
     },
-    defaultVaultName: {
-      description: 'default vault name - only needed if using the .itemByReference() helper without full reference URLs',
-      extends: OnePasswordTypes.vaultName,
-    },
+
   } satisfies DmnoPluginInputSchema;
   // ^^ note this explicit `satisfies` is needed to give us better typing on our inputSchema
 
   // this is likely the default for most plugins...
   // accept a mapping of how to fill inputs - each can be set to a
   // static value, config path, or use type-based injection
+  // TODO: this is still not giving me types on the static input values... :(
   constructor(
-    // TODO: this is still not giving me types on the static input values... :(
+    instanceName: string,
     inputs: DmnoPluginInputMap<typeof OnePasswordDmnoPlugin.inputSchema>,
   ) {
-    super();
+    super(instanceName);
     this.setInputMap(inputs);
+  }
+
+
+
+  private envItemsByService: Record<string, Record<string, string>> | undefined;
+  private async loadEnvItems(ctx: ResolverContext) {
+    // we've already validated the url is good and includes the query params
+    const url = new URL(this.inputValues.envItemLink!);
+    const vaultId = url.searchParams.get('v')!;
+    const itemId = url.searchParams.get('i')!;
+
+    const envItemJsonStr = await ctx.getOrSetCacheItem(`1pass:V|${vaultId}/I|${itemId}`, async () => {
+      return await execSync([
+        `OP_SERVICE_ACCOUNT_TOKEN=${this.inputValues.token}`,
+        CLI_PATH,
+        `item get ${itemId}`,
+        `--vault=${vaultId}`,
+        '--format json',
+      ].join(' ')).toString();
+    });
+    const envItemsObj = JSON.parse(envItemJsonStr);
+
+    const loadedEnvByService: typeof this.envItemsByService = {};
+    _.each(envItemsObj.fields, (field) => {
+      // the "default" items on a secure note get added to an invisible "add more" section
+      // we could force users to only add in there? but it might get confusing...?
+      const serviceName = field.label;
+
+      // make sure we dont have a duplicate
+      if (loadedEnvByService[serviceName]) {
+        throw new ResolutionError(`Duplicate env item found - ${serviceName} `);
+      }
+      const dotEnvObj = dotenv.parse(Buffer.from(field.value));
+      loadedEnvByService[serviceName] = dotEnvObj;
+      // TODO: deal with nested objects -- are paths "." or "__"?
+      // TODO: do we want to allow other formats?
+    });
+    this.envItemsByService = loadedEnvByService;
+  }
+  item() {
+    // make sure the user has mapped up an input for where the env data is stored
+    if (!this.inputItems.envItemLink.resolutionMethod) {
+      throw new SchemaError('You must set an `envItemLink` plugin input to use the .item() resolver');
+    }
+
+    return this.createResolver({
+      label: (ctx) => {
+        return `env blob item > ${ctx.serviceName} > ${ctx.itemPath}`;
+      },
+      resolve: async (ctx) => {
+        if (!this.envItemsByService) await this.loadEnvItems(ctx);
+
+        const itemValue = this.envItemsByService?.[ctx.serviceName!]?.[ctx.itemPath]
+          // the label "_" is used to signal a fallback / default to apply to all services
+          || this.envItemsByService?._default?.[ctx.itemPath];
+
+        // TODO: better error handling to tell you what went wrong? no access, non existant, etc
+
+        // TODO: add metadata so you know if it came from a service or * item
+        return itemValue;
+      },
+    });
+  }
+
+
+  /**
+   * reference an item using a "private link" (and json path)
+   *
+   * To get an item's link, right click on the item and select "Copy Private Link" (or select the item and click the ellipses / more options menu)
+   * */
+  itemByLink(privateLink: string, path?: string) {
+    const linkValidationResult = OnePasswordTypes.itemLink().validate(privateLink);
+
+    if (linkValidationResult !== true) {
+      // TOOD: add link to plugin docs
+      throw new SchemaError(`Invalid item link - ${linkValidationResult[0].message}`);
+    }
+
+    const url = new URL(privateLink);
+    const vaultId = url.searchParams.get('v')!;
+    const itemId = url.searchParams.get('i')!;
+
+    return this.itemById(vaultId, itemId, path);
   }
 
 
   // can read items by id - need a vault id, item id
   // and then need to grab the specific data from a big json blob
   // cli command `op item get bphvvrqjegfmd5yoz4buw2aequ --vault=ut2dftalm3ugmxc6klavms6tfq --format json`
-  item(idOrObj: ItemId | { id: ItemId, vaultId: VaultId }, path?: string) {
-    let vaultId: VaultId | undefined;
-    let itemId: ItemId;
-
-    if (_.isString(idOrObj)) {
-      itemId = idOrObj;
-      if (!this.inputItems.defaultVaultId.resolutionMethod) {
-        throw new SchemaError('Plugin must have defaultVaultId specified if using item id only');
-      }
-    } else {
-      itemId = idOrObj.id;
-      vaultId = idOrObj.vaultId;
-    }
-
-    return createResolver({
-      createdByPlugin: this,
+  itemById(vaultId: VaultId, itemId: ItemId, path?: string) {
+    return this.createResolver({
       label: (ctx) => {
         return _.compact([
-          `Vault: ${vaultId || this.inputValues.defaultVaultId!}`,
+          `Vault: ${vaultId}`,
           `Item: ${itemId}`,
           path && `Path: ${path}`,
         ]).join(', ');
@@ -89,15 +158,13 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
       resolve: async (ctx) => {
         // we've already checked that the defaultVaultId is set above if it's needed
         // and the plugin will have a schema error if the resolution failed
-        const vaultIdWithDefault = vaultId || this.inputValues.defaultVaultId!;
 
-
-        const valueJsonStr = await ctx.getOrSetCacheItem(`1pass:V|${vaultIdWithDefault}/I|${itemId}`, async () => {
+        const valueJsonStr = await ctx.getOrSetCacheItem(`1pass:V|${vaultId}/I|${itemId}`, async () => {
           return await execSync([
             `OP_SERVICE_ACCOUNT_TOKEN=${this.inputValues.token}`,
             CLI_PATH,
-            `get item ${itemId}`,
-            `--vault=${vaultIdWithDefault}`,
+            `item get ${itemId}`,
+            `--vault=${vaultId}`,
             '--format json',
           ].join(' ')).toString();
         });
@@ -115,6 +182,9 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
           return valueAtPath;
         }
 
+        // TODO: better error handling to tell you what went wrong? no access, non existant, etc
+
+
         return valueObj;
       },
     });
@@ -125,42 +195,24 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   // however these are not necessarily stable...
   // cli command `op read "op://dev test/example/username"`
   itemByReference(referenceUrl: ReferenceUrl) {
-    // if reference starts with "op://" then it includes the vault name already
-    // otherwise we'll prepend "op://vaultname/" to the value passed in
-    // and we are throwing a schema error early if no default vault name was set up
-    if (!referenceUrl.startsWith('op://')) {
-      if (!this.inputItems.defaultVaultName.resolutionMethod) {
-        throw new SchemaError('Plugin must have defaultVaultName if using partial reference paths');
-      }
-    }
+    // TODO: validate the reference url looks ok?
 
-    return createResolver({
-      createdByPlugin: this,
-      label: (ctx) => {
-        let fullReference = referenceUrl;
-        if (!fullReference.startsWith('op://')) {
-          fullReference = `op://${this.inputValues.defaultVaultName!}/${fullReference}`;
-        }
-        return fullReference;
-      },
+    return this.createResolver({
+      label: referenceUrl,
       resolve: async (ctx) => {
-        let fullReference = referenceUrl;
-        // if a partial path was passed in, we'll use a default vault name from the plugin settings
-        if (!fullReference.startsWith('op://')) {
-          fullReference = `op://${this.inputValues.defaultVaultName!}/${fullReference}`;
-        }
-
-        const value = await ctx.getOrSetCacheItem(`1pass:R|${fullReference}`, async () => {
+        const value = await ctx.getOrSetCacheItem(`1pass:R|${referenceUrl}`, async () => {
           return await execSync([
             `OP_SERVICE_ACCOUNT_TOKEN=${this.inputValues.token}`,
             CLI_PATH,
-            `read "${fullReference}"`,
+            `read "${referenceUrl}"`,
             '--force --no-newline',
           ].join(' ')).toString();
         });
 
+        // TODO: better error handling to tell you what went wrong? no access, non existant, etc
+
         if (value === undefined) {
-          throw new ResolutionError(`unable to resolve 1pass item - ${fullReference}`);
+          throw new ResolutionError(`unable to resolve 1pass item - ${referenceUrl}`);
         }
         return value;
       },
