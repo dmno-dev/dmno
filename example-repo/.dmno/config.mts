@@ -1,5 +1,6 @@
-import { DmnoBaseTypes, defineWorkspaceConfig, configPath, switchByNodeEnv, dmnoFormula, createDmnoDataType, NodeEnvType, registerPlugin, InjectPluginInputByType, ConfigPath } from '@dmno/core';
+import { DmnoBaseTypes, defineWorkspaceConfig, configPath, switchByNodeEnv, dmnoFormula, NodeEnvType, registerPlugin } from '@dmno/core';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
+import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
 // TODO: figure out how to get rid of mjs extension
 import { GA4MeasurementId } from './custom-types.mjs';
@@ -9,17 +10,41 @@ const ProdOnePassBackend = registerPlugin(new OnePasswordDmnoPlugin({
   // token: InjectPluginInputByType,
   // token: 'asdf',
   defaultVaultName: 'dev test',
+}))
+
+
+const NonProdVault = registerPlugin(new EncryptedVaultDmnoPlugin({
+  key: configPath('DMNO_VAULT_KEY'),
 }));
 
 export default defineWorkspaceConfig({
+  name: 'root',
   schema: {
+    OP_TOKEN: {
+      extends: OnePasswordTypes.serviceAccountToken,
+      required: true
+    },
+
+    DMNO_VAULT_KEY: {
+      extends: EncryptedVaultTypes.encryptionKey,
+    },
+
+    VAULT_TEST: {
+      value: NonProdVault.item(),
+    },
+
     NODE_ENV: NodeEnvType, 
     DMNO_ENV: {
       typeDescription: 'standardized environment flag set by DMNO',
       value: (ctx) => ctx.get('NODE_ENV'),
     },
+
+    ROOT_ONLY: {
+      value: 'rootonly',
+    },
+
     PICK_TEST: {
-      // value: (ctx) => `pick-test--${DMNO_CONFIG. }`,
+      value: (ctx) => `pick-test--${DMNO_CONFIG.ROOT_ONLY}`,
     },
 
     GOOGLE_ANALYTICS_MEASUREMENT_ID: {

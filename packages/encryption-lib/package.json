@@ -1,5 +1,5 @@
 {
-  "name": "@dmno/ts-lib",
+  "name": "@dmno/encryption-lib",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,7 +9,10 @@
     "lint": "eslint src --ext .ts,.js,.cjs,.vue",
     "lint:fix": "pnpm run lint --fix"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@types/node": "^20.12.2",
+    "base64-arraybuffer": "^1.0.2"
+  },
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*"

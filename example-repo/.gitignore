@@ -1,7 +1,7 @@
 # local cache for resolved values
 **/.dmno/cache.json
 # encryption key used for cache
-**/.dmno/key.json
+**/.dmno/cache-key.json
 # generated type files
 **/.dmno/.typegen
 # iconify cache used in generated types

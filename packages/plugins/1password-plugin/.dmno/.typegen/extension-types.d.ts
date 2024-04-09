@@ -1,6 +1,5 @@
 // TODO: this file will be auto-generated... just showing an example of what we need to output
 
-import { ConfigPath, InjectPluginInputByType } from '@dmno/core';
 import { OnePasswordDmnoPlugin } from '../../src/plugin';
 import { _PluginInputTypesSymbol } from '@dmno/core';
 declare module '../../src/plugin' {
