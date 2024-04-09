@@ -1,13 +1,13 @@
-import { Command } from 'commander';
 import kleur from 'kleur';
 import _ from 'lodash-es';
 import CliTable from 'cli-table3';
+import { DmnoCommand } from '../lib/DmnoCommand';
 import { ConfigLoaderProcess } from '../lib/loader-process';
 import { formatError, formattedValue } from '../lib/formatting';
 import { executeCommandWithEnv } from '../lib/execute-command';
 import { addServiceSelection } from '../lib/selection-helpers';
 
-const program = new Command('types')
+const program = new DmnoCommand('types')
   .summary('generate types for a service')
   .description('Generate TS types for the config')
   .addHelpText('after', `

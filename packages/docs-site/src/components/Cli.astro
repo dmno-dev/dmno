@@ -4,40 +4,46 @@ import { Code } from "@astrojs/starlight/components";
 
 const commands = json;
 
-export const formatExamples = (ex: string[][]) => {
+export const formatExamples = (examples) => {
   let str = "";
-  ex.map((e: string[]) => {
-    e.map((i) => {
-      str = str.concat(i);
-    });
-    str = str.concat("\n\n");
+  examples?.map((example) => {
+    str += `# ${example.description}
+${example.command} \n\n`;
   });
   return str;
 };
 ---
 
 {
-  commands.map((command) => {
-    return (
-      <>
-        <div>
-          <h2>{command.path}</h2>
-          <p>
-            <i>{command.description}</i>
-          </p>
-          <Code code={command.usage} />
-          <!-- TODO PARSE MD HERE -->
-          <p>{command.details}</p>
-          {command.examples && (
-            <Code
-              code={formatExamples(command.examples)}
-              lang="bash"
-              title="Examples"
-            />
-          )}
-        </div>
-        <hr />
-      </>
-    );
-  })
+  commands?.length &&
+    commands?.map((command) => {
+      return (
+        <>
+          <div>
+            <h2>dmno {command.command}</h2>
+            <p>
+              <i>{command.description}</i>
+            </p>
+            {command.more.options.length ? <h4>Options</h4> : null}
+            {command.more?.options?.map((option) => {
+              return (
+                <div>
+                  <Code code={option.flags} />
+                  <p>
+                    <em>{option.description}</em>
+                  </p>
+                </div>
+              );
+            })}
+            {command.examples.length ? (
+              <div>
+                <h4>Example(s)</h4>
+                <Code code={formatExamples(command.examples)} lang="bash" />
+              </div>
+            ) : null}
+          </div>
+          <hr />
+        </>
+      );
+    })
 }
