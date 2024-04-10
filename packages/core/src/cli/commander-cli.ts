@@ -4,10 +4,10 @@ const startBoot = new Date().getTime();
 
 import './lib/init-process';
 
-import { Command } from 'commander';
 import _ from 'lodash-es';
 import kleur from 'kleur';
 import Debug from 'debug';
+import { DmnoCommand } from './lib/DmnoCommand';
 
 import { addDocsCommand } from './lib/cli-schema-generation';
 import { LoadCommand } from './commands/load.command';
@@ -19,7 +19,7 @@ import { PluginCommand } from './commands/plugin.command';
 
 const debug = Debug('dmno:cli');
 
-const program = new Command('dmno2')
+const program = new DmnoCommand('dmno2')
   .description('DMNO CLI - https://dmno.dev')
   .version('0.0.1');
 

@@ -1,18 +1,21 @@
-import { Command } from 'commander';
 import kleur from 'kleur';
 import _ from 'lodash-es';
 import CliTable from 'cli-table3';
+import { DmnoCommand } from '../lib/DmnoCommand';
 import { formatError, formattedValue } from '../lib/formatting';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 
 const TERMINAL_COLS = process.stdout.columns - 10 || 100;
 
-const program = new Command('load')
-  .summary('load and resolve config')
-  .description('Load the resolved config for a service')
-  .option('-f, --format <format>', 'format to output resolved config')
-  .option('--public', 'only load public (non-sensitive) values');
+const program = new DmnoCommand('load')
+  .summary('Loads and resolves config')
+  .description('Loads the resolved config for a service')
+  .option('-f, --format <format>', 'format to output resolved config (ex. json)')
+  .option('--public', 'only loads public (non-sensitive) values')
+  .example('dmno load', 'Loads the resolved config for the root service')
+  .example('dmno load --service service1', 'Loads the resolved config for service1')
+  .example('dmno load --service service1 --format json', 'Loads the resolved config for service1 in JSON format');
 
 addServiceSelection(program);
 

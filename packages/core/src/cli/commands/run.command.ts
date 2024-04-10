@@ -1,21 +1,19 @@
-import { Command } from 'commander';
 import kleur from 'kleur';
 import _ from 'lodash-es';
 import CliTable from 'cli-table3';
+import { DmnoCommand } from '../lib/DmnoCommand';
 import { ConfigLoaderProcess } from '../lib/loader-process';
 import { formatError, formattedValue } from '../lib/formatting';
 import { executeCommandWithEnv } from '../lib/execute-command';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 
-const program = new Command('run')
-  .summary('inject loaded config into an external command')
-  .description('Run a command with the resolved config for a service')
+const program = new DmnoCommand('run')
+  .summary('Injects loaded config into an external command')
+  .description('Runs a command with the resolved config for a service')
   .usage('[options] -- [command to pass config to]')
   .argument('external command')
-  .addHelpText('after', `
-More stuff!
-`);
+  .example('dmno run --service service1 -- echo $SERVICE1_CONFIG', 'Runs the echo command with the resolved config for service1');
 
 addServiceSelection(program);
 

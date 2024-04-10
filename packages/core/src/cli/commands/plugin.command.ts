@@ -1,6 +1,5 @@
 import { execSync, fork } from 'child_process';
 import { inherits } from 'util';
-import { Command } from 'commander';
 import kleur from 'kleur';
 import _ from 'lodash-es';
 import CliTable from 'cli-table3';
@@ -8,6 +7,7 @@ import { select } from '@inquirer/prompts';
 import { ExecaChildProcess, execa } from 'execa';
 import which from 'which';
 import Debug from 'debug';
+import { DmnoCommand } from '../lib/DmnoCommand';
 import { ConfigLoaderProcess } from '../lib/loader-process';
 import { formatError, formattedValue } from '../lib/formatting';
 import { executeCommandWithEnv } from '../lib/execute-command';
@@ -18,9 +18,11 @@ import { SerializedDmnoPlugin } from '../../config-loader/serialization-types';
 
 const debug = Debug('dmno:plugin-cli');
 
-const program = new Command('plugin')
-  .summary('interact with dmno plugins')
-  .description('Run CLI commands related to a specific plugin instance');
+const program = new DmnoCommand('plugin')
+  .summary('Interacts with dmno plugins')
+  .description('Runs CLI commands related to a specific plugin instance')
+  .example('dmno plugin -p my-plugin', 'Runs the CLI for the my-plugin plugin')
+  .example('dmno plugin -p my-plugin -s my-service', 'Runs the CLI for the my-plugin plugin with the my-service service');
 
 addServiceSelection(program, false);
 addPluginSelection(program);
