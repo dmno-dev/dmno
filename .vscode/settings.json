@@ -40,5 +40,8 @@
   },
   "[markdown]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-  }
+  },
+
+  // vscode's built-in json formatter is removing the extra newline at the end which conflicts with editorconfig
+  "json.format.keepLines": true,
 }

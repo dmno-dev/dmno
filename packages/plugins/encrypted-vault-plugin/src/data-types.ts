@@ -14,7 +14,7 @@ const DmnoEncryptionKey = createDmnoDataType({
   ui: {
     icon: 'material-symbols:key',
   },
-  secret: true,
+  sensitive: true,
 });
 
 export const EncryptedVaultTypes = {

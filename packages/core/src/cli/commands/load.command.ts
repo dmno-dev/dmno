@@ -12,12 +12,10 @@ const program = new DmnoCommand('load')
   .summary('Loads and resolves config')
   .description('Loads the resolved config for a service')
   .option('-f, --format <format>', 'format to output resolved config (ex. json)')
+  .option('--public', 'only loads public (non-sensitive) values')
   .example('dmno load', 'Loads the resolved config for the root service')
   .example('dmno load --service service1', 'Loads the resolved config for service1')
   .example('dmno load --service service1 --format json', 'Loads the resolved config for service1 in JSON format');
-
-
-// test
 
 addServiceSelection(program);
 
@@ -25,6 +23,7 @@ addServiceSelection(program);
 program.action(async (opts: {
   service?: string,
   format?: string,
+  public?: boolean,
 }, thisCommand) => {
   const ctx = getCliRunCtx();
 
@@ -50,7 +49,7 @@ program.action(async (opts: {
   }
 
   // console.dir(workspace.services.root.config, { depth: null });
-  console.dir(workspace.plugins, { depth: null });
+  // console.dir(workspace.plugins, { depth: null });
 
   // now show plugin errors - which would also likely cause further errors
   if (_.some(_.values(workspace.plugins), (p) => !p.isValid)) {
@@ -207,7 +206,11 @@ program.action(async (opts: {
   }
 
 
-  const valuesOnly = _.mapValues(configResult.config, (val) => {
+  let exposedConfig = configResult.config;
+  if (opts.public) {
+    exposedConfig = _.pickBy(exposedConfig, (c) => !c.dataType.sensitive);
+  }
+  const valuesOnly = _.mapValues(exposedConfig, (val) => {
     return val.resolvedValue;
   });
 
@@ -215,7 +218,7 @@ program.action(async (opts: {
   if (opts.format === 'json') {
     console.log(JSON.stringify(valuesOnly));
   } else {
-    console.dir(configResult.config, { depth: null });
+    console.dir(exposedConfig, { depth: null });
   }
   process.exit(0);
 });

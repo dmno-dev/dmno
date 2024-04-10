@@ -5,6 +5,7 @@ import {
 } from './config-engine';
 import { ConfigValueResolver, processInlineResolverDef } from './resolvers/resolvers';
 import { CoercionError, EmptyRequiredValueError, ValidationError } from './errors';
+import { SerializedDmnoDataType } from '../config-loader/serialization-types';
 
 // data types expose all the same options, except they additionally have a "settings schema"
 // and their validations/normalize functions get passed in the _instance_ of those settings when invoked
@@ -346,7 +347,6 @@ export class DmnoDataType<InstanceOptions = any> {
     }
   }
 
-
   /** checks if this data type is directly an instance of the data type (not via inheritance) */
   isType(factoryFn: DmnoDataTypeFactoryFn<any>): boolean {
     // we jump straight to the parent if we are dealing with an inline defined type
@@ -385,6 +385,21 @@ export class DmnoDataType<InstanceOptions = any> {
   }
   get primitiveTypeFactory(): DmnoDataTypeFactoryFn<any> {
     return this.primitiveType.typeFactoryFn!;
+  }
+
+
+  toJSON(): SerializedDmnoDataType {
+    return {
+      summary: this.getDefItem('summary'),
+      description: this.getDefItem('description'),
+      typeDescription: this.getDefItem('typeDescription'),
+      expose: this.getDefItem('expose'),
+      sensitive: this.getDefItem('sensitive'),
+      externalDocs: this.getDefItem('externalDocs'),
+      ui: this.getDefItem('ui'),
+      required: this.getDefItem('required'),
+      useAt: this.getDefItem('useAt'),
+    };
   }
 }
 

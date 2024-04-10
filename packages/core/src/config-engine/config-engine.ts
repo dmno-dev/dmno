@@ -90,7 +90,7 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
   };
 
   /** whether this config is sensitive and must be kept secret */
-  secret?: ValueOrValueFromContextFn<boolean>;
+  sensitive?: ValueOrValueFromContextFn<boolean>;
 
   /** is this config item required, an error will be shown if empty */
   required?: ValueOrValueFromContextFn<boolean>;
@@ -969,6 +969,7 @@ export abstract class DmnoConfigItemBase {
     return {
       key: this.key,
       isValid: this.isValid,
+      dataType: this.type.toJSON(),
 
       resolvedRawValue: this.resolvedRawValue,
       resolvedValue: this.resolvedValue,

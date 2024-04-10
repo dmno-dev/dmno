@@ -14,7 +14,7 @@ const OnePasswordServiceAccountToken = createDmnoDataType({
   ui: {
     icon: ONEPASS_ICON,
   },
-  secret: true,
+  sensitive: true,
 });
 
 const OnePasswordVaultId = createDmnoDataType({
