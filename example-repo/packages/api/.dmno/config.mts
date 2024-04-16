@@ -35,6 +35,9 @@ export default defineConfigSchema({
       value: VaultPlugin.item(),
     },
 
+    A_NEW_ITEM: {
+      value: "phil 1"
+    }, 
     PORT: {
       description: 'port number to listen on',
       extends: DmnoBaseTypes.number({ max: 9999 }),
