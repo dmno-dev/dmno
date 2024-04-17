@@ -83,8 +83,7 @@ export class ConfigServerClient {
 
     this.ownedDmnoConfigServerProcess.on('exit', (code, signal) => {
       console.log('dmno config server process exit', code, signal);
-      process.exit(code || 1);
-      // if (!this.isShuttingDown) process.exit(code || 1);
+      if (!this.isShuttingDown) process.exit(code || 1);
     });
   }
 

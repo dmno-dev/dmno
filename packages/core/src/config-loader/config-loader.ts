@@ -50,12 +50,8 @@ export class ConfigLoader {
 
   private async viteHotReloadHandler(ctx: HmrContext) {
     if (this.devMode) {
-      console.log('hot reload in dev mode!');
       await this.reload();
-      if (this.onReload) {
-        this.onReload();
-        console.log('emit reload event');
-      }
+      if (this.onReload) this.onReload();
     }
   }
 

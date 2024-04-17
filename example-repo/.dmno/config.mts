@@ -25,6 +25,9 @@ const ProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
 //   key: configPath('DMNO_VAULT_KEY'),
 // });
 
+
+
+
 export default defineWorkspaceConfig({
   name: 'root',
   schema: {
