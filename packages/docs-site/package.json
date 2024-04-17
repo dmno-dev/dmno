@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.5.7",
+    "@astrojs/partytown": "^2.0.4",
     "@astrojs/starlight": "^0.21.1",
     "@astrojs/vue": "^4.0.8",
     "@dmno/eslint-config": "workspace:*",
