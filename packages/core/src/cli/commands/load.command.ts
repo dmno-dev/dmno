@@ -1,7 +1,9 @@
 import kleur from 'kleur';
 import _ from 'lodash-es';
 import CliTable from 'cli-table3';
+import { tryCatch } from '@dmno/ts-lib';
 import { DmnoCommand } from '../lib/DmnoCommand';
+
 import { formatError, formattedValue } from '../lib/formatting';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
@@ -27,17 +29,24 @@ program.action(async (opts: {
 }, thisCommand) => {
   const ctx = getCliRunCtx();
 
-  const workspace = await ctx.configLoader.makeRequest('load-full-schema', { resolve: true });
+  const workspace = await tryCatch(async () => {
+    return await ctx.configLoader.getWorkspace();
+  }, (err) => {
+    console.log(kleur.red().bold('Loading config failed'));
+    console.log(err.message);
+    process.exit(1);
+  });
+  await workspace.resolveConfig();
 
   // first display loading errors (which would likely cascade into schema errors)
-  if (_.some(_.values(workspace.services), (s) => s.configLoadError)) {
+  if (_.some(_.values(workspace.allServices), (s) => s.configLoadError)) {
     console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('We were unable to load all of your config')}  🚨 🚨 🚨\n`);
     console.log(kleur.gray('The following services are failing to load:\n'));
 
     // NOTE - we dont use a table here because word wrapping within the table
     // breaks clicking/linking into your code
 
-    _.each(workspace.services, (service) => {
+    _.each(workspace.allServices, (service) => {
       if (!service.configLoadError) return;
       console.log(kleur.bold().red(`💥 Service ${kleur.underline(service.serviceName)} failed to load 💥\n`));
 
@@ -76,21 +85,21 @@ program.action(async (opts: {
 
 
     _.each(workspace.plugins, (plugin) => {
-      _.each(plugin.inputs, (item) => {
+      _.each(plugin.inputItems, (item) => {
         if (item.isValid) return;
 
         const pathCellContents = [
-          plugin.initializedInService,
+          plugin.initByService,
           ` ${plugin.instanceName}`,
           `  ${item.key}`,
         ].join('\n');
 
 
-        let valueCellContents = formattedValue(item.resolvedValue, false);
-        if (item.resolvedRawValue !== item.resolvedValue) {
-          valueCellContents += kleur.gray().italic('\n------\ncoerced from\n');
-          valueCellContents += formattedValue(item.resolvedRawValue, false);
-        }
+        const valueCellContents = formattedValue(item.resolvedValue, false);
+        // if (item.resolvedRawValue !== item.resolvedValue) {
+        //   valueCellContents += kleur.gray().italic('\n------\ncoerced from\n');
+        //   valueCellContents += formattedValue(item.resolvedRawValue, false);
+        // }
 
         const errors = _.compact([
           item.coercionError,
@@ -101,7 +110,8 @@ program.action(async (opts: {
         errorsTable.push([
           pathCellContents,
           valueCellContents,
-          errors?.map((err) => formatError(err)).join('\n'),
+          // errors?.map((err) => formatError(err)).join('\n'),
+          errors?.map((err) => err.message).join('\n'),
         ]);
       });
     });
@@ -113,7 +123,7 @@ program.action(async (opts: {
   }
 
   // now show schema errors
-  if (_.some(_.values(workspace.services), (s) => s.schemaErrors?.length)) {
+  if (_.some(_.values(workspace.allServices), (s) => s.schemaErrors?.length)) {
     console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your config schema is invalid')}  🚨 🚨 🚨\n`);
     console.log(kleur.gray('The following services have issues:\n'));
 
@@ -133,7 +143,7 @@ program.action(async (opts: {
       ].map((t) => kleur.bold().magenta(t)),
     );
 
-    _.each(workspace.services, (service) => {
+    _.each(workspace.allServices, (service) => {
       if (!service.schemaErrors?.length) return;
 
       errorsTable.push([
@@ -146,14 +156,13 @@ program.action(async (opts: {
   }
 
 
+  if (!opts.service) {
+    console.log('select a service to load');
+    process.exit(1);
+  }
 
-
-  const configResult = await ctx.configLoader.makeRequest('get-resolved-config', {
-    serviceName: opts.service,
-  });
-
-
-  const failingItems = _.filter(configResult.config, (item) => !item.isValid);
+  const service = workspace.getService(opts.service);
+  const failingItems = _.filter(service.config, (item) => !item.isValid);
 
   // TODO: make isValid flag on service to work
   if (failingItems.length > 0) {
@@ -196,7 +205,8 @@ program.action(async (opts: {
       errorsTable.push([
         item.key,
         valueCellContents,
-        errors?.map((err) => formatError(err)).join('\n'),
+        // errors?.map((err) => formatError(err)).join('\n'),
+        errors?.map((err) => err.message).join('\n'),
       ]);
     });
 
@@ -206,19 +216,21 @@ program.action(async (opts: {
   }
 
 
-  let exposedConfig = configResult.config;
+  let exposedConfig = service.config;
   if (opts.public) {
-    exposedConfig = _.pickBy(exposedConfig, (c) => !c.dataType.sensitive);
+    exposedConfig = _.pickBy(exposedConfig, (c) => !c.type.getDefItem('sensitive'));
   }
   const valuesOnly = _.mapValues(exposedConfig, (val) => {
     return val.resolvedValue;
   });
 
 
+  // console.log(service.config);
   if (opts.format === 'json') {
     console.log(JSON.stringify(valuesOnly));
   } else {
-    console.dir(exposedConfig, { depth: null });
+    // TODO: this includes sensitive info when using --public option
+    console.dir(service.toJSON(), { depth: null });
   }
   process.exit(0);
 });

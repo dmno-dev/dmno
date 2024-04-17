@@ -20,7 +20,7 @@ export default defineConfigSchema({
     SECRET_EXAMPLE: {
       extends: DmnoBaseTypes.string,
       required: true,
-      value: OnePassBackend.itemByLink("https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequ&h=dmnoinc.1password.com"),
+      value: OnePassBackend.itemByLink("https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&h=dmnoinc.1password.com&i=bphvvrqjegfmd5yoz4buw2aequ&v=ut2dftalm3ugmxc6klavms6tfq", 'username'),
     },
     SWITCHED_EXAMPLE: {
       value: switchByNodeEnv({
@@ -31,8 +31,8 @@ export default defineConfigSchema({
     },
 
     API_ONLY: {
-      // value: 'set via dmno'
-      value: VaultPlugin.item(),
+      value: 'set via dmno'
+      // value: VaultPlugin.item(),
     },
 
     A_NEW_ITEM: {

@@ -9,7 +9,9 @@
     "lint": "eslint src --ext .ts,.js,.cjs,.vue",
     "lint:fix": "pnpm run lint --fix"
   },
-  "dependencies": {},
+  "dependencies": {
+    "is-promise": "^4.0.0"
+  },
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*"

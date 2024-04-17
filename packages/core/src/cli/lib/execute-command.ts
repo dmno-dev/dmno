@@ -4,7 +4,7 @@ import which from 'which';
 // TODO: swap this out...
 const logger = {
   debug(log: string) {
-    // console.log(log);
+    console.log(log);
   },
   error(log: string) {
     // console.error(log);
@@ -21,7 +21,10 @@ const OTHER_SIGNALS = [
   'SIGBUS', 'SIGFPE', 'SIGUSR1', 'SIGSEGV', 'SIGUSR2', 'SIGTERM',
 ];
 
-export async function executeCommandWithEnv(commandArgs: Array<string>, env: Record<string, any>) {
+export function executeCommandWithEnv(
+  commandArgs: Array<string>,
+  env: Record<string, any>,
+) {
   const fullCommand = commandArgs.join(' ');
   const rawCommand = commandArgs[0];
   const commandArgsOnly = commandArgs.slice(1);
@@ -42,13 +45,13 @@ export async function executeCommandWithEnv(commandArgs: Array<string>, env: Rec
     }
   }
 
-  function otherSignalHandler(signal: string) {
-    logger.debug(`received ${signal} signal`);
-  }
+  // function otherSignalHandler(signal: string) {
+  //   logger.debug(`received ${signal} signal`);
+  // }
 
   try {
     // attempt to expand shortened command to full path using PATH
-    const pathAwareCommand = await which(`${commandArgs[0]}`, { nothrow: true });
+    const pathAwareCommand = which.sync(`${commandArgs[0]}`, { nothrow: true });
     if (pathAwareCommand) {
       logger.debug(`expanded [${rawCommand}] to [${pathAwareCommand}]`);
     } else {
@@ -68,27 +71,24 @@ export async function executeCommandWithEnv(commandArgs: Array<string>, env: Rec
 
     process.on('SIGINT', sigintHandler);
 
-    OTHER_SIGNALS.forEach((signal) => {
-      process.on(signal, () => otherSignalHandler(signal));
-    });
+    // OTHER_SIGNALS.forEach((signal) => {
+    //   process.on(signal, () => otherSignalHandler(signal));
+    // });
 
-    // Wait for the command process to finish
-    const { exitCode } = await commandProcess;
-
-    if (exitCode !== 0) {
-      logger.debug(`received non-zero exitCode: ${exitCode}`);
-      throw new Error(`Command failed with exit code ${exitCode}`);
-    }
+    return {
+      process: commandProcess,
+      kill: (signal?: number) => {
+        process.removeListener('SIGINT', sigintHandler);
+        if (commandProcess.exitCode === null) {
+          commandProcess.kill(signal ?? 2);
+          return true;
+        } else {
+          return false;
+        }
+      },
+    };
   } catch (error) {
-    if ((error as any).signal !== 'SIGINT') {
-      logger.error((error as Error).message);
-      logger.error(`command [${fullCommand}] failed`);
-      logger.error('try running the same command without dmno');
-      logger.error('if you get a different result, dmno may be the problem...');
-      logger.error(`Please report issue here: <${REPORT_ISSUE_LINK}>`);
-    }
-    process.exit((error as any).exitCode || 1);
-  } finally {
-    process.removeListener('SIGINT', sigintHandler);
+    console.log(error);
+    process.exit(1);
   }
 }

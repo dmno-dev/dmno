@@ -2,11 +2,12 @@ import { Command } from 'commander';
 import _ from 'lodash-es';
 import kleur from 'kleur';
 import { select } from '@inquirer/prompts';
-import { ConfigLoaderProcess } from './loader-process';
 import { exitWithErrorMessage } from './error-helpers';
 import { SerializedDmnoPlugin, SerializedService } from '../../config-loader/serialization-types';
 import { fallingDmnoLoader } from './loaders';
 import { getCliRunCtx } from './cli-ctx';
+import { DmnoService, DmnoWorkspace } from '../../config-engine/config-engine';
+import { DmnoPlugin } from '../../config-engine/plugins';
 
 function getMaxLength(strings: Array<string>, extraBuffer = 4) {
   let max = 0;
@@ -18,7 +19,7 @@ function getMaxLength(strings: Array<string>, extraBuffer = 4) {
 }
 
 
-function getServiceLabel(s: SerializedService, padNameEnd: number) {
+function getServiceLabel(s: DmnoService, padNameEnd: number) {
   return [
     `- ${s.serviceName.padEnd(padNameEnd)}`,
     kleur.gray(s.packageName),
@@ -31,28 +32,24 @@ export function addServiceSelection(program: Command, selectionRequired = true) 
     .hook('preAction', async (thisCommand, actionCommand) => {
       const ctx = getCliRunCtx();
 
-      // const [,workspace] = await Promise.all([
-      //   await fallingDmnoLoader(750),
-      //   await ctx.configLoader.makeRequest('load-full-schema'),
-      // ]);
-      const workspace = await ctx.configLoader.makeRequest('load-full-schema', {});
-
-
-      const namesMaxLen = getMaxLength(_.map(workspace.services, (s) => s.serviceName));
-
+      const workspace = await ctx.configLoader.getWorkspace();
       ctx.workspace = workspace;
+
+      const namesMaxLen = getMaxLength(_.map(workspace.allServices, (s) => s.serviceName));
+
+
 
 
 
       // first display loading errors (which would likely cascade into schema errors)
-      if (_.some(_.values(workspace.services), (s) => s.configLoadError)) {
+      if (_.some(_.values(workspace.allServices), (s) => s.configLoadError)) {
         console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('We were unable to load all of your config')}  🚨 🚨 🚨\n`);
         console.log(kleur.gray('The following services are failing to load:\n'));
 
         // NOTE - we dont use a table here because word wrapping within the table
         // breaks clicking/linking into your code
 
-        _.each(workspace.services, (service) => {
+        _.each(workspace.allServices, (service) => {
           if (!service.configLoadError) return;
           console.log(kleur.bold().red(`💥 Service ${kleur.underline(service.serviceName)} failed to load 💥\n`));
 
@@ -67,12 +64,12 @@ export function addServiceSelection(program: Command, selectionRequired = true) 
 
       const explicitSelection = thisCommand.opts().service;
       if (explicitSelection) {
-        if (!_.find(workspace.services, (s) => s.serviceName === explicitSelection)) {
+        if (!_.find(workspace.allServices, (s) => s.serviceName === explicitSelection)) {
           exitWithErrorMessage(
             `Invalid service selection: ${kleur.bold(explicitSelection)}`,
             [
               'Maybe you meant one of:',
-              ..._.map(workspace.services, (s) => getServiceLabel(s, namesMaxLen)),
+              ..._.map(workspace.allServices, (s) => getServiceLabel(s, namesMaxLen)),
             ],
           );
         }
@@ -81,12 +78,14 @@ export function addServiceSelection(program: Command, selectionRequired = true) 
 
       if (!selectionRequired) return;
 
-      let autoSelectService: SerializedService | undefined;
+      let autoSelectService: DmnoService | undefined;
 
       // filled by package manager with package name if running an package.json script
-      if (process.env.npm_package_name) {
-        autoSelectService = _.find(workspace.services, (service) => {
-          return service.packageName === process.env.npm_package_name;
+      const packageName = process.env.npm_package_name || process.env.PNPM_PACKAGE_NAME;
+      if (packageName) {
+        // console.log('auto select package name', packageName);
+        autoSelectService = _.find(workspace.allServices, (service) => {
+          return service.packageName === packageName;
         });
 
         // This fully selects it and moves on
@@ -104,7 +103,7 @@ export function addServiceSelection(program: Command, selectionRequired = true) 
       if (!autoSelectService) {
         // order our services by folder depth (descending)
         // so we can look for whiuch folder the user is in
-        const servicesOrderedByDirDepth = _.orderBy(workspace.services, (s) => s.path.split('/').length, ['desc']);
+        const servicesOrderedByDirDepth = _.orderBy(workspace.allServices, (s) => s.path.split('/').length, ['desc']);
 
         const cwd = process.cwd();
         autoSelectService = _.find(servicesOrderedByDirDepth, (service) => {
@@ -114,7 +113,7 @@ export function addServiceSelection(program: Command, selectionRequired = true) 
 
       const menuSelection = await select({
         message: 'Which service?',
-        choices: _.map(workspace.services, (service) => ({
+        choices: _.map(workspace.allServices, (service) => ({
           name: getServiceLabel(service, namesMaxLen),
           value: service.serviceName,
         })),
@@ -133,11 +132,11 @@ export function addServiceSelection(program: Command, selectionRequired = true) 
 }
 
 
-function getPluginLabel(p: SerializedDmnoPlugin, padNameEnd: number) {
+function getPluginLabel(p: DmnoPlugin, padNameEnd: number) {
   return [
     `- ${p.instanceName}`.padEnd(padNameEnd),
     kleur.gray(`${p.pluginType}`),
-    kleur.gray(`| ${p.initializedInService}`),
+    kleur.gray(`| ${p.initByService}`),
   ].join(' ');
 }
 function getPluginDescription(p: SerializedDmnoPlugin) {
@@ -151,7 +150,9 @@ export function addPluginSelection(program: Command) {
     .hook('preAction', async (thisCommand, actionCommand) => {
       const ctx = getCliRunCtx();
 
-      const workspace = ctx.workspace || await ctx.configLoader.makeRequest('load-full-schema', { resolve: true });
+      const workspace = await ctx.configLoader.getWorkspace();
+      await workspace.resolveConfig();
+
       const pluginsArray = _.values(workspace.plugins);
 
       const namesMaxLen = getMaxLength(_.map(pluginsArray, (p) => p.instanceName));

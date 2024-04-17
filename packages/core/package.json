@@ -66,6 +66,7 @@
     "jsonc-parser": "^3.2.1",
     "kleur": "^4.1.5",
     "lodash-es": "^4.17.21",
+    "mitt": "^3.0.1",
     "node-ipc": "npm:@achrinza/node-ipc@^10.1.10",
     "svgo": "^3.2.0",
     "typescript": "^5.4.2",

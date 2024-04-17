@@ -51,6 +51,10 @@ export default defineWorkspaceConfig({
       value: OnePassBackend.item(),
     },
 
+    ROOT_ONLY: {
+      value: 'rootonly',
+    },
+
     VAULT_ITEM_1: {
       value: ProdVault.item(),
     },
@@ -64,10 +68,6 @@ export default defineWorkspaceConfig({
           'val2': ProdVault.item(),
         }) 
       }),
-    },
-
-    ROOT_ONLY: {
-      value: 'rootonly',
     },
 
     PICK_TEST: {

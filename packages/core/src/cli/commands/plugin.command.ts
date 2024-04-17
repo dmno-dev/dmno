@@ -7,8 +7,8 @@ import { select } from '@inquirer/prompts';
 import { ExecaChildProcess, execa } from 'execa';
 import which from 'which';
 import Debug from 'debug';
+import { tryCatch } from '@dmno/ts-lib';
 import { DmnoCommand } from '../lib/DmnoCommand';
-import { ConfigLoaderProcess } from '../lib/loader-process';
 import { formatError, formattedValue } from '../lib/formatting';
 import { executeCommandWithEnv } from '../lib/execute-command';
 import { fallingDmnoLoader } from '../lib/loaders';
@@ -33,8 +33,12 @@ program.action(async (opts: {
   service?: string,
 }, more) => {
   const ctx = getCliRunCtx();
+  if (!ctx.selectedPlugin) {
+    console.log('did not select plugin');
+    process.exit(1);
+  }
 
-  let cliPath = ctx.selectedPlugin!.cliPath;
+  let cliPath = ctx.selectedPlugin.cliPath;
 
   if (!cliPath) throw new Error('no cli for this plugin!');
   if (!cliPath.endsWith('.mjs')) cliPath += '.mjs';
@@ -86,12 +90,20 @@ program.action(async (opts: {
 
 
   // reload the workspace and resolve values
-  const workspace = await ctx.configLoader.makeRequest('load-full-schema', { resolve: true });
+  const workspace = await tryCatch(async () => {
+    return await ctx.configLoader.getWorkspace();
+  }, (err) => {
+    console.log(kleur.red().bold('Loading config failed'));
+    console.log(err.message);
+    process.exit(1);
+  });
+
+  await workspace.resolveConfig();
   const resolvedPlugin = workspace.plugins[opts.plugin!];
 
   pluginCliProcess.send(['init', {
-    workspace,
-    plugin: resolvedPlugin,
+    workspace: workspace.toJSON(),
+    plugin: resolvedPlugin.toJSON(),
     selectedServiceName: opts.service,
   }]);
 

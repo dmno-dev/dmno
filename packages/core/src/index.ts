@@ -9,3 +9,5 @@ export * from './config-engine/plugins';
 export {
   ValidationError, CoercionError, ResolutionError, SchemaError,
 } from './config-engine/errors';
+
+export { ConfigServerClient } from './config-loader/config-server-client';

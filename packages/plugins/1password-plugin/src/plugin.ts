@@ -175,7 +175,11 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
         }
 
         if (path) {
-          const valueAtPath = _.get(valueObj, path);
+          // TOOD: this logic is not right...
+          const valueAtPath = _.find(valueObj.fields, (i) => {
+            return i.reference.endsWith(path);
+          });
+
           if (!valueAtPath) {
             throw new Error(`Unable to resolve value from path ${path}`);
           }
