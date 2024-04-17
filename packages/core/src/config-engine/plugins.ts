@@ -234,6 +234,10 @@ export abstract class DmnoPlugin<
   icon?: string;
 
   static cliPath?: string;
+  get cliPath() {
+    const PluginClass = this.constructor as typeof DmnoPlugin;
+    return PluginClass.cliPath;
+  }
 
   /**
    * reference back to the service this plugin was initialized in

@@ -48,3 +48,8 @@ if (process.env.NODE_ENV !== 'test') {
     // await prisma.$disconnect();
   }
 }
+
+// process.on('SIGINT', () => {
+//   console.log('SIGINT!');
+//   process.exit(1);
+// });

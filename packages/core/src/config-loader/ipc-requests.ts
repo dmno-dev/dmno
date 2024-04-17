@@ -8,6 +8,7 @@ export type ConfigLoaderRequestMap = {
   'get-resolved-config': {
     payload: {
       serviceName?: string,
+      packageName?: string,
     },
     response: SerializedService,
   },
@@ -15,9 +16,4 @@ export type ConfigLoaderRequestMap = {
     payload: { serviceName?: string },
     response: { tsSrc: string },
   },
-  'start-dev-mode': {
-    payload: undefined,
-    response: { success: boolean }
-  }
-
 };

@@ -745,6 +745,13 @@ export class DmnoService {
     return true;
   }
 
+  getEnv() {
+    const env: Record<string, any> = _.mapValues(this.config, (item) => {
+      return item.resolvedValue;
+    });
+    return env;
+  }
+
   toJSON(): SerializedService {
     return {
       isValid: this.isValid,

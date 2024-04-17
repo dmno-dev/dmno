@@ -1,11 +1,13 @@
 import kleur from 'kleur';
 import _ from 'lodash-es';
 import CliTable from 'cli-table3';
+import { tryCatch } from '@dmno/ts-lib';
 import { DmnoCommand } from '../lib/DmnoCommand';
-import { ConfigLoaderProcess } from '../lib/loader-process';
 import { formatError, formattedValue } from '../lib/formatting';
 import { executeCommandWithEnv } from '../lib/execute-command';
 import { addServiceSelection } from '../lib/selection-helpers';
+import { getCliRunCtx } from '../lib/cli-ctx';
+import { generateServiceTypes } from '../../config-engine/type-generation';
 
 const program = new DmnoCommand('types')
   .summary('generate types for a service')
@@ -16,16 +18,26 @@ More stuff!
 
 addServiceSelection(program, false);
 
-program.action(async (opts, more) => {
-  const configLoader = new ConfigLoaderProcess();
+program.action(async (opts: {
+  service?: string,
+}, more) => {
+  const ctx = getCliRunCtx();
 
-  // TODO: support generating types for all services?
-  const config = await configLoader.makeRequest('generate-types', {
-    serviceName: opts.service,
+  const workspace = await tryCatch(async () => {
+    return await ctx.configLoader.getWorkspace();
+  }, (err) => {
+    console.log(kleur.red().bold('Loading config failed'));
+    console.log(err.message);
+    process.exit(1);
   });
 
-  const commandArgs = more.args;
-  await executeCommandWithEnv(commandArgs, config);
+
+  if (opts.service) {
+    // generate types for the single service
+  } else {
+    // generate types for all services
+  }
+
   process.exit(0);
 });
 

@@ -40,7 +40,7 @@ export class ConfigLoadError extends DmnoError {
       // filter out unimportant lines related to just running/loading
       // we could filter out more of dmno/core code once things stabilize
       if (l.includes(' at ViteNodeRunner.')) return false;
-      if (l.includes('core/src/config-loader/loader-executable.ts')) return false;
+      if (l.includes('core/src/config-loader/config-loader.ts')) return false;
       return true;
     });
 

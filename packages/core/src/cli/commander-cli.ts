@@ -36,5 +36,4 @@ customizeHelp(program);
 
 initCliRunCtx();
 debug(`finish loading - begin parse ${+new Date() - startBoot}ms`);
-
 await program.parseAsync();

@@ -1,43 +1,17 @@
 import util from 'node:util';
 import { execSync, exec } from 'child_process';
-import _ from 'lodash-es';
-
 
 const execAsync = util.promisify(exec);
 
-
-export function getResolvedConfig(publicOnly = false) {
-  try {
-    // TODO: we'll need a way of loading the config and info about which items are public
-    const configResult = execSync(`pnpm exec dmno load -f json${publicOnly ? ' --public' : ''}`);
-    const configObj = JSON.parse(configResult.toString());
-    return configObj;
-  } catch (err) {
-    // console.log('caught error while trying to load dmno config');
-    console.log((err as any).stdout.toString());
-    throw err;
-  }
-}
-
-export function getResolvedConfigForEnvInjection(publicOnly = true) {
-  const config = getResolvedConfig(publicOnly);
-  // when injecting into vite config via the `define` option, we need the data in a certain format
-  // - each key must be like `import.meta.env.KEY`
-  // - values must be JSON.stringified - meaning a string include quotes, for example '"value"'
-  return _.transform(config, (acc, itemVal, key) => {
-    // currently we are NOT going to mess with import.meta.env
-    // but we may want to enable some options that would let you inject there too
-    // acc[`import.meta.env.${key.toString()}`] = JSON.stringify(itemVal);
-
-    if (publicOnly) {
-      acc[`DMNO_PUBLIC_CONFIG.${key.toString()}`] = JSON.stringify(itemVal);
-    } else {
-      acc[`DMNO_CONFIG.${key.toString()}`] = JSON.stringify(itemVal);
-    }
-  }, {} as any);
-}
-
 export async function loadProcessDmnoEnv() {
+  // if the process is running via `dmno run`, the full serialized env will be injected
+  // so we can get properly typed (instead of all strings) env vars and re-inject into process.dmnoEnv
+  if (process.env.DMNO_LOADED_ENV) {
+    const parsedEnv = JSON.parse(process.env.DMNO_LOADED_ENV);
+    (process as any).dmnoEnv = parsedEnv;
+    return;
+  }
+
   try {
     const configResult = await execAsync('pnpm exec dmno load -f json');
     const configObj = JSON.parse(configResult.stdout.toString());
@@ -48,7 +22,15 @@ export async function loadProcessDmnoEnv() {
     throw err;
   }
 }
+
+// exact same as above but sync version
 export async function loadProcessDmnoEnvSync() {
+  if (process.env.DMNO_LOADED_ENV) {
+    const parsedEnv = JSON.parse(process.env.DMNO_LOADED_ENV);
+    (process as any).dmnoEnv = parsedEnv;
+    return;
+  }
+
   try {
     const configResult = execSync('pnpm exec dmno load -f json');
     const configObj = JSON.parse(configResult.toString());
@@ -59,9 +41,3 @@ export async function loadProcessDmnoEnvSync() {
     throw err;
   }
 }
-
-
-// // we could explicitly export a thing to import if it feels better
-// // even though it is unnecessary
-// export const DMNO_CONFIG = {};
-
