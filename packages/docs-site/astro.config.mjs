@@ -45,6 +45,9 @@ export default defineConfig({
     sidebar: [{
       label: "Get Started",
       items: [{
+          label: "What is DMNO?",
+          link: "/get-started/what-is-dmno"
+      },{
         label: "Quickstart",
         link: "/get-started/quickstart"
       }, {
@@ -56,6 +59,9 @@ export default defineConfig({
       items: [{
         label: "Schema",
         link: "/guides/schema"
+      }, {
+        label: "Repo structure",
+        link: "/guides/repo"
       }, {
         label: "Secrets",
         items: [{
@@ -72,11 +78,8 @@ export default defineConfig({
           label: "Next.js",
           link: "/guides/frameworks/nextjs/"
         }, {
-          label: "Nuxt.js",
-          link: "/guides/frameworks/nuxtjs/"
-        }, {
-          label: "Astro",
-          link: "/guides/frameworks/astro/"
+          label: "Vite",
+          link: "/guides/frameworks/vite/"
         }]
       }, {
         label: "Deployment Platforms",

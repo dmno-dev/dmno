@@ -1,0 +1,53 @@
+--- 
+title: What is DMNO?
+---
+
+DMNO (pronounced "domino") is a suite of developer tools that allow you configure, run, and deploy your applications. 
+
+The core of DMNO is the **DMNO Engine**, our configuration system. It allows you create a type-safe schema of environment variables, giving you a fully-integrated developer experience via typescript Intellisense and contextual documentation. 
+
+> INSERT SCREENSHOT
+
+You no longer need to worry about missing config items causing a deployment to fail, or constantly coercing strings into their proper type in your code. 
+
+Using our plugins you can also securely store an encrypted vault of secrets (DMNO Encrypted Vaults) safely in your codebase, or remotely in 1Password. This means, no more insecurely passing around `.env` files via Slack 🎉! 
+
+## Who is DMNO for?
+
+The short answer is: anyone who uses environment variables to configure their applications. Which, at this point, is basically everyone! Initially those who write Typescript will benefit most, but almost anyone should be able to benefit from DMNO's schema and validation system. 
+
+## Why use DMNO instead of ____ ? 
+
+TL;DR, DMNO is: 
+- Strongly typed
+- Schema-driven
+- Extensible (custom types and plugins)
+- Incrementally adoptable (use as many or as few features as you like)
+- A full suite of tools (not just config management)*
+
+Look, we realize there are no shortage of tools out there that allow you to manage your environment variables. And environment variables, for most people, are a set it and forget it type of thing. We aim to make them the bedrock of your stack, which will vastly improve your ability to debug configuration and avoid entire classes of bugs. It will also unlock some very interesting things in the not-too-distant future. 
+
+## What DMNO Isn't (Yet)
+
+DMNO is not enterprise configuration and secrets management. It certainly provides you with the tools to integrate with the enterprise tool of your choice but we're not trying to compete with mega-expensive all-encompassing products. Will we eventually grow into that world? Maybe, but it's not our focus today. 
+
+## Current Requirements
+
+DMNO requires the following: 
+
+- Node.js LTS (currently v20.x)
+- One of the following package managers
+  - `pnpm`
+  {/* - `npm` ?  */}
+  {/* - `yarn` ?  */}
+
+
+Optionally: 
+- Typescript
+
+:::tip
+While Typescript is not required in your applications, you will get the full feature set (ex. Intellisense and inline docs) of DMNO by using it in a Typescript project. Note that our `config.mts` files themselves are written in Typescript, so you'll want to use an editor that at least supports it. 
+:::
+
+----
+\* **DMNO Dev** and **DMNO Cloud** coming later in 2024

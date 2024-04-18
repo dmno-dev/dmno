@@ -1,6 +1,6 @@
 ---
-title: Astro
-description: Using DMNO with Nuxt.js
+title: Vite
+description: Using DMNO with Vite
 ---
 
 Follow [installation](/reference/config-engine/installation) first.
