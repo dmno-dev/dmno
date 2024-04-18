@@ -85,6 +85,8 @@ program.action(async (_command, opts: {
           ...process.env,
           ...serviceEnv,
           DMNO_LOADED_ENV: JSON.stringify(serviceEnv),
+          DMNO_SENSITIVE_PATHS: service.getSensitivePaths().join('!'),
+          DMNO_EMPTY_PATHS: service.getEmptyPaths().join('!'),
         },
       });
       // console.log('PARENT PID = ', process.pid);

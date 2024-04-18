@@ -1,0 +1,58 @@
+{
+  "name": "@dmno/vite-integration",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "tools for integrating dmno into vite",
+  "keywords": [
+    "dmno",
+    "vite",
+    "plugin",
+    "env vars",
+    "environment variables",
+    "secrets"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmno-dev/core.git",
+    "directory": "packages/integrations/vite"
+  },
+  "bugs": {
+    "url": "https://github.com/dmno-dev/core/issues"
+  },
+  "homepage": "https://dmno.dev",
+  "exports": {
+    ".": {
+      "default": "./dist/index.mjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "index": [
+        "./dist/index.d.mts"
+      ]
+    }
+  },
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
+    "dev": "pnpm run build --watch",
+    "lint": "eslint src --ext .ts,.cjs",
+    "lint:fix": "pnpm run lint --fix"
+  },
+  "devDependencies": {
+    "@dmno/eslint-config": "workspace:*",
+    "@dmno/tsconfig": "workspace:*",
+    "@types/async": "^3.2.24",
+    "@types/lodash-es": "^4.17.12",
+    "@types/node": "^20.12.7",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5"
+  },
+  "peerDependencies": {
+    "@dmno/core": "workspace:*",
+    "vite": "^5.0"
+  }
+}

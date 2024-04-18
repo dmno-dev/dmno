@@ -1,5 +1,5 @@
 {
-  "name": "docs-site",
+  "name": "@dmno/docs-site",
   "type": "module",
   "version": "0.0.1",
   "scripts": {

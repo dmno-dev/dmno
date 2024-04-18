@@ -14,14 +14,15 @@
     "lint:fix": "pnpm run lint --fix"
   },
   "dependencies": {
-    "vue": "^3.4.21"
+    "vue": "^3.4.23"
   },
   "devDependencies": {
     "@dmno/core": "../../../packages/core",
     "@dmno/eslint-config": "../../../packages/eslint-config",
+    "@dmno/vite-integration": "../../../packages/integrations/vite",
     "@vitejs/plugin-vue": "^5.0.4",
-    "typescript": "^5.4.4",
-    "vite": "^5.2.8",
-    "vue-tsc": "^2.0.11"
+    "typescript": "^5.4.5",
+    "vite": "^5.2.9",
+    "vue-tsc": "^2.0.13"
   }
 }

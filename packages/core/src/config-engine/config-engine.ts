@@ -751,6 +751,26 @@ export class DmnoService {
     });
     return env;
   }
+  getSensitivePaths() {
+    const sensitivePaths: Array<string> = [];
+    // TODO: deal with nested objects
+    _.each(this.config, (item) => {
+      if (item.type.getDefItem('sensitive')) {
+        sensitivePaths.push(item.getPath());
+      }
+    });
+    return sensitivePaths;
+  }
+  getEmptyPaths() {
+    const emptyPaths: Array<string> = [];
+    // TODO: deal with nested objects
+    _.each(this.config, (item) => {
+      if (item.resolvedValue === undefined) {
+        emptyPaths.push(item.getPath());
+      }
+    });
+    return emptyPaths;
+  }
 
   toJSON(): SerializedService {
     return {

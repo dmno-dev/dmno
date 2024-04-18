@@ -3,13 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "turbo build --filter=!@dmno/docs-site",
+    "lint": "turbo lint",
     "prepare": "pnpm --filter \"@dmno/*\" run build:ifnodist"
   },
-  "keywords": [],
+  "keywords": [ ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "turbo": "^1.13.2",
     "typescript": "^5.3.3"
   },
   "engines": {

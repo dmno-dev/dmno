@@ -1,0 +1,53 @@
+import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheFunctionResult, createDmnoDataType, defineConfigSchema, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from '@dmno/core';
+import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
+
+const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
+
+export default defineConfigSchema({
+  name: 'nextweb',
+  parent: 'group1',
+  pick: [
+    'NODE_ENV',
+    'DMNO_ENV',
+    {
+      source: 'api',
+      key: 'API_URL',
+      renameKey: 'NEXT_PUBLIC_API_URL',
+    },
+    {
+      source: 'group1',
+      // picking the renamed key from group1
+      key: 'PICK_TEST_G1',
+      renameKey: 'PICK_TEST_NW',
+      // should apply _after_ the group1 transform
+      transformValue: (val) => `${val}-nextwebtransform`,
+    }
+  ],
+  schema: {
+    FOO: {
+      value: 'foo',
+      description: 'test of a public env var without a NEXT_PUBLIC_ prefix',
+    },
+    EMPTY: {
+      description: 'empty item, should be undefined',
+    },
+    SECRET_FOO: {
+      value: 'secret-foo2',
+      sensitive: true,
+      description: 'test of a sensitive env var',
+    },
+
+    PUBLIC_NUM: {
+      extends: DmnoBaseTypes.number({ max: 100 }),
+      value: 13,
+    },
+    NEXT_PUBLIC_NUM: {
+      value: (ctx) => DMNO_CONFIG.PUBLIC_NUM,
+    },
+    SECRET_NUM: {
+      extends: DmnoBaseTypes.number,
+      value: 999,
+      sensitive: true,
+    },
+  },
+})
