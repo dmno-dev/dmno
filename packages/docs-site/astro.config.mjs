@@ -66,10 +66,18 @@ export default defineConfig({
         label: "Secrets",
         items: [{
           label: "Encrypted Vaults",
-          link: "/guides/secrets/encrypted-vaults"
+          link: "/guides/secrets/encrypted-vault",
+          badge: {
+            text: "WIP",
+            variant: "caution"
+          },
         }, {
           label: "1Password",
-          link: "/guides/secrets/1password"
+          link: "/guides/secrets/1password",
+          badge: {
+            text: "WIP",
+            variant: "caution"
+          },
         }]
       }, {
         label: "Frameworks",
