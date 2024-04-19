@@ -3,11 +3,12 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: [ // Entry point(s)
     'src/index.ts', // main lib, users will import from here
-    'src/inject-dmno-env.ts', // main lib, users will import from here
+    'src/dev-toolbar-app.ts', // main lib, users will import from here
+    'src/astro-middleware.ts', // main lib, users will import from here
   ], 
 
   external: [
-    "@dmno/core", "next",
+    "@dmno/core", "astro",
   ],
 
   dts: true, // Generate .d.ts files

@@ -11,6 +11,6 @@ export default defineConfig({
   plugins: [
     vue(),
     // some issues with TS here, I believe it's caused by the local symlink used in our package.json :(
-    injectDmnoConfigVitePlugin() as any as Plugin
+    injectDmnoConfigVitePlugin() as any as Plugin,
   ],
 });

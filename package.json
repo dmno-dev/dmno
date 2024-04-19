@@ -5,7 +5,7 @@
   "scripts": {
     "build": "turbo build --filter=!@dmno/docs-site",
     "lint": "turbo lint",
-    "prepare": "pnpm --filter \"@dmno/*\" run build:ifnodist"
+    "prepare": "pnpm run build"
   },
   "keywords": [ ],
   "author": "",

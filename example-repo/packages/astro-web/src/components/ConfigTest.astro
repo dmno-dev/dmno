@@ -1,0 +1,51 @@
+---
+console.log("config test loaded!");
+console.log("import.meta.env.FOO", import.meta.env.FOO);
+console.log("import.meta.env.PUBLIC_FOO", import.meta.env.PUBLIC_FOO);
+console.log("import.meta.env.SECRET_FOO", import.meta.env.SECRET_FOO);
+console.log("DMNO_CONFIG.SECRET_FOO", DMNO_CONFIG.SECRET_FOO);
+console.log("DMNO_CONFIG.PUBLIC_FOO", DMNO_CONFIG.PUBLIC_FOO);
+---
+
+<ul>
+  <li>process.env.FOO = {process.env.FOO}</li>
+  <li>import.meta.env.FOO = {import.meta.env.FOO}</li>
+  <li>process.dmnoEnv.FOO = {process.dmnoEnv.FOO}</li>
+  <li>import.meta.dmnoEnv.FOO = {import.meta.dmnoEnv.FOO}</li>
+  <li>DMNO_PUBLIC_CONFIG.FOO = {DMNO_PUBLIC_CONFIG.FOO}</li>
+  <hr />
+
+  <li>process.env.PUBLIC_FOO = {process.env.PUBLIC_FOO}</li>
+  <li>import.meta.env.PUBLIC_FOO = {import.meta.env.PUBLIC_FOO}</li>
+  <li>process.dmnoEnv.PUBLIC_FOO = {process.dmnoEnv.PUBLIC_FOO}</li>
+  <li>import.meta.dmnoEnv.PUBLIC_FOO = {import.meta.dmnoEnv.PUBLIC_FOO}</li>
+  <li>DMNO_PUBLIC_CONFIG.PUBLIC_FOO = {DMNO_PUBLIC_CONFIG.PUBLIC_FOO}</li>
+  <hr />
+
+  <!-- no TS errors, but throws a leaking error! -->
+  <!-- <li>process.env.SECRET_FOO = {process.env.SECRET_FOO}</li> -->
+  <!-- <li>import.meta.env.SECRET_FOO = {import.meta.env.SECRET_FOO}</li> -->
+  <!-- <li>process.dmnoEnv.SECRET_FOO = {process.dmnoEnv.SECRET_FOO}</li> -->
+  <!-- <li>import.meta.dmnoEnv.SECRET_FOO = {import.meta.dmnoEnv.SECRET_FOO}</li> -->
+  <!-- <li>DMNO_CONFIG.SECRET_FOO = {DMNO_CONFIG.SECRET_FOO}</li> -->
+
+  <!-- TS shows an error, and throws an error about it not existing -->
+  <!-- <li>DMNO_PUBLIC_CONFIG.SECRET_FOO = {DMNO_PUBLIC_CONFIG.SECRET_FOO}</li> -->
+  <hr />
+
+  <li>process.env.EMPTY = {process.env.EMPTY}</li>
+  <li>import.meta.env.EMPTY = {import.meta.env.EMPTY}</li>
+  <li>process.dmnoEnv.EMPTY = {process.dmnoEnv.EMPTY}</li>
+  <li>import.meta.dmnoEnv.EMPTY = {import.meta.dmnoEnv.EMPTY}</li>
+  <li>DMNO_PUBLIC_CONFIG.EMPTY = {DMNO_PUBLIC_CONFIG.EMPTY}</li>
+  <hr />
+
+  <li>process.env.NOEXIST = {process.env.NOEXIST}</li>
+  <li>import.meta.env.NOEXIST = {import.meta.env.NOEXIST}</li>
+  <!-- throws -->
+  <!-- <li>process.dmnoEnv.NOEXIST = {process.dmnoEnv.NOEXIST}</li> -->
+  <!-- throws -->
+  <!-- <li>import.meta.dmnoEnv.NOEXIST = {import.meta.dmnoEnv.NOEXIST}</li> -->
+  <!-- throws -->
+  <!-- <li>DMNO_PUBLIC_CONFIG.NOEXIST = {DMNO_PUBLIC_CONFIG.NOEXIST}</li> -->
+</ul>

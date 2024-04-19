@@ -56,11 +56,15 @@ declare global {
     
     // this adds a _new_ \`process.dmnoEnv\` global
     interface Process {
-      dmnoEnv: DmnoGeneratedConfigSchema;
+      readonly dmnoEnv: DmnoGeneratedConfigSchema;
     }
     
     // this add our generated schema to \`process.env\`
     // interface ProcessEnv extends DmnoGeneratedConfigSchema {}
+  }
+
+  interface ImportMeta {
+    readonly dmnoEnv: DmnoGeneratedConfigSchema;
   }
 }
 `, 'utf-8');
