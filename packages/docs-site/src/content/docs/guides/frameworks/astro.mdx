@@ -60,3 +60,14 @@ Basically, you should follow these rules:
 By following these rules, you can ensure that your config is only exposed where you want it to be. And DMNO will provide your with appropriate feedback if you try to access it in the wrong place.
 
 > INSERT SAMPLE CODE OR GIF
+
+### All the right typescript
+
+Astro is built with TypeScript, and so is DMNO. This means that you get full type completion and intellisense for your config items. You just need to add them to `src/.env.d.ts` (or wherever you keep your types) and you're good to go. 
+
+```typescript title=".env.d.ts"
+/// <reference types="../.dmno/.typegen/global-public.d.ts" />
+/// <reference types="../.dmno/.typegen/node.d.ts" />
+```
+
+After that, DMNO will automatically update your definitions as you add new items to your schema. 🎉

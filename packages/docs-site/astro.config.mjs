@@ -92,19 +92,19 @@ export default defineConfig({
           label: "Astro",
           link: "/guides/frameworks/astro/"
         },
-        {
-          label: "Vercel",
-          link: "/guides/deployment/vercel/"
-        }, {
-          label: "Netlify",
-          link: "/guides/deployment/netlify/"
-        }, {
-          label: "Railway",
-          link: "/guides/deployment/railway/"
-        }, {
-          label: "Render",
-          link: "/guides/deployment/render/"
-        }
+        // {
+        //   label: "Vercel",
+        //   link: "/guides/deployment/vercel/"
+        // }, {
+        //   label: "Netlify",
+        //   link: "/guides/deployment/netlify/"
+        // }, {
+        //   label: "Railway",
+        //   link: "/guides/deployment/railway/"
+        // }, {
+        //   label: "Render",
+        //   link: "/guides/deployment/render/"
+        // }
       ]}, {
       label: "Reference",
       items: [{
