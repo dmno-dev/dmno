@@ -82,7 +82,6 @@ export default defineConfig({
         }]
       }, {
         label: "Integrations",
-        collapsed: true,
         items: [{
           label: "Next.js",
           link: "/guides/frameworks/nextjs/"
