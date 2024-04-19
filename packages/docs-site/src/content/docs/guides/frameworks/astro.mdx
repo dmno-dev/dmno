@@ -1,0 +1,62 @@
+--- 
+title: Astro
+---
+
+import TabbedCode from '@/components/TabbedCode.astro';
+
+At DMNO we love Astro (this very site is built with it). That's why we're very excited to make it easier (and safer) to use environment variables in all of your Astro apps, whether it's on the client or the server!
+
+To get started install `dmno` and the `astro` plugin: 
+
+<TabbedCode packageName="@dmno/astro-integration @dmno/config-engine" />
+
+### Scaffold your DMNO config
+
+Next, run the following command in a terminal at the root of your repo:
+
+<TabbedCode command="dmno init" />
+
+This will create a `.dmno` directory in the root of your project with a `config.mts` file. And it will also create `.dmno` folders and config files in each of the other directories for other apps/services if you have a monorepo.
+
+### Configure your environment variables
+
+See our [Schema Guide](/guides/schema) for the specifics of how to write your first DMNO schema.
+
+### Add the plugin to your config
+
+Finally, in your `astro.config.mjs`, import the plugin, and add to `defineConfig`: 
+
+```js
+import { defineConfig } from 'astro/config';
+import dmnoAstroIntegration from '@dmno/astro-integration';
+
+export default defineConfig({
+  // other config
+  output: 'hybrid',
+  integrations: [
+    // ... other plugins
+    dmnoAstroIntegration(),
+  ],
+});
+```
+
+### Use your config items
+
+Now in your application code you'll have access to a global object with all of your _public_ config items (those which aren't marked `sensitive`) called `DMNO_PUBLIC_CONFIG`. 
+
+```js
+const myConfigItem = DMNO_PUBLIC_CONFIG.MY_ITEM;
+```
+
+### Client/Server/SSR/etc 
+
+Astro provides a few different [rendering modes](https://docs.astro.build/en/basics/rendering-modes/), and allows you to create [islands](https://docs.astro.build/concepts/islands/) of interactivity. 
+
+Basically, you should follow these rules: 
+
+- if you want to use config in the browser (i.e. a component with a `client:*` directive, or a page that is server rendered), you should access it using `DMNO_PUBLIC_CONFIG`
+- if you want to use config on the server (i.e. in an API Route), you should access it via `DMNO_CONFIG`
+
+By following these rules, you can ensure that your config is only exposed where you want it to be. And DMNO will provide your with appropriate feedback if you try to access it in the wrong place.
+
+> INSERT SAMPLE CODE OR GIF

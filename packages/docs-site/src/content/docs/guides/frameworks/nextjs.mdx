@@ -65,10 +65,12 @@ Finally, if you try to access a variable that doesn't exist, you will get an act
 
 With the addition of the [Next.js App Router](https://nextjs.org/docs/app), the divide between client and server gets a bit harder to reason about. We recommend Josh's excellent [article](https://www.joshwcomeau.com/react/server-components/) if you're trying to wrap your head around it. 
 
-Basically, you need to follow these rules: 
+Basically, you should follow these rules: 
 
 - if you want to use config in the browser (i.e. a Client Component), you should access it using `DMNO_PUBLIC_CONFIG`
-- if you want to use config on the server (i.e. a React Server Component or an API Route), you should access it via `process.dmnoEnv`
+- if you want to use config on the server (i.e. a React Server Component or an API Route), you should access it via `DMNO_CONFIG`
+
+By following these rules, you can ensure that your config is only exposed where you want it to be. And DMNO will provide your with appropriate feedback if you try to access it in the wrong place.
 
 > INSERT SAMPLE CODE OR GIF
 

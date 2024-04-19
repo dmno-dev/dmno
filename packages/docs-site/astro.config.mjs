@@ -54,15 +54,16 @@ export default defineConfig({
         label: "Concepts",
         link: "/get-started/concepts"
       }]
-    }, {
+      }, {
       label: "Guides",
       items: [{
-        label: "Schema",
-        link: "/guides/schema"
-      }, {
-        label: "Repo structure",
-        link: "/guides/repo"
-      }, {
+          label: "Schema",
+          link: "/guides/schema"
+        }, {
+          label: "Repo structure",
+          link: "/guides/repo"
+        }]
+      },{
         label: "Secrets",
         items: [{
           label: "Encrypted Vaults",
@@ -73,14 +74,14 @@ export default defineConfig({
           },
         }, {
           label: "1Password",
-          link: "/guides/secrets/1password",
+          link: "/guides/secrets/1password",   
           badge: {
             text: "WIP",
             variant: "caution"
           },
         }]
       }, {
-        label: "Frameworks",
+        label: "Integrations",
         collapsed: true,
         items: [{
           label: "Next.js",
@@ -88,11 +89,11 @@ export default defineConfig({
         }, {
           label: "Vite",
           link: "/guides/frameworks/vite/"
-        }]
-      }, {
-        label: "Deployment Platforms",
-        collapsed: true,
-        items: [{
+        }, {
+          label: "Astro",
+          link: "/guides/frameworks/astro/"
+        },
+        {
           label: "Vercel",
           link: "/guides/deployment/vercel/"
         }, {
@@ -104,9 +105,8 @@ export default defineConfig({
         }, {
           label: "Render",
           link: "/guides/deployment/render/"
-        }]
-      }]
-    }, {
+        }
+      ]}, {
       label: "Reference",
       items: [{
         label: 'config-engine',
@@ -123,12 +123,7 @@ export default defineConfig({
           label: 'CLI',
           link: '/reference/config-engine/dmno-cli/'
         }]
-      }, {
-        label: "Plugins",
-        autogenerate: {
-          directory: "/reference/plugins"
-        }
-      }]
+      },]
     }]
   }), vue({
     // jsx: true,
