@@ -251,13 +251,13 @@ importers:
 
   packages/integrations/astro:
     dependencies:
-      '@dmno/core':
-        specifier: workspace:*
-        version: link:../../core
       astro:
         specifier: ^4
         version: 4.5.18(@types/node@20.12.7)(typescript@5.4.5)
     devDependencies:
+      '@dmno/core':
+        specifier: workspace:*
+        version: link:../../core
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../../eslint-config
@@ -282,13 +282,13 @@ importers:
 
   packages/integrations/nextjs:
     dependencies:
-      '@dmno/core':
-        specifier: workspace:*
-        version: link:../../core
       next:
         specifier: ^14
         version: 14.2.2(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
+      '@dmno/core':
+        specifier: workspace:*
+        version: link:../../core
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../../eslint-config
@@ -307,13 +307,13 @@ importers:
 
   packages/integrations/vite:
     dependencies:
-      '@dmno/core':
-        specifier: workspace:*
-        version: link:../../core
       vite:
         specifier: ^5.0
         version: 5.1.6(@types/node@20.12.7)
     devDependencies:
+      '@dmno/core':
+        specifier: workspace:*
+        version: link:../../core
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../../eslint-config

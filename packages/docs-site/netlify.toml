@@ -1,4 +1,3 @@
 [build]
-  base = "/"
-  publish = "packages/docs-site/dist"
-  command = "pnpm run netlify-build"
+publish = "packages/docs-site/dist"
+command = "pnpm --filter \"@dmno/docs-site\" run netlify-build"

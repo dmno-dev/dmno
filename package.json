@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "turbo build --filter=!@dmno/docs-site",
+    "build": "turbo build --filter=\"!@dmno/docs-site\"",
     "lint": "turbo lint",
     "prepare": "pnpm run build"
   },

@@ -44,6 +44,7 @@
     "lint:fix": "pnpm run lint --fix"
   },
   "devDependencies": {
+    "@dmno/core": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "@types/async": "^3.2.24",
