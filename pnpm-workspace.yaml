@@ -4,3 +4,5 @@ packages:
   - 'packages/*'
   # all children of packages/plugins
   - 'packages/plugins/*'
+  # all children of packages/integrations
+  - 'packages/integrations/*'

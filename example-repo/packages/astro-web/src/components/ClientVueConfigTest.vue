@@ -1,0 +1,37 @@
+<template>
+  <ul>
+    <li v-for="val, key in configs">
+      {{key}} = {{ val }}
+    </li>
+  </ul>
+</template>
+
+<script lang="ts" setup>
+  
+  const configs = {
+    // throws because process undefined
+    // 'process.env.FOO': process.env.FOO,
+
+    // renders on server, then disappears on hydration becuase not prefixed with PUBLIC_
+    // and shows hydration error
+    'import.meta.env.FOO': import.meta.env.FOO,
+
+    // works!
+    'import.meta.env.PUBLIC_FOO': import.meta.env.PUBLIC_FOO,
+    
+    // 'import.meta.dmnoEnv.PUBLIC_FOO': import.meta.dmnoEnv.PUBLIC_FOO,
+    
+    // throws with error about trying to access DMNO_CONFIG on the client
+    // 'DMNO_CONFIG.PUBLIC_FOO': DMNO_CONFIG.PUBLIC_FOO,
+    // 'DMNO_CONFIG.SECRET_FOO': DMNO_CONFIG.SECRET_FOO,
+
+
+    'DMNO_PUBLIC_CONFIG.FOO': DMNO_PUBLIC_CONFIG.FOO,
+    
+    // throws because secret is not public
+    // 'DMNO_PUBLIC_CONFIG.SECRET_FOO': DMNO_PUBLIC_CONFIG.SECRET_FOO,
+    
+    // throws because item does not exist
+    // 'DMNO_PUBLIC_CONFIG.SECRET_FOO': DMNO_PUBLIC_CONFIG.ASDF,
+  }
+</script>

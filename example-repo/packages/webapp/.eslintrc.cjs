@@ -1,5 +1,6 @@
 module.exports = {
   extends: ["@dmno/eslint-config/vue"],
-  rules: {  
+  ignorePatterns: ["dmno-env.d.ts"],
+  rules: {
   },
 };

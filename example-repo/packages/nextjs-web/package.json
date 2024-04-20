@@ -1,0 +1,28 @@
+{
+  "name": "web-nextjs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "dmno run -w -- next dev",
+    "build": "NODE_ENV=production dmno run -- next build",
+    "start": "dmno run -- next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@dmno/nextjs-integration": "../../../packages/integrations/nextjs",
+    "next": "14.2.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@dmno/core": "../../../packages/core",
+    "@types/node": "^20.12.7",
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.2",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5"
+  }
+}

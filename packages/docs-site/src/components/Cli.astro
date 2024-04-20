@@ -34,7 +34,7 @@ export const formatPath = (command) => {
             <p>
               <i>{command.description}</i>
             </p>
-            {command.more.options.length ? <h4>Options</h4> : null}
+            {command.more?.options.length ? <h4>Options</h4> : null}
             {command.more?.options?.map((option) => {
               return (
                 <div>
@@ -51,10 +51,11 @@ export const formatPath = (command) => {
                 <Code code={formatExamples(command.examples)} lang="bash" />
               </div>
             ) : null}
+            { images[formatPath(command.command)] ? (
             <Image
               src={images[formatPath(command.command)]()}
               alt=`a CLI showing the dmno ${command.command} command`
-            />
+            />) : null }
           </div>
           <hr />
         </>
