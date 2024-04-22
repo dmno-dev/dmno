@@ -56,6 +56,9 @@ importers:
       execa:
         specifier: ^8.0.1
         version: 8.0.1
+      fdir:
+        specifier: ^6.1.1
+        version: 6.1.1(picomatch@4.0.2)
       jsonc-parser:
         specifier: ^3.2.1
         version: 3.2.1
@@ -71,6 +74,12 @@ importers:
       node-ipc:
         specifier: npm:@achrinza/node-ipc@^10.1.10
         version: /@achrinza/node-ipc@10.1.10
+      picomatch:
+        specifier: ^4.0.2
+        version: 4.0.2
+      read-yaml-file:
+        specifier: ^2.1.0
+        version: 2.1.0
       svgo:
         specifier: ^3.2.0
         version: 3.2.0
@@ -2366,7 +2375,7 @@ packages:
       chalk: 5.3.0
       clean-stack: 4.2.0
       execa: 6.1.0
-      fdir: 6.1.1
+      fdir: 6.1.1(picomatch@4.0.2)
       figures: 5.0.0
       filter-obj: 5.1.0
       got: 12.6.1
@@ -8252,14 +8261,15 @@ packages:
     dependencies:
       pend: 1.2.0
 
-  /fdir@6.1.1:
+  /fdir@6.1.1(picomatch@4.0.2):
     resolution: {integrity: sha512-QfKBVg453Dyn3mr0Q0O+Tkr1r79lOTAKSi9f/Ot4+qVEwxWhav2Z+SudrG9vQjM2aYRMQQZ2/Q1zdA8ACM1pDg==}
     peerDependencies:
       picomatch: 3.x
     peerDependenciesMeta:
       picomatch:
         optional: true
-    dev: true
+    dependencies:
+      picomatch: 4.0.2
 
   /fecha@4.2.3:
     resolution: {integrity: sha512-OP2IUU6HeYKJi3i0z4A19kHMQoLVs4Hc+DPqqxI2h/DPZHTm/vjsfC6P0b4jCMy14XizLBqvndQ+UilD7707Jw==}
@@ -12625,6 +12635,10 @@ packages:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
 
+  /picomatch@4.0.2:
+    resolution: {integrity: sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg==}
+    engines: {node: '>=12'}
+
   /pify@4.0.1:
     resolution: {integrity: sha512-uB80kBFb/tfd68bVleG9T5GGsGPjJrLAUpR5PZIrhBnIaRTQRjqdJSsIKkOP6OAIFbj7GOrcudc5pNjZ+geV2g==}
     engines: {node: '>=6'}
@@ -13165,6 +13179,14 @@ packages:
       parse-json: 5.2.0
       type-fest: 2.19.0
     dev: true
+
+  /read-yaml-file@2.1.0:
+    resolution: {integrity: sha512-UkRNRIwnhG+y7hpqnycCL/xbTk7+ia9VuVTC0S+zVbwd65DI9eUpRMfsWIGrCWxTU/mi+JW8cHQCrv+zfCbEPQ==}
+    engines: {node: '>=10.13'}
+    dependencies:
+      js-yaml: 4.1.0
+      strip-bom: 4.0.0
+    dev: false
 
   /readable-stream@2.3.8:
     resolution: {integrity: sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA==}
@@ -14346,6 +14368,11 @@ packages:
   /strip-bom@3.0.0:
     resolution: {integrity: sha512-vavAMRXOgBVNF6nyEEmL3DBK19iRpDcoIwW+swQ+CbGiu7lju6t+JklA1MHweoWtadgt4ISVUsXLyDq34ddcwA==}
     engines: {node: '>=4'}
+
+  /strip-bom@4.0.0:
+    resolution: {integrity: sha512-3xurFv5tEgii33Zi8Jtp55wEIILR9eh34FAW00PZf+JnSsTmV/ioewSgQl97JHvgjoRGwPShsWm+IdrxB35d0w==}
+    engines: {node: '>=8'}
+    dev: false
 
   /strip-dirs@3.0.0:
     resolution: {integrity: sha512-I0sdgcFTfKQlUPZyAqPJmSG3HLO9rWDFnxonnIbskYNM3DwFOeTNB5KzVq3dA1GdRAc/25b5Y7UO2TQfKWw4aQ==}

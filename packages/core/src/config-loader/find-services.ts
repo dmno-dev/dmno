@@ -1,35 +1,177 @@
-import { exec } from 'node:child_process';
-import util from 'node:util';
+import fs from 'node:fs';
+import path from 'node:path';
+import kleur from 'kleur';
 import _ from 'lodash-es';
+import async from 'async';
+import readYamlFile from 'read-yaml-file';
+import { fdir } from 'fdir';
+import { tryCatch } from '@dmno/ts-lib';
+import Debug from 'debug';
 
-const execAsync = util.promisify(exec);
+const debug = Debug('dmno:find-services');
 
-
-// currently assuming we are using pnpm, and piggybacking off of how they discover "packages" in pnpm-workspace.yaml
-// we'll want to to do smarter detection and also support yarn/npm/etc as well as our own list of services defined at the root
-
-// TODO: need smarter detection of pnpm monorepo?
-// const IS_PNPM = fs.existsSync(`${CWD}/pnpm-lock.yaml`);
-// if (IS_PNPM) console.log('detected pnpm');
-// if (!IS_PNPM) throw new Error('Must be run in a pnpm-based monorepo');
-
-
-export type PnpmPackageListing = {
-  name: string;
-  version: string;
-  path: string;
-  private: boolean;
+export type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun' | 'moon';
+export type WorkspacePackagesListing = {
+  name: string,
+  version?: string,
+  path: string,
+  isRoot: boolean,
+  dmnoFolder: boolean,
 };
 
-// using `pnpm m ls` to list workspace packages
+async function pathExists(p: string) {
+  try {
+    await fs.promises.access(p);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
-export async function findDmnoServices() {
-  // TODO: this is likely slower than trying to do this ourselves?
-  const workspacePackagesRaw = await execAsync('pnpm m ls --json --depth=-1');
-  const workspacePackagesData = JSON.parse(workspacePackagesRaw.stdout) as Array<PnpmPackageListing>;
-  // workspace root should have the shortest path, since the others will all be nested
-  const workspaceRootEntry = _.minBy(workspacePackagesData, (w) => w.path.length)!;
-  const WORKSPACE_ROOT_PATH = workspaceRootEntry.path;
+export async function findDmnoServices(): Promise<{
+  isMonorepo: boolean,
+  packageManager: PackageManager,
+  workspacePackages: Array<WorkspacePackagesListing>,
+}> {
+  const startAt = new Date();
+  let cwd = process.cwd();
+  debug(`begin scan for services from ${cwd}`);
 
-  return { workspacePackagesData, WORKSPACE_ROOT_PATH };
+  const cwdParts = cwd.split('/');
+
+  let packageManager: PackageManager | undefined;
+  let possibleRootPackage: string | undefined;
+
+  while (!packageManager) {
+    // we could also try to detect the current package manager via env vars (ex: process.env.PNPM_PACKAGE_NAME)
+    // and then not check for all of the lockfiles...?
+
+    // TODO: nx and lerna support? (lerna.json has packages array)
+    // TODO: deno?
+
+    const filesFound = await async.mapValues({
+      packageJson: 'package.json',
+      yarnLock: 'yarn.lock',
+      npmLock: 'package-lock.json',
+      pnpmLock: 'pnpm-lock.yaml',
+      pnpmWorkspace: 'pnpm-workspace.yaml',
+      bunLock: 'bun.lockb',
+      moonWorkspace: '.moon/workspace.yml',
+    // eslint-disable-next-line @typescript-eslint/no-loop-func
+    }, async (filePath) => pathExists(path.resolve(cwd, filePath)));
+
+    if (filesFound.packageJson) possibleRootPackage = cwd;
+
+    if (filesFound.pnpmLock || filesFound.pnpmWorkspace) packageManager = 'pnpm';
+    else if (filesFound.npmLock) packageManager = 'npm';
+    else if (filesFound.yarnLock) packageManager = 'yarn';
+    else if (filesFound.bunLock) packageManager = 'bun';
+    else if (filesFound.moonWorkspace) packageManager = 'moon';
+
+    if (!packageManager) {
+      cwdParts.pop();
+      cwd = cwdParts.join('/');
+    }
+    // show some hopefully useful error messaging if we hit the root folder without finding anything
+    if (cwd === '') {
+      console.log(kleur.red('Unable to find detect your package manager and workspace root!'));
+      if (possibleRootPackage) {
+        console.log(`But it looks like your workspace root might be\n${kleur.italic(possibleRootPackage)}`);
+      }
+      console.log('We look for lock files (ex: package-lock.json) so you may just need to run a dependency install');
+      process.exit(1);
+    }
+  }
+  const rootServicePath = cwd;
+
+  debug('finished scanning for workspace root', {
+    packageManager,
+    rootServicePath,
+  });
+
+
+  let packagesGlobs: Array<string> | undefined;
+  let isMonorepo = false;
+
+  debug('looking for workspace globs');
+  if (packageManager === 'pnpm') {
+    // if no pnpm-workspace.yaml exists, it's not a monorepo
+    const pnpmWorkspaceYamlPath = `${rootServicePath}/pnpm-workspace.yaml`;
+    if (await pathExists(pnpmWorkspaceYamlPath)) {
+      const pnpmWorkspacesYaml = await readYamlFile(`${rootServicePath}/pnpm-workspace.yaml`);
+      isMonorepo = true;
+      packagesGlobs = (pnpmWorkspacesYaml as any).packages;
+      debug('looked in pnpm-workspace.yaml for "packages" field');
+    } else {
+      debug('no pnpm-workspace.yaml found');
+    }
+  } else if (packageManager === 'yarn' || packageManager === 'npm' || packageManager === 'bun') {
+    const rootPackageJson = await import(`${rootServicePath}/package.json`, { assert: { type: 'json' } });
+    if (rootPackageJson.workspaces) {
+      isMonorepo = true;
+      packagesGlobs = rootPackageJson.workspaces;
+    }
+    debug('looked in package.json for "workspaces" field');
+  } else if (packageManager === 'moon') {
+    const moonWorkspacesYaml = await readYamlFile(`${rootServicePath}/.moon/workspace.yml`);
+    isMonorepo = true;
+    packagesGlobs = (moonWorkspacesYaml as any).projects;
+    debug('looked in .moon/workspace.yml for "projects" field');
+  }
+
+  // console.log('Package manager = ', packageManager);
+  // console.log('workspace root = ', rootServicePath);
+  // console.log('is monorepo?', isMonorepo);
+  // console.log('packages globs', packagesGlobs);
+
+
+  const packagePaths = [rootServicePath];
+  if (isMonorepo && packagesGlobs?.length) {
+    const expandedPathsFromGlobs = await (
+      // tried a few different libs here (tiny-glob being the other main contender) and this is WAY faster especially with some tuning :)
+      new fdir() // eslint-disable-line new-cap
+        .withBasePath()
+        .onlyDirs()
+        .glob(...packagesGlobs.map((gi) => path.resolve(`${rootServicePath}/${gi}`)))
+        .exclude((dirName, _dirPath) => {
+          // this helps speed things up since it stops recursing into these directories
+          return (
+            dirName === 'node_modules'
+            // could add more... doesn't seem to make a big difference
+            // || dirName === '.dmno'
+            // || dirName === 'src'
+            // || dirName === 'dist'
+            // || dirName === '.next'
+          );
+        })
+        .crawl(rootServicePath)
+        .withPromise()
+    );
+    packagePaths.push(...expandedPathsFromGlobs);
+  }
+
+  const workspacePackages = await Promise.all(packagePaths.map(async (packagePath) => {
+    const packageJson = await tryCatch(
+      async () => await import(`${packagePath}/package.json`, { assert: { type: 'json' } }),
+      (_err) => {},
+    );
+
+    const dmnoFolderExists = await pathExists(`${packagePath}/.dmno`);
+
+    return {
+      isRoot: packagePath === rootServicePath,
+      path: packagePath.replace(/\/$/, ''), // remove trailing slash
+      name: packageJson?.default.name || packagePath.split('/').pop(),
+      dmnoFolder: dmnoFolderExists,
+    };
+  }));
+
+
+  debug(`completed scanning in ${+new Date() - +startAt}ms`);
+
+  return {
+    isMonorepo,
+    packageManager,
+    workspacePackages,
+  };
 }

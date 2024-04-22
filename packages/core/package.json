@@ -35,7 +35,7 @@
   "bin": {
     "dmno": "./dist/cli/commander-cli.mjs"
   },
-  "keywords": [],
+  "keywords": [ ],
   "author": "",
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",
@@ -63,11 +63,14 @@
     "debug": "^4.3.4",
     "dotenv": "^16.4.5",
     "execa": "^8.0.1",
+    "fdir": "^6.1.1",
     "jsonc-parser": "^3.2.1",
     "kleur": "^4.1.5",
     "lodash-es": "^4.17.21",
     "mitt": "^3.0.1",
     "node-ipc": "npm:@achrinza/node-ipc@^10.1.10",
+    "picomatch": "^4.0.2",
+    "read-yaml-file": "^2.1.0",
     "svgo": "^3.2.0",
     "typescript": "^5.4.2",
     "validate-npm-package-name": "^5.0.0",
