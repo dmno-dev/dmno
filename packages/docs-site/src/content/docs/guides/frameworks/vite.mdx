@@ -1,0 +1,56 @@
+---
+title: Vite
+description: Using DMNO with Vite
+---
+
+import TabbedCode from '@/components/TabbedCode.astro';
+
+At DMNO we're big fans of [Vite](https://vitejs.dev/), which is why we offer first class integration between Vite and DMNO. 
+
+To get started, install `dmno` and the `vite` plugin: 
+
+<TabbedCode packageName="@dmno/vite-integration @dmno/config-engine" />
+
+### Scaffold your DMNO config
+
+Next, run the following command in a terminal at the root of your repo:
+
+<TabbedCode command="dmno init" />
+
+This will create a `.dmno` directory in the root of your project with a `config.mts` file. And it will also create `.dmno` folders and config files in each of the other directories for other apps/services if you have a monorepo.
+
+### Configure your environment variables    
+
+See our [Schema Guide](/guides/schema) for the specifics of how to write your first DMNO schema. 
+
+### Add the plugin to your config
+
+Finally, in your `vite.config.js`, import the plugin, and add to `defineConfig`: 
+
+```js
+// ...
+import { dmnoVitePlugin } from '@dmno/vite-integration';
+
+export default {
+  // other config
+  plugins: [
+    // ... other plugins
+    dmnoVitePlugin(),
+  ],
+};
+
+```
+
+### Use your config items
+
+Now in your application code you'll have access to a global object with all of your _public_ config items (those which aren't marked `sensitive`) called `DMNO_PUBLIC_CONFIG`. 
+
+```js
+
+const myConfigItem = DMNO_PUBLIC_CONFIG.MY_ITEM;
+```
+
+:::tip[FYI]
+Note: we're using Rollup under the hood here to replace these env vars at build time. 
+:::
+

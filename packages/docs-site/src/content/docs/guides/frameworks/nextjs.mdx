@@ -5,133 +5,71 @@ description: Using DMNO with Next.js
 
 import TabbedCode from '@/components/TabbedCode.astro';
 
-
-## Taking Next to the _next_ level with DMNO
-
 If you have an existing Next.js app, you're probably already familiar with how environment variables work in Next. Check their docs [here](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables) if you need a refresher. 
 
-Now forget all of that, and let's simplify things with DMNO.
+Now forget all of that, and let's simplify things with DMNO. 🤣
 
 ### Install dependencies
 
 First, install the `@dmno/config-engine` and `@dmno/dmno-next` packages.
 
-<TabbedCode packageName="@dmno/config-engine @dmno/dmno-cli @dmno/dmno-next" />
+<TabbedCode packageName="@dmno/config-engine @dmno/next-integration" />
 
-> TODO: DO WE NEED THE NEXT PLUGIN AT ALL? 
-
+{/* TEMPLATE THIS? */}
 ### Scaffold your DMNO config
 
-Run the following command in a terminal at the root of your monorepo:
+Run the following command in a terminal at the root of your repo:
 
-{/* TODO MULTIPLATFORM COMPONENT FOR GENERIC COMMANDS */}
-```bash
-npx dmno init
-```
+<TabbedCode command="dmno init" />
 
-This will create a `.dmno` directory in the root of your project with a `workspace-config.mts` file. And it will also create `.dmno` folders in each of the other directories for other apps/services in your monorepo.
+This will create a `.dmno` directory in the root of your project with a `config.mts` file. And it will also create `.dmno` folders and config files in each of the other directories for other apps/services if you have a monorepo.
 
-:::tip
-If you don't have a monorepo (yet), you can always add child apps/services to your monorepo later via the `dmno add` command.
-:::
 
 ### Configure your environment variables    
 
-Open the `workspace-config.mts` file in the `.dmno` directory at the root of your monorepo and add your environment variables like so:
+See our [Schema Guide](/guides/schema) for the specifics of how to write your first DMNO schema. 
 
-```typescript  
-import {
-  DmnoBaseTypes, defineWorkspaceConfig, configPath, switchByNodeEnv, dmnoFormula, asdf,
-} from '@dmno/core';
+### Add the plugin to your config
 
-export default defineWorkspaceConfig({
-  schema: {
-    // regular, defaults to string
-    ENVVAR1,
-    // with number type
-    ENVVAR2: DmnoBaseTypes.number,
-    // with boolean type
-    ENVVAR3: DmnoBaseTypes.boolean,
-    // with string type and additional constraints
-    ENVVAR4: {
-      extends: DmnoBaseTypes.string({
-        minLength: 5,
-        maxLength: 10,
-      }),
-      value: 'default value',
-      required: true,
-    },
-  },
-});
+Finally, in your `next.config.js`, import the plugin, and add to following to `nextConfig`: 
+
+```typescript
+// ...
+import { dmnoNextPlugin } from '@dmno/next-integration';
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // ... TBD
+};
+
 ```
 
 ### Next.js specific features
 
 If you're migrating from an existing Next.js app, you might have some environment variables that are specific to Next.js. For example, you might have a `NEXT_PUBLIC_` prefix for environment variables that are exposed to the browser.
 
-Let's say you have a `NEXT_PUBLIC_API_URL` environment variable. You can add it to your `config.mts` file like so:
+DMNO makes all of this simpler in a few ways. 
 
-```typescript
-import {
-  DmnoBaseTypes, defineConfigSchema, configPath, switchByNodeEnv, dmnoFormula,
-} from '@dmno/core';
+First, in your schema, `sensitive` items won't be available in the `DMNO_PUBLIC_CONFIG` object that we expose globally for the browser. This effectively serves the same purpose as the `NEXT_PUBLIC_` prefix, without any of the renaming or potential duplication. 
 
-export default defineConfigSchema({
-  schema: {
-    NEXT_PUBLIC_API_URL: DmnoBaseTypes.string,
-  },
-});
-```
+Secondly, for the server side of things, we expose all config items via `process.dmnoEnv` which gives you full type completion and intellisense. Neither of which you got previously when using `process.env`.
 
-Or if you want to use items from your root config, you can make use of dmno's `pick` command to get those and use them in your Next.js app.
+Finally, if you try to access a variable that doesn't exist, you will get an actionable error message. Where previously with `process.env` you would have received no feedback at all. 
 
-```typescript
-import {
-  DmnoBaseTypes, defineConfigSchema, configPath, switchByNodeEnv, dmnoFormula,
-} from '@dmno/core';
+> INSERT SCREENSHOT/GIF
 
-export default defineConfigSchema({
-  pick: [
-    {
-      key: ['ENVVAR1', 'ENVVAR2'],
-      renameKey: ((k) => `NEXT_PUBLIC_${k}`),
-    },
-  ],
-});
-```
+### Client/Server/SSR/SSG/RSC/WTF?
 
-This will allow you to use the `ENVVAR1` and `ENVVAR2` environment variables in your Next.js app as `NEXT_PUBLIC_ENVVAR1` and `NEXT_PUBLIC_ENVVAR2`.
+With the addition of the [Next.js App Router](https://nextjs.org/docs/app), the divide between client and server gets a bit harder to reason about. We recommend Josh's excellent [article](https://www.joshwcomeau.com/react/server-components/) if you're trying to wrap your head around it. 
 
-### Wiring it up in your Next.js config
+Basically, you should follow these rules: 
 
-Now that you have your environment variables set up, you can use them in your Next.js app.
+- if you want to use config in the browser (i.e. a Client Component), you should access it using `DMNO_PUBLIC_CONFIG`
+- if you want to use config on the server (i.e. a React Server Component or an API Route), you should access it via `DMNO_CONFIG`
 
-Add the following to your `next.config.js` file:
+By following these rules, you can ensure that your config is only exposed where you want it to be. And DMNO will provide your with appropriate feedback if you try to access it in the wrong place.
 
-```javascript
-const withDmno = require('@dmno/dmno-next');
-
-module.exports = {
-  // your existing config
-  env: { ...withDmno() },
-};
-```
-
-Now your environment variables will be available in your Next.js app. Instead of using `process.env`, you can use `Dmno.get('NEXT_PUBLIC_ENVVAR1')`. 
-
-For example: 
-
-```tsx
-import Dmno from '@dmno/dmno-next';
-
-export default function Home()   {
-  return (
-    <div>
-      <h1>Some env var: {Dmno.get('NEXT_PUBLIC_ENVVAR1')}</h1>
-    </div>
-  )
-}
-```
+> INSERT SAMPLE CODE OR GIF
 
 :::danger[Runtime vs. Buildtime]
 The same rules still apply for runtime vs. buildtime. You can read more about that [here](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables#runtime-environment-variables).

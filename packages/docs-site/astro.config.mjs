@@ -54,51 +54,58 @@ export default defineConfig({
         label: "Concepts",
         link: "/get-started/concepts"
       }]
-    }, {
+      }, {
       label: "Guides",
       items: [{
-        label: "Schema",
-        link: "/guides/schema"
-      }, {
-        label: "Repo structure",
-        link: "/guides/repo"
-      }, {
+          label: "Schema",
+          link: "/guides/schema"
+        }, {
+          label: "Repo structure",
+          link: "/guides/repo"
+        }]
+      },{
         label: "Secrets",
         items: [{
           label: "Encrypted Vaults",
-          link: "/guides/secrets/encrypted-vaults"
+          link: "/guides/secrets/encrypted-vault",
+          badge: {
+            text: "WIP",
+            variant: "caution"
+          },
         }, {
           label: "1Password",
-          link: "/guides/secrets/1password"
+          link: "/guides/secrets/1password",   
+          badge: {
+            text: "WIP",
+            variant: "caution"
+          },
         }]
       }, {
-        label: "Frameworks",
-        collapsed: true,
+        label: "Integrations",
         items: [{
           label: "Next.js",
           link: "/guides/frameworks/nextjs/"
         }, {
           label: "Vite",
           link: "/guides/frameworks/vite/"
-        }]
-      }, {
-        label: "Deployment Platforms",
-        collapsed: true,
-        items: [{
-          label: "Vercel",
-          link: "/guides/deployment/vercel/"
         }, {
-          label: "Netlify",
-          link: "/guides/deployment/netlify/"
-        }, {
-          label: "Railway",
-          link: "/guides/deployment/railway/"
-        }, {
-          label: "Render",
-          link: "/guides/deployment/render/"
-        }]
-      }]
-    }, {
+          label: "Astro",
+          link: "/guides/frameworks/astro/"
+        },
+        // {
+        //   label: "Vercel",
+        //   link: "/guides/deployment/vercel/"
+        // }, {
+        //   label: "Netlify",
+        //   link: "/guides/deployment/netlify/"
+        // }, {
+        //   label: "Railway",
+        //   link: "/guides/deployment/railway/"
+        // }, {
+        //   label: "Render",
+        //   link: "/guides/deployment/render/"
+        // }
+      ]}, {
       label: "Reference",
       items: [{
         label: 'config-engine',
@@ -115,12 +122,7 @@ export default defineConfig({
           label: 'CLI',
           link: '/reference/config-engine/dmno-cli/'
         }]
-      }, {
-        label: "Plugins",
-        autogenerate: {
-          directory: "/reference/plugins"
-        }
-      }]
+      },]
     }]
   }), vue({
     // jsx: true,
