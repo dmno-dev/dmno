@@ -2,6 +2,7 @@
   "name": "@dmno/core",
   "version": "1.0.0",
   "description": "",
+  "license": "MIT",
   "scripts": {
     "clean": "rm -rf dist",
     "build": "tsup",
@@ -22,6 +23,9 @@
       "default": "./dist/cli/plugin-cli-lib.mjs"
     }
   },
+  "files": [
+    "/dist"
+  ],
   "typesVersions": {
     "*": {
       "index": [
@@ -35,44 +39,60 @@
   "bin": {
     "dmno": "./dist/cli/commander-cli.mjs"
   },
-  "keywords": [],
+  "keywords": [
+    "dmno",
+    "config",
+    "dmno.dev",
+    "env vars",
+    "environment",
+    "process.env",
+    "configuration",
+    "secrets"
+  ],
   "author": "",
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
+    "@inquirer/type": "^1.3.0",
     "@types/async": "^3.2.24",
     "@types/debug": "^4.1.12",
     "@types/lodash-es": "^4.17.12",
-    "@types/node": "^20.11.28",
+    "@types/node": "^20.12.7",
     "@types/node-ipc": "^9.2.3",
     "@types/validate-npm-package-name": "^4.0.2",
     "@types/which": "^3.0.3",
     "tsup": "^8.0.2"
   },
   "dependencies": {
-    "@dagrejs/graphlib": "^2.2.1",
+    "@dagrejs/graphlib": "^2.2.2",
     "@dmno/encryption-lib": "workspace:*",
     "@dmno/ts-lib": "workspace:*",
-    "@inquirer/prompts": "^4.3.0",
+    "@inquirer/core": "^8.0.1",
+    "@inquirer/prompts": "^5.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "async": "^3.2.5",
     "base64-arraybuffer": "^1.0.2",
+    "boxen": "^7.1.1",
     "caller-path": "^4.0.0",
-    "cli-table3": "^0.6.3",
+    "cli-table3": "^0.6.4",
     "commander": "^12.0.0",
     "debug": "^4.3.4",
     "dotenv": "^16.4.5",
     "execa": "^8.0.1",
+    "fdir": "^6.1.1",
     "jsonc-parser": "^3.2.1",
     "kleur": "^4.1.5",
     "lodash-es": "^4.17.21",
     "mitt": "^3.0.1",
     "node-ipc": "npm:@achrinza/node-ipc@^10.1.10",
+    "outdent": "^0.8.0",
+    "picomatch": "^4.0.2",
+    "read-yaml-file": "^2.1.0",
     "svgo": "^3.2.0",
-    "typescript": "^5.4.2",
+    "typescript": "^5.4.5",
     "validate-npm-package-name": "^5.0.0",
-    "vite": "^5.1.6",
-    "vite-node": "^1.4.0",
+    "vite": "^5.2.10",
+    "vite-node": "^1.5.0",
     "which": "^4.0.0"
   }
 }

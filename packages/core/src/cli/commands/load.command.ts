@@ -89,11 +89,10 @@ program.action(async (opts: {
         if (item.isValid) return;
 
         const pathCellContents = [
-          plugin.initByService,
-          ` ${plugin.instanceName}`,
-          `  ${item.key}`,
+          kleur.blue(plugin.initByService?.serviceName || ''),
+          `${kleur.gray('└')}${plugin.instanceName}`,
+          ` ${kleur.gray('└')}${item.key}`,
         ].join('\n');
-
 
         const valueCellContents = formattedValue(item.resolvedValue, false);
         // if (item.resolvedRawValue !== item.resolvedValue) {

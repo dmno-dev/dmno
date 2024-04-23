@@ -136,13 +136,9 @@ function getPluginLabel(p: DmnoPlugin, padNameEnd: number) {
   return [
     `- ${p.instanceName}`.padEnd(padNameEnd),
     kleur.gray(`${p.pluginType}`),
-    kleur.gray(`| ${p.initByService}`),
+    kleur.gray(`| ${p.initByService?.serviceName}`),
   ].join(' ');
 }
-function getPluginDescription(p: SerializedDmnoPlugin) {
-  return kleur.gray(`type = ${p.pluginType}, initialized in ${p.initializedInService}`);
-}
-
 
 export function addPluginSelection(program: Command) {
   return program
@@ -172,12 +168,14 @@ export function addPluginSelection(program: Command) {
         return;
       }
 
+      const sortedPluginsArray = _.sortBy(pluginsArray, (p) => (p.cliPath ? 0 : 1));
       const menuSelection = await select({
         message: 'Which plugin instance?',
-        choices: _.map(pluginsArray, (plugin) => ({
+        choices: _.map(sortedPluginsArray, (plugin) => ({
           name: getPluginLabel(plugin, namesMaxLen),
           // description: getPluginDescription(plugin),
           value: plugin.instanceName,
+          disabled: !plugin.cliPath && '(no cli)',
         })),
         // default: autoSelectService?.serviceName,
       });

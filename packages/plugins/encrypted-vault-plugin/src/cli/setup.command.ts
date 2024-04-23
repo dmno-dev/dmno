@@ -15,7 +15,7 @@ export const SetupCommand = createDmnoPluginCliCommand({
 `,
   async handler(ctx, opts, command) {
     // const vaultName = ctx.plugin.inputs.
-    console.dir(ctx.plugin.inputs, { depth: null });
+    // console.dir(ctx.plugin.inputs, { depth: null });
 
     const vaultName = ctx.plugin.inputs.name.resolvedValue || 'default';
 

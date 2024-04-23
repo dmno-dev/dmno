@@ -1,13 +1,17 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    // "composite": true,
+    "target": "ES2022",
     "module": "ESNext",
-    "target": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
     "lib": [
-      "ESNext"
+      "ES2023"
     ],
     "strict": true,
-    "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true
   }
 }

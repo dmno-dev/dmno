@@ -1,11 +1,11 @@
-import { defineConfigSchema, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, switchByNodeEnv, createDmnoDataType } from '@dmno/core';
+import { defineDmnoService, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, switchByNodeEnv, createDmnoDataType } from '@dmno/core';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 import { EncryptedVaultDmnoPlugin } from '@dmno/encrypted-vault-plugin';
 
 const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
 const VaultPlugin = EncryptedVaultDmnoPlugin.injectInstance('vault/prod');
 
-export default defineConfigSchema({
+export default defineDmnoService({
   name: 'api',
   parent: 'group1',
   pick: [

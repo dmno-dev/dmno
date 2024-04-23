@@ -1,5 +1,5 @@
 import { ConfigServerClient } from '@dmno/core';
-import type { Plugin, PluginOption } from 'vite';
+import type { Plugin } from 'vite';
 
 export function injectDmnoConfigVitePlugin(): Plugin {
   let firstLoad = false;

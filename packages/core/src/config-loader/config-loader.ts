@@ -11,8 +11,8 @@ import { ViteNodeRunner } from 'vite-node/client';
 import { ConfigLoaderRequestMap } from './ipc-requests';
 import { createDebugTimer } from '../cli/lib/debug-timer';
 import { setupViteServer } from './vite-server';
-import { PnpmPackageListing, findDmnoServices } from './find-services';
-import { DmnoService, DmnoWorkspace, ServiceConfigSchema } from '../config-engine/config-engine';
+import { WorkspacePackagesListing, findDmnoServices } from './find-services';
+import { DmnoService, DmnoWorkspace, DmnoServiceConfig } from '../config-engine/config-engine';
 import { beginServiceLoadPlugins, beginWorkspaceLoadPlugins, finishServiceLoadPlugins } from '../config-engine/plugins';
 import { ConfigLoadError } from '../config-engine/errors';
 import { generateServiceTypes } from '../config-engine/type-generation';
@@ -36,13 +36,15 @@ export class ConfigLoader {
 
   viteRunner?: ViteNodeRunner;
 
-  workspacePackagesData: Array<PnpmPackageListing> = [];
+  workspacePackagesData: Array<WorkspacePackagesListing> = [];
   workspaceRootPath?: string;
   private async finishInit() {
-    const { WORKSPACE_ROOT_PATH, workspacePackagesData } = await findDmnoServices();
-    this.workspacePackagesData = workspacePackagesData;
-    this.workspaceRootPath = WORKSPACE_ROOT_PATH;
-    const { viteRunner } = await setupViteServer(WORKSPACE_ROOT_PATH, (ctx) => this.viteHotReloadHandler(ctx));
+    // console.time('find-services');
+    const workspaceInfo = await findDmnoServices();
+    // console.timeEnd('find-services');
+    this.workspacePackagesData = workspaceInfo.workspacePackages;
+    this.workspaceRootPath = workspaceInfo.workspacePackages[0].path; // first should always be root (and is also marked)
+    const { viteRunner } = await setupViteServer(this.workspaceRootPath, (ctx) => this.viteHotReloadHandler(ctx));
     this.viteRunner = viteRunner;
   }
 
@@ -88,7 +90,7 @@ export class ConfigLoader {
       // }
 
       const serviceInitOpts = {
-        isRoot: w.path === this.workspaceRootPath,
+        isRoot: w.isRoot,
         packageName: w.name,
         path: w.path,
         workspace: this.dmnoWorkspace,
@@ -112,10 +114,17 @@ export class ConfigLoader {
 
         const importedConfig = await this.viteRunner.executeFile(configFilePath);
 
+        if (w.isRoot && !importedConfig.default._isDmnoWorkspaceConfig) {
+          throw new Error('Workspace root .dmno/config.mts must `export default defineDmnoWorkspace(...)`');
+        }
+        if (!w.isRoot && !importedConfig.default._isDmnoServiceConfig) {
+          throw new Error('Non-root .dmno/config.mts must `export default defineDmnoService(...)`');
+        }
+
         service = new DmnoService({
           ...serviceInitOpts,
-          // TODO: check if the config file actually exported the right thing and throw helpful error otherwise
-          rawConfig: importedConfig.default as ServiceConfigSchema,
+          // NOTE - could actually be a DmnoServiceConfig or DmnoWorkspaceConfig
+          rawConfig: importedConfig.default as DmnoServiceConfig,
         });
 
         finishServiceLoadPlugins(service);

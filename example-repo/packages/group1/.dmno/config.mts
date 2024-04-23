@@ -1,6 +1,6 @@
-import { DmnoBaseTypes, defineConfigSchema } from '@dmno/core';
+import { DmnoBaseTypes, defineDmnoService } from '@dmno/core';
 
-export default defineConfigSchema({
+export default defineDmnoService({
   name: 'group1',
   pick: [
     {

@@ -1,5 +1,5 @@
 import {
-  defineConfigSchema, DmnoBaseTypes, configPath, dmnoFormula,switchByNodeEnv,
+  defineDmnoService, DmnoBaseTypes, configPath, dmnoFormula,switchByNodeEnv,
   createDmnoDataType, ValidationError,
   EncryptedFileStorePlugin
 } from '@dmno/core';
@@ -11,7 +11,7 @@ const encryptedSecrets = new EncryptedFileStorePlugin('vault', { name: 'local-se
 // pre-configured plugins can be auto-injected from those that were initialized in the workspace root
 const onePassSync = OnePasswordDmnoPlugin.injectInstance('1pass');
 
-export default defineConfigSchema({
+export default defineDmnoService({
   // each service can be explicitly named or will default to the name from its package.json
   name: 'api', 
   
