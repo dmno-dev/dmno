@@ -1,9 +1,9 @@
-import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheFunctionResult, createDmnoDataType, defineConfigSchema, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from '@dmno/core';
+import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheFunctionResult, createDmnoDataType, defineDmnoService, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from '@dmno/core';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
 
-export default defineConfigSchema({
+export default defineDmnoService({
   name: 'astroweb',
   parent: 'group1',
   pick: [

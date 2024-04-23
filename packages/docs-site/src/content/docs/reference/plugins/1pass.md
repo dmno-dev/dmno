@@ -14,7 +14,7 @@ Make sure you've installed (and logged in to) 1Password per their instructions [
 ```typescript
 // in this case we're leading 2 instances, one for preprod and one for prod
 import {
-  defineConfigSchema, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, switchByNodeEnv,
+  defineDmnoService, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, switchByNodeEnv,
 } from '@dmno/core';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
@@ -31,7 +31,7 @@ const ProdOnePassBackend = new OnePasswordDmnoPlugin(
 ### Sync an item in your scheme
 
 ```typescript
-export default defineConfigSchema({
+export default defineDmnoService({
   schema: {
     SECRET_EXAMPLE: {
       value: DevOnePassBackend.itemByReference('op://dev test/example/username'),

@@ -188,10 +188,10 @@ const NodeEnvType = createDmnoDataType({
 
 Example: 
 ```javascript
-import { NodeEnvType, defineConfigSchema } from '@dmno/config-engine';
+import { NodeEnvType, defineDmnoService } from '@dmno/config-engine';
 // ...
 
-export default defineConfigSchema({
+export default defineDmnoService({
   name: 'MyConfig',
   // ...
   schema: {
@@ -208,9 +208,9 @@ DMNO Built-in data type for URLs.
 
 Example:
 ```javascript
-import { UrlDataType, defineConfigSchema } from '@dmno/config-engine';
+import { UrlDataType, defineDmnoService } from '@dmno/config-engine';
 // ...
-export default defineConfigSchema({
+export default defineDmnoService({
   name: 'MyConfig',
   // ...
   schema: {
@@ -261,7 +261,7 @@ You can then use it in your config schema like so:
 ```javascript
 const myType = DmnoBaseTypes.MyType({ settingsObject });
 
-export default defineConfigSchema({
+export default defineDmnoService({
   name: 'MyConfig',
   parent: 'root',
   schema: {

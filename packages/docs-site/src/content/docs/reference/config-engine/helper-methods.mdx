@@ -9,9 +9,9 @@ Lorem, ipsum dolor sit amet consectetur adipisicing elit. Officia ipsa asperiore
 :::
 
 
-### `defineWorkspaceConfig`
+### `defineDmnoWorkspace`
 
-`defineWorkspaceConfig({ opts })`
+`defineDmnoWorkspace({ opts })`
 
 This method is used to define the workspace configuration. It takes an object as an argument with the following properties:
 
@@ -28,9 +28,9 @@ The `ConfigItemDefinitonOrShorthand` type is a union of the `ConfigItemDefinitio
 `TypeExtendsDefinition` can be a string (the name of the type), a reference to a type, or a function that returns a type.
 
 ```typescript
-import { defineWorkspaceConfig, DmnoBaseTypes } from '@dmno/config-engine';
+import { defineDmnoWorkspace, DmnoBaseTypes } from '@dmno/config-engine';
 
-export default defineWorkspaceConfig({
+export default defineDmnoWorkspace({
   schema: {
     ITEM0: {}, // defaults to string
     ITEM1: 'string',
@@ -53,9 +53,9 @@ All of the above examples are equivalent.
 :::
 
 
-### `defineConfigSchema`
+### `defineDmnoService`
 
-`defineConfigSchema({ opts })`
+`defineDmnoService({ opts })`
 
 This method is used to define the configuration schema in each of your services (not the root). It takes an object as an argument with the following properties:
 
@@ -63,7 +63,7 @@ This method is used to define the configuration schema in each of your services 
     typeName="ServiceConfigSchema"
 />
 
-The `schema` is otherwise the same as the `schema` property in the `defineWorkspaceConfig` method above. 
+The `schema` is otherwise the same as the `schema` property in the `defineDmnoWorkspace` method above. 
 
 ### `createDmnoDataType`
 

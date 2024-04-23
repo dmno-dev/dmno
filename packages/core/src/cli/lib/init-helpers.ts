@@ -31,11 +31,11 @@ const ENV_LOCAL = outdent`
 
 `;
 
-const CONFIG_MTS = (serviceName?: string) => outdent`
-  import { DmnoBaseTypes, defineWorkspaceConfig, switchByNodeEnv, NodeEnvType } from '@dmno/core';
+const CONFIG_MTS_ROOT = (serviceName?: string) => outdent`
+  import { DmnoBaseTypes, defineDmnoWorkspace, switchByNodeEnv, NodeEnvType } from '@dmno/core';
 
-  export default defineWorkspaceConfig({
-    ${serviceName ? `name: '${serviceName}'` : '// no name specified - inherit name from package.json'},
+  export default defineDmnoWorkspace({
+    ${serviceName ? `name: '${serviceName}'` : '// no name specified - inherit from package.json'},
     schema: {
       NODE_ENV: NodeEnvType, 
       
@@ -58,6 +58,18 @@ const CONFIG_MTS = (serviceName?: string) => outdent`
           production: 'production value',
         })
       },
+    }
+  });
+`;
+const CONFIG_MTS = (serviceName?: string) => outdent`
+  import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv } from '@dmno/core';
+
+  export default defineDmnoService({
+    ${serviceName ? `name: '${serviceName}'` : '// no name specified - inherit from package.json'},
+    pick: [
+      'NODE_ENV',
+    ],
+    schema: {
     }
   });
 `;
@@ -155,7 +167,10 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
       },
     });
 
-    await fs.promises.writeFile(configMtsPath, CONFIG_MTS(serviceName));
+    await fs.promises.writeFile(
+      configMtsPath,
+      service.isRoot ? CONFIG_MTS_ROOT(serviceName) : CONFIG_MTS(serviceName),
+    );
     console.log(initSuccessMessage('.dmno/config.mts created!', { path: configMtsPath }));
   }
 

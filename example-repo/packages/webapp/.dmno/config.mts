@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheFunctionResult, createDmnoDataType, defineConfigSchema, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from '@dmno/core';
+import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheFunctionResult, createDmnoDataType, defineDmnoService, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from '@dmno/core';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
@@ -16,7 +16,7 @@ const customUrlType = createDmnoDataType({
   },
 });
 
-export default defineConfigSchema({
+export default defineDmnoService({
   name: 'web',
   parent: 'group1',
   pick: [
@@ -102,12 +102,17 @@ export default defineConfigSchema({
       value: (ctx) => !ctx.get('BOOLEAN_OPPOSITE'),
     },
 
-    VITE_RANDOM_NUM: {
+    RANDOM_NUM: {
       extends: DmnoBaseTypes.number,
+      description: 'random number that will change each time config resolution runs',
       required: true,
-      // generate a random number, will be different each time resolution runs, but caching will keep it stable
+      value: (ctx) => Math.floor(Math.random() * 100),
+    },
+    CACHED_RANDOM_NUM: {
+      extends: DmnoBaseTypes.number,
+      description: 'random number that is cached, so should stay constant until cache is cleared',
+      required: true,
       value: cacheFunctionResult((ctx) => Math.floor(Math.random() * 100)),
-      // value: 11,
     },
     VITE_STATIC_VAL_NUM: {
       extends: DmnoBaseTypes.number({
@@ -115,7 +120,7 @@ export default defineConfigSchema({
         max: 100,
         min: 1
       }),
-      value: '123.45',
+      value: '12.45',
     },
     WEB_URL: {
       extends: customUrlType({ newSetting: true }),

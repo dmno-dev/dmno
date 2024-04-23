@@ -172,13 +172,13 @@ export type ServiceConfigSchema = {
   schema: Record<string, ConfigItemDefinitionOrShorthand>,
 };
 
-export function defineConfigSchema(opts: ServiceConfigSchema) {
+export function defineDmnoService(opts: ServiceConfigSchema) {
   debug('LOADING SCHEMA!', opts);
   // TODO: return initialized object
   return opts;
 }
 
-export function defineWorkspaceConfig(opts: WorkspaceConfig) {
+export function defineDmnoWorkspace(opts: WorkspaceConfig) {
   debug('LOADING ROOT SCHEMA!', opts);
   return opts;
 }
