@@ -10,12 +10,16 @@ import Debug from 'debug';
 import { DmnoCommand } from './lib/DmnoCommand';
 
 import { addDocsCommand } from './lib/cli-schema-generation';
+import { customizeHelp } from './lib/help-customizations';
+import { initCliRunCtx } from './lib/cli-ctx';
+
 import { LoadCommand } from './commands/load.command';
 import { RunCommand } from './commands/run.command';
 import { DevCommand } from './commands/dev.command';
-import { customizeHelp } from './lib/help-customizations';
-import { initCliRunCtx } from './lib/cli-ctx';
 import { PluginCommand } from './commands/plugin.command';
+import { InitCommand } from './commands/init.command';
+
+
 
 const debug = Debug('dmno:cli');
 
@@ -26,6 +30,7 @@ const program = new DmnoCommand('dmno2')
 program.addCommand(LoadCommand);
 program.addCommand(RunCommand);
 program.addCommand(DevCommand);
+program.addCommand(InitCommand);
 program.addCommand(PluginCommand);
 
 

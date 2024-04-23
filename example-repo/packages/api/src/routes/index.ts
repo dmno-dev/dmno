@@ -17,6 +17,7 @@ router.get('/', async (ctx) => {
   ctx.body = {
     systemStatus: 'nope',
     envCheck: process.dmnoEnv.API_ONLY || 'env-var-not-loaded',
+    dmnoTest: DMNO_CONFIG.PORT,
   };
 });
 

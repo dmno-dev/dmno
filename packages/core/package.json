@@ -22,6 +22,9 @@
       "default": "./dist/cli/plugin-cli-lib.mjs"
     }
   },
+  "files": [
+    "/dist"
+  ],
   "typesVersions": {
     "*": {
       "index": [
@@ -40,6 +43,7 @@
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
+    "@inquirer/type": "^1.3.0",
     "@types/async": "^3.2.24",
     "@types/debug": "^4.1.12",
     "@types/lodash-es": "^4.17.12",
@@ -53,10 +57,12 @@
     "@dagrejs/graphlib": "^2.2.1",
     "@dmno/encryption-lib": "workspace:*",
     "@dmno/ts-lib": "workspace:*",
+    "@inquirer/core": "^8.0.1",
     "@inquirer/prompts": "^4.3.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "async": "^3.2.5",
     "base64-arraybuffer": "^1.0.2",
+    "boxen": "^7.1.1",
     "caller-path": "^4.0.0",
     "cli-table3": "^0.6.3",
     "commander": "^12.0.0",
@@ -69,6 +75,7 @@
     "lodash-es": "^4.17.21",
     "mitt": "^3.0.1",
     "node-ipc": "npm:@achrinza/node-ipc@^10.1.10",
+    "outdent": "^0.8.0",
     "picomatch": "^4.0.2",
     "read-yaml-file": "^2.1.0",
     "svgo": "^3.2.0",

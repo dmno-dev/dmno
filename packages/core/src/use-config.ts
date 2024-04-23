@@ -9,6 +9,7 @@ export async function loadProcessDmnoEnv() {
   if (process.env.DMNO_LOADED_ENV) {
     const parsedEnv = JSON.parse(process.env.DMNO_LOADED_ENV);
     (process as any).dmnoEnv = parsedEnv;
+    (globalThis as any).DMNO_CONFIG = parsedEnv;
     return;
   }
 
@@ -16,6 +17,7 @@ export async function loadProcessDmnoEnv() {
     const configResult = await execAsync('pnpm exec dmno load -f json');
     const configObj = JSON.parse(configResult.stdout.toString());
     (process as any).dmnoEnv = configObj;
+    (globalThis as any).DMNO_CONFIG = configObj;
   } catch (err) {
     // console.log('caught error while trying to load dmno config');
     console.log((err as any).stdout.toString());

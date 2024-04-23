@@ -10,16 +10,29 @@ import Debug from 'debug';
 
 const debug = Debug('dmno:find-services');
 
+async function readJsonFile(path: string) {
+  const raw = await fs.promises.readFile(path);
+  const obj = JSON.parse(raw.toString());
+  return obj;
+}
+
 export type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun' | 'moon';
 export type WorkspacePackagesListing = {
   name: string,
   version?: string,
   path: string,
+  relativePath: string,
   isRoot: boolean,
   dmnoFolder: boolean,
 };
+export type ScannedWorkspaceInfo = {
+  isMonorepo: boolean,
+  packageManager: PackageManager,
+  workspacePackages: Array<WorkspacePackagesListing>,
+  autoSelectedPackage?: WorkspacePackagesListing;
+};
 
-async function pathExists(p: string) {
+export async function pathExists(p: string) {
   try {
     await fs.promises.access(p);
     return true;
@@ -28,11 +41,8 @@ async function pathExists(p: string) {
   }
 }
 
-export async function findDmnoServices(): Promise<{
-  isMonorepo: boolean,
-  packageManager: PackageManager,
-  workspacePackages: Array<WorkspacePackagesListing>,
-}> {
+
+export async function findDmnoServices(): Promise<ScannedWorkspaceInfo> {
   const startAt = new Date();
   let cwd = process.cwd();
   debug(`begin scan for services from ${cwd}`);
@@ -106,7 +116,7 @@ export async function findDmnoServices(): Promise<{
       debug('no pnpm-workspace.yaml found');
     }
   } else if (packageManager === 'yarn' || packageManager === 'npm' || packageManager === 'bun') {
-    const rootPackageJson = await import(`${rootServicePath}/package.json`, { assert: { type: 'json' } });
+    const rootPackageJson = await readJsonFile(`${rootServicePath}/package.json`);
     if (rootPackageJson.workspaces) {
       isMonorepo = true;
       packagesGlobs = rootPackageJson.workspaces;
@@ -152,20 +162,30 @@ export async function findDmnoServices(): Promise<{
 
   const workspacePackages = await Promise.all(packagePaths.map(async (packagePath) => {
     const packageJson = await tryCatch(
-      async () => await import(`${packagePath}/package.json`, { assert: { type: 'json' } }),
+      async () => await readJsonFile(`${packagePath}/package.json`),
       (_err) => {},
     );
 
     const dmnoFolderExists = await pathExists(`${packagePath}/.dmno`);
 
+    const fullPath = packagePath.replace(/\/$/, ''); // remove trailing slash
     return {
       isRoot: packagePath === rootServicePath,
-      path: packagePath.replace(/\/$/, ''), // remove trailing slash
-      name: packageJson?.default.name || packagePath.split('/').pop(),
+      path: fullPath,
+      relativePath: fullPath.substring(rootServicePath.length + 1),
+      name: packageJson?.name || packagePath.split('/').pop(),
       dmnoFolder: dmnoFolderExists,
     };
   }));
 
+
+
+  const packageFromPwd = workspacePackages.find((p) => p.path === process.env.PWD);
+  // note - this doesn't play nice if you have duplicate package names in your monorepo...
+  // this shouldnt really be an issue, but it's noteable
+  const packageManagerCurrentPackageName = process.env.npm_package_name || process.env.PNPM_PACKAGE_NAME;
+  const packageFromCurrentPackageName = workspacePackages.find((p) => p.name === packageManagerCurrentPackageName);
+  const autoSelectedPackagePath = packageFromPwd?.path || packageFromCurrentPackageName?.path;
 
   debug(`completed scanning in ${+new Date() - +startAt}ms`);
 
@@ -173,5 +193,6 @@ export async function findDmnoServices(): Promise<{
     isMonorepo,
     packageManager,
     workspacePackages,
+    autoSelectedPackage: packageFromPwd || packageFromCurrentPackageName,
   };
 }

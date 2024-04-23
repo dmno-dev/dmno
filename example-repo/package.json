@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "keywords": [],
+  "keywords": [ ],
   "author": "",
   "license": "ISC",
-  "scripts": {},
+  "scripts": { },
   "devDependencies": {
-    "@dmno/1password-plugin": "../packages/plugins/1password-plugin",
-    "@dmno/encrypted-vault-plugin": "../packages/plugins/encrypted-vault-plugin",
-    "@dmno/core": "../packages/core"
+    "@dmno/1password-plugin": "link:../packages/plugins/1password-plugin",
+    "@dmno/encrypted-vault-plugin": "link:../packages/plugins/encrypted-vault-plugin",
+    "@dmno/core": "link:../packages/core"
   }
 }

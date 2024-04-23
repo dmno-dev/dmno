@@ -37,8 +37,8 @@
     "vue": "^3.3.4"
   },
   "devDependencies": {
-    "@dmno/1password-plugin": "../plugins/1password-plugin",
-    "@dmno/core": "../core",
+    "@dmno/1password-plugin": "link:../plugins/1password-plugin",
+    "@dmno/core": "link:../core",
     "netlify-cli": "^17.1.0",
     "typedoc": "^0.25.12"
   }

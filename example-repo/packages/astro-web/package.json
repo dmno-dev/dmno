@@ -14,9 +14,9 @@
     "@astrojs/mdx": "^2.3.1",
     "@astrojs/node": "^8.2.5",
     "@astrojs/vue": "^4.1.0",
-    "@dmno/astro-integration": "../../../packages/integrations/astro",
-    "@dmno/core": "../../../packages/core",
-    "@dmno/eslint-config": "../../../packages/eslint-config",
+    "@dmno/astro-integration": "link:../../../packages/integrations/astro",
+    "@dmno/core": "link:../../../packages/core",
+    "@dmno/eslint-config": "link:../../../packages/eslint-config",
     "astro": "^4.6.3",
     "typescript": "^5.4.5",
     "vue": "^3.4.23"
