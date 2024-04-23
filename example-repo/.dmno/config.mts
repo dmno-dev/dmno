@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, defineDmnoWorkspace, configPath, switchByNodeEnv, dmnoFormula, NodeEnvType, switchBy } from '@dmno/core';
+import { DmnoBaseTypes, defineDmnoWorkspace, configPath, switchByNodeEnv, NodeEnvType, switchBy } from '@dmno/core';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
@@ -24,7 +24,6 @@ const ProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
 // const NonProdVault = new EncryptedVaultDmnoPlugin('vault/dev', {
 //   key: configPath('DMNO_VAULT_KEY'),
 // });
-
 
 
 
@@ -62,7 +61,6 @@ export default defineDmnoWorkspace({
       value: ProdVault.item(),
     },
     VAULT_ITEM_WITH_SWITCH: {
-      extends: DmnoBaseTypes.string({ startsWith: 'abc_' }),
       value: switchByNodeEnv({
         _default: ProdVault.item(),
         staging: ProdVault.item(),

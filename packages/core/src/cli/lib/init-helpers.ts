@@ -2,7 +2,6 @@ import { execSync } from 'child_process';
 import fs from 'node:fs';
 import kleur from 'kleur';
 import { outdent } from 'outdent';
-import prompts from 'prompts';
 import { input, select } from '@inquirer/prompts';
 import validatePackageName from 'validate-npm-package-name';
 import boxen from 'boxen';

@@ -2,9 +2,11 @@
   // not sure if this should be browser or not?
   "extends": "@dmno/tsconfig/tsconfig.node.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "target": "ESNext",
-    "module": "ESNext",
+    "declarationDir": "./dist",
+    "outDir": "./dist",
+    // this is needed for vite unfortunately...
+    // see https://github.com/vitejs/vite/issues/9813
+    "lib": [ "ES2023", "dom", "dom.iterable" ]
   },
   "include": [
     "src/**/*.ts",

@@ -4,15 +4,15 @@
   "description": "",
   "scripts": {
     "build": "turbo build --filter=\"!@dmno/docs-site\"",
+    "dev": "turbo run dev --concurrency=40 --parallel --filter=\"!@dmno/docs-site\"",
     "lint": "turbo lint",
     "prepare": "pnpm run build"
   },
-  "keywords": [ ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "turbo": "^1.13.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.5"
   },
   "engines": {
     "node": "^18.0.0 || >=20.0.0"

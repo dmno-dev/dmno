@@ -2,10 +2,16 @@
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
     "build": {
-      "inputs": [ "tsconfig.json", "tsconfig.*.json", "tsup.config.ts", "src/**" ],
       "dependsOn": [ "^build" ],
-      "outputs": [ "dist/**" ]
+      "inputs": [ "tsconfig.json", "tsconfig.*.json", "tsup.config.ts", "src/**" ],
+      "outputs": [ "dist/**" ],
+      "outputMode": "new-only"
     },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+
     "lint": { }
   }
 }

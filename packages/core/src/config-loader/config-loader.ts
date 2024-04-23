@@ -12,7 +12,7 @@ import { ConfigLoaderRequestMap } from './ipc-requests';
 import { createDebugTimer } from '../cli/lib/debug-timer';
 import { setupViteServer } from './vite-server';
 import { WorkspacePackagesListing, findDmnoServices } from './find-services';
-import { DmnoService, DmnoWorkspace, ServiceConfigSchema } from '../config-engine/config-engine';
+import { DmnoService, DmnoWorkspace, DmnoServiceConfig } from '../config-engine/config-engine';
 import { beginServiceLoadPlugins, beginWorkspaceLoadPlugins, finishServiceLoadPlugins } from '../config-engine/plugins';
 import { ConfigLoadError } from '../config-engine/errors';
 import { generateServiceTypes } from '../config-engine/type-generation';
@@ -114,10 +114,17 @@ export class ConfigLoader {
 
         const importedConfig = await this.viteRunner.executeFile(configFilePath);
 
+        if (w.isRoot && !importedConfig.default._isDmnoWorkspaceConfig) {
+          throw new Error('Workspace root .dmno/config.mts must `export default defineDmnoWorkspace(...)`');
+        }
+        if (!w.isRoot && !importedConfig.default._isDmnoServiceConfig) {
+          throw new Error('Non-root .dmno/config.mts must `export default defineDmnoService(...)`');
+        }
+
         service = new DmnoService({
           ...serviceInitOpts,
-          // TODO: check if the config file actually exported the right thing and throw helpful error otherwise
-          rawConfig: importedConfig.default as ServiceConfigSchema,
+          // NOTE - could actually be a DmnoServiceConfig or DmnoWorkspaceConfig
+          rawConfig: importedConfig.default as DmnoServiceConfig,
         });
 
         finishServiceLoadPlugins(service);

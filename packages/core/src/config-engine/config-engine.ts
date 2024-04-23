@@ -143,7 +143,7 @@ type ConfigItemDefinitionOrShorthand = ConfigItemDefinition | TypeExtendsDefinit
  * @category HelperMethods
  */
 
-export type WorkspaceConfig = {
+export type DmnoWorkspaceConfig = {
   /**
    * override root service name, will default to name from package.json
    */
@@ -159,7 +159,7 @@ export type WorkspaceConfig = {
  * @category HelperMethods
  */
 
-export type ServiceConfigSchema = {
+export type DmnoServiceConfig = {
   /** service name - if empty, name from package.json will be used */
   name?: string,
   /** name of parent service (if applicable) - if empty this service will be a child of the root service */
@@ -172,14 +172,17 @@ export type ServiceConfigSchema = {
   schema: Record<string, ConfigItemDefinitionOrShorthand>,
 };
 
-export function defineDmnoService(opts: ServiceConfigSchema) {
+export function defineDmnoService(opts: DmnoServiceConfig) {
   debug('LOADING SCHEMA!', opts);
-  // TODO: return initialized object
+  // we'll mark the object so we know it was initialized via defineDmnoWorkspace
+  (opts as any)._isDmnoServiceConfig = true;
   return opts;
 }
 
-export function defineDmnoWorkspace(opts: WorkspaceConfig) {
+export function defineDmnoWorkspace(opts: DmnoWorkspaceConfig) {
   debug('LOADING ROOT SCHEMA!', opts);
+  // we'll mark the object so we know it was initialized via defineDmnoWorkspace
+  (opts as any)._isDmnoWorkspaceConfig = true;
   return opts;
 }
 
@@ -590,7 +593,7 @@ export class DmnoService {
   /** path to the service itself */
   readonly path: string;
   /** unprocessed config schema pulled from config.ts */
-  readonly rawConfig?: ServiceConfigSchema;
+  readonly rawConfig?: DmnoServiceConfig;
   /** error encountered while _loading_ the config schema */
   readonly configLoadError?: ConfigLoadError;
   /** error within the schema itself */
@@ -608,14 +611,16 @@ export class DmnoService {
   private overrideSources = [] as Array<OverrideSource>;
 
   constructor(opts: {
-    isRoot: boolean,
     packageName: string,
     path: string,
-    rawConfig: ServiceConfigSchema | ConfigLoadError,
     workspace: DmnoWorkspace,
-  }) {
+  } & (
+    // TODO: this type difference should be applied to rawConfig too
+    // but they are currently close enough that it doesn't matter
+    { isRoot: true, rawConfig: DmnoWorkspaceConfig | ConfigLoadError, } |
+    { isRoot: false, rawConfig: DmnoServiceConfig | ConfigLoadError }
+  )) {
     this.workspace = opts.workspace;
-
     this.isRoot = opts.isRoot;
     this.packageName = opts.packageName;
     this.path = opts.path;

@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "keywords": [ ],
   "author": "",
-  "license": "ISC",
-  "scripts": { },
+  "license": "MIT",
+  "scripts": {
+    "dmno:dev": "dmno dev"
+  },
   "devDependencies": {
     "@dmno/1password-plugin": "link:../packages/plugins/1password-plugin",
-    "@dmno/encrypted-vault-plugin": "link:../packages/plugins/encrypted-vault-plugin",
-    "@dmno/core": "link:../packages/core"
+    "@dmno/core": "link:../packages/core",
+    "@dmno/encrypted-vault-plugin": "link:../packages/plugins/encrypted-vault-plugin"
   }
 }

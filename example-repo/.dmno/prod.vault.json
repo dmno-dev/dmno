@@ -3,16 +3,24 @@
   "keyName": "prod-2024-04-09",
   "items": {
     "root!VAULT_ITEM_1": {
-      "encryptedValue": "/PuweI2ACtQS7MQks2iXxOjtGHIRQ8/ULHkaOxyRTIXebQ==",
-      "updatedAt": "2024-04-09T01:20:31.530Z"
+      "encryptedValue": "cAfasGgfPeRVif6eJxyOXMrmQ7TrGPY2vZICMbrZEP3biyYKqnfQhAaCrpQu",
+      "updatedAt": "2024-04-23T19:43:59.120Z"
     },
     "root!VAULT_ITEM_WITH_SWITCH#staging": {
-      "encryptedValue": "4jVf1HAajgf7MVzkskWIWr5qrvaOf2mmn6sbj5X/zSdh5CYhfVJevI8PLVYrx/yqgOA0aP7aS1m9Rg==",
-      "updatedAt": "2024-04-09T03:25:16.127Z"
+      "encryptedValue": "iPyB5Fhah1CYJdXpv9O1FBrbaHzRr1vTGHntqRYAgjgywAOuGWWzVy1v",
+      "updatedAt": "2024-04-23T19:42:28.877Z"
     },
     "root!VAULT_ITEM_WITH_SWITCH#_default": {
-      "encryptedValue": "Iq+fcJzoJGM/lu64Oo3dEMfKlk5+g25ZMhavZbUYxNfy4sBdY2sxLAo=",
-      "updatedAt": "2024-04-09T03:58:06.075Z"
+      "encryptedValue": "44iHPdxe+nuMX3rcBEf6P/H6OgCINXczpZqWoUYpirORdN6/TWV5RnU7xK60hvcrYQ==",
+      "updatedAt": "2024-04-23T19:42:44.057Z"
+    },
+    "root!VAULT_ITEM_WITH_SWITCH#production/rootonly": {
+      "encryptedValue": "3Qd2RZ2rQeuLnidgp14SZDI64jqvv7TZgK8xSUeNKQS5VEpl9TN49DHLcQ==",
+      "updatedAt": "2024-04-23T19:42:16.418Z"
+    },
+    "root!VAULT_ITEM_WITH_SWITCH#production/val2": {
+      "encryptedValue": "ulgnwWQMXjQO1hPdDTEHK1r4tRcwdYEmlO6D22Cuy7c0TnGSsuCa",
+      "updatedAt": "2024-04-23T19:42:21.648Z"
     }
   }
 }

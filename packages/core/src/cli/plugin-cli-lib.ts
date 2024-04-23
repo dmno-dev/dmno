@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { Command, Option } from 'commander';
 import { createDeferredPromise } from '@dmno/ts-lib';
 import Debug from 'debug';
@@ -59,8 +60,17 @@ export function createDmnoPluginCli(opts: {
 
   const isReady = createDeferredPromise();
 
+  // reading name from package.json file
+  // TODO: maybe we can inject the plugin name somehow during the build process?
+  const errStack = new Error().stack!.split('\n');
+  const packagePath = errStack[2].replace(/.* at file:\/\//, '').replace(/\/dist\/.*$/, '');
+  const packageJsonPath = `${packagePath}/package.json`;
+  const packageJsonStr = readFileSync(packageJsonPath, 'utf-8');
+  const packageJson: { name: string } = JSON.parse(packageJsonStr);
+  const packageName = packageJson.name;
+
   const program = new Command('dmno plugin -p [pluginName] --')
-    .description('dmno plugin X cli') // TODO: figure out package name?
+    .description(`${packageName} cli`)
     .hook('preSubcommand', async (thisCommand, actionCommand) => {
       // wait for our "init" message to come over the fork IPC
       await isReady.promise;

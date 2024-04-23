@@ -11,8 +11,10 @@ export function addDocsCommand(program: DmnoCommand) {
         command: subCmd.name(),
         aliases: subCmd.aliases(),
         description: subCmd.description(),
-        examples: subCmd.examples,
         more: _.omit(subCmd, 'parent'),
+        ...subCmd instanceof DmnoCommand && {
+          examples: subCmd.examples,
+        },
       }));
       console.log(JSON.stringify(commandsSchema, null, 2));
       process.exit();

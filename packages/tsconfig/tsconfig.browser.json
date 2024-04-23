@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES6",
     "declaration": true,
     "declarationMap": true,
     "useDefineForClassFields": true,
-    "module": "ESNext",
+    "module": "ES6",
     "moduleResolution": "node",
     "strict": true,
     "jsx": "preserve",
@@ -13,7 +13,7 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "lib": [
-      "ESNext",
+      "ES6",
       "DOM",
       "dom.iterable"
     ],
