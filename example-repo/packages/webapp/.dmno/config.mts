@@ -102,6 +102,11 @@ export default defineDmnoService({
       value: (ctx) => !ctx.get('BOOLEAN_OPPOSITE'),
     },
 
+    SIMPLE_OBJECT: {
+      extends: 'simpleObject',
+      value: { foo: 1, bar: 'biz' },
+    },
+
     RANDOM_NUM: {
       extends: DmnoBaseTypes.number,
       description: 'random number that will change each time config resolution runs',

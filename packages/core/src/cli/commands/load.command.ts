@@ -2,9 +2,13 @@ import kleur from 'kleur';
 import _ from 'lodash-es';
 import CliTable from 'cli-table3';
 import { tryCatch } from '@dmno/ts-lib';
+import { outdent } from 'outdent';
+import boxen from 'boxen';
 import { DmnoCommand } from '../lib/DmnoCommand';
 
-import { formatError, formattedValue } from '../lib/formatting';
+import {
+  formatError, formattedValue, getItemSummary, joinAndCompact,
+} from '../lib/formatting';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 
@@ -166,50 +170,54 @@ program.action(async (opts: {
   // TODO: make isValid flag on service to work
   if (failingItems.length > 0) {
     console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your configuration is currently failing validation')}  🚨 🚨 🚨\n`);
-    console.log(kleur.gray('The following config item(s) are failing:\n'));
+    console.log(kleur.gray('Some of your config items are currently invalid:\n'));
 
-    const errorsTable = new CliTable({
-      // TODO: make helper to get column widths based on percentages
-      colWidths: [
-        Math.floor(TERMINAL_COLS * 0.25),
-        Math.floor(TERMINAL_COLS * 0.25),
-        Math.floor(TERMINAL_COLS * 0.5),
-      ],
-      wordWrap: true,
+    // const errorsTable = new CliTable({
+    //   // TODO: make helper to get column widths based on percentages
+    //   colWidths: [
+    //     Math.floor(TERMINAL_COLS * 0.25),
+    //     Math.floor(TERMINAL_COLS * 0.25),
+    //     Math.floor(TERMINAL_COLS * 0.5),
+    //   ],
+    //   wordWrap: true,
+    // });
+
+    // // header row
+    // errorsTable.push(
+    //   [
+    //     'Path',
+    //     'Value',
+    //     'Error(s)',
+    //   ].map((t) => kleur.bold().magenta(t)),
+    // );
+
+
+    // _.each(failingItems, (item) => {
+    //   let valueCellContents = formattedValue(item.resolvedValue, false);
+    //   if (item.resolvedRawValue !== item.resolvedValue) {
+    //     valueCellContents += kleur.gray().italic('\n------\ncoerced from\n');
+    //     valueCellContents += formattedValue(item.resolvedRawValue, false);
+    //   }
+
+    //   const errors = _.compact([
+    //     item.coercionError,
+    //     ...item.validationErrors || [],
+    //     item.resolutionError,
+    //   ]);
+
+    //   errorsTable.push([
+    //     item.key,
+    //     valueCellContents,
+    //     // errors?.map((err) => formatError(err)).join('\n'),
+    //     errors?.map((err) => err.message).join('\n'),
+    //   ]);
+    // });
+
+    _.each(service.config, (item) => {
+      console.log(getItemSummary(item));
     });
 
-    // header row
-    errorsTable.push(
-      [
-        'Path',
-        'Value',
-        'Error(s)',
-      ].map((t) => kleur.bold().magenta(t)),
-    );
-
-
-    _.each(failingItems, (item) => {
-      let valueCellContents = formattedValue(item.resolvedValue, false);
-      if (item.resolvedRawValue !== item.resolvedValue) {
-        valueCellContents += kleur.gray().italic('\n------\ncoerced from\n');
-        valueCellContents += formattedValue(item.resolvedRawValue, false);
-      }
-
-      const errors = _.compact([
-        item.coercionError,
-        ...item.validationErrors || [],
-        item.resolutionError,
-      ]);
-
-      errorsTable.push([
-        item.key,
-        valueCellContents,
-        // errors?.map((err) => formatError(err)).join('\n'),
-        errors?.map((err) => err.message).join('\n'),
-      ]);
-    });
-
-    console.log(errorsTable.toString());
+    // console.log(errorsTable.toString());
 
     process.exit(1);
   }
@@ -227,9 +235,15 @@ program.action(async (opts: {
   // console.log(service.config);
   if (opts.format === 'json') {
     console.log(JSON.stringify(valuesOnly));
-  } else {
+  } else if (opts.format === 'json-full') {
     // TODO: this includes sensitive info when using --public option
     console.dir(service.toJSON(), { depth: null });
+  } else {
+    console.log('\nConfig loaded successfully:\n');
+    _.each(service.config, (item) => {
+      console.log(getItemSummary(item));
+    });
+    console.log('');
   }
   process.exit(0);
 });

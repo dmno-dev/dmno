@@ -186,8 +186,11 @@ export function defineDmnoWorkspace(opts: DmnoWorkspaceConfig) {
   return opts;
 }
 
-
-
+// config item keys are all checked against this regex
+// currently it must start with a letter (to make it a valid js property)
+// and can only contain letters, number, and underscore
+// we may want to restrict "__" if we use that as the nesting separator for env var overrides?
+const VALID_ITEM_KEY_REGEX = /^[a-z]\w+$/i;
 
 export class ConfigPath {
   constructor(readonly path: string) { }
@@ -458,8 +461,13 @@ export class DmnoWorkspace {
 
       // process the regular config schema items
       for (const itemKey in service.rawConfig?.schema) {
-        const itemDef = service.rawConfig?.schema[itemKey];
-        service.addConfigItem(new DmnoConfigItem(itemKey, itemDef, service));
+        if (!itemKey.match(VALID_ITEM_KEY_REGEX)) {
+          service.schemaErrors.push(new SchemaError(`Invalid item key "${itemKey}"`));
+        } else {
+          const itemDef = service.rawConfig?.schema[itemKey];
+          service.addConfigItem(new DmnoConfigItem(itemKey, itemDef, service));
+        }
+
         // TODO: add dag node
       }
     }
