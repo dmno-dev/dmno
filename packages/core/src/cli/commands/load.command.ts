@@ -11,6 +11,7 @@ import {
 } from '../lib/formatting';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
+import { addCacheFlags } from '../lib/cache-helpers';
 
 const TERMINAL_COLS = process.stdout.columns - 10 || 100;
 
@@ -19,17 +20,21 @@ const program = new DmnoCommand('load')
   .description('Loads the resolved config for a service')
   .option('-f, --format <format>', 'format to output resolved config (ex. json)')
   .option('--public', 'only loads public (non-sensitive) values')
+  .option('--show-all', 'shows all items, even when config is failing')
   .example('dmno load', 'Loads the resolved config for the root service')
   .example('dmno load --service service1', 'Loads the resolved config for service1')
   .example('dmno load --service service1 --format json', 'Loads the resolved config for service1 in JSON format');
 
 addServiceSelection(program);
-
+addCacheFlags(program);
 
 program.action(async (opts: {
   service?: string,
   format?: string,
   public?: boolean,
+  showAll?: boolean,
+  skipCache?: boolean,
+  clearCache?: boolean,
 }, thisCommand) => {
   const ctx = getCliRunCtx();
 
@@ -169,8 +174,26 @@ program.action(async (opts: {
 
   // TODO: make isValid flag on service to work
   if (failingItems.length > 0) {
-    console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your configuration is currently failing validation')}  🚨 🚨 🚨\n`);
-    console.log(kleur.gray('Some of your config items are currently invalid:\n'));
+    console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline(`Configuration of service "${kleur.magenta(service.serviceName)}" is currently invalid `)}  🚨 🚨 🚨\n`);
+    console.log('Invalid items:\n');
+
+    _.each(failingItems, (item) => {
+      console.log(getItemSummary(item));
+      console.log();
+    });
+    if (opts.showAll) {
+      console.log();
+      console.log(joinAndCompact([
+        'Valid items:',
+        kleur.italic().gray('(remove `--show-all` flag to hide)'),
+      ]));
+      console.log();
+      const validItems = _.filter(service.config, (i) => !!i.isValid);
+      _.each(validItems, (item) => {
+        console.log(getItemSummary(item));
+      });
+    }
+
 
     // const errorsTable = new CliTable({
     //   // TODO: make helper to get column widths based on percentages
@@ -213,9 +236,6 @@ program.action(async (opts: {
     //   ]);
     // });
 
-    _.each(service.config, (item) => {
-      console.log(getItemSummary(item));
-    });
 
     // console.log(errorsTable.toString());
 

@@ -85,6 +85,7 @@
     "jsonc-parser": "^3.2.1",
     "kleur": "^4.1.5",
     "lodash-es": "^4.17.21",
+    "log-update": "^6.0.0",
     "mitt": "^3.0.1",
     "node-ipc": "npm:@achrinza/node-ipc@^10.1.10",
     "outdent": "^0.8.0",

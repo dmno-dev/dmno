@@ -1,6 +1,7 @@
 export * from './config-engine/config-engine';
 export * from './use-config';
 export * from './config-engine/base-types';
+export * from './config-engine/common-types';
 // TODO: probably want to clean up how these are exported
 export * from './config-engine/resolvers/resolvers';
 export * from './config-engine/resolvers/formula-resolver';

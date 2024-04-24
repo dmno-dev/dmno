@@ -47,7 +47,7 @@ export class ConfigServerClient {
 
   private ownedDmnoConfigServerProcess?: ChildProcess;
   private initOwnedConfigServer() {
-    this.ownedDmnoConfigServerProcess = spawn('pnpm', 'exec dmno dev'.split(' '), {
+    this.ownedDmnoConfigServerProcess = spawn('pnpm', 'exec dmno dev --silent'.split(' '), {
       stdio: 'inherit',
       env: {
         ...process.env,

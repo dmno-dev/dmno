@@ -11,11 +11,11 @@ type ColorMods = ColorMod | Array<ColorMod>;
 function applyMods(str: string, mods?: ColorMods) {
   if (!mods) return str;
   if (_.isArray(mods)) {
-    let k: any = kleur;
+    let modStr = str;
     _.each(mods, (mod) => {
-      k = k[mod]();
+      modStr = kleur[mod](modStr);
     });
-    return k(str);
+    return modStr;
   }
   return kleur[mods](str);
 }
@@ -26,7 +26,7 @@ export function formattedValue(val: any, showType = false) {
   let mods: ColorMods | undefined;
   if (_.isBoolean(val)) {
     strVal = val.toString();
-    mods = 'yellow';
+    mods = ['yellow', 'italic'];
     strType = 'boolean';
   } else if (_.isNumber(val)) {
     strVal = val.toString();
@@ -83,11 +83,13 @@ export function joinAndCompact(strings: Array<string | number | boolean | undefi
 export function getItemSummary(item: DmnoConfigItemBase) {
   const summary: Array<string> = [];
   const icon = item.coercionError?.icon || item.resolutionError?.icon || item?.validationErrors?.[0]?.icon || '✅';
+  // item.resolvedValue === undefined ? '✅' : '✅';
   const isSensitive = item.type.getDefItem('sensitive');
   const isRequired = item.type.getDefItem('required');
   summary.push(joinAndCompact([
     icon,
-    kleur[item.isValid ? 'green' : 'red'](item.key) + (isRequired ? kleur.yellow('*') : ''),
+    kleur[item.isValid ? 'cyan' : 'red'](item.key) + (isRequired ? kleur.magenta('*') : ''),
+
     // kleur.gray(`[type = ${item.type.getDefItem('typeLabel')}]`),
     isSensitive && ` 🔐${kleur.italic().gray('sensitive')}`,
   ]));
@@ -96,7 +98,7 @@ export function getItemSummary(item: DmnoConfigItemBase) {
     kleur.gray('   └'),
     isSensitive && item.resolvedValue
       // TODO: this logic should probably not live here...
-      ? `"${item.resolvedValue.toString().substring(0, 2)}${kleur.bold('░░░░░░░░░░░░░')}"`
+      ? `"${item.resolvedValue.toString().substring(0, 2)}${kleur.bold('▒'.repeat(10))}"` // ░▒▓
       : formattedValue(item.resolvedValue, false),
     // item.resolvedRawValue !== item.resolvedValue && kleur.gray().italic('(coerced)'),
 
@@ -114,8 +116,3 @@ export function getItemSummary(item: DmnoConfigItemBase) {
   });
   return summary.join('\n');
 }
-
-const DMNO_ASCII = outdent`
-  ┌─╮┌─╮╭─╮╭─╮
-  └─╯└─┘└─┘╰─╯
-`;

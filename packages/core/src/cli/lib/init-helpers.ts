@@ -92,7 +92,6 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
   const service = workspaceInfo.workspacePackages.find((s) => s.path === servicePath);
   if (!service) throw new Error('service not found');
 
-  console.log();
   console.log(boxen(
     [
       `Initializing DMNO in workspace ${service.isRoot ? 'root' : 'package'} - ${kleur.magenta(service.name)}`,
@@ -103,7 +102,6 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     },
   ));
   console.log();
-
 
   // hidden env flag to force overwriting existing files
   // might make this an actual cli option but not sure if needed
@@ -225,4 +223,5 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
       console.log(initSuccessMessage(`.gitignore ${createdGitIgnore ? 'created' : 'updated'} with dmno files!`, { path: gitIgnorePath }));
     }
   }
+  console.log('');
 }

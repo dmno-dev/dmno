@@ -10,9 +10,9 @@ import { getThisDirname } from './lib/this-file-path';
 
 const __dirname = getThisDirname(import.meta.url);
 
-console.time('dmno load');
+// console.time('dmno load');
 await loadProcessDmnoEnv();
-console.timeEnd('dmno load');
+// console.timeEnd('dmno load');
 
 // console.log(process.dmnoEnv);
 

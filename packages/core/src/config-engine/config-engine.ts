@@ -31,6 +31,7 @@ import { stringifyJsonWithCommentBanner } from '../lib/json-utils';
 const debug = Debug('dmno');
 
 type ConfigRequiredAtTypes = 'build' | 'boot' | 'run' | 'deploy';
+export type CacheMode = 'skip' | 'clear' | true;
 
 type ConfigContext = {
   get: (key: string) => any;
@@ -504,7 +505,12 @@ export class DmnoWorkspace {
   get cacheKeyFilePath() { return `${this.rootPath}/.dmno/cache-key.json`; }
   private valueCache: Record<string, CacheEntry> = {};
   private cacheLastLoadedAt: Date | undefined;
+  private cacheMode: CacheMode = true;
+  setCacheMode(cacheMode: typeof this.cacheMode) {
+    this.cacheMode = cacheMode;
+  }
   private async loadCache() {
+    if (this.cacheMode === 'skip') return;
     // might want to attach the CacheEntry to the workspace instead to get the key?
     // or we could always pass it around as needed
 
@@ -544,6 +550,7 @@ export class DmnoWorkspace {
       CacheEntry.encryptionKeyName = importedDmnoKey.keyName;
     }
 
+    if (this.cacheMode === 'clear') return;
     if (!fs.existsSync(this.cacheFilePath)) return;
     const cacheRawStr = await fs.promises.readFile(this.cacheFilePath, 'utf-8');
     const cacheRaw = parseJSONC(cacheRawStr) as SerializedCache;
@@ -559,6 +566,7 @@ export class DmnoWorkspace {
     this.cacheLastLoadedAt = new Date();
   }
   private async writeCache() {
+    if (this.cacheMode === 'skip') return;
     // we don't want to write a file if the cache has not changed because it will trigger vite to reload
     if (this.cacheLastLoadedAt && _.every(this.valueCache, (item) => item.updatedAt < this.cacheLastLoadedAt!)) {
       return;
@@ -573,12 +581,14 @@ export class DmnoWorkspace {
     await fs.promises.writeFile(this.cacheFilePath, serializedCacheStr, 'utf-8');
   }
   async getCacheItem(key: string, usedBy?: string) {
+    if (this.cacheMode === 'skip') return undefined;
     if (key in this.valueCache) {
       if (usedBy) this.valueCache[key].usedByItems.add(usedBy);
       return this.valueCache[key].value;
     }
   }
   async setCacheItem(key: string, value: string, usedBy?: string) {
+    if (this.cacheMode === 'skip') return undefined;
     this.valueCache[key] = new CacheEntry(key, value, { usedBy });
   }
 

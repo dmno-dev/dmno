@@ -10,6 +10,7 @@ import { formatError, formattedValue } from '../lib/formatting';
 import { executeCommandWithEnv } from '../lib/execute-command';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
+import { addCacheFlags } from '../lib/cache-helpers';
 
 const program = new DmnoCommand('run')
   .summary('Injects loaded config into an external command')
@@ -20,6 +21,7 @@ const program = new DmnoCommand('run')
   .example('dmno run --service service1 -- echo $SERVICE1_CONFIG', 'Runs the echo command with the resolved config for service1');
 
 addServiceSelection(program);
+addCacheFlags(program);
 
 
 program.action(async (_command, opts: {

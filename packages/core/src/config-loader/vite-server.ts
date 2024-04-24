@@ -63,7 +63,7 @@ export async function setupViteServer(
     root: workspaceRootPath,
     appType: 'custom',
     clearScreen: false,
-
+    logLevel: 'warn',
     plugins: [
       customPlugin,
     ],

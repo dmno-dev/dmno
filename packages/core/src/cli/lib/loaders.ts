@@ -89,7 +89,7 @@ export async function fallingDmnoLoader(
 export async function fallingDmnosAnimation(
   loadingText: string = '',
   loadedText: string = '',
-  totalTime = 5000,
+  totalTime = 1500,
 ) {
   if (loadingText) loadingText += ' ';
   if (loadedText) loadedText += ' ';
@@ -108,8 +108,10 @@ export async function fallingDmnosAnimation(
 
     let str = '';
     if (!isFalling) {
-      str = '▐'.repeat(currentCol)
-        + ' '.repeat(TERMINAL_COLS - currentCol);
+      for (let i = 0; i < currentCol; i++) {
+        if (i === 0) str += '👆';
+        else str += '▐';
+      }
     } else {
       for (let i = 0; i < TERMINAL_COLS; i++) {
         if (i === 0) str += '👉';
@@ -120,8 +122,7 @@ export async function fallingDmnosAnimation(
         else str += '▐';
       }
     }
-
-    process.stdout.write(gradientColorizer(str));
+    process.stdout.write(gradientColorizer(str + ' '.repeat(TERMINAL_COLS + 1 - str.length)));
 
     if (currentCol === TERMINAL_COLS) {
       if (!isFalling) {
@@ -133,14 +134,8 @@ export async function fallingDmnosAnimation(
           process.stdout.clearLine(0);
           process.stdout.cursorTo(0);
 
-          let str = '';
-          for (let i = 0; i < TERMINAL_COLS; i++) {
-            if (i < loadedText.length) {
-              str += loadedText.slice(i, i + 1);
-            } else {
-              str += '▂';
-            }
-          }
+          let str = loadedText;
+          str += '▂'.repeat(TERMINAL_COLS + 1 - str.length);
 
           process.stdout.write(gradientColorizer(str));
           process.stdout.write('\n');
@@ -152,3 +147,71 @@ export async function fallingDmnosAnimation(
 
   return deferred.promise;
 }
+
+
+export const DMNO_DEV_BANNER2 = gradient('#00FF0A', '#00C2FF').multiline(outdent`
+  ┌─╮╭─┬─╮╭─┬┐╭─╮ ┌─╮╭─┐┌┬┐
+  │╷││╷│╷││╷│││╷│ ││││ ┤│││
+  │╵│││╵││││╵││╵│ ││││ ┤│╵│
+  └─╯└┴─┴┘└┴─╯╰─╯○└─╯╰─┘╰─╯
+`);
+export const DMNO_DEV_BANNER = gradient('#00FF0A', '#00C2FF').multiline(outdent`
+  ┌─╮╭─┬─╮╭─┬┐╭─╮ ┌─╮╭─┐┌┬┐ ╭───────────╮ 
+  │╷││╷│╷││╷│││╷│ ││││ ┤│││ │ ● ● │ ●   │ 
+  │╵│││╵││││╵││╵│ ││││ ┤│╵│ │ ● ● │   ● │ 
+  └─╯└┴─┴┘└┴─╯╰─╯○└─╯╰─┘╰─╯ ╰───────────╯ 
+`);
+
+// let DOMINO_W_D = gradient('#00FF0A', '#00C2FF').multiline(outdent`
+//   ╭───────────╮
+//   │ ● ● │ ┌─╮ │
+//   │ ● ● │ └─╯ │
+//   ╰───────────╯
+// `);
+const EMPTY_DOMINO = outdent`
+  ╭───────────╮
+  │     │     │
+  │     │     │
+  ╰───────────╯
+`;
+const EMPTY_DOMINO_LINES = gradient('#00FF0A', '#00C2FF').multiline(EMPTY_DOMINO).split('\n');
+const dominoWithDArray = structuredClone(EMPTY_DOMINO_LINES);
+dominoWithDArray[1] = spliceString(dominoWithDArray[1], 193, 50, kleur.green('┌─╮'));
+dominoWithDArray[2] = spliceString(dominoWithDArray[2], 193, 50, kleur.green('└─╯'));
+dominoWithDArray[1] = spliceString(dominoWithDArray[1], 55, 50, kleur.cyan('○ ○'));
+dominoWithDArray[2] = spliceString(dominoWithDArray[2], 55, 50, kleur.cyan('○ ○'));
+
+
+
+// splicing with ansi codes is very finnicky... will need better tooling, but this helps a bit
+// for (let i = 0; i < EMPTY_DOMINO_LINES[1].length; i++) {
+//   const dominoWithDArray = structuredClone(EMPTY_DOMINO_LINES);
+//   // dominoWithDArray[1] = spliceString(dominoWithDArray[1], i, 50, kleur.white('┌─╮'));
+//   // dominoWithDArray[2] = spliceString(dominoWithDArray[2], i, 50, kleur.white('└─╯'));
+//   dominoWithDArray[1] = spliceString(dominoWithDArray[1], i, 50, kleur.white('● ●'));
+//   dominoWithDArray[2] = spliceString(dominoWithDArray[2], i, 50, kleur.white('● ●'));
+//   console.log(i);
+//   console.log(dominoWithDArray.join('\n'));
+// }
+
+
+// dominoWithDArray[1] = spliceString(dominoWithDArray[1], 172, 3, kleur.white('┌─╮'));
+// dominoWithDArray[2] = spliceString(dominoWithDArray[2], 172, 3, kleur.white('└─╯'));
+export const DOMINO_WITH_D = dominoWithDArray.join('\n');
+
+export default function spliceString(string: string, index: number, count: number, insert: string) {
+  const array = _.toArray(string);
+  array.splice(index, count, insert);
+  return array.join('');
+}
+
+export function getDmnoMascot(message: string = '') {
+  return `
+  ╭─────────────────╮  
+  │        ╷        │ ┏  ${message ? '💬' : ''}${message}
+┏━┥   ⬤    │   ⬤    ┝━┛
+┻ │        ╯▃▖      │  
+  ╰─────╥─────╥─────╯  
+        ╜     ╙        `;
+}
+
