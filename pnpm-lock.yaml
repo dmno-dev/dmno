@@ -159,15 +159,6 @@ importers:
       '@astrojs/vue':
         specifier: ^4.1.0
         version: 4.1.0(astro@4.7.0)(vite@5.2.10)(vue@3.4.25)
-      '@dmno/1password-plugin':
-        specifier: link:../plugins/1password-plugin
-        version: link:../plugins/1password-plugin
-      '@dmno/astro-integration':
-        specifier: link:../integrations/astro
-        version: link:../integrations/astro
-      '@dmno/core':
-        specifier: link:../core
-        version: link:../core
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
@@ -180,9 +171,6 @@ importers:
       astro:
         specifier: ^4.7.0
         version: 4.7.0(@types/node@20.12.7)(typescript@5.4.5)
-      astro-expressive-code:
-        specifier: ^0.35.2
-        version: 0.35.2(astro@4.7.0)
       astro-iconify:
         specifier: ^1.2.0
         version: 1.2.0
@@ -214,6 +202,12 @@ importers:
         specifier: ^3.3.4
         version: 3.4.25(typescript@5.4.5)
     devDependencies:
+      '@dmno/1password-plugin':
+        specifier: link:../plugins/1password-plugin
+        version: link:../plugins/1password-plugin
+      '@dmno/astro-integration':
+        specifier: link:../integrations/astro
+        version: link:../integrations/astro
       dmno:
         specifier: link:../core
         version: link:../core
@@ -1122,11 +1116,6 @@ packages:
     engines: {node: '>=10'}
     dev: false
 
-  /@ctrl/tinycolor@4.1.0:
-    resolution: {integrity: sha512-WyOx8cJQ+FQus4Mm4uPIZA64gbk3Wxh0so5Lcii0aJifqwoVOlfFtorjLE0Hen4OYyHZMXDWqMmaQemBhgxFRQ==}
-    engines: {node: '>=14'}
-    dev: false
-
   /@dabh/diagnostics@2.0.3:
     resolution: {integrity: sha512-hrlQOIi7hAfzsMqlGSFyVucrx38O+j6wiGOf//H2ecvIEqYN4ADBSS2iLMh5UFyDunCNniUIPk/q3riFv45xRA==}
     dependencies:
@@ -1813,31 +1802,11 @@ packages:
       postcss-nested: 6.0.1(postcss@8.4.38)
     dev: false
 
-  /@expressive-code/core@0.35.2:
-    resolution: {integrity: sha512-lInKOxMvcvVTrRB8qjsH6PDQ5+rz9o3lyoUh+2xxvdWmnpcTE7JVWWcVfDrLfEXZb+6KQWlWqD0J50u1+xe8Rg==}
-    dependencies:
-      '@ctrl/tinycolor': 4.1.0
-      hast-util-select: 6.0.2
-      hast-util-to-html: 9.0.1
-      hast-util-to-text: 4.0.2
-      hastscript: 9.0.0
-      postcss: 8.4.38
-      postcss-nested: 6.0.1(postcss@8.4.38)
-      unist-util-visit: 5.0.0
-      unist-util-visit-parents: 6.0.1
-    dev: false
-
   /@expressive-code/plugin-frames@0.33.5:
     resolution: {integrity: sha512-lFt/gbnZscBSxHovg4XiWohp5nrxk4McS6RGABdj6+0gJcX8/YrFTM23GKBIkaDePxdDidVY0jQYGYDL/RrQHw==}
     dependencies:
       '@expressive-code/core': 0.33.5
       hastscript: 7.2.0
-    dev: false
-
-  /@expressive-code/plugin-frames@0.35.2:
-    resolution: {integrity: sha512-ABj9WQinforkAvBzCTOd3puuGWaKm1mzts7yck1YNyfh4uQGLxabvjKIj69WYA75+Ccd0edy0b1QzIqwecJpzg==}
-    dependencies:
-      '@expressive-code/core': 0.35.2
     dev: false
 
   /@expressive-code/plugin-shiki@0.33.5:
@@ -1847,25 +1816,12 @@ packages:
       shiki: 1.3.0
     dev: false
 
-  /@expressive-code/plugin-shiki@0.35.2:
-    resolution: {integrity: sha512-V+pAhT3m0xAbwHvDT9DLpZLkksYKeNNTDIEHE0VHoZfw9IibvG6QcrH8FjMQnxv1DfvWjkYV4wob7/TZKlGU6w==}
-    dependencies:
-      '@expressive-code/core': 0.35.2
-      shiki: 1.3.0
-    dev: false
-
   /@expressive-code/plugin-text-markers@0.33.5:
     resolution: {integrity: sha512-JxSHL1MGrJAPNaUMjFXex3K+9NJDbfew9H6PmX8LQ+fm9VNQdtBYTAz/x7nqOk7bkTrtAZK5RfDqUfb8U5M+2A==}
     dependencies:
       '@expressive-code/core': 0.33.5
       hastscript: 7.2.0
       unist-util-visit-parents: 5.1.3
-    dev: false
-
-  /@expressive-code/plugin-text-markers@0.35.2:
-    resolution: {integrity: sha512-YD/QhTBoCGXWCE40BD3Wg1XXAR0eVVFYL0TZaD8JjdRqVDmmRtZmhiG+/luXfbe9xZy5qEw4ZFXiQrJkUH6DJQ==}
-    dependencies:
-      '@expressive-code/core': 0.35.2
     dev: false
 
   /@fastify/accept-negotiator@1.1.0:
@@ -5148,15 +5104,6 @@ packages:
       remark-expressive-code: 0.33.5
     dev: false
 
-  /astro-expressive-code@0.35.2(astro@4.7.0):
-    resolution: {integrity: sha512-euLMzMBRyNjniHIdla2yjBEFVKbYJxo5jdzsFB/2M/nf3hgKs9o6VU41HEvKEnk5Pf2NhFtgUGGwrIrjwuHhyA==}
-    peerDependencies:
-      astro: ^4.0.0-beta || ^3.3.0
-    dependencies:
-      astro: 4.7.0(@types/node@20.12.7)(typescript@5.4.5)
-      rehype-expressive-code: 0.35.2
-    dev: false
-
   /astro-iconify@1.2.0:
     resolution: {integrity: sha512-arLDiSop3DAHHS30raZysspkz5MO9moJJZ4rJk1Ty+4W1jZDa00Jme0LrnRJRDB6BB2EDTxC553fo20yz3MeYw==}
     dependencies:
@@ -7660,15 +7607,6 @@ packages:
       '@expressive-code/plugin-text-markers': 0.33.5
     dev: false
 
-  /expressive-code@0.35.2:
-    resolution: {integrity: sha512-Cc4W+DqnnULYnia42UrfRlqshCL2vci/X9EUSutiz6PK6+vNNXrG3c0BQmBJr+nRj0lde9F/O1IxZXAK9UBZ0w==}
-    dependencies:
-      '@expressive-code/core': 0.35.2
-      '@expressive-code/plugin-frames': 0.35.2
-      '@expressive-code/plugin-shiki': 0.35.2
-      '@expressive-code/plugin-text-markers': 0.35.2
-    dev: false
-
   /ext-list@2.2.2:
     resolution: {integrity: sha512-u+SQgsubraE6zItfVA0tBuCBhfU9ogSRnsvygI7wht9TS510oLkBRXBsqopeUG/GBOIQyKZO9wjTqIu/sf5zFA==}
     engines: {node: '>=0.10.0'}
@@ -8832,16 +8770,6 @@ packages:
 
   /hastscript@8.0.0:
     resolution: {integrity: sha512-dMOtzCEd3ABUeSIISmrETiKuyydk1w0pa+gE/uormcTpSYuaNJPbX1NU3JLyscSLjwAQM8bWMhhIlnCqnRvDTw==}
-    dependencies:
-      '@types/hast': 3.0.4
-      comma-separated-tokens: 2.0.3
-      hast-util-parse-selector: 4.0.0
-      property-information: 6.5.0
-      space-separated-tokens: 2.0.2
-    dev: false
-
-  /hastscript@9.0.0:
-    resolution: {integrity: sha512-jzaLBGavEDKHrc5EfFImKN7nZKKBdSLIdGvCwDZ9TfzbF2ffXiov8CKE445L2Z1Ek2t/m4SKQ2j6Ipv7NyUolw==}
     dependencies:
       '@types/hast': 3.0.4
       comma-separated-tokens: 2.0.3
@@ -12847,12 +12775,6 @@ packages:
     dependencies:
       rc: 1.2.8
     dev: true
-
-  /rehype-expressive-code@0.35.2:
-    resolution: {integrity: sha512-ydaCdmRW9mPDt8TUh69HzS7E7kQZcwi0Z4nZyWTUjX3nVPx3kA8TAHe/oWjtMGSsIP+7xAybrCpNNNEMXmzWqQ==}
-    dependencies:
-      expressive-code: 0.35.2
-    dev: false
 
   /rehype-parse@9.0.0:
     resolution: {integrity: sha512-WG7nfvmWWkCR++KEkZevZb/uw41E8TsH4DsY9UxsTbIXCVGbAs4S+r8FrQ+OtH5EEQAs+5UxKC42VinkmpA1Yw==}
