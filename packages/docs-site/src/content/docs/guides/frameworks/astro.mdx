@@ -4,7 +4,7 @@ title: Astro
 
 import TabbedCode from '@/components/TabbedCode.astro';
 
-At DMNO we love Astro (this very site is built with it). That's why we're very excited to make it easier (and safer) to use environment variables in all of your Astro apps, whether it's on the client or the server!
+At DMNO we _love_ Astro (this very site is built with it). That's why we're very excited to make it easier (and safer) to use environment variables in all of your Astro apps, whether it's on the client or the server!
 
 To get started install `dmno` and the `astro` plugin: 
 
@@ -22,33 +22,112 @@ This will create a `.dmno` directory in the root of your project with a `config.
 
 See our [Schema Guide](/guides/schema) for the specifics of how to write your first DMNO schema.
 
-### Add the plugin to your config
+## Setup
 
-Finally, in your `astro.config.mjs`, import the plugin, and add to `defineConfig`: 
+### Install the dmno astro integration
 
-```js
+Using astro's add command:
+
+<TabbedCode command="astro add @dmno/astro-integration" />
+
+#### Manual install instructions
+
+Install dmno itself and the astro integration
+<TabbedCode packageName="@dmno/astro-integration @dmno/config-engine" />
+
+Update your `astro.config.mjs` - import the plugin, and add to `defineConfig`: 
+
+```diff lang="mjs" title="astro.config.mjs"
 import { defineConfig } from 'astro/config';
-import dmnoAstroIntegration from '@dmno/astro-integration';
++import dmnoAstroIntegration from '@dmno/astro-integration';
 
 export default defineConfig({
-  // other config
-  output: 'hybrid',
+  // ...
   integrations: [
++    dmnoAstroIntegration(),
     // ... other plugins
-    dmnoAstroIntegration(),
   ],
 });
 ```
 
-### Use your config items
+### Set up Typescript
 
-Now in your application code you'll have access to a global object with all of your _public_ config items (those which aren't marked `sensitive`) called `DMNO_PUBLIC_CONFIG`. 
+Astro is built with TypeScript, and so is DMNO. This means that you get full type completion and intellisense for your config items. You just need to make sure the typescript compiler knows about them
 
-```js
-const myConfigItem = DMNO_PUBLIC_CONFIG.MY_ITEM;
+By default, astro's generated tsconfig does not explicitly include any specific files, but to get DMNO_CONFIG autocompletion working everywhere, we'll have to specify the files we want to include, as well as reference the generated types.
+
+
+```diff lang="json" title="tsconfig.json" {"You only need to add the file types you are using:": 4} {"Add these references to dmno's auto-generated config schema:": 9}
+{
+  "extends": "astro/tsconfigs/strict",
++  "include": [
+
++    "src/**/*.astro",
++    "src/**/*.ts", "src/**/*.js", "src/**/*.d.ts",
++    "src/**/*.jsx", "src/**/*.tsx",
++    "src/**/*.mdx",
+
++    "./.dmno/.typegen/global.d.ts",
++    "./.dmno/.typegen/global-public.d.ts",
++    "./.dmno/.typegen/node.d.ts"
++  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/components/*": [
+        "src/components/*"
+      ],
+      "@/utils/*": [
+        "src/utils/*"
+      ]
+    }
+  }
+}
 ```
 
-### Client/Server/SSR/etc 
+After that, DMNO will automatically update your definitions as you add new items to your schema. 🎉
+
+
+## Accessing config
+
+DMNO globally injects your config into your application. You can access it via:
+- `DMNO_CONFIG` - includes _all_ of your config items
+- `DMNO_PUBLIC_CONFIG` - includes only items not marked with `sensitive: true`
+
+Which you can access (with full type-safety and autocompletion) in templates and code.
+
+:::tip[Why globals?]
+It's really no different than using `process.env` or `import.meta.env` - but by using our own variables, we can provide a more consistent experience and do some magic...
+:::
+
+Now in your application code you'll have access to a global object with all of your _public_ config items (those which aren't marked ) called `DMNO_PUBLIC_CONFIG`. 
+
+```js
+const mySecretItem = DMNO_CONFIG.SECRET_API_KEY;
+const nonSecretItem = DMNO_PUBLIC_CONFIG.PUBLISHABLE_ITEM;
+```
+
+### Client vs Server/SSR/Security/etc 
+
+In theory, you should only access `DMNO_PUBLIC_CONFIG` on the _client_, and you can access both `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG` on the server.
+
+Sounds easy, right? Except in a world of hybrid client/server rendering and rehydration, and when you may actually need sensitive config during a server-side render, it can be hard to keep track of what is getting rendered where...
+
+So we make it easy for you:
+
+- In the browser/client, you only have access to `DMNO_PUBLIC_CONFIG` and if you try to access `DMNO_CONFIG`, we'll throw an error 🛑
+- We also inject a middleware that detects any leaked secrets, just in case you leaked a secret into ANYTHING getting sent over the wire...
+
+
+### Static vs dynamic
+
+In general accessing `DMNO_PUBLIC_CONFIG.FOO` is treated as static, and these vars get rewritten (by vite) at build time. This can be useful because it affects tree-shaking and can remove unreachable code.
+
+Meanwhile `DMNO_CONFIG.BAR` is not rewritten at build time and will take the latest config into account - including overrides from system environment vars on the server at boot time. This can be useful for running a single build in different contexts...
+
+We've got some tricks up our sleeve to help give you more control over this... coming very soon!
+
+
 
 Astro provides a few different [rendering modes](https://docs.astro.build/en/basics/rendering-modes/), and allows you to create [islands](https://docs.astro.build/concepts/islands/) of interactivity. 
 
@@ -61,13 +140,93 @@ By following these rules, you can ensure that your config is only exposed where 
 
 > INSERT SAMPLE CODE OR GIF
 
-### All the right typescript
 
-Astro is built with TypeScript, and so is DMNO. This means that you get full type completion and intellisense for your config items. You just need to add them to `src/.env.d.ts` (or wherever you keep your types) and you're good to go. 
 
-```typescript title=".env.d.ts"
-/// <reference types="../.dmno/.typegen/global-public.d.ts" />
-/// <reference types="../.dmno/.typegen/node.d.ts" />
+---
+
+## Additional Recipes
+
+### Accessing DMNO_CONFIG within astro.config.mjs
+It's often useful to be able to access configuration / env vars within your astro config.
+
+Without DMNO, it's a bit awkward... but DMNO makes it dead simple - in fact it's already available!
+
+However to get TS autocompletion in our .mjs file, we need to add a triple-slash reference to the dmno generated types.
+
+```diff lang="mjs" title="astro.config.mjs"
++/// <reference path="./.dmno/.typegen/global.d.ts" />
+import { defineConfig } from 'astro/config';
+import dmnoAstroIntegration from '@dmno/astro-integration';
+
+export default defineConfig({
+  // ...
+  integrations: [
+    dmnoAstroIntegration(),
+    starlight({
+      social: {
+        // now we can use our config instead of hard-coding values 🥳
+-        github: 'https://gihthub.com/dmno-dev/core',
++        github: DMNO_CONFIG.GITHUB_REPO_URL,
+      //...
+  ],
+});
 ```
 
-After that, DMNO will automatically update your definitions as you add new items to your schema. 🎉
+
+
+### Injecting config into markdown files
+
+Markdown files are processed by astro but treated as just pure content without evaluating any javsascript... So if you want to inject any DMNO_CONFIG values, you'll need to use MDX and follow some guidelines:
+
+- install the [@astrojs/
+mdx integration](https://docs.astro.build/en/guides/integrations-guide/mdx/) (`npx astro add mdx`)
+- rename your `.md` file into a `.mdx` file
+
+Then you need to use JSX within your markdown content:
+
+For injecting text, that just looks like
+```mdx
+Some text: { DMNO_PUBLIC_CONFIG.SOME_VAR }
+```
+
+For links, you'll need to use the html/jsx version rather than a markdown style link:
+```mdx {"🥳 This works!": 1} del={"🥵 These dont work": 4-7}
+.
+  <a href={DMNO_PUBLIC_CONFIG.DISCORD_JOIN_URL}>Discord</a>
+
+
+  [Discord](DMNO_PUBLIC_CONFIG.DISCORD_JOIN_URL)
+  [Discord]({DMNO_PUBLIC_CONFIG.DISCORD_JOIN_URL})
+  [Discord]({ DMNO_PUBLIC_CONFIG.DISCORD_JOIN_URL })
+
+
+```
+
+
+### Injecting config into inline script tags
+Another case where astro may not process the code you write and inject DMNO_CONFIG is within the body of an inline script. Attributes do work though, so here is one workaround you can use:
+
+**GoogleAnalytics.astro**
+```diff lang="jsx"
+<script
+  type="text/partytown"
+  async
+-  src="https://www.googletagmanager.com/gtag/js?id=G-12345"
++  src=`https://www.googletagmanager.com/gtag/js?id=${DMNO_PUBLIC_CONFIG.GOOGLE_TAG_MANAGER_ID}`
+></script>
+
+<script
+  type="text/partytown"
++  gtmid={DMNO_PUBLIC_CONFIG.GOOGLE_TAG_MANAGER_ID}
+>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() {
+    dataLayer.push(arguments);
+  }
+  gtag("js", new Date());
+  // we can reference the attributes of the current script tag
+-  gtag("config", "G-12345");
++  gtag("config", document.currentScript.getAttribute("gtmid"));
+</script>
+```
+
