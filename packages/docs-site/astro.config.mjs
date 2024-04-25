@@ -15,9 +15,12 @@ export default defineConfig({
       src: "./src/assets/square-logo.svg"
     },
     social: {
-      github: "https://github.com/dmno-dev"
+      github: "https://github.com/dmno-dev",
+      discord: "https://discord.gg/Q9GW2PzD"
     },
-    plugins: [starlightBlog(), starlightLinksValidator()],
+    plugins: [starlightBlog({
+      title: "console.blog()",
+    }), starlightLinksValidator()],
     pagination: false,
     head: [
       {
@@ -42,46 +45,64 @@ export default defineConfig({
         },
       }
     ],
-    sidebar: [{
+    sidebar: [
+      {
       label: "Get Started",
-      items: [{
+      items: [
+        {
           label: "What is DMNO?",
           link: "/get-started/what-is-dmno"
-      },{
-        label: "Quickstart",
-        link: "/get-started/quickstart"
-      }, {
-        label: "Concepts",
-        link: "/get-started/concepts"
-      }]
+        },
+        {
+          label: "Quickstart",
+          link: "/get-started/quickstart"
+        }, 
+        {
+          label: "Concepts",
+          link: "/get-started/concepts"
+        }, 
+        {
+          label: "Security",
+          link: "/get-started/security"
+        }]
       }, {
       label: "Guides",
-      items: [{
+      items: [
+        {
           label: "Schema",
           link: "/guides/schema"
-        }, {
+        }, 
+        {
           label: "Repo structure",
           link: "/guides/repo"
-        }]
+        },
+        {
+          label: "Incremental Adoption",
+          link: "/guides/incremental-adoption"
+        }, 
+        {
+          label: "Multiple Environments",
+          link: "/guides/multi-env"
+        },
+      ]
       },{
-        label: "Secrets",
+        label: "Plugins",
+        badge: "New", 
         items: [{
+          label: "Overview",
+          link: "/guides/plugins/overview"
+        },
+        {
           label: "Encrypted Vaults",
-          link: "/guides/secrets/encrypted-vault",
-          badge: {
-            text: "WIP",
-            variant: "caution"
-          },
-        }, {
+          link: "/guides/plugins/encrypted-vault",
+        }, 
+        {
           label: "1Password",
-          link: "/guides/secrets/1password",   
-          badge: {
-            text: "WIP",
-            variant: "caution"
-          },
+          link: "/guides/plugins/1password",   
         }]
       }, {
         label: "Integrations",
+        badge: "New",
         items: [{
           label: "Next.js",
           link: "/guides/frameworks/nextjs/"
@@ -91,7 +112,10 @@ export default defineConfig({
         }, {
           label: "Astro",
           link: "/guides/frameworks/astro/"
-        },
+        },{
+          label: "Node.js (Express, Koa, etc.)",
+          link: "/guides/frameworks/node/"
+        }, 
         // {
         //   label: "Vercel",
         //   link: "/guides/deployment/vercel/"
@@ -105,9 +129,11 @@ export default defineConfig({
         //   label: "Render",
         //   link: "/guides/deployment/render/"
         // }
-      ]}, {
+      ]}, 
+      {
       label: "Reference",
-      items: [{
+      items: [
+        {
         label: 'config-engine',
         items: [{
           label: 'Installation',
@@ -118,12 +144,40 @@ export default defineConfig({
         }, {
           label: 'Helper Methods',
           link: '/reference/config-engine/helper-methods/'
-        }, {
+        }],
+        },
+        {
           label: 'CLI',
-          link: '/reference/config-engine/dmno-cli/'
-        }]
-      },]
-    }]
+          items: [
+            {
+              label: 'Commands',
+              link: '/reference/cli/commands'
+            },
+            {
+              label: 'init',
+              link: '/reference/cli/init'
+            },
+            {
+              label: 'load',
+              link: '/reference/cli/load'
+            },
+            {
+              label: 'dev',
+              link: '/reference/cli/dev'
+            },
+            {
+              label: 'run',
+              link: '/reference/cli/run'
+            },
+            {
+              label: 'plugin',
+              link: '/reference/cli/plugin'
+            },
+          ]
+        },
+      ]
+      },
+    ],
   }), vue({
     // jsx: true,
   }), robotsTxt({

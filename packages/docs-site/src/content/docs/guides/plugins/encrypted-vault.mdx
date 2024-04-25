@@ -1,0 +1,111 @@
+---
+title: DMNO Encrypted Vaults
+---
+
+import TabbedCode from '@/components/TabbedCode.astro';
+
+:::caution
+THIS NEEDS TO BE UPDATED
+:::
+
+## Install
+
+Install the package: 
+
+<TabbedCode packageName="@dmno/encrypted-vault-plugin" />
+
+:::tip
+Run this in the root if you want the plugin to be shared, otherwise run it in the specific service's directory.
+:::
+
+## Initialize the plugin
+
+Initialize the plugin in the root (or service if not shared). Note the `vault/prod` alias, which we can refer to in other services or in the CLI. This is useful if you have multiple vaults.
+
+Also, note the `configPath` function. This is a helper function that will look up the value of the key that contains the key used to encrypt/decrypt the vault. This is useful for keeping the key out of the codebase. It will need to live in your `.env.local` file, or in an environment variable.
+
+```typescript title="[root]/config.mts"
+import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
+
+const MyProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
+  key: configPath('DMNO_VAULT_KEY'),
+});
+
+
+export default defineDmnoWorkspace({
+  schema: {
+    DMNO_VAULT_KEY: {
+      extends: EncryptedVaultTypes.encryptionKey,
+      // NOTE - the type itself is already marked as secret
+    },
+  },
+});
+```
+
+If your plugin was initiatized in root and you need to use in a child service, inject the already configured plugin: 
+
+```typescript title="services/child-service/config.mts"
+import { EncryptedVaultDmnoPlugin } from '@dmno/encrypted-vault-plugin';
+
+const MyVault = EncryptedVaultDmnoPlugin.injectInstance('vault/prod'); // same "instance name" it was created with
+```
+
+-----
+
+## Initialize the vault and key
+
+<TabbedCode command="pnpm exec dmno plugin -p vault -- setup" />
+
+:::tip
+If you prefer to use the CLI interactively, you can simply run `pnpm exec dmno plugin` and follow thue prompts.
+:::
+
+This will: 
+- detect if the vault is configured but has no key value
+- detect if vault file is empty/exists
+- create new a key if needed
+
+
+## Add vault items to your schema
+
+```typescript title="config.mts"
+{
+  // simple case example
+  SUPER_SECRET_ITEM: {
+    value: MyProdVault.item(),
+  },
+  ITEM_WITH_PROD_ONLY_SECRET: {
+    value: toggleByNodeEnv({
+      _default: 'not-a-secret',
+      staging: NonProdVault.item(), // reference to another vault
+      production: MyProdVault.item(),
+    })
+  },
+}
+```
+
+## Fill the vault with your secrets
+
+Add encrypted values to the vault: 
+
+<TabbedCode command="pnpm exec dmno plugin -p vault -- set-item" />
+
+> **TODO** add tape gif
+
+## Rotate the vault key
+
+<TabbedCode command="pnpm exec dmno plugin -p vault -- rotate-key" />
+
+This will:
+- generate a new key, and share it (similar to the initial setup)
+- re-encrypts all the values in the vault with the new key
+
+
+## Accessing an Existing Vault
+
+If you're joining a project that already has a vault set up, you'll will need to get the key from a coworker. 
+
+:::tip
+Coming soon, you will be able to use the CLI to request the key from a coworker. 
+:::
+

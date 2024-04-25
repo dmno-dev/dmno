@@ -15,7 +15,10 @@ import TabbedCode from '@/components/TabbedCode.astro'
 
     Run this command in the root of your project:
     <TabbedCode command="dmno init" />
-    This will create a `.dmno` folder in the root of your project with a `config.mts` file. It will produce a file tree that looks something like this:
+
+    {/* MAYBE INSERT TAPE GIF */}
+
+    This will create a `.dmno` folder in the root of your project (and any additional services of your choice) with a `config.mts` file. It will produce a file tree that looks something like this:
 
     <FileTree>
     - / (root of your project)
@@ -33,6 +36,8 @@ import TabbedCode from '@/components/TabbedCode.astro'
 
 3. **Start the development server**
     <TabbedCode command="dmno dev" />
+
+    {/* DO WE WANT TO REPLACE THIS WITH `dmno run` for their service(s) */}
 
 4. **Write your schema**
 
@@ -52,7 +57,9 @@ import TabbedCode from '@/components/TabbedCode.astro'
 
     `const myConfigItem = DMNO_CONFIG.MY_CONFIG_ITEM;`
 
-    For more information on how to integrate your config items, check out the framework-specific guides. 
+    For more information on how to integrate your config items, check out the framework-specific guides in the sidebar.
+
+    {/* add list of guides? */}
 
 6. **Deploy your project**
 
@@ -72,12 +79,10 @@ import TabbedCode from '@/components/TabbedCode.astro'
     ```json
     {
       "scripts": {
-        "deploy": "dmno run deploy-my-thing"
+        "deploy": "dmno run -- deploy-my-thing"
       }
     }
       ```
-    
-    For more on the specifics of a particular platform, follow the deployment guides for the platform of your choice. 
 
 </Steps>
 

@@ -4,7 +4,7 @@ title: DMNO Schema Guide
 
 import { FileTree } from '@astrojs/starlight/components'
 
-If you haven't already, follow our [Quickstart](/get-started/quickstart) guide to get started with DMNO. Once you're set up and ready to go, let's dive in to writing a full schema for your project.
+If you haven't already, follow our [Quickstart](/get-started/quickstart) guide to get started with DMNO. Once you're set up and ready to go, let's dive in to writing a full schema for your project. You can also check out a fully fleshed out [sample schema](/get-started/sample) to see all the different options available to you.
 
 ## Project Structure
 
@@ -43,7 +43,7 @@ import {
   defineDmnoWorkspace,
   DmnoVendorTypes,
   DmnoBaseTypes,
-  switchByDmnoEnv,
+  switchByNodeEnv,
 } from '@dmno/dmno-core';
 
 export default defineDmnoWorkspace({
@@ -62,7 +62,7 @@ export default defineDmnoWorkspace({
       extends: DmnoBaseTypes.email,
       description: 'The email address for customer service',
       // change the value based on the environment
-      value: switchByDmnoEnv({
+      value: switchByNodeEnv({
         _default: 'test@test.com',
         staging: 'staging@test.com',
         production: 'production@test.com',
@@ -71,6 +71,16 @@ export default defineDmnoWorkspace({
   },
 });
 ```
+
+In this example, we're defining a few different types of schema items:
+  - `GOOGLE_ANALYTICS_ID` is a required string
+  - `STRIPE_PUB_KEY` is a Stripe publishable key, which uses a custom type provided by DMNO. This adds things like validation and type checking, specific to this type of Stripe key. 
+  - `CUSTOMER_SERVICE_EMAIL` is an email address, and we're changing the value based on the environment
+
+:::tip
+For more on environment-specific configuration, see our [Multi-Environment Configuration](/guides/multi-env) guide.
+:::
+
 
 ## Service config
 
@@ -130,4 +140,4 @@ export default defineDmnoService({
 ```
 This is similar to the previous example, but we're also picking the `API_URL` from `my-package` and renaming it to `MY_PACKAGE_API_URL`.
 
-For an exhaustive list of all the options available for each schema item, check out the [defineDmnoService](/reference/config-engine/helper-methods/#definedmnoservice) reference docs.
+For an exhaustive list of all the options available for each schema item, check out the [config item](/reference/config-engine/helper-methods/#configitemdefinition) reference docs.

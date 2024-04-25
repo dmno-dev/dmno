@@ -4,10 +4,6 @@ title: Config Engine Helper Methods
 
 import TabbedTypeSettings from '@/components/TabbedTypeSettings.astro';
 
-:::tip[Did you know?]
-Lorem, ipsum dolor sit amet consectetur adipisicing elit. Officia ipsa asperiores dolore impedit esse sit minus perferendis. Amet odit minus eveniet ratione modi! Deleniti nihil quae velit numquam? Quas, tempora.
-:::
-
 
 ### `defineDmnoWorkspace`
 
@@ -19,7 +15,11 @@ This method is used to define the workspace configuration. It takes an object as
     typeName="WorkspaceConfig"
 />
 
-The `ConfigItemDefinitonOrShorthand` type is a union of the `ConfigItemDefinition` and `TypeExtendsDefinition` types. The `ConfigItemDefinition` type is an object with the following properties:
+The `ConfigItemDefinitonOrShorthand` type is a union of the `ConfigItemDefinition` and `TypeExtendsDefinition` types. 
+
+### `ConfigItemDefinition`
+
+The `ConfigItemDefinition` type is an object with the following properties:
 
 <TabbedTypeSettings
     typeName="ConfigItemDefinition"
@@ -71,15 +71,13 @@ The `schema` is otherwise the same as the `schema` property in the `defineDmnoWo
 
 This method is used to create a new data type. It takes an object as an argument with the following properties:
 
-<TabbedTypeSettings
-    typeName="DmnoDataTypeOptions"
-/>
-
 
 ### `switchByNodeEnv`
 
-Lorem ipsum dolor sit, amet consectetur adipisicing elit. Voluptas magni, illum cum a officia eum quis architecto dicta facere? Voluptas animi enim hic unde eum, nihil aut ex at odit!
+`switchByNodeEnv({ opts })`
 
 ### `dmnoFormula`
 
-Lorem ipsum dolor, sit amet consectetur adipisicing elit. Facere ducimus aliquam, quod, neque harum cupiditate amet numquam voluptatem omnis adipisci dolore itaque labore culpa et optio. At quos officiis deleniti.
+`dmnoFormula({ opts })`
+
+
