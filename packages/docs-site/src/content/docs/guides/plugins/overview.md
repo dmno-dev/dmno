@@ -5,8 +5,8 @@ title: Plugins
 
 DMNO provides 1st-party plugins to securely store (and retrieve) your application secrets. 
 
-- [**DMNO Encrypted Secrets**](/guides/secrets/encrypted-vault): Store secrets securely in an encrypted vault that you check in to your git repo. 
-- [**DMNO 1Password Sync**](/guides/secrets/1password): Securely sync secrets with 1Password 
+- [**DMNO Encrypted Secrets**](/guides/plugins/encrypted-vault): Store secrets securely in an encrypted vault that you check in to your git repo. 
+- [**DMNO 1Password Sync**](/guides/plugins/1password): Securely sync secrets with 1Password 
 
 
 :::note
