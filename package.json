@@ -12,6 +12,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "dmno": "link:./packages/core",
     "turbo": "^1.13.2",
     "typescript": "^5.4.5"
   },

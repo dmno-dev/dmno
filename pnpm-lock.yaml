@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      dmno:
+        specifier: link:./packages/core
+        version: link:packages/core
       turbo:
         specifier: ^1.13.2
         version: 1.13.2
@@ -181,8 +184,8 @@ importers:
         specifier: ^3.1.5
         version: 3.1.5(eslint@8.57.0)
       nanostores:
-        specifier: ^0.10.0
-        version: 0.10.0
+        specifier: ^0.10.3
+        version: 0.10.3
       sharp:
         specifier: ^0.32.5
         version: 0.32.6
@@ -202,6 +205,9 @@ importers:
       '@dmno/1password-plugin':
         specifier: link:../plugins/1password-plugin
         version: link:../plugins/1password-plugin
+      '@dmno/astro-integration':
+        specifier: link:../integrations/astro
+        version: link:../integrations/astro
       dmno:
         specifier: link:../core
         version: link:../core
@@ -12357,8 +12363,8 @@ packages:
       - supports-color
     dev: true
 
-  /nanostores@0.10.0:
-    resolution: {integrity: sha512-Poy5+9wFXOD0jAstn4kv9n686U2BFw48z/W8lms8cS8lcbRz7BU20JxZ3e/kkKQVfRrkm4yLWCUA6GQINdvJCQ==}
+  /nanostores@0.10.3:
+    resolution: {integrity: sha512-Nii8O1XqmawqSCf9o2aWqVxhKRN01+iue9/VEd1TiJCr9VT5XxgPFbF1Edl1XN6pwJcZRsl8Ki+z01yb/T/C2g==}
     engines: {node: ^18.0.0 || >=20.0.0}
     dev: false
 
@@ -16045,6 +16051,7 @@ packages:
 
   /undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+    requiresBuild: true
 
   /unherit@3.0.1:
     resolution: {integrity: sha512-akOOQ/Yln8a2sgcLj4U0Jmx0R5jpIg2IUyRrWOzmEbjBtGzBdHtSeFKgoEcoH4KYIG/Pb8GQ/BwtYm0GCq1Sqg==}

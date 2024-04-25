@@ -30,6 +30,9 @@ module.exports = {
       settings: {
         "mdx/code-blocks": true,
       },
+      rules: {
+        'no-unused-expressions': 0,
+      }
     },
 
     // RULES SPECIFIC TO CODE BLOCKS WITHIN MDX!

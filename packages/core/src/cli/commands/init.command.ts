@@ -28,7 +28,7 @@ const program = new DmnoCommand('init')
 program.action(async (opts: {
 }, thisCommand) => {
   const [workspaceInfo] = await Promise.all([
-    findDmnoServices(),
+    findDmnoServices(true),
     fallingDmnoLoader('● Scanning repo', '● Scan complete'),
   ]);
   // const workspaceInfo = ;

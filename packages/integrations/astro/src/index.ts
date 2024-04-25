@@ -1,7 +1,10 @@
 import { ConfigServerClient } from 'dmno';
 import type { AstroIntegration } from 'astro';
 
-const dmnoConfigClient = new ConfigServerClient();
+/// initialize a dmno config server client, but only once
+(process as any).dmnoConfigClient ||= new ConfigServerClient();
+const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
+
 let dmnoEnv: Record<string, any> = {};
 let publicConfigInjection = {} as Record<string, string>;
 
@@ -16,64 +19,71 @@ function stringifyWithUndefined(value: any, space?: number): string {
   return str.replaceAll('"__DMNO_UNDEF__"', 'undefined');
 }
 
+// console.log('dmno astro integration file loaded!');
+
+async function injectConfig() {
+  const dmnoService = await dmnoConfigClient.getServiceConfig();
+
+  let configIsValid = true;
+  // TODO: not yet sure if this logic should live here or not...
+  publicConfigInjection = {};
+  dmnoEnv = {};
+  for (const itemKey in dmnoService.config) {
+    const configItem = dmnoService.config[itemKey];
+
+    // TODO: better error messaging, maybe push through to toolbar???
+    if (!configItem.isValid) {
+      console.log(`Config item ${itemKey} is invalid`);
+
+      configItem.validationErrors?.forEach((error) => {
+        console.log(`${error.icon} ${error.message}`);
+      });
+
+      configIsValid = false;
+    } else {
+      dmnoEnv[itemKey] = configItem.resolvedValue;
+
+      if (!configItem.dataType.sensitive) {
+        // add rollup rewrite/define for non-sensitive items
+        publicConfigInjection[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
+      }
+    }
+  }
+
+  // We attach some stuff to the locally running process / globalThis
+  // which will be accessible in api endpoints (at least in dev mode)
+
+  // feed our dmno config into process.env
+  process.env = {
+    ...originalProcessEnv,
+  };
+  for (const k in dmnoEnv) {
+    process.env[k] = dmnoEnv[k]?.toString() || '';
+  }
+
+  (process as any).dmnoEnv = dmnoEnv;
+  // we cannot edit import.meta, but we've rewritten it to DMNO_CONFIG
+  // (import.meta as any).dmnoEnv = dmnoEnv;
+  (globalThis as any).DMNO_CONFIG = dmnoEnv;
+  // attach the same proxy object so we can throw nice errors
+  (globalThis as any).DMNO_PUBLIC_CONFIG = new Proxy({}, {
+    get(o, key) {
+      throw new Error(`❌ ${key.toString()} is not a public config item`);
+    },
+  });
+
+  // add the full dmnoService so we can use it in the middleware to detect leaked secrets!
+  (process as any).dmnoService = dmnoService;
+}
+
+await injectConfig();
+
 function dmnoAstroIntegration(): AstroIntegration {
+  // console.log('dmno astro integration initialized');
   return {
     name: 'dmno-astro-integration',
     hooks: {
       'astro:config:setup': async (opts) => {
-        const dmnoService = await dmnoConfigClient.getServiceConfig();
-
-        let configIsValid = true;
-        // TODO: not yet sure if this logic should live here or not...
-        publicConfigInjection = {};
-        dmnoEnv = {};
-        for (const itemKey in dmnoService.config) {
-          const configItem = dmnoService.config[itemKey];
-
-          // TODO: better error messaging, maybe push through to toolbar???
-          if (!configItem.isValid) {
-            console.log(`Config item ${itemKey} is invalid`);
-
-            configItem.validationErrors?.forEach((error) => {
-              console.log(`${error.icon} ${error.message}`);
-            });
-
-            configIsValid = false;
-          } else {
-            dmnoEnv[itemKey] = configItem.resolvedValue;
-
-            if (!configItem.dataType.sensitive) {
-              // add rollup rewrite/define for non-sensitive items
-              publicConfigInjection[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
-            }
-          }
-        }
-
-        // We attach some stuff to the locally running process / globalThis
-        // which will be accessible in api endpoints (at least in dev mode)
-
-        // feed our dmno config into process.env
-        process.env = {
-          ...originalProcessEnv,
-        };
-        for (const k in dmnoEnv) {
-          process.env[k] = dmnoEnv[k]?.toString() || '';
-        }
-
-        (process as any).dmnoEnv = dmnoEnv;
-        // we cannot edit import.meta, but we've rewritten it to DMNO_CONFIG
-        // (import.meta as any).dmnoEnv = dmnoEnv;
-        (globalThis as any).DMNO_CONFIG = dmnoEnv;
-        // attach the same proxy object so we can throw nice errors
-        (globalThis as any).DMNO_PUBLIC_CONFIG = new Proxy({}, {
-          get(o, key) {
-            throw new Error(`❌ ${key.toString()} is not a public config item`);
-          },
-        });
-
-        // add the full dmnoService so we can use it in the middleware to detect leaked secrets!
-        (process as any).dmnoService = dmnoService;
-
         const {
           isRestart, logger, addDevToolbarApp, updateConfig,
           injectScript, addMiddleware,
@@ -85,7 +95,7 @@ function dmnoAstroIntegration(): AstroIntegration {
             plugins: [{
               name: 'astro-vite-plugin',
               async config(config, env) {
-                console.log('vite plugin config!');
+                // console.log('vite plugin config!');
 
                 // inject rollup rewrites via config.define
                 config.define = {
@@ -96,7 +106,7 @@ function dmnoAstroIntegration(): AstroIntegration {
               },
 
               async configureServer(server) {
-                console.log('astro vite plugin configure server');
+                // console.log('astro vite plugin configure server');
                 if (!isRestart) {
                   dmnoConfigClient.eventBus.on('reload', () => {
                     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -168,5 +178,6 @@ function dmnoAstroIntegration(): AstroIntegration {
     },
   };
 }
+
 
 export default dmnoAstroIntegration;

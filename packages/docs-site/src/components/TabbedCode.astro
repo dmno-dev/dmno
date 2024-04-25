@@ -57,8 +57,8 @@ const platforms = [
   // update other tabs after any tab is clicked
   document.addEventListener("click", (e) => {
     const tabs = Array.from(document.querySelectorAll(selector));
-    const tabNames = tabs.map((tab) => tab.innerText);
-    const val = e?.target?.innerText;
+    const tabNames = tabs.map((tab) => (tab as any).innerText);
+    const val = (e?.target as any)?.innerText;
     if (tabNames.indexOf(val) < 0) return;
     if (val == activeTab) return;
     setCurrentPm(val);

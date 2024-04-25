@@ -4,9 +4,11 @@
     "src/**/*.ts",
     "src/**/*.js",
     "src/**/*.d.ts",
-    // "src/**/*.mdx",
-    // "src/**/*.astro",
-    // "src/**/*.mdx",
+    "src/**/*.mdx",
+    "src/**/*.astro",
+    "./.dmno/.typegen/global.d.ts",
+    "./.dmno/.typegen/global-public.d.ts",
+    "./.dmno/.typegen/node.d.ts"
   ],
   "compilerOptions": {
     "baseUrl": ".",
