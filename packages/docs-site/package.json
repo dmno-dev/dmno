@@ -25,6 +25,7 @@
     "@dmno/tsconfig": "workspace:*",
     "@dmno/ui-lib": "workspace: *",
     "astro": "^4.7.0",
+    "astro-expressive-code": "^0.35.2",
     "astro-iconify": "^1.2.0",
     "astro-robots-txt": "^1.0.0",
     "eslint-plugin-astro": "^0.31.4",
