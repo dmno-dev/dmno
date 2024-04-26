@@ -12,7 +12,7 @@ importers:
         specifier: link:./packages/core
         version: link:packages/core
       turbo:
-        specifier: ^1.13.2
+        specifier: ^1.13.3
         version: 1.13.3
       typescript:
         specifier: ^5.4.5

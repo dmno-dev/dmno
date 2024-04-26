@@ -24,7 +24,7 @@ export default defineConfig({
         discord: DMNO_CONFIG.DISCORD_JOIN_URL,
       },
       plugins: [
-        starlightBlog({ title: 'console.blog()' }),
+        starlightBlog(),
         starlightLinksValidator(),
       ],
       pagination: false,
