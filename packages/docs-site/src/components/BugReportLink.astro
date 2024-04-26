@@ -1,0 +1,20 @@
+---
+interface Props {
+  label:
+    | "core"
+    | "integrations/astro"
+    | "integrations/vite"
+    | "integrations/nextjs"
+    | "plugins/1password"
+    | "plugins/encrypted-vault";
+}
+
+const { label } = Astro.props;
+---
+
+<a
+  href=`${DMNO_PUBLIC_CONFIG.GITHUB_REPO_URL}/issues/new?labels=${label}&template=bug_report.md`
+  target="_blank"><slot /></a
+>
+<!-- 
+https://github.com/dmno-dev/core/issues/new?assignees=philmillman&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D+ -->

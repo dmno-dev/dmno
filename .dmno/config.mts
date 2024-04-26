@@ -8,7 +8,7 @@ export default defineDmnoWorkspace({
       required: true,
     },
     GITHUB_REPO_NAME: {
-      value: 'dmno-core',
+      value: 'core',
       required: true,
     },
     GITHUB_ORG_URL: {

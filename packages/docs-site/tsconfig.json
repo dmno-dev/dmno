@@ -6,6 +6,9 @@
     "src/**/*.d.ts",
     "src/**/*.mdx",
     "src/**/*.astro",
+
+    "astro.config.ts",
+
     "./.dmno/.typegen/global.d.ts",
     "./.dmno/.typegen/global-public.d.ts",
     "./.dmno/.typegen/node.d.ts"

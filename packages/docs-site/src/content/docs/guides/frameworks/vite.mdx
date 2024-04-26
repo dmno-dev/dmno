@@ -27,16 +27,12 @@ See our [Schema Guide](/guides/schema) for the specifics of how to write your fi
 
 Finally, in your `vite.config.js`, import the plugin, and add to `defineConfig`: 
 
-```js
-// ...
-import { dmnoVitePlugin } from '@dmno/vite-integration';
+```diff lang="ts" ins="dmnoVitePlugin()"
++import { dmnoVitePlugin } from '@dmno/vite-integration';
 
 export default {
-  // other config
-  plugins: [
-    // ... other plugins
-    dmnoVitePlugin(),
-  ],
+  // ...
+  plugins: [dmnoVitePlugin()],
 };
 
 ```
