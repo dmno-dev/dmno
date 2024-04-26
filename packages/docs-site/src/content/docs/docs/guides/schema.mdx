@@ -4,7 +4,7 @@ title: DMNO Schema Guide
 
 import { FileTree } from '@astrojs/starlight/components'
 
-If you haven't already, follow our [Quickstart](/get-started/quickstart) guide to get started with DMNO. Once you're set up and ready to go, let's dive in to writing a full schema for your project. You can also check out a fully fleshed out [sample schema](/get-started/sample) to see all the different options available to you.
+If you haven't already, follow our [Quickstart](/docs/get-started/quickstart) guide to get started with DMNO. Once you're set up and ready to go, let's dive in to writing a full schema for your project. You can also check out a fully fleshed out [sample schema](/docs/get-started/sample) to see all the different options available to you.
 
 ## Project Structure
 
@@ -78,7 +78,7 @@ In this example, we're defining a few different types of schema items:
   - `CUSTOMER_SERVICE_EMAIL` is an email address, and we're changing the value based on the environment
 
 :::tip
-For more on environment-specific configuration, see our [Multi-Environment Configuration](/guides/multi-env) guide.
+For more on environment-specific configuration, see our [Multi-Environment Configuration](/docs/guides/multi-env) guide.
 :::
 
 
@@ -140,4 +140,4 @@ export default defineDmnoService({
 ```
 This is similar to the previous example, but we're also picking the `API_URL` from `my-package` and renaming it to `MY_PACKAGE_API_URL`.
 
-For an exhaustive list of all the options available for each schema item, check out the [config item](/reference/config-engine/helper-methods/#configitemdefinition) reference docs.
+For an exhaustive list of all the options available for each schema item, check out the [config item](/docs/reference/config-engine/helper-methods/#configitemdefinition) reference docs.

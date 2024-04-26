@@ -15,7 +15,7 @@ There are a few different ways you can adopt DMNO incrementally:
   - You can start by adding a list of environment variables to your schema, and use DMNO to validate that they exist
   - Next add types to each of the items
   - Then add custom validation rules and custom types/coercion 
-  - Finally, add [plugins](/guides/plugins/overview) to fetch the values from a secure source
+  - Finally, add [plugins](/docs/guides/plugins/overview) to fetch the values from a secure source
 
 **In your code**: 
   - We will support your existing methods of using env vars (ex. `process.env` in Node.js, `import.meta.env` in Vite, etc) while you migrate to DMNO. You won't get type completion full intellisense, or validation, but you will get actionable error messages if you try to access a variable that doesn't exist. **VERIFY THIS** ⚠️

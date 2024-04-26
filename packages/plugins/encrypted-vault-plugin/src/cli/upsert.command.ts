@@ -128,6 +128,12 @@ export const UpsertItemCommand = createDmnoPluginCliCommand({
   description: `
   upserts items...
 `,
+  examples: [
+    {
+      command: 'dmno plugin -p vault -- upsert',
+      description: 'Update or insert an item to the vault',
+    },
+  ],
   options: upsertOptions,
   handler: upsertHandler,
 });
@@ -138,6 +144,12 @@ export const AddItemCommand = createDmnoPluginCliCommand({
   description: `
   adds items...
 `,
+  examples: [
+    {
+      command: 'dmno plugin -p vault -- add',
+      description: 'add an item to the vault',
+    },
+  ],
   options: upsertOptions,
   handler: upsertHandler,
 });
@@ -148,6 +160,12 @@ export const UpdateItemCommand = createDmnoPluginCliCommand({
   description: `
   udpates items...
 `,
+  examples: [
+    {
+      command: 'dmno plugin -p vault -- update',
+      description: 'update an item in the vault',
+    },
+  ],
   options: upsertOptions,
   handler: upsertHandler,
 });

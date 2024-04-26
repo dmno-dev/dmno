@@ -48,7 +48,7 @@ export default defineDmnoService({
 ```
 
 :::tip[FYI]
-This example uses `switchByNodeEnv`. To learn more about that, see our [helper method](/reference/config-engine/helper-methods) docs.
+This example uses `switchByNodeEnv`. To learn more about that, see our [helper method](/docs/reference/config-engine/helper-methods) docs.
 :::
 
 ### 1Password reference

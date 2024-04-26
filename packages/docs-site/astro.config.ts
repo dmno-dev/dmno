@@ -24,7 +24,16 @@ export default defineConfig({
         discord: DMNO_CONFIG.DISCORD_JOIN_URL,
       },
       plugins: [
-        starlightBlog(),
+        starlightBlog({
+          title: '.blog/',
+          authors: {
+            team: {
+              name: 'DMNO Team',
+            },
+          },
+          postCount: 5,
+          recentPostCount: 10,
+        }),
         starlightLinksValidator(),
       ],
       pagination: false,
@@ -57,38 +66,38 @@ export default defineConfig({
           items: [
             {
               label: 'What is DMNO?',
-              link: '/get-started/what-is-dmno',
+              link: '/docs/get-started/what-is-dmno',
             },
             {
               label: 'Quickstart',
-              link: '/get-started/quickstart',
+              link: '/docs/get-started/quickstart',
             },
             {
               label: 'Concepts',
-              link: '/get-started/concepts',
+              link: '/docs/get-started/concepts',
             },
             {
               label: 'Security',
-              link: '/get-started/security',
+              link: '/docs/get-started/security',
             }],
         }, {
           label: 'Guides',
           items: [
             {
               label: 'Schema',
-              link: '/guides/schema',
+              link: '/docs/guides/schema',
             },
             {
               label: 'Repo structure',
-              link: '/guides/repo',
+              link: '/docs/guides/repo',
             },
             {
               label: 'Incremental Adoption',
-              link: '/guides/incremental-adoption',
+              link: '/docs/guides/incremental-adoption',
             },
             {
               label: 'Multiple Environments',
-              link: '/guides/multi-env',
+              link: '/docs/guides/multi-env',
             },
           ],
         }, {
@@ -96,31 +105,32 @@ export default defineConfig({
           badge: 'New',
           items: [{
             label: 'Overview',
-            link: '/guides/plugins/overview',
+            link: '/docs/guides/plugins/overview',
           },
           {
             label: 'Encrypted Vaults',
-            link: '/guides/plugins/encrypted-vault',
+            link: '/docs/guides/plugins/encrypted-vault',
           },
           {
             label: '1Password',
-            link: '/guides/plugins/1password',
+            link: '/docs/guides/plugins/1password',
           }],
         }, {
           label: 'Integrations',
           badge: 'New',
           items: [{
+            label: 'Astro',
+            link: '/docs/guides/frameworks/astro/',
+          },
+          {
             label: 'Next.js',
-            link: '/guides/frameworks/nextjs/',
+            link: '/docs/guides/frameworks/nextjs/',
           }, {
             label: 'Vite',
-            link: '/guides/frameworks/vite/',
-          }, {
-            label: 'Astro',
-            link: '/guides/frameworks/astro/',
+            link: '/docs/guides/frameworks/vite/',
           }, {
             label: 'Node.js (Express, Koa, etc.)',
-            link: '/guides/frameworks/node/',
+            link: '/docs/guides/frameworks/node/',
           },
           // {
           //   label: "Vercel",
@@ -144,13 +154,13 @@ export default defineConfig({
               label: 'config-engine',
               items: [{
                 label: 'Installation',
-                link: '/reference/config-engine/installation/',
+                link: '/docs/reference/config-engine/installation/',
               }, {
                 label: 'Base Types',
-                link: '/reference/config-engine/base-types/',
+                link: '/docs/reference/config-engine/base-types/',
               }, {
                 label: 'Helper Methods',
-                link: '/reference/config-engine/helper-methods/',
+                link: '/docs/reference/config-engine/helper-methods/',
               }],
             },
             {
@@ -158,27 +168,27 @@ export default defineConfig({
               items: [
                 {
                   label: 'Commands',
-                  link: '/reference/cli/commands',
+                  link: '/docs/reference/cli/commands',
                 },
                 {
                   label: 'init',
-                  link: '/reference/cli/init',
+                  link: '/docs/reference/cli/init',
                 },
                 {
                   label: 'load',
-                  link: '/reference/cli/load',
+                  link: '/docs/reference/cli/load',
                 },
                 {
                   label: 'dev',
-                  link: '/reference/cli/dev',
+                  link: '/docs/reference/cli/dev',
                 },
                 {
                   label: 'run',
-                  link: '/reference/cli/run',
+                  link: '/docs/reference/cli/run',
                 },
                 {
                   label: 'plugin',
-                  link: '/reference/cli/plugin',
+                  link: '/docs/reference/cli/plugin',
                 },
               ],
             },

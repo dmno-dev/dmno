@@ -2,13 +2,13 @@
 title: Vercel
 ---
 
-We're assuming you're already familiar with both DMNO and Vercel. If you're not, you can learn more about DMNO [here](/get-started/quickstart) and Vercel [here](https://vercel.com/docs). 
+We're assuming you're already familiar with both DMNO and Vercel. If you're not, you can learn more about DMNO [here](/docs/get-started/quickstart) and Vercel [here](https://vercel.com/docs). 
 
 ## Prerequisites
 
 Before you start, you'll need to have the following:
 
-- A set of [DMNO Schema](/guides/schema) definitions
+- A set of [DMNO Schema](/docs/guides/schema) definitions
 - A Vercel [account](https://vercel.com/signup)
 
 ## It just works 
@@ -62,7 +62,7 @@ This will create a set of encrypted secrets (per environment) in your repository
 Finally, to use DMNO Encrypted Secrets with Vercel, you will need to a single ENV VAR (per environment) to your Vercel project called `DMNO_SECRETS_KEY`. This is the key that will be used to decrypt your secrets at build (or run) time.
 
 :::tip
-For an in-depth look at DMNO Secrets, check out the [secrets guide](/guides/plugins/overview).
+For an in-depth look at DMNO Secrets, check out the [secrets guide](/docs/guides/plugins/overview).
 :::
 
 ### DMNO 1Password Sync
@@ -72,5 +72,5 @@ If you're an existing 1Password user, you can use DMNO 1Password Sync to sync yo
 If you're already using DMNO 1Password Sync, you can use the same ENV VARs that you're using for your local development. You will just need to add a single ENV VAR on Vercel called `DMNO_1PASSWORD_SECRET` that allows the integration to work.
 
 :::tip
-For an in-depth look at DMNO 1Password Sync, check out the [1Password Sync guide](/reference/plugins/1pass).
+For an in-depth look at DMNO 1Password Sync, check out the [1Password Sync guide](/docs/reference/plugins/1pass).
 :::
