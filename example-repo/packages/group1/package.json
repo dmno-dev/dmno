@@ -3,6 +3,6 @@
   "private": true,
   "version": "0.0.0",
   "dependencies": {
-    "@dmno/core": "link:../../../packages/core"
+    "dmno": "link:../../../packages/core"
   }
 }

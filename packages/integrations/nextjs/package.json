@@ -15,11 +15,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dmno-dev/core.git",
+    "url": "git+https://github.com/dmno-dev/dmno.git",
     "directory": "packages/integrations/nextjs"
   },
   "bugs": {
-    "url": "https://github.com/dmno-dev/core/issues"
+    "url": "https://github.com/dmno-dev/dmno/issues"
   },
   "homepage": "https://dmno.dev",
   "exports": {
@@ -45,7 +45,7 @@
     "lint:fix": "pnpm run lint --fix"
   },
   "devDependencies": {
-    "@dmno/core": "workspace:*",
+    "dmno": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "@types/node": "^20.12.7",
@@ -53,7 +53,7 @@
     "typescript": "^5.4.5"
   },
   "peerDependencies": {
-    "@dmno/core": "workspace:*",
+    "dmno": "workspace:*",
     "next": "^14"
   }
 }

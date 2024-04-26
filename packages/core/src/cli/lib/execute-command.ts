@@ -12,7 +12,7 @@ const logger = {
 };
 
 // TODO: move this somewhere to reuse it
-const REPORT_ISSUE_LINK = 'https://github.com/dmno-dev/core/issues';
+const REPORT_ISSUE_LINK = 'https://github.com/dmno-dev/dmno/issues';
 
 
 // list of other non SIGINT signals we care about

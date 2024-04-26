@@ -17,7 +17,7 @@
     "vue": "^3.4.23"
   },
   "devDependencies": {
-    "@dmno/core": "link:../../../packages/core",
+    "dmno": "link:../../../packages/core",
     "@dmno/eslint-config": "link:../../../packages/eslint-config",
     "@dmno/vite-integration": "link:../../../packages/integrations/vite",
     "@vitejs/plugin-vue": "^5.0.4",

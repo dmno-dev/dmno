@@ -1,6 +1,7 @@
 {
-  "name": "@dmno/monorepo",
-  "version": "1.0.0",
+  "name": "@dmno/monorepo-root",
+  "version": "0.0.0",
+  "private": true,
   "description": "",
   "scripts": {
     "build": "turbo build --filter=\"!@dmno/docs-site\"",

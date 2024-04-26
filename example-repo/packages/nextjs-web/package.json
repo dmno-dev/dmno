@@ -15,7 +15,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@dmno/core": "link:../../../packages/core",
+    "dmno": "link:../../../packages/core",
     "@types/node": "^20.12.7",
     "@types/react": "^18.2.79",
     "@types/react-dom": "^18.2.25",

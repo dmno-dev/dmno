@@ -14,11 +14,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dmno-dev/core.git",
+    "url": "git+https://github.com/dmno-dev/dmno.git",
     "directory": "packages/plugins/1password-plugin"
   },
   "bugs": {
-    "url": "https://github.com/dmno-dev/core/issues"
+    "url": "https://github.com/dmno-dev/dmno/issues"
   },
   "homepage": "https://dmno.dev",
   "exports": {
@@ -46,7 +46,7 @@
     "postinstall": "node scripts/install-cli.mjs"
   },
   "devDependencies": {
-    "@dmno/core": "workspace:*",
+    "dmno": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "@types/async": "^3.2.24",
@@ -57,7 +57,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@dmno/core": "workspace:*",
+    "dmno": "workspace:*",
     "async": "^3.2.5",
     "dotenv": "^16.4.5",
     "lodash-es": "^4.17.21",

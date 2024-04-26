@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@dmno/1password-plugin": "link:../plugins/1password-plugin",
-    "@dmno/core": "link:../core",
+    "dmno": "link:../core",
     "netlify-cli": "^17.1.0",
     "typedoc": "^0.25.12"
   }
