@@ -9,6 +9,10 @@
 <script lang="ts" setup>
   
   const configs = {
+    'DMNO_PUBLIC_CONFIG.PUBLIC_STATIC': DMNO_PUBLIC_CONFIG.PUBLIC_STATIC,
+    'DMNO_PUBLIC_CONFIG.PUBLIC_DYNAMIC': DMNO_PUBLIC_CONFIG.PUBLIC_DYNAMIC,
+
+
     'process.env.FOO': process.env.FOO,
     'import.meta.env.FOO': import.meta.env.FOO,
     'import.meta.env.PUBLIC_FOO': import.meta.env.PUBLIC_FOO,

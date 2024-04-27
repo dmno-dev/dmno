@@ -1,6 +1,18 @@
 export async function GET() {
+  
+  console.log(DMNO_CONFIG.SECRET_STATIC);
+  console.log(DMNO_CONFIG.SECRET_FOO);
+  
+
   return new Response(
     JSON.stringify({
+      "DMNO_PUBLIC_CONFIG.PUBLIC_STATIC": DMNO_PUBLIC_CONFIG.PUBLIC_STATIC,
+      "DMNO_PUBLIC_CONFIG.PUBLIC_DYNAMIC": DMNO_PUBLIC_CONFIG.PUBLIC_DYNAMIC,
+
+      "DMNO_CONFIG.PUBLIC_STATIC": DMNO_CONFIG.PUBLIC_STATIC,
+      "DMNO_CONFIG.PUBLIC_DYNAMIC": DMNO_CONFIG.PUBLIC_DYNAMIC,
+      // "DMNO_CONFIG.SECRET_STATIC": DMNO_CONFIG.SECRET_STATIC,
+
       'public-foo': '------------------------------------------',
       'process.env.PUBLIC_FOO': process.env.PUBLIC_FOO || '_unset_',
       'import.meta.env.PUBLIC_FOO': import.meta.env.PUBLIC_FOO || '_unset_',

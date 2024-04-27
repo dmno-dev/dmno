@@ -79,12 +79,14 @@ program.action(async (_command, opts: {
     }
 
     if (allValid) {
+      console.log(service.getLoadedEnv());
+
       commandProcess = execa(pathAwareCommand || rawCommand, commandArgsOnly, {
         stdio: 'inherit',
         env: {
           ...process.env,
           ...serviceEnv,
-          DMNO_LOADED_ENV: JSON.stringify(serviceEnv),
+          DMNO_LOADED_ENV: JSON.stringify(service.getLoadedEnv()),
           DMNO_SENSITIVE_PATHS: service.getSensitivePaths().join('!'),
           DMNO_EMPTY_PATHS: service.getEmptyPaths().join('!'),
         },

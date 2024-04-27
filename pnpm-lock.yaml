@@ -12,11 +12,7 @@ importers:
         specifier: link:./packages/core
         version: link:packages/core
       turbo:
-<<<<<<< HEAD
         specifier: ^1.13.3
-=======
-        specifier: ^1.13.2
->>>>>>> aa8bae6 (more work on astro guide)
         version: 1.13.3
       typescript:
         specifier: ^5.4.5
@@ -163,18 +159,6 @@ importers:
       '@astrojs/vue':
         specifier: ^4.1.0
         version: 4.1.0(astro@4.7.0)(vite@5.2.10)(vue@3.4.25)
-<<<<<<< HEAD
-=======
-      '@dmno/1password-plugin':
-        specifier: link:../plugins/1password-plugin
-        version: link:../plugins/1password-plugin
-      '@dmno/astro-integration':
-        specifier: link:../integrations/astro
-        version: link:../integrations/astro
-      '@dmno/core':
-        specifier: link:../core
-        version: link:../core
->>>>>>> aa8bae6 (more work on astro guide)
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
@@ -221,7 +205,6 @@ importers:
         specifier: ^3.3.4
         version: 3.4.25(typescript@5.4.5)
     devDependencies:
-<<<<<<< HEAD
       '@dmno/1password-plugin':
         specifier: link:../plugins/1password-plugin
         version: link:../plugins/1password-plugin
@@ -231,8 +214,6 @@ importers:
       dmno:
         specifier: link:../core
         version: link:../core
-=======
->>>>>>> aa8bae6 (more work on astro guide)
       netlify-cli:
         specifier: ^17.1.0
         version: 17.23.0(@types/node@20.12.7)
@@ -300,6 +281,9 @@ importers:
 
   packages/integrations/astro:
     dependencies:
+      '@dmno/ts-lib':
+        specifier: workspace:*
+        version: link:../../ts-lib
       astro:
         specifier: ^4
         version: 4.7.0(@types/node@20.12.7)(typescript@5.4.5)
@@ -14673,16 +14657,7 @@ packages:
 
   /undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
-
-  /unenv@1.9.0:
-    resolution: {integrity: sha512-QKnFNznRxmbOF1hDgzpqrlIf6NC5sbZ2OJ+5Wl3OX8uM+LUJXbj4TXvLJCtwbPTmbMHCLIz6JLKNinNsMShK9g==}
-    dependencies:
-      consola: 3.2.3
-      defu: 6.1.4
-      mime: 3.0.0
-      node-fetch-native: 1.6.4
-      pathe: 1.1.2
-    dev: true
+    requiresBuild: true
 
   /unenv@1.9.0:
     resolution: {integrity: sha512-QKnFNznRxmbOF1hDgzpqrlIf6NC5sbZ2OJ+5Wl3OX8uM+LUJXbj4TXvLJCtwbPTmbMHCLIz6JLKNinNsMShK9g==}

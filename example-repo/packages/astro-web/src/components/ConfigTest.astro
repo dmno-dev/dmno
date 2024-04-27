@@ -5,9 +5,38 @@ console.log("import.meta.env.PUBLIC_FOO", import.meta.env.PUBLIC_FOO);
 console.log("import.meta.env.SECRET_FOO", import.meta.env.SECRET_FOO);
 console.log("DMNO_CONFIG.SECRET_FOO", DMNO_CONFIG.SECRET_FOO);
 console.log("DMNO_CONFIG.PUBLIC_FOO", DMNO_CONFIG.PUBLIC_FOO);
+
+console.log("DMNO_CONFIG.SECRET_STATIC", DMNO_CONFIG.SECRET_STATIC);
 ---
 
+<h2>Now = {new Date().toISOString()}</h2>
+<!-- <p>{DMNO_CONFIG.SECRET_STATIC}</p> -->
+
 <ul>
+  <li>process.env.PUBLIC_STATIC = {process.env.PUBLIC_STATIC}</li>
+  <li>import.meta.env.PUBLIC_STATIC = {import.meta.env.PUBLIC_STATIC}</li>
+  <li>process.dmnoEnv.PUBLIC_STATIC = {process.dmnoEnv.PUBLIC_STATIC}</li>
+  <li>
+    import.meta.dmnoEnv.PUBLIC_STATIC = {import.meta.dmnoEnv.PUBLIC_STATIC}
+  </li>
+  <li>DMNO_PUBLIC_CONFIG.PUBLIC_STATIC = {DMNO_PUBLIC_CONFIG.PUBLIC_STATIC}</li>
+  <li>DMNO_CONFIG.PUBLIC_STATIC = {DMNO_CONFIG.PUBLIC_STATIC}</li>
+  <hr />
+
+  <li>process.env.PUBLIC_DYNAMIC = {process.env.PUBLIC_DYNAMIC}</li>
+  <li>import.meta.env.PUBLIC_DYNAMIC = {import.meta.env.PUBLIC_DYNAMIC}</li>
+  <li>process.dmnoEnv.PUBLIC_DYNAMIC = {process.dmnoEnv.PUBLIC_DYNAMIC}</li>
+  <li>
+    import.meta.dmnoEnv.PUBLIC_DYNAMIC = {import.meta.dmnoEnv.PUBLIC_DYNAMIC}
+  </li>
+  <li>
+    DMNO_PUBLIC_CONFIG.PUBLIC_DYNAMIC = {DMNO_PUBLIC_CONFIG.PUBLIC_DYNAMIC}
+  </li>
+  <li>
+    DMNO_CONFIG.PUBLIC_DYNAMIC = {DMNO_CONFIG.PUBLIC_DYNAMIC}
+  </li>
+  <hr />
+
   <li>process.env.FOO = {process.env.FOO}</li>
   <li>import.meta.env.FOO = {import.meta.env.FOO}</li>
   <li>process.dmnoEnv.FOO = {process.dmnoEnv.FOO}</li>
@@ -20,6 +49,8 @@ console.log("DMNO_CONFIG.PUBLIC_FOO", DMNO_CONFIG.PUBLIC_FOO);
   <li>process.dmnoEnv.PUBLIC_FOO = {process.dmnoEnv.PUBLIC_FOO}</li>
   <li>import.meta.dmnoEnv.PUBLIC_FOO = {import.meta.dmnoEnv.PUBLIC_FOO}</li>
   <li>DMNO_PUBLIC_CONFIG.PUBLIC_FOO = {DMNO_PUBLIC_CONFIG.PUBLIC_FOO}</li>
+  <hr />
+
   <hr />
 
   <!-- no TS errors, but throws a leaking error! -->
@@ -48,4 +79,5 @@ console.log("DMNO_CONFIG.PUBLIC_FOO", DMNO_CONFIG.PUBLIC_FOO);
   <!-- <li>import.meta.dmnoEnv.NOEXIST = {import.meta.dmnoEnv.NOEXIST}</li> -->
   <!-- throws -->
   <!-- <li>DMNO_PUBLIC_CONFIG.NOEXIST = {DMNO_PUBLIC_CONFIG.NOEXIST}</li> -->
+  <!-- <li>DMNO_CONFIG.NOEXIST = {DMNO_CONFIG.NOEXIST}</li> -->
 </ul>

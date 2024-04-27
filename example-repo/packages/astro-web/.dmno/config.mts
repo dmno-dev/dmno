@@ -33,6 +33,20 @@ export default defineDmnoService({
     },
     FN_FOO: {
       value: (ctx) => DMNO_CONFIG.FOO,
-    }
+    },
+    PUBLIC_DYNAMIC: {
+      value: 'public-dynamic-init',
+      useAt: 'boot',
+    },
+    PUBLIC_STATIC: {
+      value: 'public-static-init',
+      useAt: 'build',
+    },
+
+    SECRET_STATIC: {
+      value: 'secret-static',
+      useAt: 'build',
+      sensitive: true,
+    },
   },
 })

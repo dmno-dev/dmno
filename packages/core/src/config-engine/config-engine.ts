@@ -761,6 +761,18 @@ export class DmnoService {
     });
     return env;
   }
+  getLoadedEnv() {
+    const env: Record<string, any> = _.mapValues(this.config, (item) => {
+      return {
+        ...item.type.getDefItem('sensitive') && { sensitive: 1 },
+        // TODO: shorten this
+        ...item.type.getDefItem('useAt') && { use: item.type.getDefItem('useAt') },
+        value: item.resolvedValue,
+      };
+    });
+    return env;
+  }
+
   getSensitivePaths() {
     const sensitivePaths: Array<string> = [];
     // TODO: deal with nested objects
