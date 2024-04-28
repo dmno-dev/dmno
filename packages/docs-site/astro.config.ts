@@ -59,6 +59,10 @@ export default defineConfig({
             gtag("config", "${DMNO_CONFIG.GOOGLE_TAG_MANAGER_ID}");`,
           },
         },
+        {
+          tag: 'script',
+          content: 'window.addEventListener(\'load\', () => document.querySelector(\'.site-title\').href += \'docs/\')',
+        },
       ],
       sidebar: [
         {
