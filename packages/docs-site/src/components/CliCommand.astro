@@ -1,0 +1,60 @@
+---
+import type { ImageMetadata } from "astro";
+import { Image } from "astro:assets";
+import { Code } from "@astrojs/starlight/components";
+import allCommandsSpec from "@/utils/cli.json";
+
+export const images = import.meta.glob<{ default: ImageMetadata }>(
+  "../assets/tapes/*.gif",
+);
+
+export const formatExamples = (examples: typeof commandSpec['examples']) => {
+  let str = "";
+  examples?.map((example) => {
+    str += `# ${example.description}
+${example.command} \n\n`;
+  });
+  return str;
+};
+
+export const formatPath = (command: string) => {
+  return `../assets/tapes/${command}.gif`;
+};
+
+export const getCommand = (name: string) => {
+  return allCommandsSpec?.find((c) => c.command === name);
+};
+
+const { name } = Astro.props;
+
+const commandSpec = getCommand(name)!;
+
+---
+
+<div>
+  <p>
+    <i>{commandSpec.description}</i>
+  </p>
+  {commandSpec.more?.options.length ? <h4>Options</h4> : null}
+  {commandSpec.more?.options?.map((option) => {
+    return (
+      <div>
+        <Code code={option.flags} />
+        <p>
+          <em>{option.description}</em>
+        </p>
+      </div>
+    );
+  })}
+  {commandSpec.examples.length ? (
+    <div>
+      <h4>Example(s)</h4>
+      <Code code={formatExamples(commandSpec.examples)} lang="bash" />
+    </div>
+  ) : null}
+  { images[formatPath(commandSpec.command)] ? (
+  <Image
+    src={images[formatPath(commandSpec.command)]()}
+    alt=`a CLI showing the dmno ${commandSpec.command} command`
+  />) : null }
+</div>

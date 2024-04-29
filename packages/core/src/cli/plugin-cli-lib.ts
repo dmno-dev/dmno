@@ -93,6 +93,10 @@ export function createDmnoPluginCliCommand(commandSpec: {
   alias?: string,
   summary: string,
   description: string,
+  examples?: Array<{
+    command: string,
+    description: string,
+  }>,
   options?: Array<Option>,
   handler: (
     ctx: PluginCliDmnoCtx,

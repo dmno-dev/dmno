@@ -13,6 +13,12 @@ export const SetupCommand = createDmnoPluginCliCommand({
   description: `
   Sets up a new encrypted vault - this means createing a key and initializing a file
 `,
+  examples: [
+    {
+      command: 'dmno plugin -p vault -- setup',
+      description: 'set up a new encrypted vault',
+    },
+  ],
   async handler(ctx, opts, command) {
     // const vaultName = ctx.plugin.inputs.
     // console.dir(ctx.plugin.inputs, { depth: null });

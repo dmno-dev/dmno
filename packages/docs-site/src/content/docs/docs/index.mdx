@@ -1,0 +1,60 @@
+---
+title: DMNO
+description: The easiest way to configure, run, and deploy your apps
+template: 'splash'
+hero:
+  tagline: The easiest way to configure, run, and deploy your apps
+  image:
+    file: ../../../assets/domino-logo.svg
+  actions:
+    - text: Get Started
+      link: /docs/get-started/quickstart
+      icon: right-arrow
+      variant: primary
+    - text: ⭐ DMNO on Github
+      # frontmatter does not have access to any javascript, so currently we cannot access out config :(
+      # Working on some workarounds, but nothing working just yet...
+      link: https://github.com/dmno-dev
+      icon: github
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+<Card title="Features" icon="approve-check">
+  - **Typesafe Configuration**: Define your configuration in TypeScript and get full type safety, autocompletion, and documentation.
+  - **Schema Driven**: Define your schema and let DMNO handle the rest, including validation and coercion.
+  - **Deploy Anywhere**: Deploy on your existing platforms, powered by DMNO's typesafe configuration.
+</Card>
+
+<CardGrid>
+  <Card title="Start here" icon="pencil">
+    Install DMNO and get started with your first schema.
+    <LinkCard
+      title="Let's get started!"
+      href="/docs/get-started/quickstart"
+    />
+  </Card >
+  <Card title="Frameworks" icon="add-document">
+    Integrate DMNO with your favorite framework.
+    <LinkCard
+      title="Let's integrate!"
+      href="/docs/guides/frameworks/nextjs"
+    />
+  </Card>
+  <Card title="Secrets" icon="setting">
+    Securely store and retrieve your sensitive configuration items.
+    <LinkCard
+      title="Keep it safe!"
+      href="/docs/guides/plugins/overview"
+    />
+  </Card>
+  <Card title="Reference" icon="open-book">
+    Read our full set of reference docs to unlock the full potential of DMNO.
+    <LinkCard
+      title="Let's learn!"
+      href="/docs/reference/config-engine/installation"
+    />
+  </Card>
+</CardGrid>
+
+

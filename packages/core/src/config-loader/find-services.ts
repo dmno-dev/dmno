@@ -42,7 +42,7 @@ export async function pathExists(p: string) {
 }
 
 
-export async function findDmnoServices(): Promise<ScannedWorkspaceInfo> {
+export async function findDmnoServices(includeUnitialized = false): Promise<ScannedWorkspaceInfo> {
   const startAt = new Date();
   let cwd = process.cwd();
   debug(`begin scan for services from ${cwd}`);
@@ -160,25 +160,32 @@ export async function findDmnoServices(): Promise<ScannedWorkspaceInfo> {
     packagePaths.push(...expandedPathsFromGlobs);
   }
 
-  const workspacePackages = await Promise.all(packagePaths.map(async (packagePath) => {
+  const workspacePackages = _.compact(await Promise.all(packagePaths.map(async (packagePathWithSlash) => {
+    const packagePath = packagePathWithSlash.replace(/\/$/, ''); // remove trailing slash
     const packageJson = await tryCatch(
       async () => await readJsonFile(`${packagePath}/package.json`),
-      (_err) => {},
+      (err) => {
+        // missing package.json, so we'll skip this one
+        // currently this is true for a folder containing other packages
+        // but eventually for polyglot support we may need some other logic here
+        if ((err as any).code === 'ENOENT') {
+          return undefined;
+        }
+        throw err;
+      },
     );
+    if (!packageJson) return;
 
     const dmnoFolderExists = await pathExists(`${packagePath}/.dmno`);
 
-    const fullPath = packagePath.replace(/\/$/, ''); // remove trailing slash
     return {
       isRoot: packagePath === rootServicePath,
-      path: fullPath,
-      relativePath: fullPath.substring(rootServicePath.length + 1),
+      path: packagePath,
+      relativePath: packagePath.substring(rootServicePath.length + 1),
       name: packageJson?.name || packagePath.split('/').pop(),
       dmnoFolder: dmnoFolderExists,
     };
-  }));
-
-
+  })));
 
   const packageFromPwd = workspacePackages.find((p) => p.path === process.env.PWD);
   // note - this doesn't play nice if you have duplicate package names in your monorepo...
@@ -192,7 +199,7 @@ export async function findDmnoServices(): Promise<ScannedWorkspaceInfo> {
   return {
     isMonorepo,
     packageManager,
-    workspacePackages,
+    workspacePackages: includeUnitialized ? workspacePackages : _.filter(workspacePackages, (p) => p.dmnoFolder),
     autoSelectedPackage: packageFromPwd || packageFromCurrentPackageName,
   };
 }

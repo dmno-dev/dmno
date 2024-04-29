@@ -18,6 +18,12 @@ export const DeleteItemCommand = createDmnoPluginCliCommand({
   description: `
   adds items...
 `,
+  examples: [
+    {
+      command: 'dmno plugin -p vault -- delete',
+      description: 'delete an item from the vault',
+    },
+  ],
   async handler(ctx, opts, command) {
     // TODO: check plugin is in valid state
     const vaultName = ctx.plugin.inputs.name.resolvedValue || 'default';

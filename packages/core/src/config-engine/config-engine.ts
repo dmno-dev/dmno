@@ -503,8 +503,13 @@ export class DmnoWorkspace {
     // currently we are creating a cache key automatically if one does not exist
     // is that what we want to do? or have the user take more manual steps? not sure
     if (!fs.existsSync(this.cacheKeyFilePath)) {
-      const gitUserEmail = execSync('git config user.email').toString().trim();
-      const keyName = `${gitUserEmail}/${new Date().toISOString()}`;
+      let keyName: string;
+      try {
+        const gitUserEmail = execSync('git config user.email').toString().trim();
+        keyName = `${gitUserEmail}/${new Date().toISOString()}`;
+      } catch (err) {}
+      // when running in CI or elsewhere we wont have a git username so we fallback to something else
+      keyName ||= `${process.env.NODE_ENV}/${new Date().toISOString()}`;
       const dmnoKeyStr = await generateDmnoEncryptionKeyString(keyName);
 
       const reimportedDmnoKey = await importDmnoEncryptionKeyString(dmnoKeyStr);

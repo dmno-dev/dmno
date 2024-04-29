@@ -30,6 +30,9 @@ module.exports = {
       settings: {
         "mdx/code-blocks": true,
       },
+      rules: {
+        'no-unused-expressions': 0,
+      }
     },
 
     // RULES SPECIFIC TO CODE BLOCKS WITHIN MDX!
@@ -47,6 +50,7 @@ module.exports = {
       rules: {
         "import/no-unresolved": 0,
         "@typescript-eslint/no-unused-vars": 0,
+        "import/no-extraneous-dependencies": 0,
       },
     },
   ],
