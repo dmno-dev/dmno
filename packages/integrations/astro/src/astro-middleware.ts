@@ -26,7 +26,6 @@ if (!(globalThis as any).DMNO_CONFIG) {
       throw new Error(`❌ ${key.toString()} is not a config item (ssr 1)`);
     },
   });
-  (process as any).dmnoEnv = (globalThis as any).DMNO_CONFIG;
 
   // attach the same proxy object so we can throw nice errors
   (globalThis as any).DMNO_PUBLIC_CONFIG = new Proxy({}, {
@@ -52,13 +51,14 @@ if (!(globalThis as any).DMNO_CONFIG) {
 
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
-  // console.log(`custom astro middleware executed - ${context.url}`);
+  console.log(`custom astro middleware executed - ${context.url}`);
 
   const response = await next();
 
   // TODO: binary file types / images / etc dont need to be checked
   const bodyText = await response.clone().text();
 
+  // scan for leaked secrets!
   for (const itemKey in sensitiveLookup) {
     if (bodyText.includes(sensitiveLookup[itemKey])) {
       // TODO: better error details to help user _find_ the problem

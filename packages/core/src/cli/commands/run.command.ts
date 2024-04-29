@@ -79,7 +79,7 @@ program.action(async (_command, opts: {
     }
 
     if (allValid) {
-      console.log(service.getLoadedEnv());
+      // console.log(service.getLoadedEnv());
 
       commandProcess = execa(pathAwareCommand || rawCommand, commandArgsOnly, {
         stdio: 'inherit',

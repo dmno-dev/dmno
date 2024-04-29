@@ -23,9 +23,7 @@
 
     // works!
     'import.meta.env.PUBLIC_FOO': import.meta.env.PUBLIC_FOO,
-    
-    // 'import.meta.dmnoEnv.PUBLIC_FOO': import.meta.dmnoEnv.PUBLIC_FOO,
-    
+  
     // throws with error about trying to access DMNO_CONFIG on the client
     // 'DMNO_CONFIG.PUBLIC_FOO': DMNO_CONFIG.PUBLIC_FOO,
     // 'DMNO_CONFIG.SECRET_FOO': DMNO_CONFIG.SECRET_FOO,

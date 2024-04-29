@@ -10,19 +10,11 @@ let sensitiveKeys: Array<string> = [];
 
 const originalProcessEnv = structuredClone(process.env);
 
-function stringifyWithUndefined(value: any, space?: number): string {
-  const str = JSON.stringify(
-    value,
-    (_k, v) => (v === undefined ? '__DMNO_UNDEF__' : v),
-    space,
-  );
-  return str.replaceAll('"__DMNO_UNDEF__"', 'undefined');
-}
-
 // console.log('dmno astro integration file loaded!');
 
 
 const dmnoService = await dmnoConfigClient.getServiceConfig();
+const configItemKeysAccessed: Record<string, boolean> = {};
 
 async function injectConfig() {
   let configIsValid = true;
@@ -57,24 +49,29 @@ async function injectConfig() {
     process.env[k] = dmnoEnv[k]?.toString() || '';
   }
 
-  (process as any).dmnoEnv = dmnoEnv;
   // we cannot edit import.meta, but we've rewritten it to DMNO_CONFIG
   // (import.meta as any).dmnoEnv = dmnoEnv;
   (globalThis as any).DMNO_CONFIG = new Proxy({}, {
     get(o, key) {
-      if (key in dmnoEnv) return dmnoEnv[key.toString()];
-      throw new Error(`❌ ${key.toString()} is not a config item (1)`);
+      const keyStr = key.toString();
+      configItemKeysAccessed[keyStr] = true;
+      console.log('get DMNO_CONFIG - ', key);
+      if (key in dmnoEnv) return dmnoEnv[keyStr];
+      throw new Error(`❌ ${keyStr} is not a config item (1)`);
     },
   });
 
   // attach the same proxy object so we can throw nice errors
   (globalThis as any).DMNO_PUBLIC_CONFIG = new Proxy({}, {
     get(o, key) {
-      if (sensitiveKeys.includes(key.toString())) {
-        throw new Error(`❌ ${key.toString()} is not a public config item!`);
+      const keyStr = key.toString();
+      configItemKeysAccessed[keyStr] = true;
+      console.log('get DMNO_PUBLIC_CONFIG - ', keyStr);
+      if (sensitiveKeys.includes(keyStr)) {
+        throw new Error(`❌ ${keyStr} is not a public config item!`);
       }
-      if (key in dmnoEnv) return dmnoEnv[key.toString()];
-      throw new Error(`❌ ${key.toString()} is not a config item (2)`);
+      if (key in dmnoEnv) return dmnoEnv[keyStr];
+      throw new Error(`❌ ${keyStr} is not a config item (2)`);
     },
   });
 
@@ -95,6 +92,8 @@ type DmnoAstroIntegrationOptions = {
 
 function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions): AstroIntegration {
   // console.log('dmno astro integration initialized');
+
+
   return {
     name: 'dmno-astro-integration',
     hooks: {
@@ -104,13 +103,16 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
           injectScript, addMiddleware, injectRoute,
         } = opts;
 
+        // astroOutputType = opts.config.output;
+        // if (opts.command === 'build') isBuildMode = true;
+
         // TODO: maybe show a warning about public/dynamic and performance?
         if (dmnoIntegrationOpts?.dynamicPublicConfig && opts.config.output === 'static') {
           throw new Error('`dynamicPublicConfig` not supported when astro in static output');
         }
 
         sensitiveKeys = [];
-        const publicStaticConfigInjection = {} as Record<string, string>;
+        const staticConfigReplacements = {} as Record<string, string>;
 
         for (const itemKey in dmnoService.config) {
           const configItem = dmnoService.config[itemKey];
@@ -120,7 +122,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
 
             // if it's sensitive and static, we'll inject only into DMNO_CONFIG
             if (configItem.dataType.useAt === 'build') {
-              publicStaticConfigInjection[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
+              staticConfigReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
             }
           } else {
             // if public and static, we'll inject into vite's rewrites
@@ -129,8 +131,8 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
               || (!configItem.dataType.useAt || configItem.dataType.useAt === 'build')
             ) {
               // add rollup rewrite/define for non-sensitive items
-              publicStaticConfigInjection[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
-              publicStaticConfigInjection[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
+              staticConfigReplacements[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
+              staticConfigReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
             }
           }
         }
@@ -142,11 +144,12 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
               async config(config, env) {
                 // console.log('vite plugin config!');
 
+                console.log('STATIC REPLACEMENTS', staticConfigReplacements);
+
                 // inject rollup rewrites via config.define
                 config.define = {
                   ...config.define,
-                  ...publicStaticConfigInjection,
-                  'import.meta.dmnoEnv': 'globalThis.DMNO_CONFIG',
+                  ...staticConfigReplacements,
                 };
               },
 
@@ -155,8 +158,8 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
                 if (!isRestart) {
                   // let counter = 1;
                   // setInterval(() => {
-                  //   (process as any).dmnoEnv.PUBLIC_STATIC = `static-${counter++}`;
-                  //   (process as any).dmnoEnv.PUBLIC_DYNAMIC = `dynamic-${counter++}`;
+                  //   (globalThis as any).DMNO_CONFIG.PUBLIC_STATIC = `static-${counter++}`;
+                  //   (globalThis as any).DMNO_CONFIG.PUBLIC_DYNAMIC = `dynamic-${counter++}`;
                   // }, 1000);
 
 
@@ -276,7 +279,9 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
           `
             window.DMNO_CONFIG = new Proxy({}, {
               get(o, key) {
-                throw new Error(\`❌ You cannot access DMNO_CONFIG on the client, use DMNO_PUBLIC_CONFIG.\${key} instead \`);
+                // TODO: we could make this a warning instead?
+                // because it does get replaced during the build and doesn't actually harm anything
+                throw new Error(\`❌ You should not access DMNO_CONFIG on the client, use DMNO_PUBLIC_CONFIG.\${key} instead \`);
               }
             });
           `,
@@ -299,6 +304,27 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
 
         // enable the toolbar (currently does nothing...)
         addDevToolbarApp(`${import.meta.dirname}/dev-toolbar-app.mjs`);
+      },
+      'astro:build:done': async (opts) => {
+        // if we didn't actually pre-render any pages, we can move one
+        // (this would be the case in output=server mode with no `prerender` pages
+        if (!opts.pages.length) return;
+
+        // otherwise, we want to check which config was used during prerendering
+        // so if any were expected to be dyanmic (ie loaded at boot time) we can throw/warn
+
+        let dynamicConfigPrerendered = false;
+        for (const itemKey in configItemKeysAccessed) {
+          const configItem = dmnoService.config[itemKey];
+          if (configItem.dataType.useAt === 'boot') {
+            dynamicConfigPrerendered = true;
+            opts.logger.error(`Dynamic config item "${itemKey}" was used during pre-render`);
+            opts.logger.error('> Change to `{ "useAt": "build" }` to make it static');
+          }
+        }
+        if (dynamicConfigPrerendered) {
+          throw new Error('Dynamic config used during static pre-rendering');
+        }
       },
     },
   };

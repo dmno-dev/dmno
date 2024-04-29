@@ -9,24 +9,24 @@ import node from "@astrojs/node";
 export default defineConfig({
   integrations: [
     dmnoAstroIntegration({
-      dynamicPublicConfig: !!process.env.TEST_ASTRO_SSR && false
+      dynamicPublicConfig: !!process.env.TEST_ASTRO_SSR && true
     }),
     vue(),
     mdx(),
     {
       name: 'custom',
       hooks: {
-        'astro:config:setup': async (opts) => {
-          // detects leak
-          opts.injectScript(
-            // 'head-inline', // detects leak via middleware
-            // 'before-hydration', // detects leak via vite plugin
-            // 'page', // detects leak via vite plugin
+        // 'astro:config:setup': async (opts) => {
+        //   // detects leak
+        //   opts.injectScript(
+        //     // 'head-inline', // detects leak via middleware
+        //     // 'before-hydration', // detects leak via vite plugin
+        //     // 'page', // detects leak via vite plugin
             
-            'page-ssr', // not leaked...
-            `console.log(${JSON.stringify(DMNO_CONFIG.SECRET_FOO)});`
-          );
-        },
+        //     'page-ssr', // not leaked...
+        //     `console.log(${JSON.stringify(DMNO_CONFIG.SECRET_FOO)});`
+        //   );
+        // },
       }
     },
   ],

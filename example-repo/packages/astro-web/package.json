@@ -8,8 +8,8 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "ssr:dev": "TEST_ASTRO_SSR=1 astro dev",
-    "ssr:build": "astro check && TEST_ASTRO_SSR=1 PUBLIC_STATIC=ps-build PUBLIC_DYNAMIC=pd-build astro build",
-    "ssr:preview": "PUBLIC_STATIC=ps-boot PUBLIC_DYNAMIC=pd-boot pnpm exec dmno run -- node dist/server/entry.mjs",
+    "ssr:build": "astro check && TEST_ASTRO_SSR=1 PUBLIC_STATIC=ps-build PUBLIC_DYNAMIC=pd-build FOO=foo-build astro build",
+    "ssr:preview": "PUBLIC_STATIC=ps-boot PUBLIC_DYNAMIC=pd-boot FOO=foo-boot pnpm exec dmno run -- node dist/server/entry.mjs",
     "astro": "astro"
   },
   "dependencies": {
