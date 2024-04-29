@@ -665,6 +665,30 @@ const UrlDataType = createDmnoDataType({
 });
 
 
+const SimpleObjectDataType = createDmnoDataType({
+  typeLabel: 'dmno/simple-object',
+  extends: PrimitiveBaseType,
+  validate(val) {
+    if (_.isPlainObject(val)) return true;
+    return new ValidationError('Value must be an object');
+  },
+  coerce(val) {
+    if (_.isPlainObject(val)) return val;
+    // if value is a string, we'll try to JSON.parse and see if that is an objce
+    if (_.isString(val)) {
+      try {
+        const parsedObj = JSON.parse(val);
+        if (_.isPlainObject(parsedObj)) return parsedObj;
+        return new CoercionError('Unable to coerce JSON parsed string to object');
+      } catch (err) {
+        return new CoercionError('Error parsing JSON string while coercing string to object');
+      }
+    }
+    return new CoercionError('Cannot coerce value to object');
+  },
+});
+
+
 
 // Complex "container" types //////////////////////////////////////////////////////////
 
@@ -889,6 +913,7 @@ export const DmnoBaseTypes = {
   string: StringDataType,
   number: NumberDataType,
   boolean: BooleanDataType,
+  simpleObject: SimpleObjectDataType,
 
   enum: EnumDataType,
   email: emailDataType,
@@ -912,7 +937,7 @@ export const DmnoBaseTypes = {
 
 // cannot use `keyof typeof DmnoBaseTypes` as it creates a circular reference...
 // so we'll list the basic types that don't need any options
-export type DmnoSimpleBaseTypeNames = 'string' | 'number' | 'url' | 'boolean';
+export type DmnoSimpleBaseTypeNames = 'string' | 'number' | 'url' | 'boolean' | 'simpleObject';
 
 
 

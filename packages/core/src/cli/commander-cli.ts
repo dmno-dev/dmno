@@ -18,6 +18,7 @@ import { RunCommand } from './commands/run.command';
 import { DevCommand } from './commands/dev.command';
 import { PluginCommand } from './commands/plugin.command';
 import { InitCommand } from './commands/init.command';
+import { CacheCommand } from './commands/cache.command';
 
 
 
@@ -31,7 +32,9 @@ program.addCommand(LoadCommand);
 program.addCommand(RunCommand);
 program.addCommand(DevCommand);
 program.addCommand(InitCommand);
+program.addCommand(CacheCommand);
 program.addCommand(PluginCommand);
+
 
 
 // have to pass through the root program for this one so we can access all the subcommands

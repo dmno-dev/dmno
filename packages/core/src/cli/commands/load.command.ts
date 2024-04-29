@@ -2,11 +2,16 @@ import kleur from 'kleur';
 import _ from 'lodash-es';
 import CliTable from 'cli-table3';
 import { tryCatch } from '@dmno/ts-lib';
+import { outdent } from 'outdent';
+import boxen from 'boxen';
 import { DmnoCommand } from '../lib/DmnoCommand';
 
-import { formatError, formattedValue } from '../lib/formatting';
+import {
+  formatError, formattedValue, getItemSummary, joinAndCompact,
+} from '../lib/formatting';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
+import { addCacheFlags } from '../lib/cache-helpers';
 
 const TERMINAL_COLS = process.stdout.columns - 10 || 100;
 
@@ -15,17 +20,21 @@ const program = new DmnoCommand('load')
   .description('Loads the resolved config for a service')
   .option('-f, --format <format>', 'format to output resolved config (ex. json)')
   .option('--public', 'only loads public (non-sensitive) values')
+  .option('--show-all', 'shows all items, even when config is failing')
   .example('dmno load', 'Loads the resolved config for the root service')
   .example('dmno load --service service1', 'Loads the resolved config for service1')
   .example('dmno load --service service1 --format json', 'Loads the resolved config for service1 in JSON format');
 
 addServiceSelection(program);
-
+addCacheFlags(program);
 
 program.action(async (opts: {
   service?: string,
   format?: string,
   public?: boolean,
+  showAll?: boolean,
+  skipCache?: boolean,
+  clearCache?: boolean,
 }, thisCommand) => {
   const ctx = getCliRunCtx();
 
@@ -165,51 +174,70 @@ program.action(async (opts: {
 
   // TODO: make isValid flag on service to work
   if (failingItems.length > 0) {
-    console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your configuration is currently failing validation')}  🚨 🚨 🚨\n`);
-    console.log(kleur.gray('The following config item(s) are failing:\n'));
-
-    const errorsTable = new CliTable({
-      // TODO: make helper to get column widths based on percentages
-      colWidths: [
-        Math.floor(TERMINAL_COLS * 0.25),
-        Math.floor(TERMINAL_COLS * 0.25),
-        Math.floor(TERMINAL_COLS * 0.5),
-      ],
-      wordWrap: true,
-    });
-
-    // header row
-    errorsTable.push(
-      [
-        'Path',
-        'Value',
-        'Error(s)',
-      ].map((t) => kleur.bold().magenta(t)),
-    );
-
+    console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline(`Configuration of service "${kleur.magenta(service.serviceName)}" is currently invalid `)}  🚨 🚨 🚨\n`);
+    console.log('Invalid items:\n');
 
     _.each(failingItems, (item) => {
-      let valueCellContents = formattedValue(item.resolvedValue, false);
-      if (item.resolvedRawValue !== item.resolvedValue) {
-        valueCellContents += kleur.gray().italic('\n------\ncoerced from\n');
-        valueCellContents += formattedValue(item.resolvedRawValue, false);
-      }
-
-      const errors = _.compact([
-        item.coercionError,
-        ...item.validationErrors || [],
-        item.resolutionError,
-      ]);
-
-      errorsTable.push([
-        item.key,
-        valueCellContents,
-        // errors?.map((err) => formatError(err)).join('\n'),
-        errors?.map((err) => err.message).join('\n'),
-      ]);
+      console.log(getItemSummary(item));
+      console.log();
     });
+    if (opts.showAll) {
+      console.log();
+      console.log(joinAndCompact([
+        'Valid items:',
+        kleur.italic().gray('(remove `--show-all` flag to hide)'),
+      ]));
+      console.log();
+      const validItems = _.filter(service.config, (i) => !!i.isValid);
+      _.each(validItems, (item) => {
+        console.log(getItemSummary(item));
+      });
+    }
 
-    console.log(errorsTable.toString());
+
+    // const errorsTable = new CliTable({
+    //   // TODO: make helper to get column widths based on percentages
+    //   colWidths: [
+    //     Math.floor(TERMINAL_COLS * 0.25),
+    //     Math.floor(TERMINAL_COLS * 0.25),
+    //     Math.floor(TERMINAL_COLS * 0.5),
+    //   ],
+    //   wordWrap: true,
+    // });
+
+    // // header row
+    // errorsTable.push(
+    //   [
+    //     'Path',
+    //     'Value',
+    //     'Error(s)',
+    //   ].map((t) => kleur.bold().magenta(t)),
+    // );
+
+
+    // _.each(failingItems, (item) => {
+    //   let valueCellContents = formattedValue(item.resolvedValue, false);
+    //   if (item.resolvedRawValue !== item.resolvedValue) {
+    //     valueCellContents += kleur.gray().italic('\n------\ncoerced from\n');
+    //     valueCellContents += formattedValue(item.resolvedRawValue, false);
+    //   }
+
+    //   const errors = _.compact([
+    //     item.coercionError,
+    //     ...item.validationErrors || [],
+    //     item.resolutionError,
+    //   ]);
+
+    //   errorsTable.push([
+    //     item.key,
+    //     valueCellContents,
+    //     // errors?.map((err) => formatError(err)).join('\n'),
+    //     errors?.map((err) => err.message).join('\n'),
+    //   ]);
+    // });
+
+
+    // console.log(errorsTable.toString());
 
     process.exit(1);
   }
@@ -227,9 +255,15 @@ program.action(async (opts: {
   // console.log(service.config);
   if (opts.format === 'json') {
     console.log(JSON.stringify(valuesOnly));
-  } else {
+  } else if (opts.format === 'json-full') {
     // TODO: this includes sensitive info when using --public option
     console.dir(service.toJSON(), { depth: null });
+  } else {
+    console.log('\nConfig loaded successfully:\n');
+    _.each(service.config, (item) => {
+      console.log(getItemSummary(item));
+    });
+    console.log('');
   }
   process.exit(0);
 });

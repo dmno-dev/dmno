@@ -95,18 +95,19 @@ export default defineDmnoService({
     },
     BOOLEAN_OPPOSITE: {
       extends: 'boolean',
-      value: true,
+      value: (ctx) => !ctx.get('BOOLEAN_EXAMPLE'),
     },
-    BOOLEAN_OPPOSITE2: {
-      extends: 'boolean',
-      value: (ctx) => !ctx.get('BOOLEAN_OPPOSITE'),
+
+    SIMPLE_OBJECT: {
+      extends: 'simpleObject',
+      value: { foo: 1, bar: 'biz' },
     },
 
     RANDOM_NUM: {
       extends: DmnoBaseTypes.number,
       description: 'random number that will change each time config resolution runs',
       required: true,
-      value: (ctx) => Math.floor(Math.random() * 100),
+      // value: (ctx) => Math.floor(Math.random() * 100),
     },
     CACHED_RANDOM_NUM: {
       extends: DmnoBaseTypes.number,
@@ -129,5 +130,8 @@ export default defineDmnoService({
       // required: true,
       // value: 'EXAMPLE',
     },
+    ANOTHER: {
+      value: 123
+    }
   },
 })

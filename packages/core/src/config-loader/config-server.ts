@@ -133,8 +133,10 @@ export class ConfigServer {
     ipc.server.broadcast('event', { type, payload });
   }
 
+  onReload?: () => void;
   private onConfigReload() {
     this.broadcastIpcEvent('reload', { foo: 1 });
+    if (this.onReload) this.onReload();
   }
 
 

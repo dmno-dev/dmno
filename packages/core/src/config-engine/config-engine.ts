@@ -31,6 +31,7 @@ import { stringifyJsonWithCommentBanner } from '../lib/json-utils';
 const debug = Debug('dmno');
 
 type ConfigRequiredAtTypes = 'build' | 'boot' | 'run' | 'deploy';
+export type CacheMode = 'skip' | 'clear' | true;
 
 type ConfigContext = {
   get: (key: string) => any;
@@ -186,8 +187,11 @@ export function defineDmnoWorkspace(opts: DmnoWorkspaceConfig) {
   return opts;
 }
 
-
-
+// config item keys are all checked against this regex
+// currently it must start with a letter (to make it a valid js property)
+// and can only contain letters, number, and underscore
+// we may want to restrict "__" if we use that as the nesting separator for env var overrides?
+const VALID_ITEM_KEY_REGEX = /^[a-z]\w+$/i;
 
 export class ConfigPath {
   constructor(readonly path: string) { }
@@ -458,8 +462,13 @@ export class DmnoWorkspace {
 
       // process the regular config schema items
       for (const itemKey in service.rawConfig?.schema) {
-        const itemDef = service.rawConfig?.schema[itemKey];
-        service.addConfigItem(new DmnoConfigItem(itemKey, itemDef, service));
+        if (!itemKey.match(VALID_ITEM_KEY_REGEX)) {
+          service.schemaErrors.push(new SchemaError(`Invalid item key "${itemKey}"`));
+        } else {
+          const itemDef = service.rawConfig?.schema[itemKey];
+          service.addConfigItem(new DmnoConfigItem(itemKey, itemDef, service));
+        }
+
         // TODO: add dag node
       }
     }
@@ -496,7 +505,12 @@ export class DmnoWorkspace {
   get cacheKeyFilePath() { return `${this.rootPath}/.dmno/cache-key.json`; }
   private valueCache: Record<string, CacheEntry> = {};
   private cacheLastLoadedAt: Date | undefined;
+  private cacheMode: CacheMode = true;
+  setCacheMode(cacheMode: typeof this.cacheMode) {
+    this.cacheMode = cacheMode;
+  }
   private async loadCache() {
+    if (this.cacheMode === 'skip') return;
     // might want to attach the CacheEntry to the workspace instead to get the key?
     // or we could always pass it around as needed
 
@@ -536,6 +550,7 @@ export class DmnoWorkspace {
       CacheEntry.encryptionKeyName = importedDmnoKey.keyName;
     }
 
+    if (this.cacheMode === 'clear') return;
     if (!fs.existsSync(this.cacheFilePath)) return;
     const cacheRawStr = await fs.promises.readFile(this.cacheFilePath, 'utf-8');
     const cacheRaw = parseJSONC(cacheRawStr) as SerializedCache;
@@ -551,6 +566,7 @@ export class DmnoWorkspace {
     this.cacheLastLoadedAt = new Date();
   }
   private async writeCache() {
+    if (this.cacheMode === 'skip') return;
     // we don't want to write a file if the cache has not changed because it will trigger vite to reload
     if (this.cacheLastLoadedAt && _.every(this.valueCache, (item) => item.updatedAt < this.cacheLastLoadedAt!)) {
       return;
@@ -565,12 +581,14 @@ export class DmnoWorkspace {
     await fs.promises.writeFile(this.cacheFilePath, serializedCacheStr, 'utf-8');
   }
   async getCacheItem(key: string, usedBy?: string) {
+    if (this.cacheMode === 'skip') return undefined;
     if (key in this.valueCache) {
       if (usedBy) this.valueCache[key].usedByItems.add(usedBy);
       return this.valueCache[key].value;
     }
   }
   async setCacheItem(key: string, value: string, usedBy?: string) {
+    if (this.cacheMode === 'skip') return undefined;
     this.valueCache[key] = new CacheEntry(key, value, { usedBy });
   }
 

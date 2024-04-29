@@ -12,7 +12,9 @@ import { ConfigLoaderRequestMap } from './ipc-requests';
 import { createDebugTimer } from '../cli/lib/debug-timer';
 import { setupViteServer } from './vite-server';
 import { WorkspacePackagesListing, findDmnoServices } from './find-services';
-import { DmnoService, DmnoWorkspace, DmnoServiceConfig } from '../config-engine/config-engine';
+import {
+  DmnoService, DmnoWorkspace, DmnoServiceConfig, CacheMode,
+} from '../config-engine/config-engine';
 import { beginServiceLoadPlugins, beginWorkspaceLoadPlugins, finishServiceLoadPlugins } from '../config-engine/plugins';
 import { ConfigLoadError } from '../config-engine/errors';
 import { generateServiceTypes } from '../config-engine/type-generation';
@@ -33,6 +35,13 @@ export class ConfigLoader {
     this.isReady = this.finishInit();
     this.startAt = new Date();
   }
+
+  private cacheMode: CacheMode = true;
+  setCacheMode(cacheMode: typeof this.cacheMode) {
+    if (this.dmnoWorkspace) this.dmnoWorkspace.setCacheMode(cacheMode);
+    this.cacheMode = cacheMode;
+  }
+
 
   viteRunner?: ViteNodeRunner;
 
@@ -75,6 +84,7 @@ export class ConfigLoader {
 
     // TODO: if not first load, clean up previous workspace? or reuse it somehow?
     this.dmnoWorkspace = new DmnoWorkspace();
+    this.dmnoWorkspace.setCacheMode(this.cacheMode);
     beginWorkspaceLoadPlugins(this.dmnoWorkspace);
 
     // TODO: we may want to set up an initial sort of the services so at least root is first?
