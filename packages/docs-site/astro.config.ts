@@ -37,6 +37,11 @@ export default defineConfig({
         starlightLinksValidator(),
       ],
       pagination: false,
+      expressiveCode: {
+        styleOverrides: {
+          // codePaddingInline: '25px',
+        }
+      },
       head: [
         {
           tag: 'script',

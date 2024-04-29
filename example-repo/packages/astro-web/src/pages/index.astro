@@ -3,18 +3,14 @@ import Layout from "../layouts/Layout.astro";
 import ConfigTest from "../components/ConfigTest.astro";
 import ClientVueConfigTest from "../components/ClientVueConfigTest.vue";
 import ServerVueConfigTest from "../components/ServerVueConfigTest.vue";
+
+// export const prerender = true;
 ---
 
 <Layout title="Welcome to Astro.">
   <main>
-    <h1>Welcome to <span class="text-gradient">DMNO + Astro</span></h1>
-    <p class="instructions">
-      To get started, open the directory <code>src/pages</code> in your project.<br
-      />
-      <strong>Code Challenge:</strong> Tweak the "Welcome to Astro" message above.
-    </p>
+    <h1><span class="text-gradient">DMNO + Astro</span></h1>
     <ConfigTest />
-
     <hr />
     <h2>Server rendered vue component</h2>
     <ServerVueConfigTest />

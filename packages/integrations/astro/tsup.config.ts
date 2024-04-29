@@ -3,13 +3,16 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: [ // Entry point(s)
     'src/index.ts', // main lib, users will import from here
-    'src/dev-toolbar-app.ts', // main lib, users will import from here
-    'src/astro-middleware.ts', // main lib, users will import from here
+    'src/dev-toolbar-app.ts', // dev toolbar
+    'src/astro-middleware.ts', // lead detection middleware
+    'src/fetch-public-dynamic-config.json.ts', // injected api route to fetch dynamic public config
   ], 
 
   external: [
     "dmno", "astro",
   ],
+  noExternal: ['@dmno/ts-lib', '@dmno/encryption-lib'],
+
 
   dts: true, // Generate .d.ts files
   // minify: true, // Minify output
