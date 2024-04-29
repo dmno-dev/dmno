@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, defineDmnoService } from '@dmno/core';
+import { DmnoBaseTypes, defineDmnoService } from 'dmno';
 
 export default defineDmnoService({
   name: 'group1',

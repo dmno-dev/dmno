@@ -11,21 +11,18 @@ importers:
       '@dmno/1password-plugin':
         specifier: link:../packages/plugins/1password-plugin
         version: link:../packages/plugins/1password-plugin
-      '@dmno/core':
-        specifier: link:../packages/core
-        version: link:../packages/core
       '@dmno/encrypted-vault-plugin':
         specifier: link:../packages/plugins/encrypted-vault-plugin
         version: link:../packages/plugins/encrypted-vault-plugin
+      dmno:
+        specifier: link:../packages/core
+        version: link:../packages/core
 
   packages/api:
     dependencies:
       '@dmno/1password-plugin':
         specifier: link:../../../packages/plugins/1password-plugin
         version: link:../../../packages/plugins/1password-plugin
-      '@dmno/core':
-        specifier: link:../../../packages/core
-        version: link:../../../packages/core
       '@koa/cors':
         specifier: ^4.0.0
         version: 4.0.0
@@ -41,6 +38,9 @@ importers:
       debug:
         specifier: ^4.3.4
         version: 4.3.4
+      dmno:
+        specifier: link:../../../packages/core
+        version: link:../../../packages/core
       dotenv:
         specifier: ^16.0.3
         version: 16.0.3
@@ -165,15 +165,15 @@ importers:
       '@dmno/astro-integration':
         specifier: link:../../../packages/integrations/astro
         version: link:../../../packages/integrations/astro
-      '@dmno/core':
-        specifier: link:../../../packages/core
-        version: link:../../../packages/core
       '@dmno/eslint-config':
         specifier: link:../../../packages/eslint-config
         version: link:../../../packages/eslint-config
       astro:
         specifier: ^4.6.3
         version: 4.6.3(typescript@5.4.5)
+      dmno:
+        specifier: link:../../../packages/core
+        version: link:../../../packages/core
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -183,7 +183,7 @@ importers:
 
   packages/group1:
     dependencies:
-      '@dmno/core':
+      dmno:
         specifier: link:../../../packages/core
         version: link:../../../packages/core
 
@@ -202,9 +202,6 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
     devDependencies:
-      '@dmno/core':
-        specifier: link:../../../packages/core
-        version: link:../../../packages/core
       '@types/node':
         specifier: ^20.12.7
         version: 20.12.7
@@ -214,6 +211,9 @@ importers:
       '@types/react-dom':
         specifier: ^18.2.25
         version: 18.2.25
+      dmno:
+        specifier: link:../../../packages/core
+        version: link:../../../packages/core
       eslint:
         specifier: ^8.57.0
         version: 8.57.0
@@ -236,9 +236,6 @@ importers:
         specifier: ^3.4.23
         version: 3.4.23(typescript@5.4.5)
     devDependencies:
-      '@dmno/core':
-        specifier: link:../../../packages/core
-        version: link:../../../packages/core
       '@dmno/eslint-config':
         specifier: link:../../../packages/eslint-config
         version: link:../../../packages/eslint-config
@@ -248,6 +245,9 @@ importers:
       '@vitejs/plugin-vue':
         specifier: ^5.0.4
         version: 5.0.4(vite@5.2.9)(vue@3.4.23)
+      dmno:
+        specifier: link:../../../packages/core
+        version: link:../../../packages/core
       typescript:
         specifier: ^5.4.5
         version: 5.4.5

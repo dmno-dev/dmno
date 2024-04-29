@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, ValidationError, createDmnoDataType } from '@dmno/core';
+import { DmnoBaseTypes, ValidationError, createDmnoDataType } from 'dmno';
 
 const ONEPASS_ICON = 'simple-icons:1password';
 

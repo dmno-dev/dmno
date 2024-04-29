@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, createDmnoDataType } from "@dmno/core";
+import { DmnoBaseTypes, createDmnoDataType } from "dmno";
 
 export const GA4MeasurementId = createDmnoDataType({
   extends: DmnoBaseTypes.string({ startsWith: 'G-', }),

@@ -10,14 +10,14 @@ export async function setupViteServer(
   const customPlugin: Plugin = {
     name: 'dmno-config-loader-plugin',
 
-    // THIS IS IMPORTANT - it forces our @dmno/core code to be "externalized" rather than bundled
+    // THIS IS IMPORTANT - it forces our dmno code to be "externalized" rather than bundled
     // otherwise we end up not loading the same code here in this file as within the config files
     // meaning we have 2 copies of classes and `instanceof` stops working
     enforce: 'pre', // Run before the builtin 'vite:resolve' of Vite
     async resolveId(source, importer, options) {
       // console.log(kleur.bgCyan('PLUGIN RESOLVE!'), source, importer, options);
 
-      if (source === '@dmno/core') {
+      if (source === 'dmno') {
         // const resolution = await this.resolve(source, importer, options);
         // console.log('resolution', resolution);
         // if (!resolution) return;
@@ -25,7 +25,7 @@ export async function setupViteServer(
         return {
           // pointing at dist/index is hard-coded...
           // we could extract the main entry point from the resolution instead?
-          id: '/node_modules/@dmno/core/dist/index.mjs',
+          id: '/node_modules/dmno/dist/index.mjs',
           // I believe this path is appended to our "root" which is our workpace root
         };
       }
@@ -74,7 +74,7 @@ export async function setupViteServer(
     build: {
     // target: 'esnext',
     // rollupOptions: {
-    //   external: '@dmno/core',
+    //   external: 'dmno',
     // },
     //     // external: [...builtinModules, ...builtinModules.map((m) => `node:${m}`)],
     //   },

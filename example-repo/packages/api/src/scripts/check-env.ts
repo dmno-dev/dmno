@@ -1,4 +1,4 @@
-import { loadProcessDmnoEnv } from '@dmno/core';
+import { loadProcessDmnoEnv } from 'dmno';
 
 await loadProcessDmnoEnv();
 

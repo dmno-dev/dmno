@@ -202,7 +202,7 @@ importers:
       '@dmno/1password-plugin':
         specifier: link:../plugins/1password-plugin
         version: link:../plugins/1password-plugin
-      '@dmno/core':
+      dmno:
         specifier: link:../core
         version: link:../core
       netlify-cli:
@@ -276,9 +276,6 @@ importers:
         specifier: ^4
         version: 4.5.18(@types/node@20.12.7)(typescript@5.4.5)
     devDependencies:
-      '@dmno/core':
-        specifier: workspace:*
-        version: link:../../core
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../../eslint-config
@@ -294,6 +291,9 @@ importers:
       '@types/node':
         specifier: ^20.12.7
         version: 20.12.7
+      dmno:
+        specifier: workspace:*
+        version: link:../../core
       tsup:
         specifier: ^8.0.2
         version: 8.0.2(typescript@5.4.5)
@@ -307,9 +307,6 @@ importers:
         specifier: ^14
         version: 14.2.2(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
-      '@dmno/core':
-        specifier: workspace:*
-        version: link:../../core
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../../eslint-config
@@ -319,6 +316,9 @@ importers:
       '@types/node':
         specifier: ^20.12.7
         version: 20.12.7
+      dmno:
+        specifier: workspace:*
+        version: link:../../core
       tsup:
         specifier: ^8.0.2
         version: 8.0.2(typescript@5.4.5)
@@ -332,9 +332,6 @@ importers:
         specifier: ^5.0
         version: 5.1.6(@types/node@20.12.7)
     devDependencies:
-      '@dmno/core':
-        specifier: workspace:*
-        version: link:../../core
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../../eslint-config
@@ -350,6 +347,9 @@ importers:
       '@types/node':
         specifier: ^20.12.7
         version: 20.12.7
+      dmno:
+        specifier: workspace:*
+        version: link:../../core
       tsup:
         specifier: ^8.0.2
         version: 8.0.2(typescript@5.4.5)
@@ -359,12 +359,12 @@ importers:
 
   packages/plugins/1password-plugin:
     dependencies:
-      '@dmno/core':
-        specifier: workspace:*
-        version: link:../../core
       async:
         specifier: ^3.2.5
         version: 3.2.5
+      dmno:
+        specifier: workspace:*
+        version: link:../../core
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
@@ -402,9 +402,6 @@ importers:
 
   packages/plugins/encrypted-vault-plugin:
     dependencies:
-      '@dmno/core':
-        specifier: workspace:*
-        version: link:../../core
       '@dmno/encryption-lib':
         specifier: workspace:*
         version: link:../../encryption-lib
@@ -417,6 +414,9 @@ importers:
       async:
         specifier: ^3.2.5
         version: 3.2.5
+      dmno:
+        specifier: workspace:*
+        version: link:../../core
       jsonc-parser:
         specifier: ^3.2.1
         version: 3.2.1

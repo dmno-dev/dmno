@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, createDmnoDataType } from '@dmno/core';
+import { DmnoBaseTypes, createDmnoDataType } from 'dmno';
 
 const DmnoEncryptionKey = createDmnoDataType({
   typeLabel: 'dmno/encryption-key',

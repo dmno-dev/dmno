@@ -31,7 +31,7 @@ const ENV_LOCAL = outdent`
 `;
 
 const CONFIG_MTS_ROOT = (serviceName?: string) => outdent`
-  import { DmnoBaseTypes, defineDmnoWorkspace, switchByNodeEnv, NodeEnvType } from '@dmno/core';
+  import { DmnoBaseTypes, defineDmnoWorkspace, switchByNodeEnv, NodeEnvType } from 'dmno';
 
   export default defineDmnoWorkspace({
     ${serviceName ? `name: '${serviceName}'` : '// no name specified - inherit from package.json'},
@@ -61,7 +61,7 @@ const CONFIG_MTS_ROOT = (serviceName?: string) => outdent`
   });
 `;
 const CONFIG_MTS = (serviceName?: string) => outdent`
-  import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv } from '@dmno/core';
+  import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv } from 'dmno';
 
   export default defineDmnoService({
     ${serviceName ? `name: '${serviceName}'` : '// no name specified - inherit from package.json'},
@@ -109,14 +109,14 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
   // might make this an actual cli option but not sure if needed
   const overwriteMode = !!process.env.DMNO_INIT_OVERWRITE;
 
-  if (!overwriteMode && await pathExists(`${servicePath}/node_modules/@dmno/core`)) {
-    console.log(noopMessage('@dmno/core already installed'));
+  if (!overwriteMode && await pathExists(`${servicePath}/node_modules/dmno`)) {
+    console.log(noopMessage('dmno already installed'));
   } else {
     try {
-      const dmnoCoreInstall = execSync(`cd ${servicePath} && ${packageManager} install @dmno/core ${service.isRoot ? '-w' : ''}`);
-      console.log(initSuccessMessage('@dmno/core installed'));
+      const dmnoCoreInstall = execSync(`cd ${servicePath} && ${packageManager} install dmno ${service.isRoot ? '-w' : ''}`);
+      console.log(initSuccessMessage('dmno installed'));
     } catch (err) {
-      console.log('💥 @dmno/core install failed');
+      console.log('💥 dmno install failed');
       throw err;
     }
   }

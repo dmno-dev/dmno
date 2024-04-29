@@ -2,7 +2,7 @@ import {
   defineDmnoService, DmnoBaseTypes, configPath, dmnoFormula,switchByNodeEnv,
   createDmnoDataType, ValidationError,
   EncryptedFileStorePlugin
-} from '@dmno/core';
+} from 'dmno';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 // plugins can be used to create reusable functionality and can reference config items in their initialization

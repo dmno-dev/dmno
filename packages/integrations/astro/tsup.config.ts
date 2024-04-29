@@ -8,7 +8,7 @@ export default defineConfig({
   ], 
 
   external: [
-    "@dmno/core", "astro",
+    "dmno", "astro",
   ],
 
   dts: true, // Generate .d.ts files

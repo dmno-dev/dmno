@@ -7,7 +7,7 @@ export default defineConfig({
   ], 
 
   external: [
-    "@dmno/core", "next",
+    "dmno", "next",
   ],
 
   dts: true, // Generate .d.ts files

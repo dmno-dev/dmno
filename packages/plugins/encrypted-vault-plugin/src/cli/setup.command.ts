@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { execSync } from 'node:child_process';
-import { kleur, createDmnoPluginCliCommand } from '@dmno/core/cli-lib';
+import { kleur, createDmnoPluginCliCommand } from 'dmno/cli-lib';
 
 import { confirm, select } from '@inquirer/prompts';
 

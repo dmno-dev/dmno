@@ -1,4 +1,4 @@
-import { ConfigServerClient } from '@dmno/core';
+import { ConfigServerClient } from 'dmno';
 import type { Plugin } from 'vite';
 
 export function injectDmnoConfigVitePlugin(): Plugin {

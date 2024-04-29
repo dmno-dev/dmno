@@ -11,7 +11,7 @@ import {
   SchemaError,
   GetPluginInputTypes,
   createResolver,
-} from '@dmno/core';
+} from 'dmno';
 import { OnePasswordTypes } from './data-types';
 
 type ItemId = string;

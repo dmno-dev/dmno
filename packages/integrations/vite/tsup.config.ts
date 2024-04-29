@@ -6,7 +6,7 @@ export default defineConfig({
   ], 
 
   external: [
-    "@dmno/core", "vite",
+    "dmno", "vite",
   ],
 
   dts: true, // Generate .d.ts files

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { execSync } from 'node:child_process';
 import _ from 'lodash-es';
 import { parse as parseJSONC } from 'jsonc-parser';
-import { kleur, createDmnoPluginCliCommand, Option } from '@dmno/core/cli-lib';
+import { kleur, createDmnoPluginCliCommand, Option } from 'dmno/cli-lib';
 
 import { confirm, input, select } from '@inquirer/prompts';
 

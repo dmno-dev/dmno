@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, defineDmnoWorkspace, configPath, switchByNodeEnv, NodeEnvType, switchBy } from '@dmno/core';
+import { DmnoBaseTypes, defineDmnoWorkspace, configPath, switchByNodeEnv, NodeEnvType, switchBy } from 'dmno';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 

@@ -1,4 +1,4 @@
-import { createDmnoPluginCli } from '@dmno/core/cli-lib';
+import { createDmnoPluginCli } from 'dmno/cli-lib';
 import { SetupCommand } from './setup.command';
 import { AddItemCommand, UpdateItemCommand, UpsertItemCommand } from './upsert.command';
 import { DeleteItemCommand } from './delete.command';

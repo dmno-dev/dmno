@@ -15,7 +15,7 @@ Make sure you've installed (and logged in to) 1Password per their instructions [
 // in this case we're leading 2 instances, one for preprod and one for prod
 import {
   defineDmnoService, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, switchByNodeEnv,
-} from '@dmno/core';
+} from 'dmno';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 const DevOnePassBackend = new OnePasswordDmnoPlugin(

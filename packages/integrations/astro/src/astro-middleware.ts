@@ -1,4 +1,4 @@
-import { ConfigServerClient, DmnoService } from '@dmno/core';
+import { ConfigServerClient, DmnoService } from 'dmno';
 import { MiddlewareHandler } from 'astro';
 
 // console.log('custom astro middleware loaded!', (globalThis as any).DMNO_CONFIG, process.env);

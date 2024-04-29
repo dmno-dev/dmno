@@ -1,7 +1,7 @@
 import path from 'path';
 import dotenv from 'dotenv';
 
-import { loadProcessDmnoEnv } from '@dmno/core';
+import { loadProcessDmnoEnv } from 'dmno';
 
 
 // import '../.dmno/generated-types/config-hash';

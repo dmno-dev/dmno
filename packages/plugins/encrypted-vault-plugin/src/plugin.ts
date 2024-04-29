@@ -13,7 +13,7 @@ import {
   SchemaError,
   GetPluginInputTypes,
   createResolver,
-} from '@dmno/core';
+} from 'dmno';
 import {
   decrypt, encrypt, generateEncryptionKeyString, importDmnoEncryptionKeyString,
 } from '@dmno/encryption-lib';

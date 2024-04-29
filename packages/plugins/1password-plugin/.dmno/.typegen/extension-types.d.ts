@@ -1,7 +1,7 @@
 // TODO: this file will be auto-generated... just showing an example of what we need to output
 
 import { OnePasswordDmnoPlugin } from '../../src/plugin';
-import { _PluginInputTypesSymbol } from '@dmno/core';
+import { _PluginInputTypesSymbol } from 'dmno';
 declare module '../../src/plugin' {
   interface OnePasswordDmnoPlugin {
     [_PluginInputTypesSymbol]: {
