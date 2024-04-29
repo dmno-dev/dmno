@@ -9,7 +9,7 @@ At DMNO we _love_ Astro (this very site is built with it). That's why we're very
 
 To get started install `dmno` and the `astro` plugin: 
 
-<TabbedCode packageName="@dmno/astro-integration @dmno/config-engine" />
+<TabbedCode packageName="@dmno/astro-integration dmno" />
 
 ### Scaffold your DMNO config
 
@@ -36,11 +36,11 @@ If you run into any issues, feel free to <BugReportLink label='integrations/astr
 #### Manual install instructions
 
 Install dmno itself and the astro integration
-<TabbedCode packageName="@dmno/astro-integration @dmno/config-engine" />
+<TabbedCode packageName="@dmno/astro-integration dmno" />
 
 Update your `astro.config.mjs` - import the plugin, and add to `defineConfig`: 
 
-```diff lang="mjs" title="astro.config.mjs" ins="dmnoAstroIntegration()"
+```diff lang="js" title="astro.config.mjs" ins="dmnoAstroIntegration()"
 import { defineConfig } from 'astro/config';
 +import dmnoAstroIntegration from '@dmno/astro-integration';
 
@@ -138,7 +138,7 @@ As long as you've added your config file to the include section in your
 
 However to get TS autocompletion in our .mjs file, we need to add a triple-slash reference to the dmno generated types. For e
 
-```diff lang="mjs" title="astro.config.mjs"
+```diff lang="js" title="astro.config.mjs"
 +/// <reference path="./.dmno/.typegen/global.d.ts" />
 import { defineConfig } from 'astro/config';
 
