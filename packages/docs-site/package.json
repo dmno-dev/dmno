@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro check && astro build",
+    "build": "astro check",
     "netlify-build": "pnpm run docgen && pnpm run clidocgen && turbo build",
     "preview": "astro preview",
     "astro": "astro",

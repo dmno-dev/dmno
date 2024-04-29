@@ -51,7 +51,7 @@ async function injectConfig() {
 
   // we cannot edit import.meta, but we've rewritten it to DMNO_CONFIG
   // (import.meta as any).dmnoEnv = dmnoEnv;
-  (globalThis as any).DMNO_CONFIG = new Proxy({}, {
+  (globalThis as any).DMNO_CONFIG = new Proxy({ _dmnoConfig: true }, {
     get(o, key) {
       const keyStr = key.toString();
       configItemKeysAccessed[keyStr] = true;
@@ -60,6 +60,7 @@ async function injectConfig() {
       throw new Error(`❌ ${keyStr} is not a config item (1)`);
     },
   });
+  console.log('INJECTING globalThis.DMNO_CONFIG', (globalThis as any).DMNO_CONFIG);
 
   // attach the same proxy object so we can throw nice errors
   (globalThis as any).DMNO_PUBLIC_CONFIG = new Proxy({}, {
