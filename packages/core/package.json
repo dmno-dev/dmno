@@ -21,6 +21,9 @@
     },
     "./cli-lib": {
       "default": "./dist/cli/plugin-cli-lib.mjs"
+    },
+    "./load": {
+      "default": "./dist/app-init/auto-load-global.mjs"
     }
   },
   "files": [

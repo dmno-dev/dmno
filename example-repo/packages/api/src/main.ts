@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 
-// import first to set up env
-import './init-env';
+import 'dmno/load'; // import first to load global DMNO_CONFIG
 
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
