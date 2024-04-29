@@ -20,7 +20,7 @@ const program = new DmnoCommand('clear-cache')
 
     Also note many commands have \`--skip-cache\` and \`--clear-cache\` flags
   `)
-  .example('dmno cache clear', 'Clear the entire cache');
+  .example('dmno clear-cache', 'Clear the entire cache');
   // .example('dmno cache clear -s web', 'Clear items from the cache used by the "web" service only');
 
 // addServiceSelection(program);
@@ -43,4 +43,4 @@ program.action(async (opts, more) => {
   process.exit(0);
 });
 
-export const CacheCommand = program;
+export const ClearCacheCommand = program;

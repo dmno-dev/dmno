@@ -1,5 +1,5 @@
 export * from './config-engine/config-engine';
-export * from './use-config';
+export * from './app-init/app-init-lib';
 export * from './config-engine/base-types';
 export * from './config-engine/common-types';
 // TODO: probably want to clean up how these are exported
