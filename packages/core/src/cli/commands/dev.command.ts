@@ -65,7 +65,10 @@ program.action(async (opts: {
     );
   }
 
-  await ctx.configLoader.dmnoWorkspace?.resolveConfig();
+  // calling reload will regenerate types and resolve the config
+  // TODO: we may want to chagne how the initial load in dev mode works so we dont need to reload here...
+  await ctx.configLoader.reload();
+
   await logResult();
 
   configServer.onReload = () => logResult();
