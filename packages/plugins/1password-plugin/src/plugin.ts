@@ -186,7 +186,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
           if (!valueAtPath) {
             throw new Error(`Unable to resolve value from path ${path}`);
           }
-          return valueAtPath;
+          return valueAtPath.value;
         }
 
         // TODO: better error handling to tell you what went wrong? no access, non existant, etc

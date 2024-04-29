@@ -40,7 +40,7 @@ export default defineConfig({
       expressiveCode: {
         styleOverrides: {
           // codePaddingInline: '25px',
-        }
+        },
       },
       head: [
         {
@@ -198,6 +198,10 @@ export default defineConfig({
                 {
                   label: 'plugin',
                   link: '/docs/reference/cli/plugin',
+                },
+                {
+                  label: 'clear-cache',
+                  link: '/docs/reference/cli/clear-cache',
                 },
               ],
             },

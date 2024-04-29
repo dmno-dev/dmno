@@ -4,19 +4,25 @@ title: Node.js (Express, Koa, etc)
 
 import TabbedCode from '@/components/TabbedCode.astro';
 
-For backend services, DMNO provides a way to manage your configuration in a single place, and access it in a type-safe way across your services. This allows you to easily share configuration between services, and ensures that your configuration is always up-to-date and consistent.
+While node recently added [native support for loading dotenv files](https://nodejs.org/docs/latest/api/cli.html#--env-fileconfig), you're often still left hacking things together to get a config system that works well.
 
-
+Instead of reinventing the wheel on every service within each project, with DMNO you get:
+- single system to manage your config for all of your services
+- securely handle your secrets by committing them encrypted to your repo or sync with backends like 1password
+- validations, coercion logic, and full type safety
+- built in documentation, and magical IDE auto-completion
+- all powered by an extremely flexible type system
+- live reload (and re-validation) on config changes
 
 ## Setup
-To get started, simply install dmno and then set up your config schema.
+To get started, simply install dmno and then set up your config schema according to the schema guide. (TODO: link to somewhere?)
 <TabbedCode packageName="dmno" />
 
 ### Loading your config
 
-You must trigger the loading of `DMNO_CONFIG` global. Ideally you want to do this as the first thing you do in your app.
-To do this, simply `import 'dmno/load'` as the first thing in any code you need to run - typically a file like "app.ts" or "main.ts" (or .js ).
-Also make sure to do the same in any other script files you may need to run.
+You must trigger the loading of the `DMNO_CONFIG` global, ideally as the _first thing_ you do in your application code.
+To do this, simply `import 'dmno/load'` at the top of any entrypoint into your code (typically something like `app.ts`/`main.ts`)
+and do the same in any other script files you may need to run.
 
 ```diff lang="ts" title="main.ts"
 +import 'dmno/load'; // should be imported first!
@@ -24,56 +30,42 @@ Also make sure to do the same in any other script files you may need to run.
 // rest of your imports and code...
 ```
 
+### Booting your app
 
-### Adjusting your package.json scripts
+We recommend you adjust the command(s) you use to run your code by using `dmno run`.
 
-The import of `dmno/load` will automatically call out to the dmno CLI and load your config if it has not been loaded alraedy. However you can also run your main code via `dmno run` to have the config loaded already and passed into your app.
+While the `dmno/load` import will internally call the dmno cli and load config if necessary, by calling your code via `dmno run` you'll get the best experience on the command line.
 
-
-#### Watch mode and dev commands
-You likely have a `pnpm dev` (or yarn/npm/etc) command - which you expect to automatically reload as you make changes to your code. It might use [nodemon](https://nodemon.io/), node's [native `--watch` option](https://nodejs.org/docs/latest/api/cli.html#--watch), or something else. Similarly, `dmno run` has a "watch mode" (`-w`) which watches your config and reloads when any changes are detected. In most cases, if you just prefix your existing dev command with `dmno run -w --` and you're good to go.
-
-
-```diff lang="json" title="package.json" ins="dmno run -w -- "
+```diff lang="json" title="package.json" ins="dmno run -- "
 {
   // ...
   "scripts": {
-    "dev:nodemon": "dmno run -w -- nodemon dist/main.js",
-    "dev:native": "dmno run -w -- node --watch --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm ./src/main.ts",
+    "start": "dmno run -- node dist/main.js",
   },
 ```
 
-#### Other scripts / tools
-Other tools likely need config as well. If they are loading your code, your import of `dmno/load` will work, but if they don't and are expecting some other env vars or attempt to do their own loading of .env files, you can simple run then via `dmno run` to load your config and pass it into these scripts.
+## Accessing config values
 
-One thing to note - in this case those tools will be accessing your config via `process.env` (rather than `DMNO_CONFIG`) and will be getting stringified versions of everything, the same as if you passed in actual environment variables. This should not be a problem since those tools were likely expecting regular environment variables  (strings) in the first place, but it is important.
+Simply use `DMNO_CONFIG.SOME_ITEM` within your code and you are good to go!
+
+```diff lang="ts" ins="DMNO_CONFIG" del="process.env"
+
+-const someApiClient = new SomeApiClient(process.env.SOME_API_SECRET);
++const someApiClient = new SomeApiClient(DMNO_CONFIG.SOME_API_SECRET);
+```
+
+### External tools
+Other tools likely need access to some of your config as well - for example a database migration tool might need the full connection string/url for your database.
+
+In some cases you may have a custom wrapper script, in which case, `import 'dmno/load'` will do the trick, but in other cases, you may want to call those tools directly via their executables - whether directly on the command line or via package.json scripts.
+
+In this case, simply run the command via `dmno run` and your config will be loaded and passed back into `process.env` which is usually where those external tools will be looking. It's important to note that when we pass the config back into `process.env`, **we convert everything back into strings**, because this matches how normal env vars passed into process.env work. This should not be a problem since those tools were likely expecting regular environment variables (strings) in the first place, but it is important to remember.
 
 :::tip
 Scripts defined in package.json will resolve commands automatically from your installed `node_modules` directory, so using `dmno run -- othercommand` works.
 
 But if you are running a command manually, `dmno` will not usually be in your PATH and so your terminal will not know what to do. Typically you can use your package manager to find the dmno executable, for example: `pnpm exec dmno run -- othercommand` (or `npm exec` or `yarn exec`).
 :::
-
-## Using config
-
-simply use `DMNO_CONFIG.SOME_ITEM` within your code and you are good to go!
-
-```diff lang="ts"
-
--const someApiClient = new SomeApiClient(process.env.SOME_API_SECRET);
-+const someApiClient = new SomeApiClient(DMNO_CONFIG.SOME_API_SECRET);
-```
-
-
-## Loading config into other scripts
-
-Many other tools that you must run via command line scripts require access to specific configuration. Often they will accept environment variables being passed in, and sometimes they may attempt to do their own loading of .env files or specific .json config files. It's always awkward if you've rigged up some nicer config loading tooling to get it passed back into those tools.
-
-With dmno, you can simply run `dmno run -- other script` and your config will be loaded and then passed back in as environment variables.
-
-When running a command manually, that means prefixing it with `pnpm exec dmno run --`
-
-If running via a package.json script, you can just prefix with `dmno run --`
 
 
 ```diff lang="json" title="package.json"
@@ -85,8 +77,23 @@ If running via a package.json script, you can just prefix with `dmno run --`
   },
 ```
 
+## Recipes
 
+### Watch mode and dev commands
+You likely have a `pnpm dev` (or yarn/npm/etc) command - which you rely on for automatically reloading as you make changes to your _application code_. It might use [nodemon](https://nodemon.io/), node's [native `--watch` option](https://nodejs.org/docs/latest/api/cli.html#--watch), or something else. Similarly, `dmno run` has a "watch mode" (`-w`) which watches your _config_ and reloads when any changes are detected.
 
+By running your watch/dev tool via dmno run, you'll get your app automatically reloading whenever you make changes to your config or application code - all while validating your config, regenerating types, etc.
+
+Just prefix your existing dev command with `dmno run -w --` and you're good to go.
+
+```diff lang="json" title="package.json" ins="dmno run -w -- "
+{
+  // ...
+  "scripts": {
+    "dev:nodemon": "dmno run -w -- nodemon dist/main.js",
+    "dev:native": "dmno run -w -- node --watch --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm ./src/main.ts",
+  },
+```
 
 
 ### Scanning for leaked secrets
