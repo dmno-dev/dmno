@@ -20,6 +20,12 @@ export const RotateKeyCommand = createDmnoPluginCliCommand({
   description: `
   Generate a new encryption key and re-encrypt all of the secrets with it
 `,
+  examples: [
+    {
+      command: 'dmno plugin -p vault -- rotate-key',
+      description: 'rotate the key for the vault',
+    },
+  ],
   async handler(ctx, opts, command) {
     // TODO: check plugin is in valid state
     const vaultName = ctx.plugin.inputs.name.resolvedValue || 'default';

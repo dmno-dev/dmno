@@ -8,18 +8,24 @@ Type "cd ../../example-repo/"
 Enter
 Sleep 500ms
 
-Type "cat .dmno/config.mts"
-Enter
-Sleep 500ms
-
 Type "pnpm exec dmno plugin" 
 Sleep 500ms
 
 Enter
 
-Sleep 2s
+Sleep 3s
 
 Enter
 
-Sleep 5s
+Type "pnpm exec dmno plugin -p vault/prod upsert"
+
+Enter 
+
+Sleep 3s
+
+Down 2
+Sleep 500ms
+Up 2
+
+Sleep 2s
 

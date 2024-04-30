@@ -18,7 +18,8 @@ const program = new DmnoCommand('run')
   .usage('[options] -- [command to pass config to]')
   .option('-w,--watch', 'watch config for changes and restart command')
   .argument('external command')
-  .example('dmno run --service service1 -- echo $SERVICE1_CONFIG', 'Runs the echo command with the resolved config for service1');
+  .example('dmno run --service service1 -- echo $SERVICE1_CONFIG', 'Runs the echo command with the resolved config for service1')
+  .example('dmno run —-servce service1 -- somecommand --some-option=(printenv SOME_VAR)', 'Runs the somecommand with the resolved config using SOME_VAR via printenv');
 
 addServiceSelection(program);
 addCacheFlags(program);

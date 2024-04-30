@@ -1,0 +1,108 @@
+{
+  "command": "plugin",
+  "aliases": [ ],
+  "description": "Runs CLI commands related to a specific plugin instance",
+  "more": {
+    "_events": { },
+    "_eventsCount": 2,
+    "commands": [ ],
+    "options": [
+      {
+        "flags": "-s, --service <service>",
+        "description": "which service to load",
+        "required": true,
+        "optional": false,
+        "variadic": false,
+        "mandatory": false,
+        "short": "-s",
+        "long": "--service",
+        "negate": false,
+        "hidden": false,
+        "conflictsWith": [ ]
+      },
+      {
+        "flags": "-p, --plugin <plugin>",
+        "description": "which plugin instance to interact with",
+        "required": true,
+        "optional": false,
+        "variadic": false,
+        "mandatory": false,
+        "short": "-p",
+        "long": "--plugin",
+        "negate": false,
+        "hidden": false,
+        "conflictsWith": [ ]
+      }
+    ],
+    "_allowUnknownOption": false,
+    "_allowExcessArguments": true,
+    "registeredArguments": [ ],
+    "_args": [ ],
+    "args": [ ],
+    "rawArgs": [ ],
+    "processedArgs": [ ],
+    "_scriptPath": null,
+    "_name": "plugin",
+    "_optionValues": { },
+    "_optionValueSources": { },
+    "_storeOptionsAsProperties": false,
+    "_executableHandler": false,
+    "_executableFile": null,
+    "_executableDir": null,
+    "_defaultCommandName": null,
+    "_exitCallback": null,
+    "_aliases": [ ],
+    "_combineFlagAndOptionalValue": true,
+    "_description": "Runs CLI commands related to a specific plugin instance",
+    "_summary": "Interacts with dmno plugins",
+    "_enablePositionalOptions": false,
+    "_passThroughOptions": false,
+    "_lifeCycleHooks": {
+      "preAction": [
+        null,
+        null
+      ]
+    },
+    "_showHelpAfterError": false,
+    "_showSuggestionAfterError": true,
+    "_outputConfiguration": { },
+    "_hidden": false,
+    "_helpConfiguration": { },
+    "examples": [
+      {
+        "command": "dmno plugin -p my-plugin",
+        "description": "Runs the CLI for the my-plugin plugin"
+      },
+      {
+        "command": "dmno plugin -p my-plugin -s my-service",
+        "description": "Runs the CLI for the my-plugin plugin with the my-service service"
+      }
+    ]
+  },
+  "examples": [
+    {
+      "command": "dmno plugin -p vault -- setup",
+      "description": "set up a new encrypted vault"
+    },
+    {
+      "command": "dmno plugin -p vault -- upsert",
+      "description": "Update or insert an item to te vault"
+    },
+    {
+      "command": "dmno plugin -p vault -- add",
+      "description": "add an item to the vault"
+    },
+    {
+      "command": "dmno plugin -p vault -- update",
+      "description": "update an item in the vault"
+    },
+    {
+      "command": "dmno plugin -p vault -- delete",
+      "description": "delete an item from the vault"
+    },
+    {
+      "command": "dmno plugin -p vault -- delete",
+      "description": "delete an item from the vault"
+    }
+  ]
+}

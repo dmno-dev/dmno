@@ -2,15 +2,23 @@
 # since we will do the docgen from there
 Source "../core/src/cli/commands/tapes/base.tape"
 
-Output "./src/assets/tapes/run.gif"
+Output "./src/assets/tapes/init.gif"
 
 Type "cd ../../example-repo/"
 Enter
 Sleep 500ms
 
-Type "pnpm exec dmno run -s root -- printenv SOME_MD5" 
+Type "pnpm exec dmno init" 
 Sleep 500ms
 
 Enter
+
+Sleep 2000ms
+
+Down 2
+Sleep 1000ms
+Up 2
+Sleep 1000ms
+
 Sleep 5s
 
