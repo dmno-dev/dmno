@@ -784,32 +784,11 @@ export class DmnoService {
       return {
         ...item.type.getDefItem('sensitive') && { sensitive: 1 },
         // TODO: shorten this
-        ...item.type.getDefItem('useAt') && { use: item.type.getDefItem('useAt') },
+        ...item.type.getDefItem('useAt') && { useAt: item.type.getDefItem('useAt') },
         value: item.resolvedValue,
       };
     });
     return env;
-  }
-
-  getSensitivePaths() {
-    const sensitivePaths: Array<string> = [];
-    // TODO: deal with nested objects
-    _.each(this.config, (item) => {
-      if (item.type.getDefItem('sensitive')) {
-        sensitivePaths.push(item.getPath());
-      }
-    });
-    return sensitivePaths;
-  }
-  getEmptyPaths() {
-    const emptyPaths: Array<string> = [];
-    // TODO: deal with nested objects
-    _.each(this.config, (item) => {
-      if (item.resolvedValue === undefined) {
-        emptyPaths.push(item.getPath());
-      }
-    });
-    return emptyPaths;
   }
 
   toJSON(): SerializedService {

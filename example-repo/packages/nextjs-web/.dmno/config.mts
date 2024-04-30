@@ -28,26 +28,42 @@ export default defineDmnoService({
       value: 'foo',
       description: 'test of a public env var without a NEXT_PUBLIC_ prefix',
     },
-    EMPTY: {
-      description: 'empty item, should be undefined',
-    },
     SECRET_FOO: {
-      value: 'secret-foo2',
+      value: 'secret-foo',
       sensitive: true,
       description: 'test of a sensitive env var',
     },
 
-    PUBLIC_NUM: {
-      extends: DmnoBaseTypes.number({ max: 100 }),
-      value: 13,
+    EMPTY: {
+      description: 'empty item, should be undefined',
     },
-    NEXT_PUBLIC_NUM: {
-      value: (ctx) => DMNO_CONFIG.PUBLIC_NUM,
+
+    
+    PUBLIC_STATIC: {
+      value: 'public-static-default',
     },
-    SECRET_NUM: {
-      extends: DmnoBaseTypes.number,
-      value: 999,
+    PUBLIC_DYNAMIC: {
+      value: 'public-dynamic-default',
+      useAt: 'boot',
+    },
+
+    SECRET_STATIC: {
+      value: 'secret-static-default',
+      useAt: 'build',
       sensitive: true,
     },
+    SECRET_DYNAMIC: {
+      value: 'secret-dynamic-default',
+      useAt: 'boot',
+      sensitive: true,
+    },
+    
+
+    
+    NEXT_PUBLIC_STATIC: {
+      value: (ctx) => DMNO_CONFIG.PUBLIC_STATIC,
+    },
+
+
   },
 })
