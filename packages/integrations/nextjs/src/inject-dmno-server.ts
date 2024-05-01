@@ -9,9 +9,16 @@ if (!process.env.DMNO_LOADED_ENV) {
 
 export const parsedDmnoLoadedEnv: Record<string, {
   sensitive?: boolean,
-  useAt?: 'build' | 'boot',
+  dynamic?: boolean,
   value: any,
 }> = JSON.parse(process.env.DMNO_LOADED_ENV);
+
+export const publicDynamicConfig: Record<string, any> = {};
+for (const itemKey in parsedDmnoLoadedEnv) {
+  if (!parsedDmnoLoadedEnv[itemKey].sensitive && parsedDmnoLoadedEnv[itemKey].dynamic) {
+    publicDynamicConfig[itemKey] = parsedDmnoLoadedEnv[itemKey].value;
+  }
+}
 
 if (!(globalThis as any).DMNO_CONFIG) {
   // we inject a global proxy object so that we can customize the error messages
@@ -39,7 +46,7 @@ if (!(globalThis as any).DMNO_CONFIG) {
 
       // attempts to force the route into dynamic rendering mode so it wont put our our dynamic value into a pre-rendered page
       // however we have to wrap in try/catch because you can only call headers() within certain parts of the page... so it's not 100% foolproof
-      if (parsedDmnoLoadedEnv[keyStr].useAt === 'boot') {
+      if (parsedDmnoLoadedEnv[keyStr].dynamic) {
         // eslint-disable-next-line max-statements-per-line, no-empty
         try { headers(); } catch (err) {}
       }
@@ -60,7 +67,7 @@ if (!(globalThis as any).DMNO_CONFIG) {
       }
 
       // see notes above
-      if (parsedDmnoLoadedEnv[keyStr].useAt === 'boot') {
+      if (parsedDmnoLoadedEnv[keyStr].dynamic) {
         // eslint-disable-next-line max-statements-per-line, no-empty
         try { headers(); } catch (err) {}
       }

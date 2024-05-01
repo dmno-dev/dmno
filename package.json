@@ -7,7 +7,7 @@
     "build": "turbo build --filter=\"!@dmno/docs-site\"",
     "dev": "turbo run dev --concurrency=40 --parallel --filter=\"!@dmno/docs-site\"",
     "lint": "turbo lint",
-    "prepare2": "pnpm run build"
+    "prepare": "pnpm run build"
   },
   "author": "",
   "license": "MIT",

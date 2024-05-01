@@ -5,6 +5,7 @@ console.log('server top of file', DMNO_CONFIG.SECRET_STATIC);
 export default function ServerPage() {
 
   console.log('server handler fn --', DMNO_CONFIG.SECRET_STATIC);
+  console.log('server handler fn --', DMNO_CONFIG.SECRET_DYNAMIC);
 
   return (
     <main>

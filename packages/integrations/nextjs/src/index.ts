@@ -59,23 +59,13 @@ export function dmnoNextConfigPlugin() {
         for (const key in parsedDmnoLoadedEnv) {
           // TODO: deal with nested objects
 
-          // SENSITIVE
-          if (parsedDmnoLoadedEnv[key].sensitive) {
-            // deal with sensitive + static
-            if (isServer && parsedDmnoLoadedEnv[key].useAt === 'build') {
-              staticConfigReplacements[`DMNO_CONFIG.${key}`] = JSON.stringify(parsedDmnoLoadedEnv[key].value);
-            } else {
-              // will be accessed from boot time vars on server and inaccessble on client
-            }
-
-          // NON-SENSITIVE
-          } else {
-            // static replacements will work for both DMNO_CONFIG and DMNO_PUBLIC_CONFIG
-            if (!parsedDmnoLoadedEnv[key].useAt || parsedDmnoLoadedEnv[key].useAt === 'build') {
+          if (!parsedDmnoLoadedEnv[key].dynamic) {
+            if (!parsedDmnoLoadedEnv[key].sensitive) {
               staticConfigReplacements[`DMNO_PUBLIC_CONFIG.${key}`] = JSON.stringify(parsedDmnoLoadedEnv[key].value);
+            }
+            if (!parsedDmnoLoadedEnv[key].sensitive || isServer) {
               staticConfigReplacements[`DMNO_CONFIG.${key}`] = JSON.stringify(parsedDmnoLoadedEnv[key].value);
             }
-            // dynamic public will be accessed via a loaded json API endpoint
           }
         }
         webpackConfig.plugins.push(new webpack.DefinePlugin(staticConfigReplacements));

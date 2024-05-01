@@ -44,17 +44,22 @@ export default defineDmnoService({
     },
     PUBLIC_DYNAMIC: {
       value: 'public-dynamic-default',
-      useAt: 'boot',
+      dynamic: true,
     },
+
+    PUBLIC_DYNAMIC2: {
+      value: 'public-dynamic-default another!',
+      dynamic: true,
+    },
+
 
     SECRET_STATIC: {
       value: 'secret-static-default',
-      useAt: 'build',
       sensitive: true,
     },
     SECRET_DYNAMIC: {
       value: 'secret-dynamic-default',
-      useAt: 'boot',
+      dynamic: true,
       sensitive: true,
     },
     

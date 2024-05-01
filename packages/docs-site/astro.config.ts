@@ -108,6 +108,10 @@ export default defineConfig({
               label: 'Multiple Environments',
               link: '/docs/guides/multi-env',
             },
+            {
+              label: 'Dynamic vs static config',
+              link: '/docs/guides/dynamic-config',
+            },
           ],
         }, {
           label: 'Plugins',
