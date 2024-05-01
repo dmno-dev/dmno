@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import '@dmno/nextjs-integration';
+import '@dmno/nextjs-integration/inject';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,8 +21,11 @@ export default function RootLayout({
         <h1>DMNO + nextjs example</h1>
         <nav>
           <a href="/client-page">client rendered page</a>
-          <br/>
+          |||| 
           <a href="/server-page">server rendered page</a>
+          ||||
+
+          <a href="/api">json api endpoint</a>
         </nav>
         <hr className="my-4" />
 

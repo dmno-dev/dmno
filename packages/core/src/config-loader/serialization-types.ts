@@ -83,7 +83,7 @@ export type SerializedResolverBranch = {
 export type SerializedDmnoDataType = Pick<
 ConfigItemDefinition,
 'summary' | 'description' | 'typeDescription' | 'externalDocs' | 'ui' |
-'required' | 'sensitive' | 'expose' | 'useAt'
+'required' | 'sensitive' | 'expose' | 'useAt' | 'dynamic'
 >;
 
 

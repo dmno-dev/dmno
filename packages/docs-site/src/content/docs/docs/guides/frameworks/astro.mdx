@@ -114,13 +114,13 @@ So we make it easy for you:
 - We also inject a middleware that detects any leaked secrets, just in case you leaked a secret into ANYTHING getting sent over the wire...
 
 
-### Static vs dynamic
+### Static vs dynamic config
 
-In general accessing `DMNO_PUBLIC_CONFIG.FOO` is treated as static, and these vars get rewritten (by vite) at build time. This can be useful because it affects tree-shaking and can remove unreachable code.
+DMNO gives you explicit control over how your config items are treated - whether they will be replaced into your bundled code at build time (static), or reloaded at boot time (dynamic). See the [dynamic config guide](/docs/guides/dynamic-config) for more details.
 
-Meanwhile `DMNO_CONFIG.BAR` is not rewritten at build time and will take the latest config into account - including overrides from system environment vars on the server at boot time. This can be useful for running a single build in different contexts...
-
-We've got some tricks up our sleeve to help give you more control over this... coming very soon!
+As for features related to dynamic config, this integration will:
+- automatically inject the API route required to fetch public+dynamic config (if you have any in your schema)
+- warn you if you accidentally use a dynamic config item during a pre-render - regardless of the [output mode](https://docs.astro.build/en/basics/rendering-modes/#server-output-modes) you are using
 
 ---
 
@@ -133,41 +133,13 @@ Without DMNO, it's a bit awkward, but DMNO makes it dead simple - in fact it's a
 
 Just reference config vars via `DMNO_CONFIG.SOME_ITEM` like you do everywhere else.
 
-You'll get TS autocompletion as long as you've added your config file to the your `tsconfig.json`'s include list. If for some reason that doesn't work, you can also try adding a 
-As long as you've added your config file to the include section in your 
-
-However to get TS autocompletion in our .mjs file, we need to add a triple-slash reference to the dmno generated types. For e
-
-```diff lang="js" title="astro.config.mjs"
-+/// <reference path="./.dmno/.typegen/global.d.ts" />
-import { defineConfig } from 'astro/config';
-
-// ...
-
-import dmnoAstroIntegration from '@dmno/astro-integration';
-
-export default defineConfig({
-  // ...
-  integrations: [
-    dmnoAstroIntegration(),
-    starlight({
-      social: {
-        // now we can use our config instead of hard-coding values 🥳
--        github: 'https://gihthub.com/dmno-dev/core',
-+        github: DMNO_CONFIG.GITHUB_REPO_URL,
-      //...
-  ],
-});
-```
-
-
+You'll get TS autocompletion as long as you've added your config file to the your `tsconfig.json`'s include list. If for some reason that doesn't work, you can also try adding a `///` reference at the top of the file.
 
 ### Injecting config into markdown files
 
 Markdown files are processed by astro but treated as pure content without evaluating any javsascript. So if you need to inject any DMNO_CONFIG values, you'll need to use MDX instead.
 
-See [@astrojs/
-mdx integration](https://docs.astro.build/en/guides/integrations-guide/mdx/)
+See [@astrojs/mdx integration](https://docs.astro.build/en/guides/integrations-guide/mdx/)
 
 Then you need to use JSX within your markdown content. For example:
 

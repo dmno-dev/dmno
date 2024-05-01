@@ -15,14 +15,17 @@ export default defineConfig({
 
     dmnoAstroIntegration(),
     starlight({
-      title: 'DMNO Docs',
+      title: '.docs/',
       logo: {
-        src: './src/assets/square-logo.svg',
+        src: '@dmno/ui-lib/brand-assets/domino-logo-full-outline.svg',
       },
       social: {
         github: DMNO_CONFIG.GITHUB_REPO_URL,
         discord: DMNO_CONFIG.DISCORD_JOIN_URL,
       },
+      customCss: [
+        './src/style/docs-global.css',
+      ],
       plugins: [
         starlightBlog({
           title: '.blog/',
@@ -41,6 +44,9 @@ export default defineConfig({
         styleOverrides: {
           // codePaddingInline: '25px',
         },
+      },
+      components: {
+        Header: './src/components/CustomStarlightHeader.astro',
       },
       head: [
         {
@@ -63,10 +69,6 @@ export default defineConfig({
           
             gtag("config", "${DMNO_CONFIG.GOOGLE_TAG_MANAGER_ID}");`,
           },
-        },
-        {
-          tag: 'script',
-          content: 'window.addEventListener(\'load\', () => document.querySelector(\'.site-title\').href += \'docs/\')',
         },
       ],
       sidebar: [
@@ -107,6 +109,10 @@ export default defineConfig({
             {
               label: 'Multiple Environments',
               link: '/docs/guides/multi-env',
+            },
+            {
+              label: 'Dynamic vs static config',
+              link: '/docs/guides/dynamic-config',
             },
           ],
         }, {
