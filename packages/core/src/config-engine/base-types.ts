@@ -862,6 +862,7 @@ const SemverDataType = createDmnoDataType({
   typeDescription: 'semantic version string',
   settingsSchema: Object as undefined | {
     normalize?: boolean,
+    // range?: string, // ex.
   },
   validate(val) {
     const result = SEMVER_REGEX.test(val);

@@ -3,6 +3,7 @@ import type { ImageMetadata } from "astro";
 import { Image } from "astro:assets";
 import { Code } from "@astrojs/starlight/components";
 import allCommandsSpec from "@/utils/cli.json";
+import EncryptedVaultSpec from "@/utils/cli-plugin-vault.json";
 
 export const images = import.meta.glob<{ default: ImageMetadata }>(
   "../assets/tapes/*.gif",
@@ -21,13 +22,17 @@ export const formatPath = (command: string) => {
   return `../assets/tapes/${command}.gif`;
 };
 
-export const getCommand = (name: string) => {
-  return allCommandsSpec?.find((c) => c.command === name);
+export const getCommand = (name: string, plugin: string = "") => {
+  let singleSpec =  allCommandsSpec?.find((c) => c.command === name);
+  console.log ("plugin", plugin);
+  if (plugin == "encrypted-vault" && singleSpec) singleSpec.examples = [...EncryptedVaultSpec.examples];
+  // console.log(singleSpec);
+  return singleSpec;
 };
 
-const { name } = Astro.props;
+const { name, plugin } = Astro.props;
 
-const commandSpec = getCommand(name)!;
+const commandSpec = getCommand(name, plugin)!;
 
 ---
 

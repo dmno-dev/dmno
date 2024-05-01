@@ -134,6 +134,10 @@ export default defineConfig({
           label: 'Integrations',
           badge: 'New',
           items: [{
+            label: 'Overview',
+            link: '/docs/guides/frameworks/overview',
+          },
+          {
             label: 'Astro',
             link: '/docs/guides/frameworks/astro/',
           },

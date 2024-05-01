@@ -6,3 +6,7 @@ import CliCommand from "@/components/CliCommand.astro";
 
 
 <CliCommand name="run" />
+
+:::caution
+Because of the way variable expansion works in the shell, you will need to use `printenv` (or if you trust the command, `eval`) to expand variables in your command. This is because the shell will expand the variables _before_ passing them to `dmno run`.
+:::

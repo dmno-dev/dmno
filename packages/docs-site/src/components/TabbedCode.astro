@@ -25,13 +25,10 @@ const platforms = [
 ];
 ---
 
-<Tabs>
+<Tabs syncKey="packageManager">
   {
     platforms.map((platform) => (
-      <TabItem
-        label={platform.name}
-        aria-selected={platform.name == "pnpm" ? true : ""}
-      >
+      <TabItem label={platform.name}>
         <Code lang="bash" code={platform[variant]} />
       </TabItem>
     ))
@@ -48,22 +45,14 @@ const platforms = [
       document.querySelectorAll(selector),
     ) as HTMLElement[];
     const pnpmTabs = tabs.filter((tab) => tab.innerText === activeTab);
-    // click each of the tabs
-    pnpmTabs.map((tab) => tab.click());
-    pnpmTabs[pnpmTabs.length - 1].blur();
-    e.preventDefault();
+    clickAndBlur(pnpmTabs[0]);
   });
 
-  // update other tabs after any tab is clicked
+  // update store
   document.addEventListener("click", (e) => {
-    const tabs = Array.from(document.querySelectorAll(selector));
-    const tabNames = tabs.map((tab) => (tab as any).innerText);
     const val = (e?.target as any)?.innerText;
-    if (tabNames.indexOf(val) < 0) return;
-    if (val == activeTab) return;
     setCurrentPm(val);
-    activeTab = val;
-    e.preventDefault();
+    // e.preventDefault();
   });
 
   currentPm.listen((value) => {
@@ -72,7 +61,14 @@ const platforms = [
         document.querySelectorAll(selector),
       ) as HTMLElement[];
       const pnpmTabs = tabs.filter((tab) => tab.innerText === value);
-      pnpmTabs.map((tab) => tab.click());
+      clickAndBlur(pnpmTabs[0]);
     }
   });
+
+  const clickAndBlur = (el: HTMLElement) => {
+    // click the first tab to show the correct tab, then blur it
+    // syncKey="packageManager" will handle the rest
+    el.click();
+    el.blur();
+  };
 </script>
