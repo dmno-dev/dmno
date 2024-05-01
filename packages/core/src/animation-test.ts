@@ -2,7 +2,7 @@ import { outdent } from 'outdent';
 import logUpdate from 'log-update';
 import { DOMINO_WITH_D, fallingDmnosAnimation } from './cli/lib/loaders';
 
-// console.log(DOMINO_WITH_D);
+console.log(DOMINO_WITH_D);
 
 
 console.log(`
