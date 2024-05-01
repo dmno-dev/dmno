@@ -3,7 +3,8 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: [ // Entry point(s)
     'src/index.ts', // main lib, users will import from here
-    'src/inject-dmno-env.ts', // main lib, users will import from here
+    'src/inject-dmno-client.ts',
+    'src/inject-dmno-server.ts',
   ], 
 
   external: [

@@ -399,6 +399,7 @@ export class DmnoDataType<InstanceOptions = any> {
       ui: this.getDefItem('ui'),
       required: this.getDefItem('required'),
       useAt: this.getDefItem('useAt'),
+      dynamic: this.getDefItem('dynamic'),
     };
   }
 }

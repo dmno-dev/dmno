@@ -121,15 +121,12 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
             sensitiveKeys.push(itemKey);
 
             // if it's sensitive and static, we'll inject only into DMNO_CONFIG
-            if (configItem.dataType.useAt === 'build') {
+            if (!configItem.dataType.dynamic) {
               staticConfigReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
             }
           } else {
             // if public and static, we'll inject into vite's rewrites
-            if (
-              !dmnoIntegrationOpts?.dynamicPublicConfig
-              || (!configItem.dataType.useAt || configItem.dataType.useAt === 'build')
-            ) {
+            if (!configItem.dataType.dynamic) {
               // add rollup rewrite/define for non-sensitive items
               staticConfigReplacements[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
               staticConfigReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
@@ -316,10 +313,10 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
         let dynamicConfigPrerendered = false;
         for (const itemKey in configItemKeysAccessed) {
           const configItem = dmnoService.config[itemKey];
-          if (configItem.dataType.useAt === 'boot') {
+          if (configItem.dataType.dynamic) {
             dynamicConfigPrerendered = true;
             opts.logger.error(`Dynamic config item "${itemKey}" was used during pre-render`);
-            opts.logger.error('> Change to `{ "useAt": "build" }` to make it static');
+            opts.logger.error('> Change to `{ "dynamic": "false" }` to make it static');
           }
         }
         if (dynamicConfigPrerendered) {

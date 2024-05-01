@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "dmno run -w -- next dev",
-    "build": "NODE_ENV=production dmno run -- next build",
-    "start": "dmno run -- next start",
+    "dev": "SECRET_STATIC=secret-static-dev SECRET_DYNAMIC=secret-dynamic-dev PUBLIC_STATIC=ps-dev PUBLIC_DYNAMIC=pd-dev dmno run -w -- next dev",
+    "build": "NODE_ENV=production SECRET_STATIC=secret-static-build SECRET_DYNAMIC=secret-dynamic-build PUBLIC_STATIC=ps-build PUBLIC_DYNAMIC=pd-build dmno run -- next build",
+    "build:static": "NODE_ENV=production NEXT_OUTPUT_EXPORT=1 pnpm build",
+    "start": "NODE_ENV=production SECRET_STATIC=secret-static-boot SECRET_DYNAMIC=secret-dynamic-boot PUBLIC_STATIC=ps-boot PUBLIC_DYNAMIC=pd-boot dmno run -- next start",
+    "start2": "next start",
     "lint": "next lint"
   },
   "dependencies": {

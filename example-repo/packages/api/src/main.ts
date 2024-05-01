@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 
-// import first to set up env
-import './init-env';
+import 'dmno/load'; // import first to load global DMNO_CONFIG
 
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
@@ -40,8 +39,8 @@ if (process.env.NODE_ENV !== 'test') {
   try {
     // await prisma.$connect();
     await routesLoaded;
-    app.listen(process.dmnoEnv.PORT);
-    console.log(chalk.green.bold(`API available at ${process.dmnoEnv.API_URL}`));
+    app.listen(DMNO_CONFIG.PORT);
+    console.log(chalk.green.bold(`API available at ${DMNO_CONFIG.API_URL}`));
     // await prisma.$disconnect();
   } catch (err) {
     console.log('ERROR!', err);

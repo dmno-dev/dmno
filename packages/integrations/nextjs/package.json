@@ -25,6 +25,9 @@
   "exports": {
     ".": {
       "default": "./dist/index.mjs"
+    },
+    "./inject": {
+      "default": "./dist/inject-dmno-server.mjs"
     }
   },
   "typesVersions": {
@@ -45,10 +48,10 @@
     "lint:fix": "pnpm run lint --fix"
   },
   "devDependencies": {
-    "dmno": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "@types/node": "^20.12.7",
+    "dmno": "workspace:*",
     "tsup": "^8.0.2",
     "typescript": "^5.4.5"
   },

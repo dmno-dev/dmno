@@ -174,12 +174,19 @@ const EMPTY_DOMINO = outdent`
   │     │     │
   ╰───────────╯
 `;
+const DMNO_W_D_WHITE = outdent`
+  ╭───────────╮
+  │   ○ │ ┌─╮ │
+  │ ○   │ └─╯ │
+  ╰───────────╯
+`;
+
 const EMPTY_DOMINO_LINES = gradient('#00FF0A', '#00C2FF').multiline(EMPTY_DOMINO).split('\n');
 const dominoWithDArray = structuredClone(EMPTY_DOMINO_LINES);
-dominoWithDArray[1] = spliceString(dominoWithDArray[1], 193, 50, kleur.green('┌─╮'));
-dominoWithDArray[2] = spliceString(dominoWithDArray[2], 193, 50, kleur.green('└─╯'));
-dominoWithDArray[1] = spliceString(dominoWithDArray[1], 55, 50, kleur.cyan('○ ○'));
-dominoWithDArray[2] = spliceString(dominoWithDArray[2], 55, 50, kleur.cyan('○ ○'));
+dominoWithDArray[1] = spliceString(dominoWithDArray[1], 193, 50, kleur.white('┌─╮'));
+dominoWithDArray[2] = spliceString(dominoWithDArray[2], 193, 50, kleur.white('└─╯'));
+dominoWithDArray[1] = spliceString(dominoWithDArray[1], 55, 50, kleur.white('  ○'));
+dominoWithDArray[2] = spliceString(dominoWithDArray[2], 55, 50, kleur.white('○  '));
 
 
 

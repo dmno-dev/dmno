@@ -43,4 +43,4 @@ program.action(async (opts, more) => {
   process.exit(0);
 });
 
-export const CacheCommand = program;
+export const ClearCacheCommand = program;

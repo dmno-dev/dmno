@@ -209,6 +209,9 @@ export default defineDmnoService({
       // understand when this value is used, which lets us parallelize run/deploy
       // and know when a missing item should be considered a critical problem or be ignored
       useAt: ['build', 'boot', 'deploy'],
+
+      // opt-in out of build-time code replacements
+      dynamic: true,
       // mark an item as being "exposed" for picking by other services
       expose: true,
       // override name when importing/exporting into process.env

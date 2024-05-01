@@ -6,7 +6,7 @@ import which from 'which';
 import CliTable from 'cli-table3';
 import { tryCatch } from '@dmno/ts-lib';
 import { DmnoCommand } from '../lib/DmnoCommand';
-import { formatError, formattedValue } from '../lib/formatting';
+import { formatError, formattedValue, getItemSummary } from '../lib/formatting';
 import { executeCommandWithEnv } from '../lib/execute-command';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
@@ -71,17 +71,21 @@ program.action(async (_command, opts: {
 
     // TODO: should show nice errors, and that logic should probably move within the services/items
     // TODO: service.isValid is not correct
-    let allValid = true;
-    for (const itemKey in service.config) {
-      const item = service.config[itemKey];
-      if (!item.isValid) {
-        allValid = false;
-        console.log(`Invalid config for item: ${itemKey}`);
-        console.log(item.validationErrors);
-      }
-    }
+    const invalidItems = _.filter(service.config, (i) => !i.isValid);
+    if (invalidItems.length) {
+      console.log('');
+      console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your config is currently invalid ')}  🚨 🚨 🚨\n`);
+      _.each(invalidItems, (item) => {
+        console.log(getItemSummary(item));
+      });
 
-    if (allValid) {
+      if (!opts.watch) {
+        console.log('\n', kleur.bgRed(' Exiting without running script... '), '\n');
+        process.exit(1);
+      } else {
+        console.log(kleur.gray('\n👀 watching your config files for changes... hit CTRL+C to exit'));
+      }
+    } else {
       // console.log(service.getLoadedEnv());
 
       commandProcess = execa(pathAwareCommand || rawCommand, commandArgsOnly, {
@@ -90,8 +94,6 @@ program.action(async (_command, opts: {
           ...process.env,
           ...serviceEnv,
           DMNO_LOADED_ENV: JSON.stringify(service.getLoadedEnv()),
-          DMNO_SENSITIVE_PATHS: service.getSensitivePaths().join('!'),
-          DMNO_EMPTY_PATHS: service.getEmptyPaths().join('!'),
         },
       });
       // console.log('PARENT PID = ', process.pid);
@@ -124,15 +126,10 @@ program.action(async (_command, opts: {
             console.log(`\n💥 command failed - exit code = ${exitCode}`);
           }
 
-          console.log(kleur.blue().italic('... watching for changes to dmno config ...'));
+          console.log(kleur.gray('\n👀 watching your config files for changes... hit CTRL+C to exit'));
         }
       } else {
         process.exit(exitCode);
-      }
-    } else {
-      if (!opts.watch) process.exit(1);
-      else {
-        console.log(kleur.blue().italic('... watching for changes to dmno config ...'));
       }
     }
   }

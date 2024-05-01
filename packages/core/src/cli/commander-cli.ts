@@ -18,7 +18,7 @@ import { RunCommand } from './commands/run.command';
 import { DevCommand } from './commands/dev.command';
 import { PluginCommand } from './commands/plugin.command';
 import { InitCommand } from './commands/init.command';
-import { CacheCommand } from './commands/cache.command';
+import { ClearCacheCommand } from './commands/clear-cache.command';
 
 
 
@@ -32,7 +32,7 @@ program.addCommand(LoadCommand);
 program.addCommand(RunCommand);
 program.addCommand(DevCommand);
 program.addCommand(InitCommand);
-program.addCommand(CacheCommand);
+program.addCommand(ClearCacheCommand);
 program.addCommand(PluginCommand);
 
 

@@ -99,6 +99,9 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
   /** at what time is this value required */
   useAt?: ConfigRequiredAtTypes | Array<ConfigRequiredAtTypes>;
 
+  /** opt in/out of build-type code replacements - default is false unless changed at the service level */
+  dynamic?: boolean;
+
   // we allow the fn that returns the data type so you can use the data type without calling the empty initializer
   // ie `DmnoBaseTypes.string` instead of `DmnoBaseTypes.string({})`;
   /** the type the item is based, can be a DmnoBaseType or something custom */
@@ -783,33 +786,11 @@ export class DmnoService {
     const env: Record<string, any> = _.mapValues(this.config, (item) => {
       return {
         ...item.type.getDefItem('sensitive') && { sensitive: 1 },
-        // TODO: shorten this
-        ...item.type.getDefItem('useAt') && { use: item.type.getDefItem('useAt') },
+        ...item.type.getDefItem('dynamic') && { dynamic: item.type.getDefItem('dynamic') },
         value: item.resolvedValue,
       };
     });
     return env;
-  }
-
-  getSensitivePaths() {
-    const sensitivePaths: Array<string> = [];
-    // TODO: deal with nested objects
-    _.each(this.config, (item) => {
-      if (item.type.getDefItem('sensitive')) {
-        sensitivePaths.push(item.getPath());
-      }
-    });
-    return sensitivePaths;
-  }
-  getEmptyPaths() {
-    const emptyPaths: Array<string> = [];
-    // TODO: deal with nested objects
-    _.each(this.config, (item) => {
-      if (item.resolvedValue === undefined) {
-        emptyPaths.push(item.getPath());
-      }
-    });
-    return emptyPaths;
   }
 
   toJSON(): SerializedService {

@@ -36,16 +36,15 @@ export default defineDmnoService({
     },
     PUBLIC_DYNAMIC: {
       value: 'public-dynamic-init',
-      useAt: 'boot',
+      dynamic: true,
     },
     PUBLIC_STATIC: {
       value: 'public-static-init',
-      useAt: 'build',
     },
 
     SECRET_STATIC: {
       value: 'secret-static',
-      useAt: 'build',
+      dynamic: true,
       sensitive: true,
     },
   },
