@@ -177,6 +177,9 @@ importers:
       '@dmno/ui-lib':
         specifier: 'workspace: *'
         version: link:../ui-lib
+      '@iconify/vue':
+        specifier: ^4.1.2
+        version: 4.1.2(vue@3.4.25)
       astro:
         specifier: ^4.7.0
         version: 4.7.0(@types/node@20.12.7)(typescript@5.4.5)
@@ -1950,6 +1953,15 @@ packages:
       mlly: 1.6.1
     transitivePeerDependencies:
       - supports-color
+    dev: false
+
+  /@iconify/vue@4.1.2(vue@3.4.25):
+    resolution: {integrity: sha512-CQnYqLiQD5LOAaXhBrmj1mdL2/NCJvwcC4jtW2Z8ukhThiFkLDkutarTOV2trfc9EXqUqRs0KqXOL9pZ/IyysA==}
+    peerDependencies:
+      vue: '>=3'
+    dependencies:
+      '@iconify/types': 2.0.0
+      vue: 3.4.25(typescript@5.4.5)
     dev: false
 
   /@img/sharp-darwin-arm64@0.33.3:

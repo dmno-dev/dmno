@@ -9,7 +9,9 @@ import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
 
 import config from "virtual:starlight/user-config";
 
-import DmnoLogo from "@dmno/ui-lib/brand-assets/domino-logo-full.svg?raw";
+import { DmnoTileLogo } from "@dmno/ui-lib";
+// import { Icon } from "@astrojs/starlight/components";
+import { Icon } from "@iconify/vue";
 
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
@@ -21,14 +23,36 @@ const shouldRenderSearch = true;
 
 <div class="header sl-flex">
   <div class="title-wrapper sl-flex">
-    <!-- <SiteTitle {...Astro.props} /> -->
-    <a href="/docs" class="site-title sl-flex">
-      <Fragment set:html={DmnoLogo} />
-      <span class:list={{ "sr-only": config.logo?.replacesTitle }}>
-        {config.title}
+    <a href="/" class="site-title sl-flex">
+      <DmnoTileLogo client:load />
+      <span
+        class:list={{
+          "sr-only": config.logo?.replacesTitle,
+          "logo-font": true,
+          "logo-dmno-text": true,
+        }}
+      >
+        <!-- {config.title} -->
+        DMNO
       </span>
     </a>
   </div>
+  <nav>
+    <a href="/docs" title="cd ./.docs">
+      <Icon
+        icon={`material-symbols:folder${Astro.url.pathname.startsWith("/docs") ? "-open" : ""}`}
+        client:load
+      />
+      .docs
+    </a>
+    <a href="/blog" title="cd ./.blog">
+      <Icon
+        icon={`material-symbols:folder${Astro.url.pathname.startsWith("/blog") ? "-open" : ""}`}
+        client:load
+      />
+      .blog
+    </a>
+  </nav>
   <div class="sl-flex">
     {shouldRenderSearch && <Search {...Astro.props} />}
   </div>
@@ -42,49 +66,95 @@ const shouldRenderSearch = true;
 </div>
 
 <style>
-  .site-title :global(svg) {
-    height: 40px;
-    width: auto;
+  .header {
+    --color-one: hsl(131, 88%, 54%);
+    --color-two: hsl(181, 82%, 51%);
   }
-  /* the DMNO letters are the black paths */
-  :global(html[data-theme="dark"]) .site-title :global(svg path[fill="black"]) {
-    fill: white;
-  }
-  /* the domino background is the black rect */
-  :global(html[data-theme="dark"]) .site-title :global(svg rect[fill="black"]) {
-    stroke: white;
-  }
-  .site-title:hover :global(svg path[fill="black"]) {
-    fill: #00ff0a !important;
-  }
-  #header-shape-gradient {
-    --color-stop: #140a07;
-    --color-bot: #faed34;
-  }
-
   .site-title {
     align-items: center;
-    gap: var(--sl-nav-gap);
-    font-size: var(--sl-text-h4);
+    /* gap: var(--sl-nav-gap); */
+    gap: 10px;
+    font-size: 30px;
     font-weight: 600;
-    color: var(--sl-color-text-accent);
+    /* color: var(--sl-color-text-accent); */
+    color: white;
     text-decoration: none;
     white-space: nowrap;
   }
-  /* 
-  img {
+  .site-title :global(.dmno-tile-logo) {
     height: calc(var(--sl-nav-height) - 2 * var(--sl-nav-pad-y));
-    width: auto;
-    max-width: 100%;
-    object-fit: contain;
-    object-position: 0 50%;
   }
-  */
+
+  @media (prefers-reduced-motion: no-preference) {
+    .site-title:hover .logo-dmno-text {
+      animation: move-bg 8s linear infinite;
+      --bg-size: 400%;
+
+      background: linear-gradient(
+          90deg,
+          var(--color-one),
+          var(--color-two),
+          var(--color-one)
+        )
+        0 0 / var(--bg-size) 100%;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .site-title:hover :global(.dmno-tile-logo__d),
+    .site-title:hover :global(.dots-loader > div) {
+      animation: move-bg 8s linear infinite;
+      --bg-size: 400%;
+
+      background: linear-gradient(
+          90deg,
+          var(--color-one),
+          var(--color-two),
+          var(--color-one)
+        )
+        0 0 / var(--bg-size) 100%;
+    }
+
+    @keyframes move-bg {
+      to {
+        background-position: var(--bg-size) 0;
+      }
+    }
+  }
+
+  .header > nav {
+    display: flex;
+    width: auto;
+    > a {
+      padding: 0 0.5em;
+      margin: 0 0.5em;
+      text-decoration: none;
+      &:hover {
+        color: var(--color-one);
+      }
+
+      svg {
+        display: inline-block;
+        margin-right: 3px;
+        vertical-align: middle;
+        margin-bottom: 4px;
+      }
+    }
+  }
+
   .header {
     gap: var(--sl-nav-gap);
     justify-content: space-between;
     align-items: center;
     height: 100%;
+    color: white;
+
+    a {
+      color: inherit;
+    }
+  }
+  :global(html[data-theme="light"]) .header {
+    color: #222;
   }
 
   .title-wrapper {
@@ -134,6 +204,7 @@ const shouldRenderSearch = true;
           auto
         )
         /* 2 (search box): all free space that is available. */
+        auto
         1fr
         /* 3 (right items): use the space that these need. */
         auto;
