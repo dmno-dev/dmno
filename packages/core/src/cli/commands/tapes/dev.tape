@@ -4,10 +4,6 @@ Source "../core/src/cli/commands/tapes/base.tape"
 
 Output "./src/assets/tapes/dev.gif"
 
-Type "cd ../../example-repo/"
-Enter
-Sleep 500ms
-
 Type "pnpm exec dmno dev" 
 Sleep 500ms
 

@@ -26,12 +26,28 @@ DMNO Built-in data type for Strings. Includes the following (optional) settings:
 />
 
 
-Examples: 
+Examples
 ```javascript
-const myMinMaxType = DmnoBaseTypes.String({ minLength: 2, maxLength: 5 });
-const myFixedLengthType = DmnoBaseTypes.String({ isLength: 5 });
-const myStartsWithType = DmnoBaseTypes.String({ startsWith: 'pk_' });
+import { DmnoBaseTypes, defineDmnoService } from 'dmno';
 
+export default defineDmnoService({
+  name: 'MyConfig',
+  // ...
+  schema: {
+    MY_STRING: DmnoBaseTypes.string({
+      minLength: 2,
+      maxLength: 5,
+    }),
+    MY_STRING2: DmnoBaseTypes.string({
+      isLength: 5,
+    }),
+    MY_STRING3: DmnoBaseTypes.string({
+      startsWith: 'pk_',
+    }),
+    // ...
+  },
+  // ...
+});
 ```
 
 
@@ -47,8 +63,20 @@ DMNO Built-in data type for Numbers. Includes the following (optional) settings:
 
 Example: 
 ```javascript
-const myMinMaxType = DmnoBaseTypes.String({ min: 2, max: 5 });
+import { DmnoBaseTypes, defineDmnoService } from 'dmno';
 
+export default defineDmnoService({
+  name: 'MyConfig',
+  // ...
+  schema: {
+    MY_NUMBER: DmnoBaseTypes.number({
+      min: 2,
+      max: 5,
+    }),
+    // ...
+  },
+  // ...
+});
 ```
 
 ### `boolean`
@@ -59,11 +87,20 @@ DMNO Built-in data type for Booleans.
 
 Example: 
 ```javascript
-const myBoolType = DmnoBaseTypes.Boolean();
+import { DmnoBaseTypes, defineDmnoService } from 'dmno';
 
+export default defineDmnoService({
+  name: 'MyConfig',
+  // ...
+  schema: {
+    MY_BOOLEAN: DmnoBaseTypes.boolean(),
+    // ...
+  },
+  // ...
+});
 ```
 
-## Container types
+{/* ## Container types
 
 These types are used to define more complex data structures.
 
@@ -129,8 +166,9 @@ Example:
 ```javascript
 const myDictionaryType = DmnoBaseTypes.dictionary({ itemSchema: DmnoBaseTypes.String() });
 const myMinItemsType = DmnoBaseTypes.dictionary({ minItems: 2 });
-```
+``` */}
 
+## Utility types
 
 ### `Enum`
 
@@ -167,7 +205,183 @@ const myEnumType3 = DmnoBaseTypes.Enum(
 );
 ```
 
-## Utility types
+### `email`
+
+`DmnoBaseTypes.email({ settingsSchema? })`
+
+DMNO Built-in data type for Email addresses.
+
+Example: 
+```javascript
+import { DmnoBaseTypes, defineDmnoService } from 'dmno';
+
+export default defineDmnoService({
+  name: 'MyConfig',
+  // ...
+  schema: {
+    EMAIL: DmnoBaseTypes.email({
+      normalize: true,
+    }),
+    // ...
+  },
+  // ...
+});
+```
+
+### `url`
+
+`DmnoBaseTypes.url({ settingsSchema? })`
+
+DMNO Built-in data type for URLs.
+
+Example: 
+```javascript
+import { DmnoBaseTypes, defineDmnoService } from 'dmno';
+
+export default defineDmnoService({
+  name: 'MyConfig',
+  // ...
+  schema: {
+    URL: DmnoBaseTypes.url({
+      prependProtocol: true, // adds https:// if missing
+    }),
+    // ...
+  },
+  // ...
+});
+```
+
+### `ipAddress`
+
+`DmnoBaseTypes.ipAddress({ settingsSchema? })`
+
+DMNO Built-in data type for IP Addresses.
+
+Example: 
+```javascript
+import { DmnoBaseTypes, defineDmnoService } from 'dmno';
+
+export default defineDmnoService({
+  name: 'MyConfig',
+  // ...
+  schema: {
+    IP: DmnoBaseTypes.ipAddress({
+      version: 4, // or 6
+    }),
+    // ...
+  },
+  // ...
+});
+```
+
+### `port`
+
+`DmnoBaseTypes.port({ settingsSchema? })`
+
+DMNO Built-in data type for Ports.
+
+Example: 
+```javascript
+import { DmnoBaseTypes, defineDmnoService } from 'dmno';
+
+export default defineDmnoService({
+  name: 'MyConfig',
+  // ...
+  schema: {
+    PORT: DmnoBaseTypes.port({
+      min: 1024, // > 0
+      max: 49151, // < 65535
+    }),
+    // ...
+  },
+  // ...
+});
+```
+
+### `semver`
+
+`DmnoBaseTypes.semver()`
+
+DMNO Built-in data type for Semantic Versioning.
+
+Example: 
+```javascript
+import { DmnoBaseTypes, defineDmnoService } from 'dmno';
+
+export default defineDmnoService({
+  name: 'MyConfig',
+  // ...
+  schema: {
+    VERSION: DmnoBaseTypes.semver(),
+    // ...
+  },
+  // ...
+});
+```
+
+### `isoDate`
+
+`DmnoBaseTypes.isoDate()`
+
+DMNO Built-in data type for ISO Dates. Ex. `2022-01-01T00:00:00.000Z`.
+
+Example: 
+```javascript
+import { DmnoBaseTypes, defineDmnoService } from 'dmno';
+
+export default defineDmnoService({
+  name: 'MyConfig',
+  // ...
+  schema: {
+    DATE: DmnoBaseTypes.isoDate(),
+    // ...
+  },
+  // ...
+});
+```
+
+### `uuid`
+
+`DmnoBaseTypes.uuid()`
+
+DMNO Built-in data type for UUIDs.
+
+Example: 
+```javascript
+import { DmnoBaseTypes, defineDmnoService } from 'dmno';
+
+export default defineDmnoService({
+  name: 'MyConfig',
+  // ...
+  schema: {
+    UUID: DmnoBaseTypes.uuid(),
+    // ...
+  },
+  // ...
+});
+```
+
+### `md5`
+
+`DmnoBaseTypes.md5()`
+
+DMNO Built-in data type for MD5 Hashes.
+
+Example: 
+```javascript
+import { DmnoBaseTypes, defineDmnoService } from 'dmno';
+
+export default defineDmnoService({
+  name: 'MyConfig',
+  // ...
+  schema: {
+    MD5: DmnoBaseTypes.md5(),
+    // ...
+  },
+  // ...
+});
+```
+
 
 These types are used for specific use cases.
 
@@ -202,25 +416,7 @@ export default defineDmnoService({
 });
 
 ```
-### `UrlDataType`
 
-DMNO Built-in data type for URLs. 
-
-Example:
-```javascript
-import { UrlDataType, defineDmnoService } from 'dmno';
-// ...
-export default defineDmnoService({
-  name: 'MyConfig',
-  // ...
-  schema: {
-    API_URL: UrlDataType,
-    // ...
-  },
-  // ...
-});
-
-```
 
 
 ## Creating your own types

@@ -4,10 +4,6 @@ Source "../core/src/cli/commands/tapes/base.tape"
 
 Output "./src/assets/tapes/load.gif"
 
-Type "cd ../../example-repo/"
-Enter
-Sleep 500ms
-
 Type "cat .dmno/config.mts"
 Enter
 Sleep 500ms

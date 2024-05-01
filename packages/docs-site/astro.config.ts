@@ -40,7 +40,7 @@ export default defineConfig({
       expressiveCode: {
         styleOverrides: {
           // codePaddingInline: '25px',
-        }
+        },
       },
       head: [
         {
@@ -128,6 +128,10 @@ export default defineConfig({
           label: 'Integrations',
           badge: 'New',
           items: [{
+            label: 'Overview',
+            link: '/docs/guides/frameworks/overview',
+          },
+          {
             label: 'Astro',
             link: '/docs/guides/frameworks/astro/',
           },
@@ -198,6 +202,10 @@ export default defineConfig({
                 {
                   label: 'plugin',
                   link: '/docs/reference/cli/plugin',
+                },
+                {
+                  label: 'clear-cache',
+                  link: '/docs/reference/cli/clear-cache',
                 },
               ],
             },
