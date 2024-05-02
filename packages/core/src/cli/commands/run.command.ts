@@ -93,7 +93,7 @@ program.action(async (_command, opts: {
         env: {
           ...process.env,
           ...serviceEnv,
-          DMNO_LOADED_ENV: JSON.stringify(service.getLoadedEnv()),
+          DMNO_LOADED_ENV: JSON.stringify(service.getInjectedEnvJSON()),
         },
       });
       // console.log('PARENT PID = ', process.pid);

@@ -17,17 +17,14 @@ const dmnoConfigValid = ConfigServerClient.checkServiceIsValid(dmnoService);
 
 injectDmnoGlobals(dmnoService, configItemKeysAccessed);
 
+let enableDynamicPublicClientLoading = false;
+
 type DmnoAstroIntegrationOptions = {
-  /**
-   * enable dynamic public config items
-   * these will be fetched on page load rather than replaced in your built code
-   * */
-  dynamicPublicConfig: boolean,
+  // TODO: figure out options - loading dynamic public config?
 };
 
 function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions): AstroIntegration {
   // console.log('dmno astro integration initialized');
-
 
   return {
     name: 'dmno-astro-integration',
@@ -42,9 +39,12 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
           throw new Error('DMNO config is not valid');
         }
 
-        // TODO: maybe show a warning about public/dynamic and performance?
-        if (dmnoIntegrationOpts?.dynamicPublicConfig && opts.config.output === 'static') {
-          throw new Error('`dynamicPublicConfig` not supported when astro in static output');
+        if (opts.config.output === 'static') {
+          enableDynamicPublicClientLoading = false;
+        } else {
+          const hasPublicDynamicConfig = Object.values(dmnoService.config)
+            .find((i) => !i.dataType.sensitive && i.isDynamic);
+          enableDynamicPublicClientLoading = !!hasPublicDynamicConfig;
         }
 
         const staticConfigReplacements = {} as Record<string, string>;
@@ -54,12 +54,12 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
 
           if (configItem.dataType.sensitive) {
             // if it's sensitive and static, we'll inject only into DMNO_CONFIG
-            if (!configItem.dataType.dynamic) {
+            if (!configItem.isDynamic) {
               staticConfigReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
             }
           } else {
             // if public and static, we'll inject into vite's rewrites
-            if (!configItem.dataType.dynamic) {
+            if (!configItem.isDynamic) {
               // add rollup rewrite/define for non-sensitive items
               staticConfigReplacements[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
               staticConfigReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
@@ -86,13 +86,6 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
               async configureServer(server) {
                 // console.log('astro vite plugin configure server');
                 if (!isRestart) {
-                  // let counter = 1;
-                  // setInterval(() => {
-                  //   (globalThis as any).DMNO_CONFIG.PUBLIC_STATIC = `static-${counter++}`;
-                  //   (globalThis as any).DMNO_CONFIG.PUBLIC_DYNAMIC = `dynamic-${counter++}`;
-                  // }, 1000);
-
-
                   dmnoConfigClient.eventBus.on('reload', () => {
                     // eslint-disable-next-line @typescript-eslint/no-floating-promises
                     server.restart();
@@ -130,77 +123,42 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
 
         // console.log('adding dmno env', dmnoEnv);
 
-
-        // TODO: ideally this isn't inline text like this
-
-        // TODO: this strategy won't quite work for actual SSR (ie output = server | hybrid)
-        // inject script into SSR context
-
-        // injectScript('page-ssr', `
-        //   // during dev and build, we've already globally injected DMNO_CONFIG
-        //   if (!globalThis.DMNO_CONFIG) {
-
-        //     if (!process.env.DMNO_LOADED_ENV) {
-        //       throw new Error('You must run this server via \`dmno run\`');
-        //     }
-        //     const dmnoEnv = JSON.parse(process.env.DMNO_LOADED_ENV);
-        //     // TODO: inject back into process.dmnoEnv??
-
-        //     globalThis.DMNO_CONFIG ||= new Proxy({}, {
-        //       get(o, key) {
-        //         if (key in dmnoEnv) return dmnoEnv[key].value;
-        //         throw new Error(\`❌ \${key} is not a config item (3)\`);
-        //       }
-        //     });
-        //     process.dmnoEnv = globalThis.DMNO_CONFIG;
-
-        //     globalThis.DMNO_PUBLIC_CONFIG = new Proxy({}, {
-        //       get(o, key) {
-        //         if (key in dmnoEnv) {
-        //           if (dmnoEnv[key].sensitive) {
-        //             throw new Error(\`❌ \${key} is not public, use DMNO_CONFIG.\${key}\`);
-        //           }
-        //           return dmnoEnv[key].value;
-        //         }
-        //         throw new Error(\`❌ \${key} is not a config item (4)\`);
-        //       }
-        //     });
-        //   }
-        // `);
-
-
-
         // inject script into CLIENT context
         injectScript('page', [
-
-          // fetch and load public dynamic config (if enabled)
-          dmnoIntegrationOpts?.dynamicPublicConfig ? `
-            const request = new XMLHttpRequest();
-            request.open("GET", "/public-dynamic-config.json", false); // false means sync/blocking!
-            request.send(null);
-
-            if (request.status !== 200) {
-              throw new Error('Failed to load public dynamic config');
-            }
-            window._DMNO_PUBLIC_DYNAMIC_CONFIG = JSON.parse(request.responseText);
-            
-            console.log('loaded public dynamic config', window._DMNO_PUBLIC_DYNAMIC_CONFIG);
-          ` : '',
-
           // client side DMNO_PUBLIC_CONFIG proxy object
+          // TODO: ideally we can throw a better error if we know its a dynamic item and we aren't loading dynamic stuff
           `
             window._DMNO_PUBLIC_STATIC_CONFIG = window.DMNO_PUBLIC_CONFIG || {};
-            console.log('public static config: ', window.DMNO_PUBLIC_CONFIG);
             window.DMNO_PUBLIC_CONFIG = new Proxy({}, {
               get(o, key) {
-                ${dmnoIntegrationOpts?.dynamicPublicConfig ? `
-                if (key in window._DMNO_PUBLIC_DYNAMIC_CONFIG) { // must be first
-                  return window._DMNO_PUBLIC_DYNAMIC_CONFIG[key];
-                } else ` : ''}if (key in window._DMNO_PUBLIC_STATIC_CONFIG) {
+                if (key in window._DMNO_PUBLIC_STATIC_CONFIG) {
                   return window._DMNO_PUBLIC_STATIC_CONFIG[key];
-                } else {
-                  throw new Error(\`❌ \${key} is not a public config item, it may be sensitive or it may not exist at all\`);
                 }
+          `,
+
+          // if dynamic public config is enabled, we'll fetch it on-demand
+          // this is fine because we only hit this block if the rewrite failed
+          // (or wasnt found in the static vars during dev)
+          enableDynamicPublicClientLoading ? `
+                if (!window._DMNO_PUBLIC_DYNAMIC_CONFIG) {
+                  const request = new XMLHttpRequest();
+                  request.open("GET", "/public-dynamic-config.json", false); // false means sync/blocking!
+                  request.send(null);
+
+                  if (request.status !== 200) {
+                    throw new Error('Failed to load public dynamic DMNO config');
+                  }
+                  window._DMNO_PUBLIC_DYNAMIC_CONFIG = JSON.parse(request.responseText);
+                  
+                  console.log('loaded public dynamic config', window._DMNO_PUBLIC_DYNAMIC_CONFIG);
+                }
+                
+                if (key in window._DMNO_PUBLIC_DYNAMIC_CONFIG) {
+                  return window._DMNO_PUBLIC_DYNAMIC_CONFIG[key];
+                }
+          ` : '',
+          `     
+                throw new Error(\`❌ \${key} not found in your config, it may be sensitive,${!enableDynamicPublicClientLoading ? ' could be dynamic,' : ''} or it may not exist at all\`);
               }
             });
           `,
@@ -218,7 +176,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
         ].join('\n'));
 
 
-        if (dmnoIntegrationOpts?.dynamicPublicConfig) {
+        if (enableDynamicPublicClientLoading) {
           injectRoute({
             pattern: 'public-dynamic-config.json',
             // Use relative path syntax for a local route.
@@ -246,7 +204,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
         let dynamicConfigPrerendered = false;
         for (const itemKey in configItemKeysAccessed) {
           const configItem = dmnoService.config[itemKey];
-          if (configItem.dataType.dynamic) {
+          if (configItem.isDynamic) {
             dynamicConfigPrerendered = true;
             opts.logger.error(`Dynamic config item "${itemKey}" was used during pre-render`);
             opts.logger.error('> Change to `{ "dynamic": "false" }` to make it static');

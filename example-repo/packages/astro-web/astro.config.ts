@@ -8,9 +8,7 @@ import node from "@astrojs/node";
 // https://astro.build/config
 export default defineConfig({
   integrations: [
-    dmnoAstroIntegration({
-      dynamicPublicConfig: !!process.env.TEST_ASTRO_SSR && true
-    }),
+    dmnoAstroIntegration(),
     vue(),
     mdx(),
     // {

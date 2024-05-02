@@ -1,4 +1,3 @@
-
 import _ from 'lodash-es';
 import {
   ConfigItemDefinition, ResolverContext, TypeValidationResult,

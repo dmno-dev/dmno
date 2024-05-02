@@ -20,23 +20,25 @@ Then in your code, simply use `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG` and we take
 
 ### Default dynamic behavior
 
-How items are treated by default (with respect to being dynamic) is something that likely depends on the kind of app/service you are building and how it will be deployed. So rather than forcing you with a single way, we let you control this default behaviour with the `dynamicConfig` in your service config (`defineDmnoService()`).
+How items are treated by default (with respect to being dynamic) is something that likely depends on the kind of app/service you are building and how it will be deployed, so we let you control this default behaviour with the `settings.dynamicConfig` property in your service config.
 
 The following table shows the different modes supported:
 
 |value | description|
 |---|---|
-| `public_static`<br/>_(default)_ | **non-sensitive = static, sensitive = dynamic**<br/>_use `dynamic: true \| false` option to override_|
+| `public_static`<br/>⭐ _default_ | **non-sensitive = static, sensitive = dynamic**<br/>_use `dynamic: true \| false` option to override_|
 | `only_static` | **everything static, dynamic not supported**<br/>_useful for static/SSG sites_ |
 | `only_dynamic` | **everything dynamic, static not supported**<br/>_useful for a backend app and not using any bundler_ |
 | `default_static` | **default is static**<br/>_use `dynamic: true` to override_ |
 | `default_dynamic` | **default is dynamic**<br/>_use `dynamic: false` to override_ |
 
-An example schema:
+An example service schema using the `dynamicConfig` service setting and item overrides:
 
 ```diff lang="ts" ins="dynamic: true"
 export default defineDmnoService({
-+  dynamicConfig: 'default_static',
++  settings: {
++    dynamicConfig: 'default_static',
++  },
   schema: {    
     PUBLIC_STATIC: {},
     PUBLIC_DYNAMIC: { dynamic: true },
@@ -45,6 +47,13 @@ export default defineDmnoService({
   }
 })
 ```
+:::tip[Default behavior]
+The default "dynamic config mode" is `public_static` which matches what you are probably used to with other tools - sensitive items are dynamic and non-sensitive items are static.
+:::
+
+:::note[Service settings inheritance]
+Service "settings" are inherited up through the chain of parent services if left unspecified.
+:::
 
 
 ### Fetching dynamic config on the client

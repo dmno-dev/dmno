@@ -7,7 +7,6 @@
     "build": "NODE_ENV=production SECRET_STATIC=secret-static-build SECRET_DYNAMIC=secret-dynamic-build PUBLIC_STATIC=ps-build PUBLIC_DYNAMIC=pd-build dmno run -- next build",
     "build:static": "NODE_ENV=production NEXT_OUTPUT_EXPORT=1 pnpm build",
     "start": "NODE_ENV=production SECRET_STATIC=secret-static-boot SECRET_DYNAMIC=secret-dynamic-boot PUBLIC_STATIC=ps-boot PUBLIC_DYNAMIC=pd-boot dmno run -- next start",
-    "start2": "next start",
     "lint": "next lint"
   },
   "dependencies": {
