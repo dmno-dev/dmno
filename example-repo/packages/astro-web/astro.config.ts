@@ -13,22 +13,22 @@ export default defineConfig({
     }),
     vue(),
     mdx(),
-    {
-      name: 'custom',
-      hooks: {
-        // 'astro:config:setup': async (opts) => {
-        //   // detects leak
-        //   opts.injectScript(
-        //     // 'head-inline', // detects leak via middleware
-        //     // 'before-hydration', // detects leak via vite plugin
-        //     // 'page', // detects leak via vite plugin
+    // {
+    //   name: 'custom',
+    //   hooks: {
+    //     'astro:config:setup': async (opts) => {
+    //       // detects leak
+    //       opts.injectScript(
+    //         // 'head-inline', // detects leak via middleware
+    //         // 'before-hydration', // detects leak via vite plugin
+    //         // 'page', // detects leak via vite plugin
             
-        //     'page-ssr', // not leaked...
-        //     `console.log(${JSON.stringify(DMNO_CONFIG.SECRET_FOO)});`
-        //   );
-        // },
-      }
-    },
+    //         'page-ssr', // not leaked...
+    //         `console.log(${JSON.stringify(DMNO_CONFIG.SECRET_FOO)});`
+    //       );
+    //     },
+    //   }
+    // },
   ],
   ...process.env.TEST_ASTRO_SSR && {
     output: "server",

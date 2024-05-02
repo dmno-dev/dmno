@@ -1,35 +1,34 @@
-import { ConfigServerClient } from 'dmno';
+import { ConfigServerClient, injectDmnoGlobals } from 'dmno';
 import type { Plugin } from 'vite';
 
-export function injectDmnoConfigVitePlugin(): Plugin {
-  let firstLoad = false;
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  if (!(process as any).dmnoConfigClient) {
-    firstLoad = true;
-    (process as any).dmnoConfigClient = new ConfigServerClient();
-  }
-  const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
+let firstLoad = !(process as any).dmnoConfigClient;
 
+/// initialize a dmno config server client, but only once
+(process as any).dmnoConfigClient ||= new ConfigServerClient();
+const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
+
+const dmnoService = await dmnoConfigClient.getServiceConfig();
+// add the full dmnoService so we can use it in the middleware to detect leaked secrets!
+(process as any).dmnoService = dmnoService;
+
+const configItemKeysAccessed: Record<string, boolean> = {};
+const dmnoConfigValid = ConfigServerClient.checkServiceIsValid(dmnoService);
+
+injectDmnoGlobals(dmnoService, configItemKeysAccessed);
+
+export function injectDmnoConfigVitePlugin(): Plugin {
+  const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
 
   return {
     name: 'inject-dmno-config',
     async config(config, env) {
       const dmnoService = await dmnoConfigClient.getServiceConfig();
 
-      let configIsValid = true;
-      // TODO: not yet sure if this logic should live here or not...
       const publicConfigInjection = {} as Record<string, string>;
+
       for (const itemKey in dmnoService.config) {
         const configItem = dmnoService.config[itemKey];
-        if (!configItem.isValid) {
-          console.log(`Config item ${itemKey} is invalid`);
-
-          configItem.validationErrors?.forEach((error) => {
-            console.log(`${error.icon} ${error.message}`);
-          });
-
-          configIsValid = false;
-        } else {
+        if (configItem.isValid) {
           if (!configItem.dataType.sensitive) {
             publicConfigInjection[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
           }
@@ -46,21 +45,23 @@ export function injectDmnoConfigVitePlugin(): Plugin {
       if (env.command === 'build') {
         dmnoConfigClient.shutdown();
 
-        if (!configIsValid) {
-          throw new Error('Config validation failed');
+        if (!dmnoConfigValid) {
+          console.log('');
+          throw new Error('DMNO config validation failed');
         }
 
         // dev mode - load env, watch, and reload on changes
       } else if (env.command === 'serve') {
         // adjust vite's setting so it doesnt bury the error messages
-        if (!configIsValid) config.clearScreen = false;
+        if (!dmnoConfigValid) config.clearScreen = false;
       }
     },
     async configureServer(server) {
       // not sure about this...
       if (firstLoad && server.config.command === 'serve') {
+        firstLoad = false;
         dmnoConfigClient.eventBus.on('reload', () => {
-          console.log('vite config received reload event');
+          // console.log('vite config received reload event');
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
           server.restart();
         });

@@ -76,7 +76,7 @@ program.action(async (_command, opts: {
       console.log('');
       console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your config is currently invalid ')}  🚨 🚨 🚨\n`);
       _.each(invalidItems, (item) => {
-        console.log(getItemSummary(item));
+        console.log(getItemSummary(item.toJSON()));
       });
 
       if (!opts.watch) {

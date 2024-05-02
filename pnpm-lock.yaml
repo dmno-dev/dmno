@@ -352,6 +352,9 @@ importers:
 
   packages/integrations/vite:
     dependencies:
+      kleur:
+        specifier: ^4.1.5
+        version: 4.1.5
       vite:
         specifier: ^5.0
         version: 5.2.10(@types/node@20.12.7)
