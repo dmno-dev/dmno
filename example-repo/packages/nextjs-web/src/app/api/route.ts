@@ -18,8 +18,5 @@ export async function GET() {
     
     // throws an error
     // publicError: DMNO_PUBLIC_CONFIG.ASDF,
-    
-    // throws an error
-    // privateError: process.dmnoEnv.ASDF,
   })
 }

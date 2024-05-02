@@ -91,10 +91,10 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
   };
 
   /** whether this config is sensitive and must be kept secret */
-  sensitive?: ValueOrValueFromContextFn<boolean>;
+  sensitive?: boolean; // TODO: can this be a (ctx) => fn?
 
   /** is this config item required, an error will be shown if empty */
-  required?: ValueOrValueFromContextFn<boolean>;
+  required?: boolean; // TODO: can this be a (ctx) => fn?
 
   /** at what time is this value required */
   useAt?: ConfigRequiredAtTypes | Array<ConfigRequiredAtTypes>;
@@ -115,7 +115,6 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
   coerce?: ((val: any, ctx: ResolverContext) => any);
 
   /** set the value, can be static, or a function, or use helpers */
-  // value?: ValueOrValueFromContextFn<any>
   value?: InlineValueResolverDef;
 
   /** import value a env variable with a different name */
@@ -142,27 +141,42 @@ type PickConfigItemDefinition = {
 
 type ConfigItemDefinitionOrShorthand = ConfigItemDefinition | TypeExtendsDefinition;
 
+
+type DynamicConfigModes =
+  /* non-sensitive = static, sensitive = dynamic (this is the default) */
+  'public_static' |
+  /* everything static, dynamic not supported */
+  'only_static' |
+  /* everything dynamic, static not supported */
+  'only_dynamic' |
+  /* default is static */
+  'default_static' |
+  /* default_dynamic */
+  'default_dynamic';
+
 /**
  * options for defining a service's config schema
  * @category HelperMethods
  */
-
 export type DmnoWorkspaceConfig = {
-  /**
-   * override root service name, will default to name from package.json
-   */
+  /** root service name, if empty will fallback to name from package.json */
   name?: string,
-  /**
-   * root property that holds all the of schema items
-   */
+  /** settings for the root service - children will be inherit individual settings unless overridden */
+  settings?: DmnoServiceSettings,
+  /** config schema items that live in the workspace root */
   schema: Record<string, ConfigItemDefinitionOrShorthand>,
+};
+
+
+type DmnoServiceSettings = {
+  /** default behaviour for "dynamic" vs "static" behaviour of config items */
+  dynamicConfig?: DynamicConfigModes,
 };
 
 /**
  * options for defining a service's config schema
  * @category HelperMethods
  */
-
 export type DmnoServiceConfig = {
   /** service name - if empty, name from package.json will be used */
   name?: string,
@@ -170,6 +184,8 @@ export type DmnoServiceConfig = {
   parent?: string,
   /** optional array of "tags" for the service */
   tags?: Array<string>,
+  /** settings for this service - each item will be inherited from parent(s) if unspecified */
+  settings?: DmnoServiceSettings,
   /** array of config items to be picked from parent */
   pick?: Array<PickConfigItemDefinition | string>,
   /** the config schema itself */
@@ -633,6 +649,7 @@ export class DmnoService {
   injectedPlugins: Array<DmnoPlugin> = [];
   ownedPlugins: Array<DmnoPlugin> = [];
 
+  private settings: DmnoServiceSettings = {};
 
   private overrideSources = [] as Array<OverrideSource>;
 
@@ -660,6 +677,7 @@ export class DmnoService {
       // - disallow renaming the root service?
       // - stop naming a non-root service "root"?
       this.rawConfig = opts.rawConfig;
+      this.settings = opts.rawConfig.settings || {};
 
       if (this.rawConfig.name) {
         const validateNameResult = validatePackageName(this.rawConfig.name);
@@ -672,6 +690,19 @@ export class DmnoService {
         this.serviceName = opts.isRoot ? 'root' : this.packageName;
       }
     }
+  }
+
+  get parentService(): DmnoService | undefined {
+    if (this.rawConfig?.parent) {
+      const parent = this.workspace.getService({ serviceName: this.rawConfig?.parent });
+      if (parent) return parent;
+      throw new Error(`Unable to find parent service: ${this.rawConfig.parent}`);
+    }
+  }
+
+  getSettingsItem<K extends keyof DmnoServiceSettings>(key: K): DmnoServiceSettings[K] | undefined {
+    if (key in this.settings) return this.settings[key];
+    return this.parentService?.getSettingsItem(key);
   }
 
   addConfigItem(item: DmnoConfigItem | DmnoPickedConfigItem) {
@@ -782,13 +813,9 @@ export class DmnoService {
     });
     return env;
   }
-  getLoadedEnv() {
+  getInjectedEnvJSON() {
     const env: Record<string, any> = _.mapValues(this.config, (item) => {
-      return {
-        ...item.type.getDefItem('sensitive') && { sensitive: 1 },
-        ...item.type.getDefItem('dynamic') && { dynamic: item.type.getDefItem('dynamic') },
-        value: item.resolvedValue,
-      };
+      return item.toInjectedJSON();
     });
     return env;
   }
@@ -957,6 +984,30 @@ export abstract class DmnoConfigItemBase {
     return `${this.parentService.serviceName}!${this.getPath(respectImportOverride)}`;
   }
 
+  get isDynamic() {
+    // this resolves whether the item should actually be treated as static or dynamic
+    // which takes into account the specific item's `dynamic` override
+    // the parent's dynamicConfig setting and if the item is "sensitive" (if the servies is in `public_static` mode)
+
+    // NOTE - this is the only place this logic exists
+
+    // get the config default mode of the service
+    const serviceDynamicConfigMode = this.parentService?.getSettingsItem('dynamicConfig');
+
+    if (serviceDynamicConfigMode === 'only_dynamic') return true;
+    if (serviceDynamicConfigMode === 'only_static') return false;
+
+    const explicitSetting = this.type.getDefItem('dynamic');
+    if (explicitSetting !== undefined) return explicitSetting;
+
+    if (serviceDynamicConfigMode === 'default_dynamic') return true;
+    if (serviceDynamicConfigMode === 'default_static') return false;
+
+    // 'public_static' mode is default behaviour
+    // sensitive = dynamic, non-sensitive = static
+    return !!this.type.getDefItem('sensitive');
+  }
+
 
   async resolve() {
     // TODO: not sure if we want to bail here or what it means to be "resolved" as things are changing?
@@ -1013,11 +1064,21 @@ export abstract class DmnoConfigItemBase {
     );
   }
 
+  /** this is the shape that gets injected into an serialized json env var by `dmno run` */
+  toInjectedJSON() {
+    return {
+      ...this.type.getDefItem('sensitive') && { sensitive: 1 },
+      ...this.isDynamic && { dynamic: 1 },
+      value: this.resolvedValue,
+    };
+  }
+
   toJSON(): SerializedConfigItem {
     return {
       key: this.key,
       isValid: this.isValid,
       dataType: this.type.toJSON(),
+      isDynamic: this.isDynamic,
 
       resolvedRawValue: this.resolvedRawValue,
       resolvedValue: this.resolvedValue,

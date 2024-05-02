@@ -117,9 +117,9 @@ So we make it easy for you:
 
 DMNO gives you explicit control over how your config items are treated - whether they will be replaced into your bundled code at build time (static), or reloaded at boot time (dynamic). See the [dynamic config guide](/docs/guides/dynamic-config) for more details.
 
-As for features related to dynamic config, this integration will:
-- automatically inject the API route required to fetch public+dynamic config (if you have any in your schema)
-- warn you if you accidentally use a dynamic config item during a pre-render - regardless of the [output mode](https://docs.astro.build/en/basics/rendering-modes/#server-output-modes) you are using
+Client-side loading of dynamic config is automatically enabled if you are not using `output: 'static'` mode and you have non-sensitive dynamic config items in your schema. It will fetched on-demand, so if you don't use those items on the client, that's also fine. This integration will automatically inject the API route required to fetch public+dynamic config.
+
+Additionally, this integration throws an error during `astro build` if you try to use a dynamic config item during a pre-render of any static page/endpoint - regardless of the [output mode](https://docs.astro.build/en/basics/rendering-modes/#server-output-modes) you are using.
 
 ---
 

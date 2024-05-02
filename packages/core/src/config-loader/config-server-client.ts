@@ -277,8 +277,8 @@ export function injectDmnoGlobals(dmnoService: SerializedService, trackAccess?: 
       const keyStr = key.toString();
       if (trackAccess) trackAccess[keyStr] = true;
       // console.log('get DMNO_PUBLIC_CONFIG - ', keyStr);
-      if (dmnoService.config[keyStr].dataType.sensitive) {
-        throw new Error(`❌ ${keyStr} is not a public config item!`);
+      if (dmnoService.config[keyStr]?.dataType.sensitive) {
+        throw new Error(`❌ ${keyStr} is not a public config item! Use \`DMNO_CONFIG.${keyStr}\` instead`);
       }
       if (key in dmnoEnvValues) return dmnoEnvValues[keyStr];
       throw new Error(`❌ ${keyStr} is not a config item (2)`);

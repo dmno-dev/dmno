@@ -84,8 +84,8 @@ export function getItemSummary(item: SerializedConfigItem) {
   const summary: Array<string> = [];
   const icon = item.coercionError?.icon || item.resolutionError?.icon || item?.validationErrors?.[0]?.icon || '✅';
   // item.resolvedValue === undefined ? '✅' : '✅';
-  const isSensitive = item.dataType.sensitive;
-  const isRequired = item.dataType.required;
+  const isSensitive = item.dataType?.sensitive;
+  const isRequired = item.dataType?.required;
   summary.push(joinAndCompact([
     icon,
     kleur[item.isValid ? 'cyan' : 'red'](item.key) + (isRequired ? kleur.magenta('*') : ''),

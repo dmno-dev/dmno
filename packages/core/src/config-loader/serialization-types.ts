@@ -49,7 +49,7 @@ export type SerializedDmnoPluginInput = Pick<DmnoPluginInputItem, 'key' | 'isVal
 };
 
 export type SerializedConfigItem =
-  Pick<DmnoConfigItemBase, 'key' | 'isValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved'>
+  Pick<DmnoConfigItemBase, 'key' | 'isValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved' | 'isDynamic'>
   & {
     dataType: SerializedDmnoDataType,
     children: Record<string, SerializedConfigItem>,

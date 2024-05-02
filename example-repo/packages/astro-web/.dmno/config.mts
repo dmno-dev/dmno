@@ -6,6 +6,9 @@ const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
 export default defineDmnoService({
   name: 'astroweb',
   parent: 'group1',
+  settings: {
+    dynamicConfig: 'default_static',
+  },
   pick: [
     'NODE_ENV',
     'DMNO_ENV',

@@ -16,7 +16,7 @@ router.get('/', async (ctx) => {
   // TODO: add something which checks redis and postgres connections are working
   ctx.body = {
     systemStatus: 'nope',
-    envCheck: process.dmnoEnv.API_ONLY || 'env-var-not-loaded',
+    envCheck: DMNO_CONFIG.API_ONLY || 'env-var-not-loaded',
     dmnoTest: DMNO_CONFIG.PORT,
   };
 });
