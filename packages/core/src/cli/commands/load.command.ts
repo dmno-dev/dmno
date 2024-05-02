@@ -178,7 +178,7 @@ program.action(async (opts: {
     console.log('Invalid items:\n');
 
     _.each(failingItems, (item) => {
-      console.log(getItemSummary(item));
+      console.log(getItemSummary(item.toJSON()));
       console.log();
     });
     if (opts.showAll) {
@@ -190,7 +190,7 @@ program.action(async (opts: {
       console.log();
       const validItems = _.filter(service.config, (i) => !!i.isValid);
       _.each(validItems, (item) => {
-        console.log(getItemSummary(item));
+        console.log(getItemSummary(item.toJSON()));
       });
     }
 
@@ -261,7 +261,7 @@ program.action(async (opts: {
   } else {
     console.log('\nConfig loaded successfully:\n');
     _.each(service.config, (item) => {
-      console.log(getItemSummary(item));
+      console.log(getItemSummary(item.toJSON()));
     });
     console.log('');
   }

@@ -6,6 +6,8 @@ import Debug from 'debug';
 import { DeferredPromise, createDeferredPromise } from '@dmno/ts-lib';
 import { createDebugTimer } from '../cli/lib/debug-timer';
 import { ConfigLoaderRequestMap } from './ipc-requests';
+import { SerializedService } from './serialization-types';
+import { formatError, getItemSummary } from '../cli/lib/formatting';
 
 const debug = Debug('dmno');
 const debugTimer = createDebugTimer('dmno:loader-client');
@@ -207,5 +209,80 @@ export class ConfigServerClient {
     const serviceConfig = await this.makeRequest('get-resolved-config', { packageName });
     return serviceConfig;
   }
+
+  static checkServiceIsValid(service: SerializedService, log = true) {
+    if (service.configLoadError) {
+      console.log('🚨 🚨 🚨  unable to load config schema  🚨 🚨 🚨');
+      console.log(formatError(service.configLoadError));
+      return false;
+    }
+    // plugins!
+
+    if (service.schemaErrors?.length) {
+      console.log('🚨 🚨 🚨  config schema is invalid  🚨 🚨 🚨');
+      console.log(service.schemaErrors.forEach((err) => {
+        console.log(formatError(err));
+      }));
+      return false;
+    }
+
+    const failingItems = Object.values(service.config).filter((c) => !c.isValid);
+    if (failingItems.length) {
+      console.log('🚨 🚨 🚨  config is invalid  🚨 🚨 🚨');
+      failingItems.forEach((item) => {
+        console.log(getItemSummary(item));
+        console.log();
+      });
+      return false;
+    }
+
+    return true;
+  }
+}
+
+
+const originalProcessEnv = structuredClone(process.env);
+export function injectDmnoGlobals(dmnoService: SerializedService, trackAccess?: Record<string, boolean>) {
+  const dmnoEnvValues: Record<string, any> = {};
+
+  process.env = { ...originalProcessEnv };
+
+  for (const itemKey in dmnoService.config) {
+    const configItem = dmnoService.config[itemKey];
+
+    if (configItem.isValid) {
+      dmnoEnvValues[itemKey] = configItem.resolvedValue;
+
+      // feed our dmno config back into process.env
+      // TODO: might want some different logic around nested items
+      process.env[itemKey] = configItem.resolvedValue?.toString() || '';
+    }
+  }
+
+  // We attach some stuff to the locally running process / globalThis
+
+  (globalThis as any).DMNO_CONFIG = new Proxy({}, {
+    get(o, key) {
+      const keyStr = key.toString();
+      if (trackAccess) trackAccess[keyStr] = true;
+      // console.log('get DMNO_CONFIG - ', key);
+      if (key in dmnoEnvValues) return dmnoEnvValues[keyStr];
+      throw new Error(`❌ ${keyStr} is not a config item (1)`);
+    },
+  });
+
+  // attach the same proxy object so we can throw nice errors
+  (globalThis as any).DMNO_PUBLIC_CONFIG = new Proxy({}, {
+    get(o, key) {
+      const keyStr = key.toString();
+      if (trackAccess) trackAccess[keyStr] = true;
+      // console.log('get DMNO_PUBLIC_CONFIG - ', keyStr);
+      if (dmnoService.config[keyStr].dataType.sensitive) {
+        throw new Error(`❌ ${keyStr} is not a public config item!`);
+      }
+      if (key in dmnoEnvValues) return dmnoEnvValues[keyStr];
+      throw new Error(`❌ ${keyStr} is not a config item (2)`);
+    },
+  });
 }
 

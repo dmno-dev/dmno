@@ -8,6 +8,6 @@
   },
   "include": [
     "vite.config.ts",
-    "./.dmno/.typegen/node.d.ts"
+    "./.dmno/.typegen/global.d.ts"
   ]
 }

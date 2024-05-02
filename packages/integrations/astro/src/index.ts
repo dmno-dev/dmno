@@ -1,86 +1,21 @@
-import { ConfigServerClient } from 'dmno';
+import { ConfigServerClient, injectDmnoGlobals } from 'dmno';
 import type { AstroIntegration } from 'astro';
+
+// console.log('dmno astro integration file loaded!');
+
 
 /// initialize a dmno config server client, but only once
 (process as any).dmnoConfigClient ||= new ConfigServerClient();
 const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
 
-let dmnoEnv: Record<string, any> = {};
-let sensitiveKeys: Array<string> = [];
-
-const originalProcessEnv = structuredClone(process.env);
-
-// console.log('dmno astro integration file loaded!');
-
-
 const dmnoService = await dmnoConfigClient.getServiceConfig();
+// add the full dmnoService so we can use it in the middleware to detect leaked secrets!
+(process as any).dmnoService = dmnoService;
+
 const configItemKeysAccessed: Record<string, boolean> = {};
+const dmnoConfigValid = ConfigServerClient.checkServiceIsValid(dmnoService);
 
-async function injectConfig() {
-  let configIsValid = true;
-  // TODO: not yet sure if this logic should live here or not...
-  dmnoEnv = {};
-  console.log('inject config!');
-  for (const itemKey in dmnoService.config) {
-    const configItem = dmnoService.config[itemKey];
-
-    // TODO: better error messaging, maybe push through to toolbar???
-    if (!configItem.isValid) {
-      console.log(`Config item ${itemKey} is invalid`);
-
-      configItem.validationErrors?.forEach((error) => {
-        console.log(`${error.icon} ${error.message}`);
-      });
-
-      configIsValid = false;
-    } else {
-      dmnoEnv[itemKey] = configItem.resolvedValue;
-    }
-  }
-
-  // We attach some stuff to the locally running process / globalThis
-  // which will be accessible in api endpoints (at least in dev mode)
-
-  // feed our dmno config into process.env
-  process.env = {
-    ...originalProcessEnv,
-  };
-  for (const k in dmnoEnv) {
-    process.env[k] = dmnoEnv[k]?.toString() || '';
-  }
-
-  // we cannot edit import.meta, but we've rewritten it to DMNO_CONFIG
-  // (import.meta as any).dmnoEnv = dmnoEnv;
-  (globalThis as any).DMNO_CONFIG = new Proxy({}, {
-    get(o, key) {
-      const keyStr = key.toString();
-      configItemKeysAccessed[keyStr] = true;
-      console.log('get DMNO_CONFIG - ', key);
-      if (key in dmnoEnv) return dmnoEnv[keyStr];
-      throw new Error(`❌ ${keyStr} is not a config item (1)`);
-    },
-  });
-
-  // attach the same proxy object so we can throw nice errors
-  (globalThis as any).DMNO_PUBLIC_CONFIG = new Proxy({}, {
-    get(o, key) {
-      const keyStr = key.toString();
-      configItemKeysAccessed[keyStr] = true;
-      console.log('get DMNO_PUBLIC_CONFIG - ', keyStr);
-      if (sensitiveKeys.includes(keyStr)) {
-        throw new Error(`❌ ${keyStr} is not a public config item!`);
-      }
-      if (key in dmnoEnv) return dmnoEnv[keyStr];
-      throw new Error(`❌ ${keyStr} is not a config item (2)`);
-    },
-  });
-
-  // add the full dmnoService so we can use it in the middleware to detect leaked secrets!
-  (process as any).dmnoService = dmnoService;
-}
-
-await injectConfig();
-
+injectDmnoGlobals(dmnoService, configItemKeysAccessed);
 
 type DmnoAstroIntegrationOptions = {
   /**
@@ -103,23 +38,21 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
           injectScript, addMiddleware, injectRoute,
         } = opts;
 
-        // astroOutputType = opts.config.output;
-        // if (opts.command === 'build') isBuildMode = true;
+        if (opts.command === 'build' && !dmnoConfigValid) {
+          throw new Error('DMNO config is not valid');
+        }
 
         // TODO: maybe show a warning about public/dynamic and performance?
         if (dmnoIntegrationOpts?.dynamicPublicConfig && opts.config.output === 'static') {
           throw new Error('`dynamicPublicConfig` not supported when astro in static output');
         }
 
-        sensitiveKeys = [];
         const staticConfigReplacements = {} as Record<string, string>;
 
         for (const itemKey in dmnoService.config) {
           const configItem = dmnoService.config[itemKey];
 
           if (configItem.dataType.sensitive) {
-            sensitiveKeys.push(itemKey);
-
             // if it's sensitive and static, we'll inject only into DMNO_CONFIG
             if (!configItem.dataType.dynamic) {
               staticConfigReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
@@ -141,7 +74,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
               async config(config, env) {
                 // console.log('vite plugin config!');
 
-                console.log('STATIC REPLACEMENTS', staticConfigReplacements);
+                // console.log('STATIC REPLACEMENTS', staticConfigReplacements);
 
                 // inject rollup rewrites via config.define
                 config.define = {
@@ -182,7 +115,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
                   if (configItem.dataType.sensitive) {
                     const itemValue = configItem.resolvedValue;
                     if (itemValue && src.includes(itemValue.toString())) {
-                      console.log(src);
+                      // console.log(src);
                       // TODO: better error details to help user find the problem
                       throw new Error(`🚨 DETECTED LEAKED CONFIG ITEM "${itemKey}" in file - ${id}`);
                     }

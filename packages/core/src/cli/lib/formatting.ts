@@ -1,7 +1,7 @@
 import kleur from 'kleur';
 import _ from 'lodash-es';
 import { outdent } from 'outdent';
-import { SerializedDmnoError } from '../../config-loader/serialization-types';
+import { SerializedConfigItem, SerializedDmnoError } from '../../config-loader/serialization-types';
 import { DmnoError } from '../../config-engine/errors';
 import { DmnoConfigItemBase } from '../../config-engine/config-engine';
 
@@ -80,12 +80,12 @@ export function joinAndCompact(strings: Array<string | number | boolean | undefi
   return strings.filter((s) => !!s).join(joinChar);
 }
 
-export function getItemSummary(item: DmnoConfigItemBase) {
+export function getItemSummary(item: SerializedConfigItem) {
   const summary: Array<string> = [];
   const icon = item.coercionError?.icon || item.resolutionError?.icon || item?.validationErrors?.[0]?.icon || '✅';
   // item.resolvedValue === undefined ? '✅' : '✅';
-  const isSensitive = item.type.getDefItem('sensitive');
-  const isRequired = item.type.getDefItem('required');
+  const isSensitive = item.dataType.sensitive;
+  const isRequired = item.dataType.required;
   summary.push(joinAndCompact([
     icon,
     kleur[item.isValid ? 'cyan' : 'red'](item.key) + (isRequired ? kleur.magenta('*') : ''),

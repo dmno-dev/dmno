@@ -23,5 +23,4 @@ add type references to `src/env.d.ts`
 
 ```
 /// <reference types="../.dmno/.typegen/global-public.d.ts" />
-/// <reference types="../.dmno/.typegen/node.d.ts" />
 ```
