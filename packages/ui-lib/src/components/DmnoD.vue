@@ -1,14 +1,11 @@
 <template>
   <div class="dmno-logo">
     <div class="d" />
-    <div class="m" />
-    <div class="n" />
-    <div class="o" />
   </div>
 </template>
 
 <style scoped lang="less">
-.dmno-logo {
+.dmno-d {
   color: currentColor;
   width: 100px;
   height: 100px;
@@ -19,8 +16,8 @@
   container-type: size;
 
   > div {
-    width: 30%;
-    height: 30%;
+    width: 40%;
+    height: 40%;
     border-radius: 50%;
     background: currentColor;
     position: absolute;
@@ -28,20 +25,7 @@
   }
   > .d {
     border-radius: 0% 50% 50% 0%;
-    transform: translate(-25cqb, -25cqb);
+    margin-right: -5%;
   }
-  > .m {
-    border-radius: 0% 50% 0% 0%;
-    transform: translate(25cqb, -25cqb);
-  }
-  > .n {
-    border-radius: 50% 50% 0% 0%;
-    transform: translate(-25cqb, 25cqb);
-  }
-  > .o {
-    border-radius: 50%;
-    transform: translate(25cqb, 25cqb);
-  }
-
 }
 </style>

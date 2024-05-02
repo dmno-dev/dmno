@@ -24,7 +24,7 @@ export default defineConfig({
         discord: DMNO_CONFIG.DISCORD_JOIN_URL,
       },
       customCss: [
-        './src/style/docs-global.css',
+        './src/style/global.css',
       ],
       plugins: [
         starlightBlog({
