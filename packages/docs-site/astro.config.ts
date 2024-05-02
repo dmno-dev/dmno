@@ -170,17 +170,11 @@ export default defineConfig({
           label: 'Reference',
           items: [
             {
-              label: 'config-engine',
-              items: [{
-                label: 'Installation',
-                link: '/docs/reference/config-engine/installation/',
-              }, {
-                label: 'Base Types',
-                link: '/docs/reference/config-engine/base-types/',
-              }, {
-                label: 'Helper Methods',
-                link: '/docs/reference/config-engine/helper-methods/',
-              }],
+              label: 'Base Types',
+              link: '/docs/reference/base-types/',
+            }, {
+              label: 'Helper Methods',
+              link: '/docs/reference/helper-methods/',
             },
             {
               label: 'CLI',

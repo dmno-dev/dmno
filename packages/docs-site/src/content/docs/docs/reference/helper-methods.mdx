@@ -1,0 +1,316 @@
+---
+title: Config Engine Helper Methods
+---
+
+import { Tabs, TabItem, Code } from "@astrojs/starlight/components";
+import TabbedTypeSettings from '@/components/TabbedTypeSettings.astro';
+import PropTable from "@/components/PropTable.astro";
+
+### `defineDmnoWorkspace`
+
+`defineDmnoWorkspace({ opts })`
+
+This method is used to define the workspace configuration. It takes an object as an argument with the following properties:
+
+<Tabs>
+  <TabItem label="Schema">
+    <Code 
+      lang="ts"
+      code={`
+type DmnoWorkspaceConfig = {
+  name?: string,
+  schema: Record<string, ConfigItemDefinitionOrShorthand>,
+};
+      `}
+    />
+  </TabItem>
+
+  <TabItem label="Properties">
+    <PropTable properties={
+      [
+        {
+          name: 'name',
+          type: 'string',
+          description: 'The name of the workspace. '
+        },
+        {
+          name: 'schema',
+          type: 'Record<string, ConfigItemDefinitionOrShorthand>',
+          required: true,
+          description: 'The schema for the workspace. These are the configuration items that will be available to all services.'
+        },
+      ]
+    } />
+  </TabItem>
+</Tabs>
+
+The `ConfigItemDefinitonOrShorthand` type is a union of the `ConfigItemDefinition` and `TypeExtendsDefinition` types. 
+
+### `ConfigItemDefinition`
+
+The `ConfigItemDefinition` type is an object with the following properties:
+
+<TabbedTypeSettings
+    typeName="ConfigItemDefinition"
+/>
+
+`TypeExtendsDefinition` can be a string (the name of the type), a reference to a type, or a function that returns a type.
+
+```typescript
+import { defineDmnoWorkspace, DmnoBaseTypes } from 'dmno';
+
+export default defineDmnoWorkspace({
+  schema: {
+    ITEM0: {}, // defaults to string
+    ITEM1: 'string',
+    ITEM2: DmnoBaseTypes.string,
+    ITEM3: DmnoBaseTypes.string(),
+    ITEM4: {
+      extends: 'string',
+    },
+    ITEM5: {
+      extends: DmnoBaseTypes.string,
+    },
+    ITEM6: {
+      extends: DmnoBaseTypes.string({}),
+    },
+  },
+});
+```
+:::tip[Did you know?]
+All of the above examples are equivalent.
+:::
+
+
+### `defineDmnoService`
+
+`defineDmnoService({ opts })`
+
+This method is used to define the configuration schema in each of your services (not the root). It takes an object as an argument with the following properties:
+
+<Tabs>
+  <TabItem label="Schema">
+    <Code 
+      lang="ts"
+      code={`
+type DmnoServiceConfig = {
+  name?: string,
+  parent?: string,
+  tags?: string[],
+  settings?: {
+    dynamicConfig: DynamicConfigModes,
+  }
+  pick?: Array<PickConfigItemDefinition | string>,
+  schema: Record<string, ConfigItemDefinitionOrShorthand>,
+};
+      `}
+    />
+  </TabItem>
+
+  <TabItem label="Properties">
+    <PropTable properties={
+      [
+        {
+          name: 'name',
+          type: 'string',
+          description: 'The name of the workspace. '
+        },
+        {
+          name: 'parent',
+          type: 'string',
+          description: 'The name of the parent service. '
+        },
+        {
+          name: 'tags',
+          type: 'string[]',
+          description: 'An array of tags for the service. '
+        },
+        {
+          name: 'pick',
+          type: 'Array<PickConfigItemDefinition | string>',
+          description: 'An array of items to pick from the parent (or other) service(s). This can be a string (the key) or a PickItemDefinition object.'
+        },
+        {
+          name: 'schema',
+          type: 'Record<string, ConfigItemDefinitionOrShorthand>',
+          required: true,
+          description: 'The schema for the workspace. These are the configuration items that will be available to all services.'
+        },
+      ]
+    } />
+  </TabItem>
+</Tabs>
+
+This is very similar to `defineDmnoWorkspace` with a few additions: 
+- `parent` is the name of the parent service.
+- `tags` is an array of tags for the service.
+- `pick` is an array of items to pick from the parent (or other) service(s). This can be a string (the key) or a `PickConfigItemDefinition` object (see below).
+
+>The `schema` is the same as the `schema` property in the `defineDmnoWorkspace` method above. 
+
+#### `PickItemDefinition`
+
+The `PickItemDefinition` type is an object with the following properties:
+
+```typescript
+type PickConfigItemDefinition = {
+  /** which service to pick from, defaults to "root" */
+  source?: string;
+  /** key(s) to pick, or function that matches against all keys from source */
+  key: string | Array<string> | ((key: string) => boolean),
+  /** new key name or function to rename key(s) */
+  renameKey?: string | ((key: string) => string),
+  /** function to transform value(s) */
+  transformValue?: (value: any) => any,
+};
+```
+
+#### `DynamicConfigModes`
+
+The `DynamicConfigModes` type is an enum with the following values:
+
+```typescript
+type DynamicConfigModes =
+/* non-sensitive = static, sensitive = dynamic (this is the default) */
+  'public_static' |
+  /* everything static, dynamic not supported */
+  'only_static' |
+  /* everything dynamic, static not supported */
+  'only_dynamic' |
+  /* default is static */
+  'default_static' |
+  /* default_dynamic */
+  'default_dynamic';
+```
+
+:::tip
+For more on dynamic config modes, see the [Dynamic vs static config](/docs/guides/dynamic-config) guide.
+:::
+
+Example: 
+```javascript
+import { defineDmnoService, DmnoBaseTypes } from 'dmno';
+
+export default defineDmnoService({
+  name: 'MyConfig',
+  parent: 'root',
+  pick: [
+    {
+      key: 'ITEM0',
+    },
+    {
+      key: 'ITEM1',
+      renameKey: 'NEW_ITEM1',
+    },
+    {
+      key: 'ITEM2',
+      transformValue: (value) => `${value} transformed`,
+    },
+  ],
+  schema: {
+    MYFIELD: DmnoBaseTypes.string({
+      required: true,
+    }),
+    MYFIELD2: DmnoBaseTypes.number({
+      required: true,
+    }),
+    MYFIELD3: DmnoBaseTypes.boolean({
+      required: true,
+    }),
+  },
+});
+```
+
+### `createDmnoDataType`
+
+`createDmnoDataType({ opts })`
+
+This method is used to create a new data type. It takes an object as an argument with the following properties:
+
+```typescript
+type DataTypeOpts = {
+  name: string;
+  extends: string | DmnoDataType | (() => DmnoDataType);
+  settingsSchema?: Record<string, unknown>;
+  validate?: (ctx, settings) => boolean;
+  coerce?: (ctx, settings) => unknown;
+};
+```
+
+Example: 
+```javascript
+const myType = createDmnoDataType({
+  name: 'MyType',
+  extends: DmnoBaseTypes.string({
+    // string specific settings object
+  }),
+  settingsSchema: {
+    // user type specific settings object
+  },
+  validate: (value) => {
+    // return true if value is valid
+    // has access to settingsSchema
+  },
+  coerce: (value) => {
+    // return coerced value
+    // has access to settingsSchema
+  },
+});
+```
+
+You can then use it in your config schema like so: 
+
+```javascript
+const myType = DmnoBaseTypes.MyType({ settings });
+
+export default defineDmnoService({
+  name: 'MyConfig',
+  parent: 'root',
+  schema: {
+    MYFIELD: {
+      extends: myType,
+      required: true,
+    },
+    MYFIELD2,
+    MYFIELD3,
+  },
+});
+```
+
+
+### `switchByNodeEnv`
+
+`switchByNodeEnv({ opts })`
+
+This method is used to define different configurations for different environments. It takes an object as an argument with the following properties:
+
+```typescript
+type SwitchByNodeEnvOpts = {
+  _default?: any;
+  development?: any;
+  staging?: any;
+  production?: any;
+  [key: string]: any;
+};
+```
+Note: `_default` is a reserved key that will be used if the current environment is not defined in the object. All the other keys should match the possible values of the `NODE_ENV` environment variable.
+
+Example: 
+```javascript
+import { switchByNodeEnv } from '@dmno/core';
+
+export default defineDmnoService({
+  schema: {
+    MY_CONFIG_ITEM: {
+      value: switchByNodeEnv({
+        _default: 'default value',
+        development: 'development value',
+        staging: 'staging value',
+        production: 'production value',
+      }),
+    },
+  },
+});
+```
+
+

@@ -12,7 +12,7 @@ DMNO comes with a comprehensive set of types to cover the majority of use cases.
 
 These types are used when defining your config schema and can be extended to create more application specific types as needed.
 
-See [_creating your own types_](#creating-your-own-types) for more on this. 
+See [_creating your own types_](/docs/reference/helper-methods/#createdmnodatatype) for more on this. 
 
 
 ### `string`
@@ -418,55 +418,8 @@ export default defineDmnoService({
 ```
 
 
-
-## Creating your own types
-
 :::tip[Advanced]
-  In the event that our base types aren't sufficient, you can extend them to create your own, more specific types using `createDmnoDataType`. 
+  In the event that our base types aren't sufficient, you can extend them to create your own using `createDmnoDataType`, see more [here](/docs/reference/helper-methods#createdmnodatatype). 
 :::
 
 
-### `createDmnoDataType`
-
-`createDmnoDataType({ options })` 
-
-Creates a new DMNO data type. 
-
-```javascript
-const myType = createDmnoDataType({
-  name: 'MyType',
-  extends: DmnoBaseTypes.string({
-    // settings object as outlined above
-  }),
-  settingsSchema: {
-    // user specific settings object
-  },
-  validate: (value) => {
-    // return true if value is valid
-    // has access to settingsSchema
-  },
-  coerce: (value) => {
-    // return coerced value
-    // has access to settingsSchema
-  },
-});
-```
-
-You can then use it in your config schema like so: 
-
-```javascript
-const myType = DmnoBaseTypes.MyType({ settingsObject });
-
-export default defineDmnoService({
-  name: 'MyConfig',
-  parent: 'root',
-  schema: {
-    MYFIELD: {
-      extends: myType,
-      required: true,
-    },
-    MYFIELD2,
-    MYFIELD3,
-  },
-});
-```
