@@ -24,3 +24,12 @@ add type references to `src/env.d.ts`
 ```
 /// <reference types="../.dmno/.typegen/global-public.d.ts" />
 ```
+
+----
+
+Check out the [docs](https://dmno.dev/docs/guides/frameworks/astro/) for more information on how to use DMNO + Astro.
+
+*** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
+
+If you have any questions, please reach out to us on [Discord](https://discord.gg/Q9GW2PzD).
+

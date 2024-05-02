@@ -27,3 +27,10 @@ const onePassVault = new OnePasswordDmnoPlugin('1pass');
 
 ### Fetch item using "reference"
 `onePassVault.itemByReference()`
+
+
+Check out the [docs](https://dmno.dev/docs/guides/plugins/1password) for more information on how to use DMNO + 1Password.
+
+*** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
+
+If you have any questions, please reach out to us on [Discord](https://discord.gg/Q9GW2PzD).

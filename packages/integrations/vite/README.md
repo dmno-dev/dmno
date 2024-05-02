@@ -20,3 +20,11 @@ export default defineConfig({
 
 });
 ```
+
+----
+
+Check out the [docs](https://dmno.dev/docs/guides/frameworks/vite/) for more information on how to use DMNO + Vite.
+
+*** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
+
+If you have any questions, please reach out to us on [Discord](https://discord.gg/Q9GW2PzD).
