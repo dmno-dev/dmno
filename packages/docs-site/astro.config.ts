@@ -42,11 +42,14 @@ export default defineConfig({
       pagination: false,
       expressiveCode: {
         styleOverrides: {
-          // codePaddingInline: '25px',
+          borderColor: 'var(--brand-pink)',
+          codeFontFamily: 'Fira Code',
+          codeLineHeight: '1.6',
         },
       },
       components: {
         Header: './src/components/CustomStarlightHeader.astro',
+        ThemeProvider: './src/components/CustomStarlightThemeProvider.astro',
       },
       head: [
         {

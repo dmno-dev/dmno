@@ -1,5 +1,6 @@
 ---
 import { Icon } from "astro-iconify";
+import { GoogleFontsOptimizer } from "astro-google-fonts-optimizer";
 import { DmnoTileLogo } from "@dmno/ui-lib";
 import SignUp from "../components/mailerlite/SignUp.astro";
 import GA from "@/components/GA.astro";
@@ -11,14 +12,9 @@ import "../style/global.css";
     <GA />
     <title>DMNO</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <link rel="icon" type="image/x-icon" href="/favicon.svg" />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap"
-      rel="stylesheet"
+    <GoogleFontsOptimizer
+      url={`https://fonts.googleapis.com/css2?${DMNO_PUBLIC_CONFIG.GOOGLE_FONT_FAMILIES}&display=swap`}
     />
   </head>
   <body>
