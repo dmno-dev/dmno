@@ -2,7 +2,7 @@ name: "\U0001F41E Bug report"
 title: "[BUG]: "
 labels: ["bug", "triage"]
 description: Create a report to help us improve dmno
-assigness: 
+assignees: 
   - philmillman
 body:
   - type: markdown
