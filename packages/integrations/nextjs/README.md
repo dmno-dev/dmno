@@ -33,3 +33,11 @@ import '@dmno/nextjs-integration';
 ### Gotchas
 
 Running `dmno run -w -- next dev` will automatically restart the next dev server on config changes, but unfortunately it does not trigger a page refresh in the browser
+
+----
+
+Check out the [docs](https://dmno.dev/docs/guides/frameworks/nextjs/) for more information on how to use DMNO + Next.js.
+
+*** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
+
+If you have any questions, please reach out to us on [Discord](https://discord.gg/Q9GW2PzD).

@@ -28,7 +28,7 @@ export default defineDmnoWorkspace({
         url: 'https://support.discord.com/hc/en-us/articles/208866998-Invites-101',
       },
       extends: 'url',
-      value: 'https://discord.gg/Q9GW2PzD',
+      value: 'https://chat.dmno.dev',
       required: true,
     },
     GENERAL_CONTACT_EMAIL: {
