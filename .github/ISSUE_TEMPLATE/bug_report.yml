@@ -21,15 +21,6 @@ body:
       label: dmno version
     validations:
       required: true
-  - type: input
-    id: reproduction-link
-    attributes:
-      label: Link to minimal reproduction
-      description: |
-        A clear and concise description of what the bug is.
-      placeholder: Reproduction Link
-    validations:
-      required: true
   - type: textarea
     id: steps-to-reproduce
     attributes:

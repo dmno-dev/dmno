@@ -26,7 +26,7 @@ body:
       label: Motivation
       description: Why do you want this feature? What problem does it solve?
       placeholder: Explain the motivation behind this feature request.
-  - type: input
+  - type: textarea
     id: proposed-solution
     attributes:
       label: Proposed Solution
@@ -38,7 +38,7 @@ body:
       label: Alternatives
       description: Are there any alternative solutions or features you've considered?
       placeholder: List any alternative solutions or features you've considered.
-  - type: input
+  - type: textarea
     id: additional-info
     attributes:
       label: Additional Information
