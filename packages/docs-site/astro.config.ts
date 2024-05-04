@@ -6,7 +6,6 @@ import robotsTxt from 'astro-robots-txt';
 import starlightLinksValidator from 'starlight-links-validator';
 import partytown from '@astrojs/partytown';
 import dmnoAstroIntegration from '@dmno/astro-integration';
-
 import IconsVitePlugin from 'unplugin-icons/vite';
 
 
@@ -107,7 +106,7 @@ export default defineConfig({
           label: 'Guides',
           items: [
             {
-              label: 'Schema',
+              label: 'DMNO Schema Guide',
               link: '/docs/guides/schema',
             },
             {

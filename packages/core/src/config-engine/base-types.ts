@@ -648,6 +648,7 @@ const UrlDataType = createDmnoDataType({
   settingsSchema: Object as undefined | {
     prependProtocol?: boolean
     normalize?: boolean,
+    allowedDomains?: Array<string>
   },
 
   coerce(rawVal, settings) {
@@ -657,13 +658,19 @@ const UrlDataType = createDmnoDataType({
     return rawVal;
   },
 
-  validate(val) {
+  validate(val, settings) {
     // TODO: this is testing assuming its a normal web/http URL
     // we'll want some options to enable/disable specific protocols and things like that...
     // at the very least, need to consider allowing localhost, which should likely be an option
     const result = URL_REGEX.test(val);
-    if (result) return true;
-    return new ValidationError('URL doesnt match url regex check');
+    if (!result) return new ValidationError('URL doesnt match url regex check');
+    if (settings?.allowedDomains) {
+      const [protocol, , domain] = val.split('/');
+      if (!settings.allowedDomains.includes(domain.toLowerCase())) {
+        return new ValidationError(`Domain (${domain}) is not in allowed list: ${settings.allowedDomains.join(',')}`);
+      }
+    }
+    return true;
   },
 });
 

@@ -53,6 +53,24 @@ export default defineDmnoService({
         // staging: valueCreatedDuringDeployment(),
         production: 'https://api.dmnoexampleapp.com',
       })
-    }
+    },
+
+    INTELLISENSE_DEMO: {
+      summary: 'Primary DB URL',
+      description: 'houses all of our users, products, and orders data',
+      typeDescription: 'Postgres connection url',
+      externalDocs: {
+        description: 'explanation (from prisma docs)',
+        url: 'https://www.prisma.io/dataguide/postgresql/short-guides/connection-uris#a-quick-overview',
+      },
+      ui: {
+        // uses iconify names, see https://icones.js.org for options
+        icon: 'akar-icons:postgresql-fill',
+        color: '336791', // postgres brand color :)
+      },
+
+      required: true,
+      sensitive: true,
+    },
   },
 });
