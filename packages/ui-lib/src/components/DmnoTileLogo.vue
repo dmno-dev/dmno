@@ -7,7 +7,7 @@
     <div class="dmno-tile-logo__dots-wrap">
       <DotsLoader
         ref="dotsRef"
-        :no-auto-play="!autoPlay"
+        :auto-play="autoPlay"
       />
     </div>
     <div class="dmno-tile-logo__d-wrap">
@@ -76,7 +76,7 @@ const dotsRef = ref<InstanceType<typeof DotsLoader>>();
   left: 50%;
   width: 50%;
   height: 100%;
-  padding: 14%;
+  padding: 16%;
 }
 .dmno-tile-logo__d {
   width: 100%;

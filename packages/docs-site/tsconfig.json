@@ -21,6 +21,9 @@
       "@/utils/*": [
         "src/utils/*"
       ]
-    }
+    },
+    "types": [
+      "unplugin-icons/types/raw"
+    ]
   }
 }

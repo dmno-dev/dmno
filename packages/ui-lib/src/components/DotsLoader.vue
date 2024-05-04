@@ -1,5 +1,5 @@
 <template>
-  <div class="dots-loader">
+  <div :class="['dots-loader', `dots-loader--${counter+1}`]">
     <div
       v-for="(_p, i) in POSITION_STEPS"
       :key="i"
@@ -13,11 +13,11 @@
 import { computed, onMounted, ref } from 'vue';
 
 const props = defineProps({
-  noAutoPlay: { type: Boolean },
+  autoPlay: { type: Boolean },
 });
 
 
-const TIC_SEC = 1.1;
+const TIC_SEC_MS = 1.1 * 1000;
 const OFFSET = 25;
 
 // map cardinal direction to positions (slightly easioer to reason about)
@@ -46,7 +46,7 @@ const NUM_POSITIONS = POSITION_STEPS.length;
 
 const counter = ref(0);
 onMounted(() => {
-  if (!props.noAutoPlay) start();
+  if (props.autoPlay) setTimeout(start, TIC_SEC_MS);
 });
 
 let ticInterval: ReturnType<typeof setInterval> | undefined;
@@ -54,7 +54,7 @@ function start() {
   counter.value++;
   ticInterval = setInterval(() => {
     counter.value = (counter.value + 1) % NUM_POSITIONS;
-  }, 1000 * TIC_SEC);
+  }, TIC_SEC_MS);
 }
 function stop() {
   counter.value = 0;
@@ -90,14 +90,20 @@ defineExpose({ start, stop });
   justify-content: center;
   container-type: size;
 
+  --dot-size: 18%;
+
+  &.dots-loader--1 {
+    --dot-size: 25%;
+  }
+
 
   > div {
-    width: 15%;
-    height: 15%;
+    width: var(--dot-size);
+    height: var(--dot-size);
     border-radius: 50%;
     background: currentColor;
     position: absolute;
-    transition: transform 1s;
+    transition: transform 1s, width 1s, height 1s;
   }
 }
 </style>

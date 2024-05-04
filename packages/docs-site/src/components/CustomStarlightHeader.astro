@@ -3,15 +3,20 @@ import type { Props } from "@astrojs/starlight/props";
 
 import LanguageSelect from "@astrojs/starlight/components/LanguageSelect.astro";
 import Search from "@astrojs/starlight/components/Search.astro";
-import SiteTitle from "@astrojs/starlight/components/SiteTitle.astro";
 import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
-import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
+
+import ThemeSelect from "./ThemeSelect.vue";
 
 import config from "virtual:starlight/user-config";
 
 import { DmnoTileLogo } from "@dmno/ui-lib";
+import DIcon from "./DIcon.astro";
 // import { Icon } from "@astrojs/starlight/components";
-import { Icon } from "@iconify/vue";
+// import { Icon } from "@iconify/vue";
+
+// TODO: use an icon component?
+import FolderIcon from "~icons/material-symbols/folder";
+import FolderOpenIcon from "~icons/material-symbols/folder-open";
 
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
@@ -32,23 +37,20 @@ const shouldRenderSearch = true;
           "logo-dmno-text": true,
         }}
       >
-        <!-- {config.title} -->
         DMNO
       </span>
     </a>
   </div>
   <nav>
     <a href="/docs" title="cd ./.docs">
-      <Icon
-        icon={`material-symbols:folder${Astro.url.pathname.startsWith("/docs") ? "-open" : ""}`}
-        client:load
+      <DIcon
+        name={Astro.url.pathname.startsWith("/docs") ? "folder-open" : "folder"}
       />
       .docs
     </a>
     <a href="/blog" title="cd ./.blog">
-      <Icon
-        icon={`material-symbols:folder${Astro.url.pathname.startsWith("/blog") ? "-open" : ""}`}
-        client:load
+      <DIcon
+        name={Astro.url.pathname.startsWith("/blog") ? "folder-open" : "folder"}
       />
       .blog
     </a>
@@ -58,9 +60,10 @@ const shouldRenderSearch = true;
   </div>
   <div class="sl-hidden md:sl-flex right-group">
     <div class="sl-flex social-icons">
-      <SocialIcons {...Astro.props} />
+      <a href={DMNO_PUBLIC_CONFIG.GITHUB_REPO_URL}><DIcon name="github" /></a>
+      <a href={DMNO_PUBLIC_CONFIG.DISCORD_JOIN_URL}><DIcon name="discord" /></a>
     </div>
-    <ThemeSelect {...Astro.props} />
+    <ThemeSelect client:load />
     <LanguageSelect {...Astro.props} />
   </div>
 </div>
@@ -74,7 +77,7 @@ const shouldRenderSearch = true;
     align-items: center;
     /* gap: var(--sl-nav-gap); */
     gap: 10px;
-    font-size: 30px;
+    font-size: 26px;
     font-weight: 600;
     /* color: var(--sl-color-text-accent); */
     color: white;
@@ -129,16 +132,17 @@ const shouldRenderSearch = true;
       padding: 0 0.5em;
       margin: 0 0.5em;
       text-decoration: none;
+      display: flex;
+      gap: 8px;
+      align-items: center;
       &:hover {
         color: var(--brand-pink);
       }
-
-      svg {
-        display: inline-block;
-        margin-right: 3px;
-        vertical-align: middle;
-        margin-bottom: 4px;
-      }
+    }
+    .d-icon {
+      /* background: red; */
+      height: 20px;
+      width: 20px;
     }
   }
 
@@ -166,6 +170,15 @@ const shouldRenderSearch = true;
   .social-icons {
     gap: 1rem;
     align-items: center;
+    > a {
+      &:hover {
+        color: var(--brand-pink);
+        transform: scale(1.1);
+      }
+      .d-icon {
+        width: 24px;
+      }
+    }
   }
   .social-icons::after {
     content: "";

@@ -1,9 +1,9 @@
 <svg width="400" height="200" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g clip-path="url(#clip0_839_264)">
-<rect x="5" y="5" width="390" height="190" rx="25" fill="black" stroke="black" stroke-width="10"/>
-<path d="M344 100C344 122.091 326.091 140 304 140C303.99 140 303.98 140 303.971 140H264V60L304 60C326.091 60 344 77.9086 344 100Z" fill="white"/>
+<rect x="2" y="2" width="396" height="196" rx="18" fill="black" stroke="black" stroke-width="4"/>
+<path d="M336 100C336 117.673 321.673 132 304 132C303.992 132 303.984 132 303.976 132H272V68H304C321.673 68 336 82.3269 336 100Z" fill="white"/>
 <ellipse cx="100" cy="100" rx="25" ry="25" transform="rotate(90 100 100)" fill="white"/>
-<path d="M204.5 20V180" stroke="white" stroke-width="4"/>
+<path d="M200 20V180" stroke="white" stroke-width="4"/>
 </g>
 <defs>
 <clipPath id="clip0_839_264">
