@@ -186,6 +186,9 @@ importers:
       astro-expressive-code:
         specifier: ^0.35.2
         version: 0.35.2(astro@4.7.0)
+      astro-google-fonts-optimizer:
+        specifier: ^0.2.2
+        version: 0.2.2
       astro-iconify:
         specifier: ^1.2.0
         version: 1.2.0
@@ -5132,6 +5135,10 @@ packages:
     dependencies:
       astro: 4.7.0(@types/node@20.12.7)(typescript@5.4.5)
       rehype-expressive-code: 0.35.2
+    dev: false
+
+  /astro-google-fonts-optimizer@0.2.2:
+    resolution: {integrity: sha512-YQxp/ExF3NzUomAGuu1VKecO7/ETRnhnE50gqwAqfpbGPZFj4MYa4XxK1ukBg3R63QmKuE5uurOiKmXiLzttuw==}
     dev: false
 
   /astro-iconify@1.2.0:

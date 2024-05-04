@@ -1,24 +1,47 @@
-@import url('https://fonts.googleapis.com/css2?family=Days+One&family=Sixtyfour&family=Righteous&display=swap');
-
-
-
 .logo-font {
   font-family: "Days One", sans-serif;
-  /* font-family: "Righteous", sans-serif; */
   font-weight: 400;
   font-style: normal;
+}
 
-  /* 
-  font-family: "Sixtyfour", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
-  font-variation-settings:
-    "BLED" 0,
-    "SCAN" 0; */
+body {
+  font-family: 'Inter';
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: 'Inter';
+}
+
+/* starlight css var customizations */
+:root {}
+
+:root[data-theme='light'] {
+  --sl-color-white: hsl(224, 10%, 20%);
 }
 
 
+/* custom colors and vars */
+:root {
+  --brand-pink: #d100ed;
+  --brand-green: #11d632;
+  --brand-purple: #743ad5;
+}
+
+starlight-file-tree,
+.expressive-code {
+  /* border-image-source: linear-gradient(to left, var(--brand-green), var(--brand-pink));
+  border-image-slice: 1; */
+  border-color: var(--brand-purple) !important;
+}
+
+/* starlight hero page header, can't add style on mdx file */
+.hero h1 {
+  font-family: 'Days One';
+}
 
 
 
