@@ -68,7 +68,7 @@ const platforms = [
   const clickAndBlur = (el: HTMLElement) => {
     // click the first tab to show the correct tab, then blur it
     // syncKey="packageManager" will handle the rest
-    el.click();
-    el.blur();
+    el?.click();
+    el?.blur();
   };
 </script>

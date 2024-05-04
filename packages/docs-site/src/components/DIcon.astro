@@ -1,0 +1,31 @@
+---
+interface Props {
+  name: IconNames;
+}
+
+const { name } = Astro.props;
+
+// object freeze lets extract a nice IconsName enum
+// the import is annoying, but slightly better than having 2 long lists...
+const ICON_LOOKUP = Object.freeze({
+  folder: (await import("~icons/material-symbols/folder")).default,
+  "folder-open": (await import("~icons/material-symbols/folder-open")).default,
+  github: (await import("~icons/mdi/github")).default,
+  discord: (await import("~icons/ic/baseline-discord")).default,
+});
+
+const iconSvg = ICON_LOOKUP[name];
+
+type IconNames = keyof typeof ICON_LOOKUP;
+---
+
+<div class="d-icon" set:html={iconSvg} />
+
+<style>
+  .d-icon {
+    > svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+</style>

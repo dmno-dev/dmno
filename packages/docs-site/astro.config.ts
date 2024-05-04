@@ -7,10 +7,19 @@ import starlightLinksValidator from 'starlight-links-validator';
 import partytown from '@astrojs/partytown';
 import dmnoAstroIntegration from '@dmno/astro-integration';
 
+import IconsVitePlugin from 'unplugin-icons/vite';
+
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://dmno.dev',
+  vite: {
+    plugins: [
+      IconsVitePlugin({
+        compiler: 'raw',
+      }),
+    ],
+  },
   integrations: [
 
     dmnoAstroIntegration(),
