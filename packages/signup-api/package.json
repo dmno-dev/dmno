@@ -1,0 +1,32 @@
+{
+  "name": "@dmno/signup-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "dmno run -- tsup",
+    "dev": "pnpm --filter=\"@dmno/signup-api\" run --parallel \"/dev:*/\" ",
+    "dev:ts": "dmno run -w -- pnpm run build --watch",
+    "dev:netlify": "netlify dev",
+    "lint": "eslint src --ext .ts,.cjs,.astro,.md,.mdx",
+    "lint:fix": "pnpm run lint --fix"
+  },
+  "dependencies": {
+    "@dmno/ts-lib": "workspace:*",
+    "async": "^3.2.5",
+    "axios": "^1.6.8",
+    "emailvalid": "^1.0.4",
+    "google-auth-library": "^9.9.0",
+    "google-spreadsheet": "^4.1.1"
+  },
+  "devDependencies": {
+    "@dmno/encrypted-vault-plugin": "link:../plugins/encrypted-vault-plugin",
+    "@dmno/eslint-config": "workspace:*",
+    "@dmno/tsconfig": "workspace:*",
+    "@netlify/functions": "^2.6.3",
+    "@types/async": "^3.2.24",
+    "dmno": "link:../core",
+    "netlify-cli": "^17.1.0",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5"
+  }
+}

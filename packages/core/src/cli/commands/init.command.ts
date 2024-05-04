@@ -130,13 +130,10 @@ program.action(async (opts: {
       message: 'Can we add you to our email list?',
     });
     if (emailOptIn) {
-      let email = '';
-      // try {
-      //   email = execSync('git config user.email').toString().trim();
-      // } catch (err) {}
-      const userEmail = await input({
+      // we could use execSync('git config user.email').toString().trim();
+      // but feels a little creepy?
+      const email = await input({
         message: 'What is your (work) email?',
-        default: email,
       });
 
       console.log('🙏 Thanks so much!\n');
@@ -151,11 +148,31 @@ program.action(async (opts: {
         console.log(`If you ever do want to chat hit us up on discord @ ${DISCORD_INVITE_URL}`);
       }
 
+      // TODO: figure out how we want to disable this while we are building/testing this
+      const response = await tryCatch(async () => {
+        // TODO: would love to use dmno for this URL, but using dmno while _building_ dmno feels like it might be tricky
+        return await fetch('https://signup-api.dmno.dev', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            emailOptIn,
+            userTestOptIn,
+            source: 'cli',
+            // TODO: more info about the current version of cli, system, etc?
+          }),
+        });
+      }, (_err) => {});
 
-      console.log({ userEmail, userTestOptIn });
+      if (response && !response.ok) {
+        console.log((await response.json()).message);
+      }
     } else {
       console.log('No worries! You can always sign up later at https://dmno.dev');
     }
+
 
     console.log(kleur.gray('\nDont worry, you wont see this onboarding stuff again...'));
   }

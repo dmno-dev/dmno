@@ -4,10 +4,11 @@
   "private": true,
   "description": "",
   "scripts": {
-    "build": "turbo build --filter=\"!@dmno/docs-site\"",
+    "build": "turbo build",
+    "build:libs": "turbo build --filter=\"!@dmno/docs-site\" --filter=\"!@dmno/signup-api\"",
     "dev": "turbo run dev --concurrency=40 --parallel --filter=\"!@dmno/docs-site\"",
     "lint": "turbo lint",
-    "prepare": "pnpm run build"
+    "prepare": "pnpm run build:libs"
   },
   "author": "",
   "license": "MIT",

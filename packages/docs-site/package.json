@@ -1,7 +1,7 @@
 {
   "name": "@dmno/docs-site",
+  "private": true,
   "type": "module",
-  "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -42,7 +42,6 @@
     "vue": "^3.3.4"
   },
   "devDependencies": {
-    "@dmno/1password-plugin": "link:../plugins/1password-plugin",
     "@dmno/astro-integration": "link:../integrations/astro",
     "@iconify/json": "^2.2.206",
     "dmno": "link:../core",
