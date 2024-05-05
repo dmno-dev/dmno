@@ -4,11 +4,11 @@ title: Multi-Environment Configuration
 
 ## Overview
 
-DMNO supports multiple environments out of the box. This allows you to define different configurations for different environments, such as development, staging, and production.
+DMNO supports multiple environments out of the box. This allows you to define different configuration item values in each environments. For example: development, staging, and production.
 
 ## Configuration
 
-To define different configurations for different environments, you can use the `switchByNodeEnv` helper method. This method takes an object where the keys are the environment names and the values are the configuration item for each environment. As is implied by the name, the configuration item for the current environment is selected based on the value of the `NODE_ENV` environment variable.
+To define different configurations for different environments, you can use the [`switchByNodeEnv`](/docs/reference/helper-methods/#switchbynodeenv) helper method. This method takes an object where the keys are the environment names and the values are the configuration item for each environment. As is implied by the name, the configuration item for the current environment is selected based on the value of the `NODE_ENV` environment variable.
 
 ```typescript
 import { switchByNodeEnv } from 'dmno';
@@ -20,7 +20,9 @@ export default defineDmnoService({
         _default: 'default value',
         development: 'development value',
         staging: 'staging value',
-        production: 'production value',
+        production: (ctx) => {
+          return ctx.val ? 'production value' : 'production value 2';
+        },
       }),
     },
   },
@@ -40,7 +42,7 @@ To set the environment for your application, you can use the `NODE_ENV` environm
 For example, to set the environment to `production` and do a production build, you could run:
 
 ```bash
-NODE_ENV=production dmno run -- my-build-command-goes-here
+NODE_ENV=production pnpm exec dmno run -- my-build-command-goes-here
 ```
 
 

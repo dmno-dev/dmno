@@ -3,8 +3,9 @@ title: DMNO Quickstart
 
 ---
 
-import { Steps, FileTree } from '@astrojs/starlight/components';
-import TabbedCode from '@/components/TabbedCode.astro'
+import { Steps, FileTree, Code } from '@astrojs/starlight/components';
+import TabbedCode from '@/components/TabbedCode.astro'; 
+
 
 <Steps>
 
@@ -16,7 +17,7 @@ import TabbedCode from '@/components/TabbedCode.astro'
     Run this command in the root of your project:
     <TabbedCode command="dmno init" />
 
-    {/* MAYBE INSERT TAPE GIF */}
+    ![dmno init](../../../../assets/tapes/init.gif)
 
     This will create a `.dmno` folder in the root of your project (and any additional services of your choice) with a `config.mts` file. It will produce a file tree that looks something like this:
 
@@ -37,7 +38,7 @@ import TabbedCode from '@/components/TabbedCode.astro'
 3. **Start the development server**
     <TabbedCode command="dmno dev" />
 
-    {/* DO WE WANT TO REPLACE THIS WITH `dmno run` for their service(s) */}
+    ![dmno init](../../../../assets/tapes/dev.gif)
 
 4. **Write your schema**
 
@@ -45,21 +46,19 @@ import TabbedCode from '@/components/TabbedCode.astro'
 
 5. **Integrate your config items** 
 
-    Depending on whether you're using a front-end or back-end framework, you'll need to integrate your config items slightly differently. 
+    We've made it easy to integrate your config items into your existing codebase. You can access your config items in your code using the `DMNO_CONFIG` object. This object will give you full type completion and intellisense, and actionable error messages if you try to access a variable that doesn't exist or fails validation.
 
-    For backend you're probably using something like `process.env`. We've added a `dmnoEnv` namespace to the `process` object that you can use to access your config items.
-
-    `const myConfigItem = process.dmnoEnv.MY_CONFIG_ITEM;`
-
-    This comes with the added bonus of full IntelliSense and Tyepscript support in your IDE.
-
-    For front-end we can get fancy with Typescript globals and a little bit of `Vite` magic. In this case, all of your config is available in the `DMNO_CONFIG` object in the global scope.
-
+    For example: 
     `const myConfigItem = DMNO_CONFIG.MY_CONFIG_ITEM;`
 
-    For more information on how to integrate your config items, check out the framework-specific guides in the sidebar.
+    If you want to access your config items in the browser (or another less-secure context), you can use the `DMNO_PUBLIC_CONFIG` object. This object will only contain items that are marked as `sensitive: false` in your schema.
 
-    {/* add list of guides? */}
+    For example:
+    `const myPublicConfigItem = DMNO_PUBLIC_CONFIG.MY_CONFIG_ITEM;`
+
+    :::tip
+    We also have integrations for popular frameworks like [Next.js](/docs/integrations/nextjs) and [Astro](/docs/integrations/astro) that make it even easier to integrate your config items.
+    :::
 
 6. **Deploy your project**
 
@@ -67,7 +66,7 @@ import TabbedCode from '@/components/TabbedCode.astro'
 
     For example: 
 
-    ```json
+    ```json title="package.json (partial)"
     {
       "scripts": {
         "deploy": "deploy-my-thing"
@@ -76,13 +75,13 @@ import TabbedCode from '@/components/TabbedCode.astro'
     ``` 
     becomes 
       
-    ```json
+    ```diff lang="json" title="package.json (partial)" ins="dmno run --"
     {
       "scripts": {
         "deploy": "dmno run -- deploy-my-thing"
       }
     }
-      ```
+    ```
 
 </Steps>
 

@@ -4,11 +4,11 @@ title: Repo structure
 
 import { FileTree } from "@astrojs/starlight/components";
 
-DMNO supports both monorepo and traditional (monolith) repo uses cases. DMNO provides additional functionality for monorepos, such as config item inheritance via `pick`. 
+DMNO supports both monorepo and traditional (monolithic) repo uses cases. DMNO provides additional functionality for monorepos, such as config item inheritance via `pick`. 
 
 ## Monorepo structure
 
-A typical monorepo using DMNO, will have a strucutre resembling the following: 
+A typical monorepo using DMNO, will have a structure resembling the following: 
 
  <FileTree>
     - / (root of your project)
@@ -23,7 +23,7 @@ A typical monorepo using DMNO, will have a strucutre resembling the following:
             - **config.mts** (config for another-package service)
 </ FileTree>
 
-If you're starting fresh with `dmno`, then the `dmno init` command will scaffold all of this for you. 
+If you're starting fresh with `dmno`, then the [`dmno init`](/docs/reference/cli/init) command will scaffold all of this for you. 
 
 ## Monolith repo structure (aka single service)
 
@@ -44,4 +44,4 @@ You may also choose to put the `.dmno` folder in a subfolder of your choice, but
 
 ## Differences
 
-As outlined in our [schema guide](/docs/guides/schema), services in monorepos, are allowed to `pick` items from their parent (in many cases the `root`) config schema (and other services if they allow it). In a monolithic case where there is only one config schema, this means you can't pick because all of the config items are co-located and there is no `parent`. 
+As outlined in our [schema guide](/docs/guides/schema), services in monorepos are allowed to `pick` items from their parent (in many cases the `root`) config schema (and other services if they allow it). In a monolithic case where there is only one config schema, this means you can't pick because all of the config items are co-located and there is no `parent`. 

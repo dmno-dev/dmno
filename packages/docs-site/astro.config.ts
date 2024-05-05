@@ -132,49 +132,49 @@ export default defineConfig({
           badge: 'New',
           items: [{
             label: 'Overview',
-            link: '/docs/guides/plugins/overview',
+            link: '/docs/plugins/overview',
           },
           {
             label: 'Encrypted Vaults',
-            link: '/docs/guides/plugins/encrypted-vault',
+            link: '/docs/plugins/encrypted-vault',
           },
           {
             label: '1Password',
-            link: '/docs/guides/plugins/1password',
+            link: '/docs/plugins/1password',
           }],
         }, {
           label: 'Integrations',
           badge: 'New',
           items: [{
             label: 'Overview',
-            link: '/docs/guides/frameworks/overview',
+            link: '/docs/integrations/overview',
           },
           {
             label: 'Astro',
-            link: '/docs/guides/frameworks/astro/',
+            link: '/docs/integrations/astro/',
           },
           {
             label: 'Next.js',
-            link: '/docs/guides/frameworks/nextjs/',
+            link: '/docs/integrations/nextjs/',
           }, {
             label: 'Vite',
-            link: '/docs/guides/frameworks/vite/',
+            link: '/docs/integrations/vite/',
           }, {
             label: 'Node.js (Express, Koa, etc.)',
-            link: '/docs/guides/frameworks/node/',
+            link: '/docs/integrations/node/',
           },
           // {
           //   label: "Vercel",
-          //   link: "/guides/deployment/vercel/"
+          //   link: "/docs/deployment/vercel/"
           // }, {
           //   label: "Netlify",
-          //   link: "/guides/deployment/netlify/"
+          //   link: "/docs/deployment/netlify/"
           // }, {
           //   label: "Railway",
-          //   link: "/guides/deployment/railway/"
+          //   link: "/docs/deployment/railway/"
           // }, {
           //   label: "Render",
-          //   link: "/guides/deployment/render/"
+          //   link: "/docs/deployment/render/"
           // }
           ],
         },

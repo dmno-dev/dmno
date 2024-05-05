@@ -47,6 +47,10 @@ import { EncryptedVaultDmnoPlugin } from '@dmno/encrypted-vault-plugin';
 const MyVault = EncryptedVaultDmnoPlugin.injectInstance('vault/prod'); // same "instance name" it was created with
 ```
 
+:::note
+Note that we're referencing the plugin by the alias we gave it (`'vault/prod'`) when we initialized it. This is useful if you have to reference multiple instances of a plugin. For example. if you're segmenting them by environment.
+:::
+
 -----
 
 ## Initialize the vault and key
@@ -86,8 +90,6 @@ This will:
 Add encrypted values to the vault: 
 
 <TabbedCode command="pnpm exec dmno plugin -p vault -- set-item" />
-
-> **TODO** add tape gif
 
 ## Rotate the vault key
 
