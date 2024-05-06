@@ -1,0 +1,19 @@
+{
+  "include": [
+    "src/**/*.ts",
+    "./.dmno/.typegen/global.d.ts",
+    "./.dmno/.typegen/global-public.d.ts",
+  ],
+  "compilerOptions": {
+    "lib": [ "ES2023" ],
+    "baseUrl": ".",
+    "paths": {
+      "@/components/*": [
+        "src/components/*"
+      ],
+      "@/utils/*": [
+        "src/utils/*"
+      ]
+    }
+  }
+}

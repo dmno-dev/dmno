@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv, configPath } from 'dmno';
 
 export default defineDmnoService({
   name: 'docs-site',
@@ -13,6 +13,6 @@ export default defineDmnoService({
     },
     GOOGLE_FONT_FAMILIES: {
       value: 'family=Days+One&family=Fira+Code:wght@300&family=Inter:wght@100..900'
-    }
+    },
   }
 });

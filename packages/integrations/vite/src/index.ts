@@ -16,7 +16,16 @@ const dmnoConfigValid = ConfigServerClient.checkServiceIsValid(dmnoService);
 
 injectDmnoGlobals(dmnoService, configItemKeysAccessed);
 
-export function injectDmnoConfigVitePlugin(): Plugin {
+export function injectDmnoConfigVitePlugin(
+  options: {
+    /**
+     * option to bundle DMNO_CONFIG as well, which will include all config items
+     * should be used carefully as it could leak secrets...
+     * but necessary if bundling backend code using vite
+     * */
+    injectPrivateConfig: boolean,
+  },
+): Plugin {
   const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
 
   return {
@@ -31,6 +40,9 @@ export function injectDmnoConfigVitePlugin(): Plugin {
         if (configItem.isValid) {
           if (!configItem.dataType.sensitive) {
             publicConfigInjection[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
+          }
+          if (options?.injectPrivateConfig) {
+            publicConfigInjection[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
           }
         }
       }

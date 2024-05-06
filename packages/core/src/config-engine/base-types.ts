@@ -636,7 +636,9 @@ const BooleanDataType = createDmnoDataType({
 
 // Common utility types ///////////////////////////////////////////////////////////////
 
-const URL_REGEX = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/;
+const URL_REGEX = /(?:^|\s)((https?:\/\/)?(?:localhost|[\w-]+(?:\.[\w-]+)+)(:\d+)?(\/\S*)?)/;
+// swapped to above to allow localhost
+// /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/;
 const UrlDataType = createDmnoDataType({
   typeLabel: 'dmno/url',
   extends: (settings) => StringDataType({
@@ -658,6 +660,7 @@ const UrlDataType = createDmnoDataType({
   validate(val) {
     // TODO: this is testing assuming its a normal web/http URL
     // we'll want some options to enable/disable specific protocols and things like that...
+    // at the very least, need to consider allowing localhost, which should likely be an option
     const result = URL_REGEX.test(val);
     if (result) return true;
     return new ValidationError('URL doesnt match url regex check');
