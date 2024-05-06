@@ -1,6 +1,6 @@
 # DMNO
 
-Welcome to the dmno monorepo
+Welcome to the `dmno` monorepo 👋
 
 Check out the [docs](https://dmno.dev/docs) for more information on how to use DMNO.
 

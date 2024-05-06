@@ -1,8 +1,9 @@
 ---
-title: DMNO Schema Guide
+title: Schema Authoring Guide
+description: Learn how to write a full DMNO schema for your project and unlock the full power of DMNO's config management.
 ---
 
-import { FileTree } from '@astrojs/starlight/components'
+import { FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
 
 If you haven't already, follow our [Quickstart](/docs/get-started/quickstart) guide to get started with DMNO. Once you're set up and ready to go, let's dive in to writing a full schema for your project.
 
@@ -14,22 +15,38 @@ Using DMNO, we define a "configuration schema" for your entire project. We break
 
 You'll always have a `.dmno/config.mts` file at the root of your project, and if you are working in a monorepo, you'll have another `.dmno/config.mts` in each of your "services" that require configuration. You may have some workspace packages that are purely shared libraries, and don't have any configuration. These do not need a `.dmno` folder.
 
-A typical DMNO monorepo project structure:
+A typical DMNO project structure:
 
-<FileTree>
-- / (root of your project)
-  - .dmno
-    - **config.mts** (workspace/root config)
-  - packages
-    - api
-      - .dmno 
-        - **config.mts** (api service config)
-    - frontend
+<Tabs syncKey='repoType'>
+  <TabItem label="Monorepo">
+    <FileTree>
+    - / (root of your project)
       - .dmno
-        - **config.mts** (frontend service config)
-    - shared-lib
-      - files... (no .dmno folder if no env vars are needed)
-</FileTree>
+        - **config.mts** (workspace/root config)
+      - packages
+        - api
+          - .dmno 
+            - **config.mts** (api service config)
+        - frontend
+          - .dmno
+            - **config.mts** (frontend service config)
+        - shared-lib
+          - files... (no .dmno folder if no env vars are needed)
+    </FileTree>
+  </TabItem>
+  <TabItem label="Single repo">
+    <FileTree>
+        - / (root of your project)
+          - .dmno/ (your workspace config)
+            - **config.mts**
+          - api/
+          - some_folder/
+          - frontend/
+          - scripts/
+          - ...etc
+    </ FileTree>
+  </TabItem>
+</Tabs>
 
 :::note
 There are many ways to organize package folders in a monorepo. We'll respect your monorepo's workspace settings (glob rules) for where to look (`package.json > workspaces`, `pnpm-workspace.yaml`, etc).

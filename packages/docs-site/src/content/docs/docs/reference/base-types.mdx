@@ -1,12 +1,13 @@
 ---
 title: DMNO Base Types
+description: DMNO comes with a comprehensive set of types to cover the majority of use cases. These types are used when defining your config schema and can be extended to create more application specific types as needed.
 ---
 
 import { Tabs, TabItem, Code } from "@astrojs/starlight/components";
 import TabbedTypeSettings from '@/components/TabbedTypeSettings.astro';
 
 
-## Base Types
+## Primitive Types
 
 DMNO comes with a comprehensive set of types to cover the majority of use cases. 
 
@@ -100,6 +101,41 @@ export default defineDmnoService({
 });
 ```
 
+### `enum`
+
+`DmnoBaseTypes.Enum({ settingsSchema? })`
+
+DMNO Built-in data type for Enums. Includes the following (optional) settings: 
+
+```typescript
+type settingsSchema = {
+  // simple list of values
+  values: Array<string>
+  // array or values with extra metadata
+  | Array< { value: string | number | boolean, description: string }>
+  // object with key value pairs (strings only)
+  | Record<string, string>;
+};
+```
+
+Example: 
+```javascript
+const myEnumType = DmnoBaseTypes.Enum({ values: ['one', 'two', 'three'] });
+const myEnumType2 = DmnoBaseTypes.Enum({
+  values: [
+    { value: 'one', description: 'The first one' },
+    { value: 'two', description: 'The second one' }],
+});
+const myEnumType3 = DmnoBaseTypes.Enum(
+  {
+    values: {
+      one: 'The first one',
+      two: 'The second one',
+    },
+  },
+);
+```
+
 {/* ## Container types
 
 These types are used to define more complex data structures.
@@ -168,42 +204,7 @@ const myDictionaryType = DmnoBaseTypes.dictionary({ itemSchema: DmnoBaseTypes.St
 const myMinItemsType = DmnoBaseTypes.dictionary({ minItems: 2 });
 ``` */}
 
-## Utility types
-
-### `Enum`
-
-`DmnoBaseTypes.Enum({ settingsSchema? })`
-
-DMNO Built-in data type for Enums. Includes the following (optional) settings: 
-
-```typescript
-type settingsSchema = {
-  // simple list of values
-  values: Array<string>
-  // array or values with extra metadata
-  | Array< { value: string | number | boolean, description: string }>
-  // object with key value pairs (strings only)
-  | Record<string, string>;
-};
-```
-
-Example: 
-```javascript
-const myEnumType = DmnoBaseTypes.Enum({ values: ['one', 'two', 'three'] });
-const myEnumType2 = DmnoBaseTypes.Enum({
-  values: [
-    { value: 'one', description: 'The first one' },
-    { value: 'two', description: 'The second one' }],
-});
-const myEnumType3 = DmnoBaseTypes.Enum(
-  {
-    values: {
-      one: 'The first one',
-      two: 'The second one',
-    },
-  },
-);
-```
+## Composite types
 
 ### `email`
 
@@ -381,9 +382,6 @@ export default defineDmnoService({
   // ...
 });
 ```
-
-
-These types are used for specific use cases.
 
 ### `NodeEnvType` 
 
