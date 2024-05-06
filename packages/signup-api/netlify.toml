@@ -1,4 +1,5 @@
 [build]
+ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF -- packages/signup-api"
 command = "pnpm --filter \"@dmno/signup-api\" run build"
 
 [functions]
@@ -15,7 +16,7 @@ status = 200
 
 # setting NODE_ENV to production will make netlify not install dev dependencies
 # which we need for the build...
-[context.production]
+[context.production.environment]
 DMNO_ENV = "production"
 
 [context.deploy-preview.environment]
