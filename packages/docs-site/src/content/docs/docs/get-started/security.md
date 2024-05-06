@@ -1,5 +1,6 @@
 ---
 title: Security
+description: DMNO is designed to keep your configuration safe and secure while maintaining simplicity and developer experience.
 ---
 
 

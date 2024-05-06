@@ -1,5 +1,6 @@
 ---
 title: Concepts
+description: Learn the core concepts of DMNO
 ---
 
 <!-- > **TODO** insert samples for each? and convert to DL  -->

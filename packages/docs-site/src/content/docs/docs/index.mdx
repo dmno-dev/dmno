@@ -14,7 +14,7 @@ hero:
     - text: ⭐ DMNO on Github
       # frontmatter does not have access to any javascript, so currently we cannot access out config :(
       # Working on some workarounds, but nothing working just yet...
-      link: https://github.com/dmno-dev
+      link: https://github.com/dmno-dev/dmno
       icon: github
 ---
 
@@ -27,33 +27,25 @@ import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 </Card>
 
 <CardGrid>
-  <Card title="Start here" icon="pencil">
-    Install DMNO and get started with your first schema.
-    <LinkCard
-      title="Let's get started!"
-      href="/docs/get-started/quickstart"
-    />
-  </Card >
-  <Card title="Frameworks" icon="add-document">
-    Integrate DMNO with your favorite framework.
-    <LinkCard
-      title="Let's integrate!"
-      href="/docs/guides/frameworks/nextjs"
-    />
-  </Card>
-  <Card title="Secrets" icon="setting">
-    Securely store and retrieve your sensitive configuration items.
-    <LinkCard
-      title="Keep it safe!"
-      href="/docs/guides/plugins/overview"
-    />
-  </Card>
-  <Card title="Reference" icon="open-book">
-    Read our full set of reference docs to unlock the full potential of DMNO.
-    <LinkCard
-      title="Let's learn!"
-      href="/docs/reference/config-engine/installation"
-    />
-  </Card>
+  <LinkCard 
+    title="Get Started"
+    description="Install DMNO and get started with your first schema."
+    href="/docs/get-started/quickstart"
+  />
+  <LinkCard
+    title="Integrations"
+    description="Integrate DMNO with your favorite framework."
+    href="/docs/integrations/overview"  
+  />
+  <LinkCard
+    title="Plugins"
+    description="Extend DMNO with our plugins."
+    href="/docs/guides/plugins/overview"
+  />
+  <LinkCard
+    title="Reference"
+    description="Read our reference docs."
+    href="/docs/reference/base-types/"
+  />
 </CardGrid>
 

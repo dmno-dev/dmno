@@ -13,7 +13,7 @@ body:
         This form is only for submitting feature requests. Please first: 
 
         - Read the [docs](https://dmno.dev/docs)
-        - Ask on [Discord Chat](https://discord.gg/Q9GW2PzD)
+        - Ask on [Discord Chat](https://chat.dmno.dev)
   - type: textarea
     id: description
     attributes:

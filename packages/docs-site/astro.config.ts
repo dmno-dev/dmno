@@ -106,12 +106,8 @@ export default defineConfig({
           label: 'Guides',
           items: [
             {
-              label: 'DMNO Schema Guide',
+              label: 'Schema Authoring',
               link: '/docs/guides/schema',
-            },
-            {
-              label: 'Repo structure',
-              link: '/docs/guides/repo',
             },
             {
               label: 'Incremental Adoption',

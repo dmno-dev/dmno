@@ -1,5 +1,6 @@
 ---
 title: DMNO Encrypted Vaults
+description: Store secrets securely in an encrypted vault that you check in to your git repo with DMNO Config.
 ---
 
 import TabbedCode from '@/components/TabbedCode.astro';
@@ -21,7 +22,7 @@ Initialize the plugin in the root (or service if not shared). Note the `vault/pr
 
 Also, note the `configPath` function. This is a helper function that will look up the value of the key that contains the key used to encrypt/decrypt the vault. This is useful for keeping the key out of the codebase. It will need to live in your `.env.local` file, or in an environment variable.
 
-```typescript title="[root]/config.mts"
+```typescript title="[root]/.dmno/config.mts"
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
 const MyProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
@@ -41,7 +42,7 @@ export default defineDmnoWorkspace({
 
 If your plugin was initiatized in root and you need to use in a child service, inject the already configured plugin: 
 
-```typescript title="services/child-service/config.mts"
+```typescript title="services/child-service/.dmno/config.mts"
 import { EncryptedVaultDmnoPlugin } from '@dmno/encrypted-vault-plugin';
 
 const MyVault = EncryptedVaultDmnoPlugin.injectInstance('vault/prod'); // same "instance name" it was created with
@@ -55,7 +56,7 @@ Note that we're referencing the plugin by the alias we gave it (`'vault/prod'`) 
 
 ## Initialize the vault and key
 
-<TabbedCode command="pnpm exec dmno plugin -p vault -- setup" />
+<TabbedCode command="dmno plugin -p vault -- setup" />
 
 :::tip
 If you prefer to use the CLI interactively, you can simply run `pnpm exec dmno plugin` and follow thue prompts.
@@ -89,11 +90,11 @@ This will:
 
 Add encrypted values to the vault: 
 
-<TabbedCode command="pnpm exec dmno plugin -p vault -- set-item" />
+<TabbedCode command="dmno plugin -p vault -- set-item" />
 
 ## Rotate the vault key
 
-<TabbedCode command="pnpm exec dmno plugin -p vault -- rotate-key" />
+<TabbedCode command="dmno plugin -p vault -- rotate-key" />
 
 This will:
 - generate a new key, and share it (similar to the initial setup)

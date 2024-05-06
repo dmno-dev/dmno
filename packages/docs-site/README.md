@@ -1,3 +1,5 @@
+> If you're looking for this site in a browser, you can find it at [dmno.dev](https://dmno.dev).
+
 # DMNO Docs (dmno.dev)
 
 Start by following the instructions in the [root README](../../README.md) to install dependencies and get started.
