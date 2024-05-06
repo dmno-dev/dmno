@@ -10,6 +10,7 @@ if (!process.env.DMNO_LOADED_ENV) {
 const parsedLoadedEnv = JSON.parse(process.env.DMNO_LOADED_ENV);
 const replacements: Record<string, string> = {};
 for (const itemKey in parsedLoadedEnv) {
+  if (parsedLoadedEnv[itemKey].value === undefined) continue;
   const strValue = JSON.stringify(parsedLoadedEnv[itemKey].value);
   replacements[`DMNO_CONFIG.${itemKey}`] = strValue;
   if (!parsedLoadedEnv[itemKey].sensitive) {

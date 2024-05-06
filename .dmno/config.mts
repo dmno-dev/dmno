@@ -12,12 +12,12 @@ export default defineDmnoWorkspace({
       required: true,
     },
     GITHUB_ORG_URL: {
-      extends: 'url',
+      extends: DmnoBaseTypes.url({ allowedDomains: ['github.com'] }),
       value: (ctx) => `https://github.com/${DMNO_CONFIG.GITHUB_ORG_NAME}`,
       required: true,
     },
     GITHUB_REPO_URL: {
-      extends: 'url',
+      extends: DmnoBaseTypes.url({ allowedDomains: ['github.com'] }),
       value: (ctx) => `${DMNO_CONFIG.GITHUB_ORG_URL}/${DMNO_CONFIG.GITHUB_REPO_NAME}`,
       required: true,
     },

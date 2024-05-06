@@ -4,64 +4,65 @@ title: DMNO Schema Guide
 
 import { FileTree } from '@astrojs/starlight/components'
 
-If you haven't already, follow our [Quickstart](/docs/get-started/quickstart) guide to get started with DMNO. Once you're set up and ready to go, let's dive in to writing a full schema for your project. You can also check out a fully fleshed out [sample schema](/docs/get-started/sample) to see all the different options available to you.
+If you haven't already, follow our [Quickstart](/docs/get-started/quickstart) guide to get started with DMNO. Once you're set up and ready to go, let's dive in to writing a full schema for your project.
+
+{/* TODO add link to example repo? */}
 
 ## Project Structure
 
-A typical DMNO project structure looks like this:
+Using DMNO, we define a "configuration schema" for your entire project. We break that configuration up to live alongside each of the services in your code, and provide ways for them to reference each other as needed. Each service config is defined in a `config.mts` (typescript) file that lives in a `.dmno` directory.
+
+You'll always have a `.dmno/config.mts` file at the root of your project, and if you are working in a monorepo, you'll have another `.dmno/config.mts` in each of your "services" that require configuration. You may have some workspace packages that are purely shared libraries, and don't have any configuration. These do not need a `.dmno` folder.
+
+A typical DMNO monorepo project structure:
 
 <FileTree>
 - / (root of your project)
-  - .dmno (your workspace config)
-    - **config.mts**
+  - .dmno
+    - **config.mts** (workspace/root config)
   - packages
-    - my-package
+    - api
       - .dmno 
-        - **config.mts** (config for my-package service)
-    - another-package
+        - **config.mts** (api service config)
+    - frontend
       - .dmno
-        - **config.mts** (config for another-package service)
+        - **config.mts** (frontend service config)
+    - shared-lib
+      - files... (no .dmno folder if no env vars are needed)
 </FileTree>
 
-## Root (workspace) config
+:::note
+There are many ways to organize package folders in a monorepo. We'll respect your monorepo's workspace settings (glob rules) for where to look (`package.json > workspaces`, `pnpm-workspace.yaml`, etc).
+:::
 
-The root of your project should contain a `.dmno` directory with a `config.mts` file. This file should have the following structure:
+### Root service config
 
-```typescript
-import { defineDmnoWorkspace } from 'dmno';
+Each config.mts file will define settings for that service, including a full schema of all the config items used by the service. The root service config is a little special, in that it also can define some settings for the entire workspace - although in general most settings are inheritable from a _chain_ of ancestors, not just the root.
 
-export default defineDmnoWorkspace({
-  schema: {
-    // your schema here
-  },
-});
-```
-This root schema allows you to define items that can be shared across all services in your project. For example, you might define a `GOOGLE_ANALYTICS_ID` that is re-used across multiple services. Because of DMNO's deep flexibility, you can define as much or as little as you want in each of these schema items. Let's look at a few examples: 
+But as the root service is an ancestor of all other services, it is where any workspace-wide settings and config items will live.
 
-```typescript
-import {
-  defineDmnoWorkspace,
-  DmnoVendorTypes,
-  DmnoBaseTypes,
-  switchByNodeEnv,
-} from 'dmno';
+This file must have `export default defineDmnoWorkspace({ //...`. Here is an example:
+<br/>_(we'll get into more details below, so don't worry if some of it is confusing)_
+
+```typescript title=".dmno/config.mts" "defineDmnoWorkspace"
+import { defineDmnoWorkspace, NodeEnvType } from 'dmno';
 
 export default defineDmnoWorkspace({
+  // service name (optional, but recommended)
+  name: 'root',
+  // workspace level settings, inherited by children (optional)
+  settings: { /* ... */ },
   schema: {
-    GOOGLE_ANALYTICS_ID: {
-      // defaults to string
-      description: 'The Google Analytics ID for this project',
-      required: true,
-    },
-    STRIPE_PUB_KEY: {
-      // uses a custom type provided by dmno
-      extends: DmnoVendorTypes.StripePublishableKey,
-      description: 'The publishable Stripe API key for this project',
+    // your root config contains shared items used by your other services
+    NODE_ENV: NodeEnvType,
+    DISCORD_JOIN_LINK: {
+      value: 'https://chat.dmno.dev',
+      description: 'link for our users to join us on discord (uses a redirect)',
     },
     CUSTOMER_SERVICE_EMAIL: {
       extends: DmnoBaseTypes.email,
       description: 'The email address for customer service',
-      // change the value based on the environment
+      // changes the value based on the environment
       value: switchByNodeEnv({
         _default: 'test@test.com',
         staging: 'staging@test.com',
@@ -72,72 +73,342 @@ export default defineDmnoWorkspace({
 });
 ```
 
-In this example, we're defining a few different types of schema items:
-  - `GOOGLE_ANALYTICS_ID` is a required string
-  - `STRIPE_PUB_KEY` is a Stripe publishable key, which uses a custom type provided by DMNO. This adds things like validation and type checking, specific to this type of Stripe key. 
-  - `CUSTOMER_SERVICE_EMAIL` is an email address, and we're changing the value based on the environment
+### Other services
 
-:::tip
-For more on environment-specific configuration, see our [Multi-Environment Configuration](/docs/guides/multi-env) guide.
-:::
+The rest of your services (if you are working in a monorepo) are very similar, however they call a different function (`defineDmnoService()`) and we gain a few new options:
 
+- `parent` - set the service's parent (by name), otherwise will default to the root service
+{/* - `tags` - array of strings, not yet used for anything */}
+- `pick` - pick specific config items from other services to use in this one (more on that below)
 
-## Service config
+An example service config:
 
-Given the above root schema, you can now define a service-specific schema in each service's `.dmno/config.mts` file. This file should have the following structure:
-
-```typescript
+```typescript title="packages/api/.dmno/config.mts" "defineDmnoService"
 import { defineDmnoService } from 'dmno';
+import { StripeDataTypes } from 'stripe-dmno-plugin'; // doesn't exist yet
 
 export default defineDmnoService({
-  name: 'my-package', // the name of the service
+  name: 'api',
+  parent: 'backend',
   pick: [
-    'GOOGLE_ANALYTICS_ID',
-    'STRIPE_PUB_KEY',
-    'CUSTOMER_SERVICE_EMAIL',
+    'NODE_ENV',
+    'DISCORD_JOIN_LINK',
+    { source: 'database', key: 'DB_URL' },
   ],
   schema: {
-    // your service-specific schema here
-    SEGMENT_SERVER_KEY: {
-      description: 'The Segment server key for this service',
-      required: true,
+    // configuration defined only within this service
+    STRIPE_PUB_KEY: {
+      // uses a custom type provided by a plugin
+      extends: StripeDataTypes.StripePublishableKey,
+      description: 'The publishable Stripe API key for this project',
     },
     API_URL: {
-      description: 'The URL for the API for this service',
-      required: true,
-      // all this config item to be 'picked' by other services
+      extends: DmnoBaseTypes.url,
       expose: true,
     },
   },
 });
 ```
-Here, we're picking the `GOOGLE_ANALYTICS_ID`, `STRIPE_PUB_KEY`, and `CUSTOMER_SERVICE_EMAIL` from the root schema, and adding a few service-specific items.
 
-Now let's look at a similar example for `another-package`:
+### Service names
+Every service must have a unique "service name" within your workspace. You can set it in the service's config, although if you do not specify a name, we will use the `name` field from that service's `package.json` file.
 
-```typescript
-import { defineDmnoService } from 'dmno';
+We recommend you set it to something short - for example `api` instead of `@my-cool-org/api` - because you may be typing it into CLI commands (ex: `pnpm exec dmno load -s api`) and it will be visible in several places in terminal output and our UI (COMING SOON).
 
+You'll also use it as a reference to the service when services need to reference each other in their configuration, like when picking config (see next section).
+
+{/* TODO: add custom id for this - plugins not working */}
+### Sharing config between services
+
+In any service config you can "pick" config items from other services to make them available within the service. The set of items you can pick from follow 2 rules:
+- **you can pick _any_ config item from an ancestor service**<br/>
+  _remember everything is a direct child of the root unless an explicit `parent` is set_
+- **otherwise you can only pick config items that are marked with `expose: true`**
+
+Additionally you can transform keys and values before exposing them within the current service.
+
+The pick syntax is very flexible and best illustrated with a few examples:
+```ts
 export default defineDmnoService({
-  name: 'another-package',
+  name: 'api',
+  parent: 'backend-services',
   pick: [
-    // pick the same items as my-package from root
-    'GOOGLE_ANALYTICS_ID',
-    'STRIPE_PUB_KEY',
-    'CUSTOMER_SERVICE_EMAIL',
-    // pick the API_URL from my-package
+    // you can specify the source service name and key(s) to pick
     {
-      source: 'my-package',
-      key: 'API_URL',
-      // rename it
-      renameKey: 'MY_PACKAGE_API_URL',
+      source: 'root',
+      key: 'SINGLE_KEY',
+    },
+
+    // if source is omitted, it will fallback to the workspace root
+    { key: 'OTHER_KEY_FROM_ROOT' },
+
+    // shorthand to pick single key from root
+    'SHORTHAND_PICK_FROM_ROOT',
+
+    // you can pick multiple keys at once
+    {
+      source: 'other-service',
+      key: ['MULTIPLE', 'KEYS'],
+    },
+
+    // you can pick by filtering keys with a function
+    // (from all items if an ancestor or just exposed items if not)
+    {
+      source: 'backend-services',
+      key: (key) => key.startsWith('DB_'),
+    },
+
+    // keys can be transformed
+    // and you can use a static value if picking a single key
+    {
+      key: 'ORIGINAL_KEY',
+      renameKey: 'NEW_KEY_NAME',
+    },
+
+    // or use a function if picking multiple
+    {
+      key: ['KEY1', 'KEY2'],
+      renameKey: (k) => `PREFIX_${k}`,
+    },
+
+    // values can also be transformed with functions
+    {
+      source: 'backend-services',
+      key: 'GROUP1_THINGY',
+      transformValue: (v) => v + 1,
     },
   ],
+});
+```
+
+:::tip[FYI]
+The inability to easily share config in a monorepo was one of the main pain points that helped kickstart dmno's creation
+:::
+
+
+## Defining config items
+
+Your service's config has a `schema` which is a key-value object that describes all of the configuration your service uses. Each item has a definition that describes what kind of data it is, how to validate it, how to handle it within your build, a rich description that feeds into your IDE tooling, and in some cases, what the value is or how to generate / fetch it (more on that later).
+
+We'll start with a simple example from our own monorepo, and then dig into what all the options are:
+```ts
+export default defineDmnoService({
   schema: {
-    // your service-specific schema here
+    // ...
+    GITHUB_REPO_URL: {
+      extends: DmnoBaseTypes.url({ allowedDomains: ['github.com'] }),
+      description: 'Github link to the main DMNO monorepo',
+      required: true,
+      value: (ctx) => {
+        return `${DMNO_CONFIG.GITHUB_ORG_URL}/${DMNO_CONFIG.GITHUB_REPO_NAME}`;
+      },
+    },
   },
 });
 ```
-This is similar to the previous example, but we're also picking the `API_URL` from `my-package` and renaming it to `MY_PACKAGE_API_URL`.
 
-For an exhaustive list of all the options available for each schema item, check out the [config item](/docs/reference/helper-methods/#configitemdefinition) reference docs.
+### Data types & `extends`
+
+Each item is defined by `extend`ing some base type (whether explicitly or not) and adding additional overrides on top of it.
+
+Most of the time, you'll use existing data types, either from `DmnoBaseTypes` ([see reference](/docs/reference/base-types)) or from a published dmno plugin - some by dmno, some by others. These data types are factory functions, and accept settings that control reusable behavior (like validation rules). You should almost always be able to accomplish what you need with existing types - but of course you can author your own resuable types as well.
+
+These types are also used to generate TypeScript types for your config and give you type safety when using your config in your application code.
+
+Again the syntax for `extend` is fairly rich, so best to illustrate via some examples:
+```ts
+export default defineDmnoService({
+  schema: {
+    // common case where a datatype is called as a function w/ settings
+    EXTENDS_TYPE_INITIALIZED: {
+      extends: DmnoBaseTypes.number({ min: 0, max: 100 }),
+    },
+    // you can skip the function call if no settings are needed
+    EXTENDS_TYPE_UNINITIALIZED: {
+      extends: DmnoBaseTypes.number,
+    },
+    // string/named format works for a few of our basic types (with no settings)
+    EXTENDS_STRING: {
+      extends: 'number',
+    },
+    // passing nothing will try to infer the type from a static value
+    // or fallback to a string otherwise
+    DEFAULTS_TO_NUMBER: { value: 42 }, // infers number
+    DEFAULTS_TO_STRING: { value: 'cool' }, // infers string
+    FALLBACK_TO_STRING_NO_INFO: { }, // assumes string
+    FALLBACK_TO_STRING_UNABLE_TO_INFER: { // assumes string
+      value: somePlugin.item(),
+    },
+
+    // shorthand is provided for items w/o settings other than extends
+    // (not recommended because attaching additional metadata/info is helpful)
+    SHORTHAND_TYPE_NAME: 'number',
+    SHORTHAND_TYPE_UNINITIALIZED: DmnoBaseTypes.number,
+    SHORTHAND_TYPE_INITIALIZED: DmnoBaseTypes.number({ min: 100 }),
+
+    // of course you can use your own custom types (or from plugins)
+    USE_CUSTOM_TYPE: {
+      extends: MyCustomPostgresConnectionUrlType,
+      // additional settings can be added/overridden as normal
+      required: true,
+    },
+  },
+});
+```
+
+{/* something about inheritance, type system etc... */}
+
+### Validations & required config
+
+Validating your config _BEFORE_ build/run/deploy is a huge part of what makes DMNO so powerful.
+
+You can mark items as `required: true` and they will be considered invalid if the value is empty when we load your config. Additional validations will be skipped if this is the case.
+
+You can also attach custom validation functions, although most of your validation needs will likely be handled by reusable types.
+
+```ts
+export default defineDmnoService({
+  schema: {
+    VALIDATION_EXAMPLE: {
+      extends: DmnoBaseTypes.number({ min: 0, max: 100 }),
+      required: true,
+      validate: (val) => {
+        if (!isPrimeNumber(val)) {
+          throw new ValidationError('Number must be prime');
+        }
+      },
+    },
+  },
+});
+```
+
+{/* skiping coercion here for now  */}
+
+### Secrets & Security
+Items can be marked as `sensitive: true` and they will be treated accordingly. That means:
+
+- We will mask their values when logging them to the console via the `dmno` CLI
+- They will NOT be exposed via `DMNO_PUBLIC_CONFIG` (only via `DMNO_CONFIG`)
+- Depending on the integration, we will help make sure you don't accidentally leak them
+- More amazing security-related features coming soon!
+
+Note that many vendor-specific resuable data types from plugins will already be marked as sensitive!
+
+```ts
+export default defineDmnoService({
+  schema: {
+    MY_SECRET: {
+      sensitive: true,
+    },
+    ONE_PASS_TOKEN: {
+      // this data type is already marked as sensitive!
+      extends: OnePasswordTypes.serviceAccountToken,
+    },
+  },
+});
+```
+
+
+
+
+### Docs & intellisense
+DMNO lets you attach additional information to items that serve as inline documentation about the item. This data is also used to generate very rich typescript JSDoc comments for your config - giving you and your team ✨ magical IDE superpowers.
+
+:::tip
+Some of these settings make more sense within the context of authoring reusable types, but they are all always available.
+:::
+
+```ts
+export default defineDmnoService({
+  schema: {
+    INTELLISENSE_DEMO: {
+      required: true,
+      sensitive: true,
+      summary: 'Primary DB URL',
+      description: 'houses all of our users, products, and orders data',
+
+      // description of the type of the data rather than this instance of it
+      typeDescription: 'Postgres connection url',
+      externalDocs: {
+        description: 'explanation (from prisma docs)',
+        url: 'https://www.prisma.io/dataguide/postgresql/short-guides/connection-uris#a-quick-overview',
+      },
+      ui: {
+        // uses iconify names, see https://icones.js.org for options
+        icon: 'akar-icons:postgresql-fill',
+        color: '336791', // postgres brand color :)
+      },
+    },
+  },
+});
+```
+
+An example of how the generated types show up with VSCode's Intellisense:
+![Intellisense demo](../../../../assets/docs-images/intellisense-demo.png)
+
+
+### Dynamic vs static
+Items can use `dynamic: true` (or false) to override their behaviour as to whether they should be bundled into your code at _build time_ versus always loaded at boot time. This is only relevant for some integrations/projects, and it's a _big_ topic. See our [dynamic config guide](/docs/guides/dynamic-config) for more details!
+
+
+### Expose
+Items marked with `expose: true` will be available to be "picked" by other services in your workspace that are not children of the service. See ["sharing config" section above](#sharing-config-between-services).
+
+
+### Setting item values
+While some tools may let you set only default values for config items, DMNO lets you set the value from within your schema for all situations.
+
+This is possible because the dmno config loading process is broken up into 2 stages: first we load the schema, and then we "resolve" the values. While the resolution process does respect overrides passed in as env vars and from local override files, many of your values may be set _from the schema directly_.
+
+We can use static values, inline functions, or a "resolver" - which is basically just a fancy function that will be called during the resolution process and passed some contextual data about the config item and the rest of the resolved config.
+
+An example of setting the `value` to each of these cases in our schema:
+```ts
+export default defineDmnoService({
+  schema: {
+    // static value (for constants or defaults planned to be overridden)
+    STATIC_VAL: {
+      value: 'static',
+    },
+
+    // use an inline function which references other item values
+    INLINE_FN_VAL: {
+      value: (ctx) => `prefix_${DMNO_CONFIG.OTHER_ITEM}`,
+    },
+
+    // using an instance of a "resolver" from a plugin
+    RESOLVER_EXAMPLE: {
+      value: somePlugin.fetchSecretItemById('xyz'),
+    },
+  },
+});
+```
+
+Internally, we even wrap the static values and inline functions into resolvers, so that we can always display some additional metadata about _how_ the value is being set - even without actually resolving it. These resolvers can also return more resolvers, and have a notion of multiple "branches" built in, leading to some very powerful composition capabilities.
+
+An quick example to illustrate using our built-in `switchByNodeEnv` resolver which selects a value based on the current value of `NODE_ENV` within your config.
+
+```ts
+export default defineDmnoService({
+  pick: ['NODE_ENV'],
+  schema: {
+    SOME_API_KEY: {
+      value: switchByNodeEnv({
+        // some dev env key, so not a problem to expose
+        _default: 'abc123',
+        // sensitive key we don't want in our repo
+        production: prodOnePassSecrets.item(),
+      }),
+    },
+  },
+});
+```
+
+You can author your own reusable resolvers - but you likely won't need to for most use cases.
+
+:::caution[Item ordering matters]
+We resolve your items in the order they are defined in your schema, so if your config items depend on each other to resolve their values, you must define them in that dependency order.
+
+**This limitation will be removed very soon**
+:::
+

@@ -10,7 +10,10 @@ export default defineDmnoService({
   name: 'signup-api',
   pick: [],
   schema: {
-    DMNO_ENV: {}, // TODO: formalize this
+    DMNO_ENV: { // TODO: formalize this
+      // will be overridden by netlify during deploys - see netlify.toml
+      value: 'development',
+    },
     DMNO_VAULT_KEY: {
       extends: EncryptedVaultTypes.encryptionKey,
       required: true,
