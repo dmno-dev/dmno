@@ -10,35 +10,24 @@ import BugReportLink from '@/components/BugReportLink.astro';
 
 At DMNO we _love_ Astro (this very site is built with it). That's why we're very excited to make it easier (and safer) to use environment variables in all of your Astro apps, whether it's on the client or the server!
 
-To get started install `dmno` and the `astro` plugin: 
-
-<TabbedCode packageName="@dmno/astro-integration dmno" />
-
-### Scaffold your DMNO config
-
-Next, run the following command in a terminal at the root of your repo:
-
-<TabbedCode command="dmno init" />
-
-This will create a `.dmno` directory in the root of your project with a `config.mts` file. And it will also create `.dmno` folders and config files in each of the other directories for other apps/services if you have a monorepo.
-
-### Configure your environment variables
-
-See our [Schema Guide](/docs/guides/schema) for the specifics of how to write your first DMNO schema.
-
 ## Setup
 
 ### Install the dmno astro integration
 
-Using astro's add command will automatically install dependencies and update your astro config.
+Using astro's `add` command will automatically install dependencies and update your astro config.
 
 <TabbedCode command="astro add @dmno/astro-integration" />
 
+>Skip to [Scaffold...](#scaffold-your-dmno-config) once this is complete.
+
+:::note
 If you run into any issues, feel free to <BugReportLink label='integrations/astro'>report them to us on GitHub</BugReportLink> and try the manual installation steps below.
+:::
 
 #### Manual install instructions
 
-Install dmno itself and the astro integration
+If you prefer not to use `astro add` you can install `dmno` itself and the `astro-integration` package manually: 
+
 <TabbedCode packageName="@dmno/astro-integration dmno" />
 
 Update your `astro.config.mjs` - import the plugin, and add to `defineConfig`: 
@@ -52,6 +41,18 @@ export default defineConfig({
   integrations: [dmnoAstroIntegration()],
 });
 ```
+
+### Scaffold your DMNO config
+
+Next, run the following command in a terminal at the root of your repo:
+
+<TabbedCode command="dmno init" />
+
+This will create a `.dmno` directory in the root of your project with a `config.mts` file. And it will also create `.dmno` folders and config files in each of the other directories for other apps/services (at your discretion) if you have a monorepo.
+
+### Configure your environment variables
+
+See our [Schema Guide](/docs/guides/schema) for the specifics of how to write your first DMNO schema.
 
 ### Set up Typescript
 
