@@ -40,7 +40,8 @@ export default async (req: Request, context: Context) => {
   const checkEmail = ev.check(reqBody.email);
   if (!checkEmail.valid) return errorResponse('email is invalid');
 
-  const clientIp = req.headers['x-nf-client-connection-ip'];
+  // set by netlify in deployed envs
+  const clientIp = req.headers.get('x-nf-client-connection-ip');
 
   const signupObj = {
     email: reqBody.email,
