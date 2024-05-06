@@ -8,15 +8,14 @@ import TabbedCode from '@/components/TabbedCode.astro';
 
 If you have an existing Next.js app, you're probably already familiar with how environment variables work in Next. Check their docs [here](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables) if you need a refresher. 
 
-Now forget all of that, and let's simplify things with DMNO. 🤣
+Now forget all of that, and let's simplify things with DMNO. 🥳
 
 ### Install dependencies
 
-First, install the `dmno` and `@dmno/dmno-next` packages.
+First, install the `dmno` and `@dmno/nextjs-integration` packages.
 
 <TabbedCode packageName="dmno @dmno/next-integration" />
 
-{/* TEMPLATE THIS? */}
 ### Scaffold your DMNO config
 
 Run the following command in a terminal at the root of your repo:
@@ -49,7 +48,7 @@ const nextConfig = {
 
 ### Injecting config
 
-Unfortunately, NextJS has limited options to reliably inject code into their framework, so we need to do a little more manual work to get things wired up correctly.
+Unfortunately, NextJS has limited options to reliably inject code into their framework. So, we need to do a little more manual work to get things wired up correctly.
 
 While things may appear to work during development, when you run `next build`, you'll likely see some errors about `DMNO_CONFIG` not existing. To fix this, you need to import a script that will populate it.
 
@@ -127,17 +126,17 @@ Unlike some of our other integrations, the next integration requires that you ru
 :::tip
 Scripts defined in package.json will resolve commands automatically from your installed `node_modules` directory, so using `dmno run -- othercommand` works.
 
-But if you are running a command manually, `dmno` will not usually be in your PATH and so your terminal will not know what to do. Typically you can use your package manager to find the dmno executable, for example: `pnpm exec dmno run -- othercommand` (or `npm exec` or `yarn exec`).
+But if you are running a command manually, `dmno` will not usually be in your `PATH` and so your terminal will not know what to do. Typically you can use your package manager to find the dmno executable, for example: `pnpm exec dmno run -- othercommand` (or `npm exec` or `yarn exec`).
 :::
 
 
 ## Accessing config
 
-> Simply use `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG` instead of `process.env` 🎉
+> Use `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG` instead of `process.env` 🎉
 
 ### Security and secrets
 
-While building your site, nextjs does 2 builds - one for the client and one for the server. During the client build, we only replace references to `DMNO_PUBLIC_CONFIG` (which never contains anything sensitive) so you can't accidentally leak any secrets into the JS of your site. Any references to `DMNO_CONFIG` in the client code will also throw a helpful error.
+While building your site, nextjs does two builds - one for the client and one for the server. During the client build, we only replace references to `DMNO_PUBLIC_CONFIG` (which never contains anything sensitive) so you can't accidentally leak any secrets into the JS of your site. Any references to `DMNO_CONFIG` in the client code will also throw a helpful error.
 
 However, because NextJS does server-side rendering (regardless of if you are doing SSG or SSR or some hybrid), it is still possible to leak secrets in the _content_ of a server-rendered page. In general, try to use `DMNO_PUBLIC_CONFIG` and be careful about when/how you use secrets.
 

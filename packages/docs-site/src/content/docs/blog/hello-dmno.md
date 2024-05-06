@@ -13,15 +13,15 @@ We've been heads down working on this project for a while now, and we're excited
 
 To make things easier to get started we've created a few integrations with popular frameworks and tools, and we're working on more. 
 
-- [Astro](/docs/guides/frameworks/astro)
-- [Vite](/docs/guides/frameworks/vite)
-- [Next.js](/docs/guides/frameworks/nextjs)
-- [Node.js](/docs/guides/frameworks/node)
+- [Astro](/docs/integrations/astro)
+- [Vite](/docs/integrations/vite)
+- [Next.js](/docs/integrations/nextjs)
+- [Node.js](/docs/integrations/node)
 
 We've also created a few plugins to help you securely manage your secrets and other sensitive configuration items.
 
-- [Encrypted Secrets](/docs/guides/plugins/encrypted-vault)
-- [1Password Secrets](/docs/guides/plugins/1password)
+- [Encrypted Secrets](/docs/plugins/encrypted-vault)
+- [1Password Secrets](/docs/plugins/1password)
 
 To get started you can check out our [quickstart guide](/docs/get-started/quickstart), or dive into our [schema guide](/docs/guides/schema).
 

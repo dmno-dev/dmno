@@ -4,18 +4,19 @@ title: Node.js (Express, Koa, etc)
 
 import TabbedCode from '@/components/TabbedCode.astro';
 
-While node recently added [native support for loading dotenv files](https://nodejs.org/docs/latest/api/cli.html#--env-fileconfig), you're often still left hacking things together to get a config system that works well.
+While node recently added [native support for loading dotenv files](https://nodejs.org/docs/latest/api/cli.html#--env-fileconfig), you're often still left hacking things together to get a config system that works for your needs.
 
 Instead of reinventing the wheel on every service within each project, with DMNO you get:
 - single system to manage your config for all of your services
-- securely handle your secrets by committing them encrypted to your repo or sync with backends like 1password
+- securely handling of your secrets by committing them encrypted to your repo or sync with backends like 1password
 - validations, coercion logic, and full type safety
 - built in documentation, and magical IDE auto-completion
-- all powered by an extremely flexible type system
+- an extremely flexible type system
 - live reload (and re-validation) on config changes
 
 ## Setup
-To get started, simply install dmno and then set up your config schema according to the schema guide. (TODO: link to somewhere?)
+To get started, install dmno and then set up your config schema according to the [schema guide](/docs/guides/schema). 
+
 <TabbedCode packageName="dmno" />
 
 ### Loading your config
@@ -46,7 +47,7 @@ While the `dmno/load` import will internally call the dmno cli and load config i
 
 ## Accessing config values
 
-Simply use `DMNO_CONFIG.SOME_ITEM` within your code and you are good to go!
+Use `DMNO_CONFIG.SOME_ITEM` within your code and you are good to go!
 
 ```diff lang="ts" ins="DMNO_CONFIG" del="process.env"
 
@@ -57,9 +58,9 @@ Simply use `DMNO_CONFIG.SOME_ITEM` within your code and you are good to go!
 ### External tools
 Other tools likely need access to some of your config as well - for example a database migration tool might need the full connection string/url for your database.
 
-In some cases you may have a custom wrapper script, in which case, `import 'dmno/load'` will do the trick, but in other cases, you may want to call those tools directly via their executables - whether directly on the command line or via package.json scripts.
+In some cases you may have a custom wrapper script, in which case, `import 'dmno/load'` will do the trick. In other cases, you may want to call those tools directly via their executables - whether directly on the command line or via package.json scripts.
 
-In this case, simply run the command via `dmno run` and your config will be loaded and passed back into `process.env` which is usually where those external tools will be looking. It's important to note that when we pass the config back into `process.env`, **we convert everything back into strings**, because this matches how normal env vars passed into process.env work. This should not be a problem since those tools were likely expecting regular environment variables (strings) in the first place, but it is important to remember.
+In this case, run the command via `dmno run` and your config will be loaded and passed back into `process.env` which is usually where those external tools will be looking. It's important to note that when we pass the config back into `process.env`, **we convert everything back into strings**, because this matches how normal env vars passed into process.env work. This should not be a problem since those tools were likely expecting regular environment variables (strings) in the first place, but it is important to remember.
 
 :::tip
 Scripts defined in package.json will resolve commands automatically from your installed `node_modules` directory, so using `dmno run -- othercommand` works.
@@ -82,9 +83,9 @@ But if you are running a command manually, `dmno` will not usually be in your PA
 ### Watch mode and dev commands
 You likely have a `pnpm dev` (or yarn/npm/etc) command - which you rely on for automatically reloading as you make changes to your _application code_. It might use [nodemon](https://nodemon.io/), node's [native `--watch` option](https://nodejs.org/docs/latest/api/cli.html#--watch), or something else. Similarly, `dmno run` has a "watch mode" (`-w`) which watches your _config_ and reloads when any changes are detected.
 
-By running your watch/dev tool via dmno run, you'll get your app automatically reloading whenever you make changes to your config or application code - all while validating your config, regenerating types, etc.
+By running your watch/dev tool via `dmno run`, you'll get your app automatically reloading whenever you make changes to your config or application code - all while validating your config, regenerating types, etc.
 
-Just prefix your existing dev command with `dmno run -w --` and you're good to go.
+Prefix your existing dev command with `dmno run -w --` and you're good to go.
 
 ```diff lang="json" title="package.json" ins="dmno run -w -- "
 {
