@@ -1,6 +1,7 @@
 [build]
 ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF -- packages/signup-api"
 command = "pnpm --filter \"@dmno/signup-api\" run build"
+publish = "packages/signup-api/dist"
 
 [functions]
 directory = "packages/signup-api/functions-dist"
