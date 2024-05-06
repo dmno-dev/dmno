@@ -16,12 +16,38 @@ h5 {
   font-family: 'Inter';
 }
 
-/* starlight css var customizations */
-:root {}
-
-:root[data-theme='light'] {
-  --sl-color-white: hsl(224, 10%, 20%);
+/* starlight theme css var customizations */
+/* Dark mode colors. */
+:root {
+  --sl-color-accent-low: #00234c;
+  --sl-color-accent: #0067c9;
+  --sl-color-accent-high: #a4ccff;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #f1ebf4;
+  --sl-color-gray-2: #c6bfca;
+  --sl-color-gray-3: #93869b;
+  --sl-color-gray-4: #5f5366;
+  --sl-color-gray-5: #3f3345;
+  --sl-color-gray-6: #2d2233;
+  --sl-color-black: #1b161e;
 }
+
+/* Light mode colors. */
+:root[data-theme='light'] {
+  --sl-color-accent-low: #bddaff;
+  --sl-color-accent: #0069cd;
+  --sl-color-accent-high: #003166;
+  --sl-color-white: #1b161e;
+  --sl-color-gray-1: #2d2233;
+  --sl-color-gray-2: #3f3345;
+  --sl-color-gray-3: #5f5366;
+  --sl-color-gray-4: #93869b;
+  --sl-color-gray-5: #c6bfca;
+  --sl-color-gray-6: #f1ebf4;
+  --sl-color-gray-7: #f8f5fa;
+  --sl-color-black: #ffffff;
+}
+
 
 
 /* custom colors and vars */
