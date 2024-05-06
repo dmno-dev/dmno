@@ -10,17 +10,17 @@ import TabbedCode from '@/components/TabbedCode.astro';
 
 <Steps>
 
-1. **Install `dmno`**
+1. ### **Install `dmno`**
     <TabbedCode packageName="dmno" />
 
-2. **Create a new dmno project**
+2. ### **Initialize dmno in your project**
 
     Run this command in the root of your project:
     <TabbedCode command="dmno init" />
 
     ![dmno init](../../../../assets/tapes/init.gif)
 
-    This will create a `.dmno` folder in the root of your project (and any additional services of your choice) with a `config.mts` file. It will produce a file tree that looks something like this:
+    This will create a `.dmno` folder in the root of your project (and if in a monorepo, any additional services of your choice) with a `config.mts` file. It will produce a file tree that looks something like this:
 
     <FileTree>
     - / (root of your project)
@@ -36,53 +36,43 @@ import TabbedCode from '@/components/TabbedCode.astro';
 
     </FileTree>
 
-3. **Start the development server**
+3. ### **Start the development server**
+
+    This will give you instant feedback while you author your config schema.
     <TabbedCode command="dmno dev" />
 
     ![dmno init](../../../../assets/tapes/dev.gif)
 
-4. **Write your schema**
+4. ### **Write your schema**
 
-    At the root of your project in a `.dmno` folder there will be a `config.mts` file. This is where you define your schema. There is a [sample](/docs/get-started/sample) that covers many of the different options and a full [schema guide](/docs/guides/schema).
+    The config schema (and other settings) live in the `.dmno/config.mts` files. Simply defining each item with a description, `required`, and `sensitive` is a great first step. You can them improve your schema over time, adding validations, and setting values from within the schema itself.
 
-5. **Integrate your config items** 
+    Check out the [schema guide](/docs/guides/schema) for full details.
 
-    We've made it easy to integrate your config items into your existing codebase. You can access your config items in your code using the `DMNO_CONFIG` object. This object will give you full type completion and intellisense, and actionable error messages if you try to access a variable that doesn't exist or fails validation.
+5. ### **Install framework specific integrations**
 
-    For example: 
-    `const myConfigItem = DMNO_CONFIG.MY_CONFIG_ITEM;`
+    We provide [drop-in integrations](/docs/integrations/overview) for many popular frameworks, and more are in the works. Install the relevant integrations in your services according to their instructions - this is the fastest way to get started.
 
-    If you want to access your config items in the browser (or another less-secure context), you can use the `DMNO_PUBLIC_CONFIG` object. This object will only contain items that are marked as `sensitive: false` in your schema.
+6. ### **Use `DMNO_CONFIG` to access your config** 
 
-    For example:
-    `const myPublicConfigItem = DMNO_PUBLIC_CONFIG.MY_CONFIG_ITEM;`
-
-    :::tip
-    We also have integrations for popular frameworks like [Next.js](/docs/integrations/nextjs) and [Astro](/docs/integrations/astro) that make it even easier to integrate your config items.
-    :::
-
-6. **Deploy your project**
-
-    Once you've written your schema and integrated your config items, you're ready to deploy. The easiest way to adapt your current workflow is to update your deployment scripts to include the appropriate `dmno` commands. In this case, `dmno run`, which will resolve all of your config items and run your deployment script.
-
-    For example: 
-
-    ```json title="package.json (partial)"
-    {
-      "scripts": {
-        "deploy": "deploy-my-thing"
-      }
-    }
-    ``` 
-    becomes 
+    You _could_ continue to use `process.env`/`import.meta.env` to access your config and still benefit from DMNO's validation logic. But we recommend migrating to `DMNO_CONFIG` as it provides a ton of helpful improvements:
       
-    ```diff lang="json" title="package.json (partial)" ins="dmno run --"
-    {
-      "scripts": {
-        "deploy": "dmno run -- deploy-my-thing"
+    For example:
+    ```diff lang="ts" ins="DMNO_CONFIG."
+      // 😿 still works, but no type-safety, and will be a string
+      if (!process.env.SOME_NUMBER) {
+        throw new Error('Missing SOME_NUMBER env var');
       }
-    }
+      const myConfigNum = parseFloat(process.env.SOME_NUMBER);
+      
+      // 🎉 easier, safer, full type-safety
+      const myConfigNum = DMNO_CONFIG.SOME_NUMBER;
+      const IS_PROD = DMNO_CONFIG.NODE_ENV === 'production';
     ```
+
+    :::note[Secrets & DMNO_PUBLIC_CONFIG]
+    While building code for the browser (or another less-secure context), you can use the `DMNO_PUBLIC_CONFIG` object - it does not contain any items that are marked as `sensitive: true` in your schema
+    :::
 
 </Steps>
 

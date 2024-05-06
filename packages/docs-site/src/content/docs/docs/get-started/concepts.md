@@ -16,7 +16,7 @@ The top level folder of the repo. In the monolithic case, this is where all of y
 
 ## Service
 
-Any subfolder that represents a "deployable chunk" of something. It could be an app, a site, or a microservice. In the DMNO world, these are all considered "services".
+Within a monorepo, this is a workspace package that uses some config, and usually is a runnable/deployable chunk of your system. It could be an app, a site, a microservice, or occasionally even a shared library (if it uses config). In the DMNO world, these are all considered "services".
 
 ## Pick
 

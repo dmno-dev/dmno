@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv, configPath, switchBy } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv, configPath, switchBy, NodeEnvType } from 'dmno';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
 const EncryptedVault = new EncryptedVaultDmnoPlugin('vault', {
