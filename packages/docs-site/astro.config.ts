@@ -32,7 +32,7 @@ export default defineConfig({
         discord: DMNO_CONFIG.DISCORD_JOIN_URL,
       },
       customCss: [
-        './src/style/global.css',
+        './src/style/global.less',
       ],
       plugins: [
         starlightBlog({
@@ -49,15 +49,12 @@ export default defineConfig({
       ],
       pagination: false,
       expressiveCode: {
-        styleOverrides: {
-          borderColor: 'var(--brand-pink)',
-          codeFontFamily: 'Fira Code',
-          codeLineHeight: '1.6',
-        },
       },
       components: {
         Header: './src/components/CustomStarlightHeader.astro',
         ThemeProvider: './src/components/CustomStarlightThemeProvider.astro',
+        MobileMenuFooter: './src/components/CustomStarlightMobileMenuFooter.astro',
+        Banner: './src/components/CustomStarlightBanner.astro',
       },
       head: [
         {

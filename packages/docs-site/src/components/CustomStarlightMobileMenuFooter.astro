@@ -1,0 +1,50 @@
+---
+import LanguageSelect from "@astrojs/starlight/components/LanguageSelect.astro";
+import SocialIcons from "./SocialIcons.astro";
+import ThemeSelect from "./ThemeSelect.vue";
+import type { Props } from "@astrojs/starlight/props";
+import DIcon from "./DIcon.astro";
+import HeaderNav from "./HeaderNav.astro";
+---
+
+<div class="mobile-preferences">
+  <HeaderNav />
+
+  <div class="sl-flex">
+    <SocialIcons />
+    <ThemeSelect client:load />
+    <LanguageSelect {...Astro.props} />
+  </div>
+</div>
+
+<style lang="less" is:global>
+  .mobile-preferences {
+    justify-content: space-between;
+    border-top: 1px solid var(--sl-color-gray-6);
+    padding-bottom: 2rem;
+    .header-nav {
+      padding: 0.75rem 0;
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid var(--sl-color-gray-6);
+      font-size: 14px;
+    }
+
+    .social-icons {
+      margin-inline-end: auto;
+      align-items: center;
+      gap: 0.5rem;
+      a {
+        padding: 4px;
+        margin: 0;
+        // background: red;
+      }
+      .d-icon {
+        width: 24px;
+      }
+
+      &:empty {
+        display: none;
+      }
+    }
+  }
+</style>
