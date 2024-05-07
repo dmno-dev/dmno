@@ -33,6 +33,11 @@ export default defineDmnoWorkspace({
     },
     GENERAL_CONTACT_EMAIL: {
       value: 'hello@dmno.dev',
-    }
-  }
+    }, 
+    POSTHOG_API_KEY: {
+      value: 'phc_GfztFpBHOc9S3UtvvchuPyzr1yNC0j34dexFGGykkNU',
+      description: 'publishable API key for PostHog',
+      required: true,
+    },
+  },
 });

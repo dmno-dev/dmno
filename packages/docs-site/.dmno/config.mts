@@ -6,6 +6,7 @@ export default defineDmnoService({
     'GITHUB_REPO_URL',
     'DISCORD_JOIN_URL',
     'GENERAL_CONTACT_EMAIL',
+    'POSTHOG_API_KEY',
   ],
   schema: {
     GOOGLE_TAG_MANAGER_ID: {
