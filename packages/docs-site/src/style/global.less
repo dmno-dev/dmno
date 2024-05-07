@@ -293,3 +293,21 @@ starlight-file-tree,
     }
   }
 }
+
+// make max width 50% when only one of them is present
+// and right align the next button
+.pagination-links {
+  display: flex;
+  justify-content: left;
+  gap: 1rem;
+
+  a {
+    flex: 1;
+    max-width: 50%;
+  }
+
+  a:first-child[rel='next'] {
+    margin-left: 50%;
+  }
+
+}
