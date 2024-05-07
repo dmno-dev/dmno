@@ -1,0 +1,36 @@
+---
+import DIcon from "./DIcon.astro";
+---
+
+<div class="sl-flex social-icons">
+  <a href={DMNO_PUBLIC_CONFIG.GITHUB_REPO_URL}><DIcon name="github" /></a>
+  <a href={DMNO_PUBLIC_CONFIG.DISCORD_JOIN_URL}><DIcon name="discord" /></a>
+</div>
+
+<style lang="less">
+  .social-icons {
+    flex-shrink: 0;
+    gap: 0.75rem;
+    > a {
+      width: 32px;
+      height: 32px;
+      display: block;
+      border-radius: 4px;
+      padding: 4px;
+      transition: all 0.2s;
+      color: currentColor;
+      &:hover {
+        color: var(--dmno-header-highlight-color);
+        transform: scale(1.1);
+      }
+      &:active {
+        color: var(--brand-purple);
+      }
+      .d-icon {
+        // width: 24px;
+        // width: 100%;
+        height: 100%;
+      }
+    }
+  }
+</style>

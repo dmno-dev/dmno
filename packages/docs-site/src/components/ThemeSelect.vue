@@ -29,8 +29,8 @@ function toggleTheme() {
 
 <style lang="less">
 .theme-select {
-  width: 60px;
-  height: 30px;
+  width: 64px;
+  height: 32px;
   position: relative;
   cursor: pointer;
   perspective: 1000px;
@@ -43,22 +43,31 @@ function toggleTheme() {
   }
 
   --edge-color: rgba(255,255,255,.3);
-  --hover-offset: -1px;
+  --hover-offset: -2px;
 
   html[data-theme="light"] & {
     --edge-color: rgba(0,0,0,.6);
-    --hover-offset: 1px; // have to reverse because of 3d flip
+    --hover-offset: 2px; // have to reverse because of 3d flip
   }
 
   &:hover {
     .theme-select__inner {
       > div {
-        margin-top: -1px;
+        margin-top: -2px;
         margin-left: var(--hover-offset);
         box-shadow: 2px 2px 0px var(--edge-color);
       }
     }
   }
+  // &:active {
+  //   .theme-select__inner {
+  //     > div {
+  //       margin-top: 0px;
+  //       margin-left: 0;
+  //       box-shadow: none;
+  //     }
+  //   }
+  // }
 }
 
 .theme-select__inner {
@@ -66,8 +75,12 @@ function toggleTheme() {
   width: 100%;
   height: 100%;
   text-align: center;
-  transition: transform 0.3s;
+  transition: transform 0.25s;
   transform-style: preserve-3d;
+
+  >div {
+    // transition: all .1s;
+  }
 
   html[data-theme="light"] & {
     transform: rotateY(180deg);
@@ -79,7 +92,7 @@ function toggleTheme() {
   width: 100%;
   border-radius: 4px;
   position: absolute;
-  padding: 7px;
+  padding: 8px;
 
   backface-visibility: hidden;
   > div {

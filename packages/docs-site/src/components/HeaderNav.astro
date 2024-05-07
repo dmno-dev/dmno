@@ -1,0 +1,65 @@
+---
+import DIcon from "./DIcon.astro";
+---
+
+<nav class="header-nav">
+  <a
+    href="/docs"
+    title="cd ./.docs"
+    aria-current={Astro.url.pathname.startsWith("/docs") ? "page" : undefined}
+  >
+    <DIcon
+      name={Astro.url.pathname.startsWith("/docs") ? "folder-open" : "folder"}
+    />
+    .docs
+  </a>
+  <a
+    href="/blog"
+    title="cd ./.blog"
+    aria-current={Astro.url.pathname.startsWith("/blog") ? "page" : undefined}
+  >
+    <DIcon
+      name={Astro.url.pathname.startsWith("/blog") ? "folder-open" : "folder"}
+    />
+    .blog
+  </a>
+</nav>
+
+<style lang="less">
+  nav {
+    display: flex;
+    > a {
+      flex-shrink: 0;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      color: currentColor;
+      &:hover {
+        color: var(--dmno-header-highlight-color);
+      }
+
+      &[aria-current="page"] {
+        // this style matches the left sidebar
+        background: var(--sl-color-text-accent);
+        color: var(--sl-color-text-invert);
+        border-radius: 4px;
+      }
+
+      gap: 4px;
+      padding: 0 0.25em;
+      margin-left: var(--sl-nav-gap);
+      &:first-child {
+        margin-left: 0;
+      }
+      @media (min-width: 50rem) {
+        gap: 8px;
+      }
+    }
+    :global(.d-icon) {
+      width: 16px;
+      @media (min-width: 50rem) {
+        width: 20px;
+      }
+    }
+  }
+</style>

@@ -1,0 +1,295 @@
+@import './reset.less';
+
+.logo-font {
+  font-family: "Days One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+body {
+  font-family: 'Inter';
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: 'Inter';
+}
+
+
+
+// custom color palette
+:root {
+  --cp-s: 89%;
+  --cp-l: 65%;
+  --cp-t1: 50%;
+  --cp-t2: 10%;
+
+  // todo - generate these programatically...
+  --brand-red: hsl(0, var(--cp-s), var(--cp-l));
+  --brand-orange: hsl(25, var(--cp-s), var(--cp-l));
+  --brand-yellow: hsl(57, var(--cp-s), var(--cp-l));
+  --brand-green: hsl(119, var(--cp-s), var(--cp-l));
+  --brand-cyan: hsl(184, var(--cp-s), var(--cp-l));
+  --brand-blue: hsl(230, var(--cp-s), var(--cp-l));
+  --brand-purple: hsl(266, var(--cp-s), var(--cp-l));
+  --brand-pink: hsl(299, var(--cp-s), var(--cp-l));
+
+  --brand-red--t1: hsla(0, var(--cp-s), var(--cp-l), var(--cp-t1));
+  --brand-orange--t1: hsla(25, var(--cp-s), var(--cp-l), var(--cp-t1));
+  --brand-yellow--t1: hsla(57, var(--cp-s), var(--cp-l), var(--cp-t1));
+  --brand-green--t1: hsla(119, var(--cp-s), var(--cp-l), var(--cp-t1));
+  --brand-cyan--t1: hsla(184, var(--cp-s), var(--cp-l), var(--cp-t1));
+  --brand-blue--t1: hsla(230, var(--cp-s), var(--cp-l), var(--cp-t1));
+  --brand-purple--t1: hsla(266, var(--cp-s), var(--cp-l), var(--cp-t1));
+  --brand-pink--t1: hsla(299, var(--cp-s), var(--cp-l), var(--cp-t1));
+
+  --brand-red--t2: hsla(0, var(--cp-s), var(--cp-l), var(--cp-t2));
+  --brand-orange--t2: hsla(25, var(--cp-s), var(--cp-l), var(--cp-t2));
+  --brand-yellow--t2: hsla(57, var(--cp-s), var(--cp-l), var(--cp-t2));
+  --brand-green--t2: hsla(119, var(--cp-s), var(--cp-l), var(--cp-t2));
+  --brand-cyan--t2: hsla(184, var(--cp-s), var(--cp-l), var(--cp-t2));
+  --brand-blue--t2: hsla(230, var(--cp-s), var(--cp-l), var(--cp-t2));
+  --brand-purple--t2: hsla(266, var(--cp-s), var(--cp-l), var(--cp-t2));
+  --brand-pink--t2: hsla(299, var(--cp-s), var(--cp-l), var(--cp-t2));
+}
+
+// starlight css var customizations 
+:root {
+  --sl-color-text-accent: var(--brand-purple) !important;
+  --sl-color-text-invert: #FFF !important;
+  --color-text-full-shade: #000;
+  --color-text-full-shade-invert: #FFF;
+  --dmno-header-highlight-color: var(--sl-color-text-accent);
+}
+
+:root[data-theme='dark'] {
+  --sl-color-text-accent: var(--brand-cyan) !important;
+  --sl-color-text-invert: #000 !important;
+  --color-text-full-shade: #FFF;
+  --color-text-full-shade-invert: #000;
+}
+
+
+// .right-sidebar-panel {
+
+// }
+
+.sidebar-content {
+
+  // --sl-color-text-accent: var(--brand-cyan);
+  // --sl-color-accent-low: #000;
+  .sl-badge.default {
+    background: linear-gradient(35deg, var(--brand-purple) 0%, var(--brand-blue) 100%);
+    border: none;
+    border-radius: 2px;
+    border: 1px solid var(--brand-purple);
+  }
+
+  .sl-badge {}
+
+}
+
+
+// starlight hero page header, can't add style on mdx file
+.hero h1 {
+  font-family: 'Days One';
+}
+
+// borders around code blocks, file trees, images
+starlight-file-tree,
+.expressive-code {
+  --border-gradient-color-1: var(--brand-cyan--t1);
+  --border-gradient-color-2: var(--brand-blue--t1);
+  border: 1px solid var(--border-gradient-color-1);
+  border-image-source: linear-gradient(90deg, var(--border-gradient-color-1), var(--border-gradient-color-2));
+  border-image-slice: 1;
+}
+
+// make terminal code blocks a different color
+.expressive-code:has(.frame.is-terminal) {
+  --border-gradient-color-1: var(--brand-green--t1);
+  --border-gradient-color-2: var(--brand-cyan--t1);
+}
+
+// image borders 
+.sl-markdown-content p>img:first-child,
+.dmno-cli-command img {
+  border: 1px solid var(--brand-blue--t1);
+}
+
+
+
+// customize code blocks
+.expressive-code {
+  --ec-tm-delBg: var(--brand-red--t2);
+  --ec-tm-delBrdCol: var(--brand-red);
+  --ec-tm-insBg: var(--brand-green--t2);
+  --ec-tm-insBrdCol: var(--brand-green);
+
+  pre {
+    border: none !important;
+  }
+
+  figcaption {
+    background: none !important;
+
+    &:before {
+      display: none !important;
+    }
+
+    /* border: none !important; */
+    .title {
+      /* background: var(--brand-blue) !important; */
+      /* color: black !important; */
+
+
+      &:after {
+        border-top-color: var(--brand-cyan) !important;
+      }
+    }
+  }
+
+  // hide empty header on "terminal" code blocks
+  .frame.is-terminal figcaption:has(.title:empty) {
+    display: none;
+  }
+
+
+  html[data-theme='dark'] & {
+    .frame {
+      --code-background: hsl(0, 0%, 8%) !important;
+    }
+  }
+}
+
+
+// asides (ex :::[tip])
+.starlight-aside {
+  /* border: 1px solid blue; */
+
+  border: 1px solid var(--aside-color-1);
+  border-left-width: 4px;
+
+  position: relative;
+
+
+  background: black;
+
+  --aside-bg-opacity: .18;
+
+  html[data-theme='light'] & {
+    background: white;
+    --aside-bg-opacity: .35;
+  }
+
+  .starlight-aside__title {
+    color: var(--aside-color-1);
+
+    html[data-theme='light'] & {
+      color: currentColor;
+    }
+
+    position: relative;
+    z-index: 2;
+  }
+
+  .starlight-aside__content {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* gradient background as a pseudo element so we can fade it with opactiy */
+  &:before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(-35deg, var(--aside-color-1) 0%, var(--aside-color-2) 100%);
+    opacity: var(--aside-bg-opacity);
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+  }
+
+  &.starlight-aside--note {
+    --aside-color-1: var(--brand-cyan);
+    --aside-color-2: var(--brand-blue);
+  }
+
+  &.starlight-aside--tip {
+    --aside-color-1: var(--brand-pink);
+    --aside-color-2: var(--brand-blue);
+  }
+
+  &.starlight-aside--caution {
+    --aside-color-1: var(--brand-orange);
+    --aside-color-2: var(--brand-red);
+  }
+
+  &.starlight-aside--danger {
+    --aside-color-1: var(--brand-red);
+    --aside-color-2: var(--brand-pink);
+  }
+}
+
+
+// starlight steps component
+.sl-steps {
+  --sl-color-hairline-light: var(--brand-purple--t1);
+
+  >li:before {
+    background-color: var(--brand-purple) !important;
+    color: white !important;
+    font-family: 'Days One', sans-serif;
+    box-shadow: none !important;
+  }
+}
+
+
+// customize markdown tables 
+.sl-markdown-content {
+
+  table:not(:where(.not-content *)) {
+    display: table;
+    min-width: 100%;
+  }
+
+  table {
+
+    --sl-color-hairline-light: var(--brand-purple--t1);
+
+    thead {
+      text-align: left;
+      background: var(--brand-purple--t2);
+      color: var(--color-text-full-shade);
+    }
+  }
+}
+
+
+.sidebar-content,
+.right-sidebar {
+  a {
+    transition: color .1s;
+  }
+
+  a:active {
+    // color: var(--brand-pink);
+  }
+}
+
+
+#starlight__mobile-toc {
+  .toggle {
+    border-radius: 4px;
+
+    &:hover {
+      border-color: var(--brand-pink);
+    }
+  }
+}
