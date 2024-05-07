@@ -32,12 +32,6 @@ importers:
       '@dagrejs/graphlib':
         specifier: ^2.2.2
         version: 2.2.2
-      '@dmno/encryption-lib':
-        specifier: workspace:*
-        version: link:../encryption-lib
-      '@dmno/ts-lib':
-        specifier: workspace:*
-        version: link:../ts-lib
       '@inquirer/core':
         specifier: ^8.0.1
         version: 8.0.1
@@ -126,9 +120,15 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
     devDependencies:
+      '@dmno/encryption-lib':
+        specifier: workspace:*
+        version: link:../encryption-lib
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
+      '@dmno/ts-lib':
+        specifier: workspace:*
+        version: link:../ts-lib
       '@dmno/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -311,9 +311,6 @@ importers:
 
   packages/integrations/astro:
     dependencies:
-      '@dmno/ts-lib':
-        specifier: workspace:*
-        version: link:../../ts-lib
       astro:
         specifier: ^4
         version: 4.7.0(@types/node@20.12.7)(less@4.2.0)(typescript@5.4.5)
@@ -321,6 +318,9 @@ importers:
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../../eslint-config
+      '@dmno/ts-lib':
+        specifier: workspace:*
+        version: link:../../ts-lib
       '@dmno/tsconfig':
         specifier: workspace:*
         version: link:../../tsconfig
@@ -404,9 +404,6 @@ importers:
       async:
         specifier: ^3.2.5
         version: 3.2.5
-      dmno:
-        specifier: workspace:*
-        version: link:../../core
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
@@ -435,6 +432,9 @@ importers:
       '@types/unzip-stream':
         specifier: ^0.3.4
         version: 0.3.4
+      dmno:
+        specifier: workspace:*
+        version: link:../../core
       tsup:
         specifier: ^8.0.2
         version: 8.0.2(postcss@8.4.38)(typescript@5.4.5)
@@ -444,21 +444,12 @@ importers:
 
   packages/plugins/encrypted-vault:
     dependencies:
-      '@dmno/encryption-lib':
-        specifier: workspace:*
-        version: link:../../encryption-lib
-      '@dmno/ts-lib':
-        specifier: workspace:*
-        version: link:../../ts-lib
       '@inquirer/prompts':
         specifier: ^4.3.0
         version: 4.3.3
       async:
         specifier: ^3.2.5
         version: 3.2.5
-      dmno:
-        specifier: workspace:*
-        version: link:../../core
       jsonc-parser:
         specifier: ^3.2.1
         version: 3.2.1
@@ -466,9 +457,15 @@ importers:
         specifier: ^4.17.21
         version: 4.17.21
     devDependencies:
+      '@dmno/encryption-lib':
+        specifier: workspace:*
+        version: link:../../encryption-lib
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../../eslint-config
+      '@dmno/ts-lib':
+        specifier: workspace:*
+        version: link:../../ts-lib
       '@dmno/tsconfig':
         specifier: workspace:*
         version: link:../../tsconfig
@@ -481,6 +478,9 @@ importers:
       '@types/node':
         specifier: ^20.12.7
         version: 20.12.7
+      dmno:
+        specifier: workspace:*
+        version: link:../../core
       tsup:
         specifier: ^8.0.2
         version: 8.0.2(postcss@8.4.38)(typescript@5.4.5)
