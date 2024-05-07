@@ -370,9 +370,6 @@ importers:
 
   packages/integrations/vite:
     dependencies:
-      kleur:
-        specifier: ^4.1.5
-        version: 4.1.5
       vite:
         specifier: ^5.0
         version: 5.2.10(@types/node@20.12.7)(less@4.2.0)
@@ -402,7 +399,7 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
 
-  packages/plugins/1password-plugin:
+  packages/plugins/1password:
     dependencies:
       async:
         specifier: ^3.2.5
@@ -445,7 +442,7 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
 
-  packages/plugins/encrypted-vault-plugin:
+  packages/plugins/encrypted-vault:
     dependencies:
       '@dmno/encryption-lib':
         specifier: workspace:*
@@ -513,8 +510,8 @@ importers:
         version: 4.1.1(google-auth-library@9.9.0)
     devDependencies:
       '@dmno/encrypted-vault-plugin':
-        specifier: link:../plugins/encrypted-vault-plugin
-        version: link:../plugins/encrypted-vault-plugin
+        specifier: link:../plugins/encrypted-vault
+        version: link:../plugins/encrypted-vault
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config

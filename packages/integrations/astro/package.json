@@ -1,26 +1,27 @@
 {
   "name": "@dmno/astro-integration",
-  "version": "1.0.0",
-  "license": "MIT",
+  "version": "0.0.0",
   "description": "tools for integrating dmno into astro",
-  "keywords": [
-    "dmno",
-    "astro-integration",
-    "env vars",
-    "environment variables",
-    "secrets",
-    "astro",
-    "integration"
-  ],
+  "author": "dmno-dev",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dmno-dev/dmno.git",
     "directory": "packages/integrations/astro"
   },
-  "bugs": {
-    "url": "https://github.com/dmno-dev/dmno/issues"
-  },
-  "homepage": "https://dmno.dev",
+  "bugs": "https://github.com/dmno-dev/dmno/issues",
+  "homepage": "https://dmno.dev/docs/integrations/astro",
+  "keywords": [
+    "dmno",
+    "astro",
+    "config",
+    "env vars",
+    "environment variables",
+    "secrets",
+    "integration",
+    "astro-integration",
+    "dmno-integration"
+  ],
   "exports": {
     ".": {
       "default": "./dist/index.mjs"

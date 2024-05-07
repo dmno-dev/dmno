@@ -9,8 +9,8 @@
     "dmno:dev": "dmno dev"
   },
   "devDependencies": {
-    "@dmno/1password-plugin": "link:../packages/plugins/1password-plugin",
+    "@dmno/1password-plugin": "link:../packages/plugins/1password",
     "dmno": "link:../packages/core",
-    "@dmno/encrypted-vault-plugin": "link:../packages/plugins/encrypted-vault-plugin"
+    "@dmno/encrypted-vault-plugin": "link:../packages/plugins/encrypted-vault"
   }
 }

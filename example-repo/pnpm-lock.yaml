@@ -9,11 +9,11 @@ importers:
   .:
     devDependencies:
       '@dmno/1password-plugin':
-        specifier: link:../packages/plugins/1password-plugin
-        version: link:../packages/plugins/1password-plugin
+        specifier: link:../packages/plugins/1password
+        version: link:../packages/plugins/1password
       '@dmno/encrypted-vault-plugin':
-        specifier: link:../packages/plugins/encrypted-vault-plugin
-        version: link:../packages/plugins/encrypted-vault-plugin
+        specifier: link:../packages/plugins/encrypted-vault
+        version: link:../packages/plugins/encrypted-vault
       dmno:
         specifier: link:../packages/core
         version: link:../packages/core
@@ -21,8 +21,8 @@ importers:
   packages/api:
     dependencies:
       '@dmno/1password-plugin':
-        specifier: link:../../../packages/plugins/1password-plugin
-        version: link:../../../packages/plugins/1password-plugin
+        specifier: link:../../../packages/plugins/1password
+        version: link:../../../packages/plugins/1password
       '@koa/cors':
         specifier: ^4.0.0
         version: 4.0.0

@@ -1,8 +1,26 @@
 {
   "name": "dmno",
   "version": "0.0.0",
-  "description": "",
+  "description": "dmno is the best way to manage config / env vars in your entire stack",
+  "author": "dmno-dev",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dmno-dev/dmno.git",
+    "directory": "packages/core"
+  },
+  "bugs": "https://github.com/dmno-dev/dmno/issues",
+  "homepage": "https://dmno.dev",
+  "keywords": [
+    "dmno",
+    "config",
+    "dmno.dev",
+    "env vars",
+    "environment",
+    "process.env",
+    "configuration",
+    "secrets"
+  ],
   "scripts": {
     "clean": "rm -rf dist",
     "build": "tsup",
@@ -42,17 +60,6 @@
   "bin": {
     "dmno": "./dist/cli/commander-cli.mjs"
   },
-  "keywords": [
-    "dmno",
-    "config",
-    "dmno.dev",
-    "env vars",
-    "environment",
-    "process.env",
-    "configuration",
-    "secrets"
-  ],
-  "author": "",
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",

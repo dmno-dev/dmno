@@ -1,26 +1,25 @@
 {
-  "name": "@dmno/encrypted-vault-plugin",
-  "version": "1.0.0",
+  "name": "@dmno/1password-plugin",
+  "version": "0.0.0",
+  "description": "dmno plugin to pull secrets from 1password",
+  "author": "dmno-dev",
   "license": "MIT",
-  "description": "adds ability to store secrets securely (encrypted) committed to your repo",
-  "keywords": [
-    "dmno",
-    "encrypted",
-    "vault",
-    "env vars",
-    "environment variables",
-    "secrets",
-    "dmno plugin"
-  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dmno-dev/dmno.git",
-    "directory": "packages/plugins/encrypted-vault-plugin"
+    "directory": "packages/plugins/1password"
   },
-  "bugs": {
-    "url": "https://github.com/dmno-dev/dmno/issues"
-  },
-  "homepage": "https://dmno.dev",
+  "bugs": "https://github.com/dmno-dev/dmno/issues",
+  "homepage": "https://dmno.dev/docs/plugins/1password",
+  "keywords": [
+    "dmno",
+    "1password",
+    "config",
+    "env vars",
+    "environment variables",
+    "secrets",
+    "dmno-plugin"
+  ],
   "exports": {
     ".": {
       "default": "./dist/index.mjs"
@@ -34,14 +33,16 @@
     }
   },
   "files": [
-    "/dist"
+    "/dist",
+    "/scripts"
   ],
   "scripts": {
     "build": "tsup",
     "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
     "dev": "pnpm run build --watch",
-    "lint": "eslint src --ext .ts,.cjs",
-    "lint:fix": "pnpm run lint --fix"
+    "lint": "eslint src --ext .ts,.cjs,.mjs",
+    "lint:fix": "pnpm run lint --fix",
+    "postinstall": "node scripts/install-cli.mjs"
   },
   "devDependencies": {
     "dmno": "workspace:*",
@@ -50,16 +51,15 @@
     "@types/async": "^3.2.24",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^20.12.7",
+    "@types/unzip-stream": "^0.3.4",
     "tsup": "^8.0.2",
     "typescript": "^5.4.5"
   },
   "dependencies": {
     "dmno": "workspace:*",
-    "@dmno/encryption-lib": "workspace:*",
-    "@dmno/ts-lib": "workspace:*",
-    "@inquirer/prompts": "^4.3.0",
     "async": "^3.2.5",
-    "jsonc-parser": "^3.2.1",
-    "lodash-es": "^4.17.21"
+    "dotenv": "^16.4.5",
+    "lodash-es": "^4.17.21",
+    "unzip-stream": "^0.3.1"
   }
 }
