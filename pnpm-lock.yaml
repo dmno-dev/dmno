@@ -70,7 +70,7 @@ importers:
         version: 8.0.1
       fdir:
         specifier: ^6.1.1
-        version: 6.1.1(picomatch@4.0.2)
+        version: 6.1.1(picomatch@3.0.1)
       gradient-string:
         specifier: ^2.0.2
         version: 2.0.2
@@ -96,8 +96,8 @@ importers:
         specifier: ^0.8.0
         version: 0.8.0
       picomatch:
-        specifier: ^4.0.2
-        version: 4.0.2
+        specifier: ^3.0.1
+        version: 3.0.1
       read-yaml-file:
         specifier: ^2.1.0
         version: 2.1.0
@@ -246,7 +246,7 @@ importers:
         version: link:../core
       netlify-cli:
         specifier: ^17.1.0
-        version: 17.23.0(@types/node@20.12.7)
+        version: 17.23.0(@types/node@20.12.7)(picomatch@3.0.1)
       typedoc:
         specifier: ^0.25.12
         version: 0.25.13(typescript@5.4.5)
@@ -529,7 +529,7 @@ importers:
         version: link:../core
       netlify-cli:
         specifier: ^17.1.0
-        version: 17.23.0(@types/node@20.12.7)
+        version: 17.23.0(@types/node@20.12.7)(picomatch@3.0.1)
       tsup:
         specifier: ^8.0.2
         version: 8.0.2(postcss@8.4.38)(ts-node@10.9.2(@types/node@20.12.7)(typescript@5.4.5))(typescript@5.4.5)
@@ -6812,9 +6812,9 @@ packages:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
 
-  picomatch@4.0.2:
-    resolution: {integrity: sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg==}
-    engines: {node: '>=12'}
+  picomatch@3.0.1:
+    resolution: {integrity: sha512-I3EurrIQMlRc9IaAZnqRR044Phh2DXY+55o7uJ0V+hYZAcQYSuFWsc9q5PvyDHUSCe1Qxn/iBz+78s86zWnGag==}
+    engines: {node: '>=10'}
 
   pify@4.0.1:
     resolution: {integrity: sha512-uB80kBFb/tfd68bVleG9T5GGsGPjJrLAUpR5PZIrhBnIaRTQRjqdJSsIKkOP6OAIFbj7GOrcudc5pNjZ+geV2g==}
@@ -10152,7 +10152,7 @@ snapshots:
       yaml: 2.4.1
       yargs: 17.7.2
 
-  '@netlify/build@29.41.0(@opentelemetry/api@1.8.0)(@types/node@20.12.7)':
+  '@netlify/build@29.41.0(@opentelemetry/api@1.8.0)(@types/node@20.12.7)(picomatch@3.0.1)':
     dependencies:
       '@bugsnag/js': 7.22.7
       '@netlify/blobs': 7.3.0
@@ -10172,7 +10172,7 @@ snapshots:
       chalk: 5.3.0
       clean-stack: 4.2.0
       execa: 6.1.0
-      fdir: 6.1.1(picomatch@4.0.2)
+      fdir: 6.1.1(picomatch@3.0.1)
       figures: 5.0.0
       filter-obj: 5.1.0
       got: 12.6.1
@@ -13647,9 +13647,9 @@ snapshots:
     dependencies:
       pend: 1.2.0
 
-  fdir@6.1.1(picomatch@4.0.2):
+  fdir@6.1.1(picomatch@3.0.1):
     optionalDependencies:
-      picomatch: 4.0.2
+      picomatch: 3.0.1
 
   fecha@4.2.3: {}
 
@@ -15914,12 +15914,12 @@ snapshots:
 
   nested-error-stacks@2.1.1: {}
 
-  netlify-cli@17.23.0(@types/node@20.12.7):
+  netlify-cli@17.23.0(@types/node@20.12.7)(picomatch@3.0.1):
     dependencies:
       '@bugsnag/js': 7.22.7
       '@fastify/static': 6.12.0
       '@netlify/blobs': 7.3.0
-      '@netlify/build': 29.41.0(@opentelemetry/api@1.8.0)(@types/node@20.12.7)
+      '@netlify/build': 29.41.0(@opentelemetry/api@1.8.0)(@types/node@20.12.7)(picomatch@3.0.1)
       '@netlify/build-info': 7.13.2
       '@netlify/config': 20.12.2
       '@netlify/edge-bundler': 12.0.0(supports-color@9.4.0)
@@ -16595,7 +16595,7 @@ snapshots:
 
   picomatch@2.3.1: {}
 
-  picomatch@4.0.2: {}
+  picomatch@3.0.1: {}
 
   pify@4.0.1: {}
 
