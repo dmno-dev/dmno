@@ -39,7 +39,6 @@ export default defineDmnoWorkspace({
       description: 'publishable API key for PostHog',
       required: true,
     },
-    },
     GITHUB_TOKEN: {
       description: 'Personal github access token, used for changesets publishing',
       sensitive: true,
