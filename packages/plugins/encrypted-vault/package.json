@@ -1,6 +1,6 @@
 {
   "name": "@dmno/encrypted-vault-plugin",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "dmno plugin to store secrets encrypted in your repo",
   "author": "dmno-dev",
   "license": "MIT",
@@ -47,7 +47,9 @@
   },
   "devDependencies": {
     "dmno": "workspace:*",
+    "@dmno/encryption-lib": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
+    "@dmno/ts-lib": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "@types/async": "^3.2.24",
     "@types/lodash-es": "^4.17.12",
@@ -56,12 +58,12 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "dmno": "workspace:*",
-    "@dmno/encryption-lib": "workspace:*",
-    "@dmno/ts-lib": "workspace:*",
     "@inquirer/prompts": "^4.3.0",
     "async": "^3.2.5",
     "jsonc-parser": "^3.2.1",
     "lodash-es": "^4.17.21"
+  },
+  "peerDependencies": {
+    "dmno": "workspace:*"
   }
 }

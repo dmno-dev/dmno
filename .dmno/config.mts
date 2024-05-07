@@ -33,6 +33,10 @@ export default defineDmnoWorkspace({
     },
     GENERAL_CONTACT_EMAIL: {
       value: 'hello@dmno.dev',
+    },
+    GITHUB_TOKEN: {
+      description: 'Personal github access token, used for changesets publishing',
+      sensitive: true,
     }
   }
 });
