@@ -27,8 +27,8 @@ Then install deps via `pnpm`:
 
 ## Plugins
 
-- `plugins/1password-plugin` - DMNO plugin for 1Password - 
-- `plugins/encrypted-vault-plugin` - DMNO plugin for encrypted values
+- `plugins/1password` - DMNO plugin for 1Password - 
+- `plugins/encrypted-vault` - DMNO plugin for encrypted values
 
 ## Integrations
 - `integrations/astro` - DMNO integration for Astro

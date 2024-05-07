@@ -1,27 +1,27 @@
 {
   "name": "@dmno/nextjs-integration",
-  "version": "1.0.0",
-  "license": "MIT",
+  "version": "0.0.0",
   "description": "tools for integrating dmno into nextjs",
-  "keywords": [
-    "dmno",
-    "nextjs",
-    "next",
-    "next.js",
-    "plugin",
-    "env vars",
-    "environment variables",
-    "secrets"
-  ],
+  "author": "dmno-dev",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dmno-dev/dmno.git",
     "directory": "packages/integrations/nextjs"
   },
-  "bugs": {
-    "url": "https://github.com/dmno-dev/dmno/issues"
-  },
-  "homepage": "https://dmno.dev",
+  "bugs": "https://github.com/dmno-dev/dmno/issues",
+  "homepage": "https://dmno.dev/docs/integrations/nextjs",
+  "keywords": [
+    "dmno",
+    "nextjs",
+    "next",
+    "config",
+    "env vars",
+    "environment variables",
+    "secrets",
+    "integration",
+    "dmno-integration"
+  ],
   "exports": {
     ".": {
       "default": "./dist/index.mjs"

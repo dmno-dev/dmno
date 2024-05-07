@@ -1,24 +1,33 @@
 {
-  "name": "@dmno/monorepo-root",
+  "name": "root",
   "version": "0.0.0",
   "private": true,
-  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dmno-dev/core.git"
+  },
   "scripts": {
     "build": "turbo build",
     "build:libs": "turbo build --filter=\"!@dmno/docs-site\" --filter=\"!@dmno/signup-api\"",
+    "preinstall": "npx only-allow pnpm",
+    "prepare": "pnpm run build:libs",
     "dev": "turbo run dev --concurrency=40 --parallel --filter=\"!@dmno/docs-site\"",
     "lint": "turbo lint",
-    "prepare": "pnpm run build:libs"
+    "changeset:add": "changeset add",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish"
   },
-  "author": "",
-  "license": "MIT",
   "devDependencies": {
+    "@changesets/changelog-github": "^0.5.0",
+    "@changesets/cli": "^2.27.1",
     "dmno": "link:./packages/core",
+    "only-allow": "^1.2.1",
     "turbo": "^1.13.3",
     "typescript": "^5.4.5"
   },
   "engines": {
-    "node": "^18.0.0 || >=20.0.0"
+    "node": "^18.17.1 || ^20.3.0 || >=21.0.0",
+    "pnpm": ">=8.15.5"
   },
-  "packageManager": "pnpm@8.15.5+sha256.4b4efa12490e5055d59b9b9fc9438b7d581a6b7af3b5675eb5c5f447cee1a589"
+  "packageManager": "pnpm@8.15.5"
 }

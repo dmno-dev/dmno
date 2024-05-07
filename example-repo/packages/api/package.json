@@ -17,7 +17,7 @@
     "migrate": "dmno run -- prisma migrate"
   },
   "dependencies": {
-    "@dmno/1password-plugin": "link:../../../packages/plugins/1password-plugin",
+    "@dmno/1password-plugin": "link:../../../packages/plugins/1password",
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",
     "axios": "^0.27.2",
