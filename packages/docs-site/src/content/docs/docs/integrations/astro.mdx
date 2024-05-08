@@ -105,7 +105,7 @@ const mySecretItem = DMNO_CONFIG.SECRET_API_KEY;
 const nonSecretItem = DMNO_PUBLIC_CONFIG.PUBLISHABLE_ITEM;
 ```
 
-### Client vs Server/SSR/Security/etc 
+### Client vs server/SSR/security/etc 
 
 In theory, you should only access `DMNO_PUBLIC_CONFIG` on the _client_, and you can access both `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG` on the server.
 
@@ -127,7 +127,7 @@ Additionally, this integration throws an error during `astro build` if you try t
 
 ---
 
-## Common Recipes
+## Common recipes
 
 ### Using env vars within `astro.config.*`
 It's often useful to be able to access configuration / env vars within your astro config.

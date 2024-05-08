@@ -1,5 +1,5 @@
 ---
-title: Schema Authoring Guide
+title: Schema authoring guide
 description: Learn how to write a full DMNO schema for your project and unlock the full power of DMNO's config management.
 ---
 
@@ -9,7 +9,7 @@ If you haven't already, follow our [Quickstart](/docs/get-started/quickstart) gu
 
 {/* TODO add link to example repo? */}
 
-## Project Structure
+## Project structure
 
 Using DMNO, we define a "configuration schema" for your entire project. We break that configuration up to live alongside each of the services in your code, and provide ways for them to reference each other as needed. Each service config is defined in a `config.mts` Typescript file that lives in a `.dmno` directory.
 
@@ -302,7 +302,7 @@ export default defineDmnoService({
 
 {/* skiping coercion here for now  */}
 
-### Secrets & Security
+### Secrets & security
 Items can be marked as `sensitive: true` and they will be treated accordingly. That means:
 
 - We will mask their values when logging them to the console via the `dmno` CLI
