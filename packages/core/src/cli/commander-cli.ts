@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+// hashbang needed to get npm generated ".bin/dmno" to work with esm imports
+
 /* eslint-disable import/first */
 // import first - we add global exception handler here
 const startBoot = new Date().getTime();

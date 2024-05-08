@@ -10,7 +10,7 @@ import Debug from 'debug';
 
 const debug = Debug('dmno:find-services');
 
-async function readJsonFile(path: string) {
+export async function readJsonFile(path: string) {
   const raw = await fs.promises.readFile(path);
   const obj = JSON.parse(raw.toString());
   return obj;
@@ -86,9 +86,9 @@ export async function findDmnoServices(includeUnitialized = false): Promise<Scan
     if (cwd === '') {
       console.log(kleur.red('Unable to find detect your package manager and workspace root!'));
       if (possibleRootPackage) {
-        console.log(`But it looks like your workspace root might be\n${kleur.italic(possibleRootPackage)}`);
+        console.log(`But it looks like your workspace root might be ${kleur.green().italic(possibleRootPackage)}`);
       }
-      console.log('We look for lock files (ex: package-lock.json) so you may just need to run a dependency install');
+      console.log('We look for lock files (ex: package-lock.json) so you may just need to run a dependency install (ie `npm install`)');
       process.exit(1);
     }
   }
