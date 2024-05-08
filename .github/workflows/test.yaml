@@ -54,11 +54,11 @@ jobs:
     - name: Init dmno
       run: |
         if [ "${{ matrix.package-manager }}" = "npm" ]; then
-          npm exec -- dmno init
+          npm exec -- dmno init --silent
         elif [ "${{ matrix.package-manager }}" = "pnpm" ]; then
-          pnpm exec dmno init
+          pnpm exec dmno init --silent
         elif [ "${{ matrix.package-manager }}" = "yarn" ]; then
-          yarn exec dmno init
+          yarn exec dmno init --silent
         fi
 
     - name: Verify .dmno/ dir exists
