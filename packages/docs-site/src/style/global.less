@@ -24,8 +24,14 @@ h5 {
 :root {
   --cp-s: 89%;
   --cp-l: 65%;
+  --cp-l2: 55%;
+  --cp-s-dark: 65%;
+  --cp-l-dark: 10%;
   --cp-t1: 50%;
-  --cp-t2: 10%;
+  --cp-t2: 15%;
+
+  --brand-white: #FFF;
+  --brand-black: #000;
 
   // todo - generate these programatically...
   --brand-red: hsl(0, var(--cp-s), var(--cp-l));
@@ -36,6 +42,24 @@ h5 {
   --brand-blue: hsl(230, var(--cp-s), var(--cp-l));
   --brand-purple: hsl(266, var(--cp-s), var(--cp-l));
   --brand-pink: hsl(299, var(--cp-s), var(--cp-l));
+
+  --brand-red--text: hsl(0, var(--cp-s), var(--cp-l));
+  --brand-orange--text: hsl(25, var(--cp-s), var(--cp-l));
+  --brand-yellow--text: hsl(57, var(--cp-s), var(--cp-l));
+  --brand-green--text: hsl(119, var(--cp-s), var(--cp-l));
+  --brand-cyan--text: hsl(184, var(--cp-s), var(--cp-l));
+  --brand-blue--text: hsl(230, var(--cp-s), var(--cp-l));
+  --brand-purple--text: hsl(266, var(--cp-s), var(--cp-l));
+  --brand-pink--text: hsl(299, var(--cp-s), var(--cp-l));
+
+  --brand-red--dark: hsl(0, var(--cp-s-dark), var(--cp-l-dark));
+  --brand-orange--dark: hsl(25, var(--cp-s-dark), var(--cp-l-dark));
+  --brand-yellow--dark: hsl(57, var(--cp-s-dark), var(--cp-l-dark));
+  --brand-green--dark: hsl(119, var(--cp-s-dark), var(--cp-l-dark));
+  --brand-cyan--dark: hsl(184, var(--cp-s-dark), var(--cp-l-dark));
+  --brand-blue--dark: hsl(230, var(--cp-s-dark), var(--cp-l-dark));
+  --brand-purple--dark: hsl(266, var(--cp-s-dark), var(--cp-l-dark));
+  --brand-pink--dark: hsl(299, var(--cp-s-dark), var(--cp-l-dark));
 
   --brand-red--t1: hsla(0, var(--cp-s), var(--cp-l), var(--cp-t1));
   --brand-orange--t1: hsla(25, var(--cp-s), var(--cp-l), var(--cp-t1));
@@ -54,7 +78,24 @@ h5 {
   --brand-blue--t2: hsla(230, var(--cp-s), var(--cp-l), var(--cp-t2));
   --brand-purple--t2: hsla(266, var(--cp-s), var(--cp-l), var(--cp-t2));
   --brand-pink--t2: hsla(299, var(--cp-s), var(--cp-l), var(--cp-t2));
+
+  --tile-drop-shadow: hsla(0, 0%, 100%, 30%);
 }
+
+// make colors a little darker when being used for text on light mode
+:root[data-theme='light'] {
+  --brand-red--text: hsl(0, var(--cp-s), var(--cp-l2));
+  --brand-orange--text: hsl(25, var(--cp-s), var(--cp-l2));
+  --brand-yellow--text: hsl(57, var(--cp-s), var(--cp-l2));
+  --brand-green--text: hsl(119, var(--cp-s), var(--cp-l2));
+  --brand-cyan--text: hsl(184, var(--cp-s), var(--cp-l2));
+  --brand-blue--text: hsl(230, var(--cp-s), var(--cp-l2));
+  --brand-purple--text: hsl(266, var(--cp-s), var(--cp-l2));
+  --brand-pink--text: hsl(299, var(--cp-s), var(--cp-l2));
+
+  --tile-drop-shadow: hsla(0, 0%, 0%, 60%);
+}
+
 
 // starlight css var customizations 
 :root {
@@ -163,6 +204,33 @@ starlight-file-tree,
       --code-background: hsl(0, 0%, 8%) !important;
     }
   }
+
+  .ec-line.tm-label .code::before {
+    padding-left: 6px !important;
+    background: rgba(0, 0, 0, .3) !important;
+
+    html[data-theme='light'] & {
+      background: rgba(0, 0, 0, .2) !important;
+
+    }
+  }
+
+  .ec-line.ins.tm-label .code::before {
+    color: var(--brand-green) !important;
+
+    html[data-theme='light'] & {
+      color: var(--brand-green--dark) !important;
+    }
+  }
+
+  .ec-line.del.tm-label .code::before {
+    color: var(--brand-red) !important;
+
+    html[data-theme='light'] & {
+      color: var(--brand-red--dark) !important;
+    }
+  }
+
 }
 
 
@@ -310,4 +378,17 @@ starlight-file-tree,
     margin-left: 50%;
   }
 
+}
+
+
+// TODO add variants - make easily reusable
+.gradient-text {
+  --color-one: var(--brand-orange--text);
+  --color-two: var(--brand-pink--text);
+
+
+  background-color: var(--color-one);
+  background: linear-gradient(30deg, var(--color-one) 0%, var(--color-two) 100%);
+  background-clip: text;
+  color: transparent;
 }

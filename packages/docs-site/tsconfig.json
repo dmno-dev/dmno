@@ -6,6 +6,7 @@
     "src/**/*.d.ts",
     "src/**/*.mdx",
     "src/**/*.astro",
+    "src/**/*.vue",
 
     "astro.config.ts",
 

@@ -18,7 +18,6 @@ import SunIcon from "~icons/material-symbols/light-mode?raw";
 // @ts-ignore
 import MoonIcon from "~icons/material-symbols/dark-mode?raw";
 
-import { onMounted } from 'vue';
 function toggleTheme() {
   const currentTheme = document.documentElement.dataset.theme;
   const newTheme = currentTheme === 'light' ? 'dark' : 'light';
@@ -42,11 +41,9 @@ function toggleTheme() {
     position: absolute;
   }
 
-  --edge-color: rgba(255,255,255,.3);
   --hover-offset: -2px;
 
   html[data-theme="light"] & {
-    --edge-color: rgba(0,0,0,.6);
     --hover-offset: 2px; // have to reverse because of 3d flip
   }
 
@@ -55,7 +52,7 @@ function toggleTheme() {
       > div {
         margin-top: -2px;
         margin-left: var(--hover-offset);
-        box-shadow: 2px 2px 0px var(--edge-color);
+        box-shadow: 2px 2px 0px var(--tile-drop-shadow);
       }
     }
   }
