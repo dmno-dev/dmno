@@ -85,7 +85,7 @@ function noopMessage(msg: string) {
 }
 
 
-export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, servicePath: string) {
+export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, servicePath: string, silent?: boolean) {
   const rootPath = workspaceInfo.workspacePackages[0].path;
   const { packageManager } = workspaceInfo;
 
@@ -150,7 +150,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     const recommendedName = service.isRoot ? 'root' : service.name.replace(/^@[^/]+\//, '');
 
     // TODO: better cli input with more options for dynamic help info
-    const serviceName = await input({
+    const serviceName = silent ? recommendedName : await input({
       message: 'What do you want to name this service?',
       default: recommendedName,
       validate(value) {

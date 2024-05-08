@@ -30,9 +30,11 @@ const TERMINAL_COLS = process.stdout.columns - 10 || 100;
 const program = new DmnoCommand('init')
   .summary('Sets up dmno')
   .description('Sets up dmno in your repo, and can help add to new packages within your monorepo - safe to run multiple times')
+  .option('--silent', 'automatically select defaults and do not prompt for any input')
   .example('dmno init', 'Set up dmno and uses interactive menus to make selections');
 
 program.action(async (opts: {
+  silent?: boolean,
 }, thisCommand) => {
   console.log(DMNO_DEV_BANNER);
   // console.log(kleur.gray('let us help you connect the dots ● ● ●'));
@@ -67,7 +69,7 @@ program.action(async (opts: {
   }
   const rootDmnoFolderExists = await pathExists(`${rootPackage.path}/.dmno`);
   // we may change this logic later?
-  const showOnboarding = workspaceInfo.autoSelectedPackage.isRoot && !rootDmnoFolderExists;
+  const showOnboarding = (workspaceInfo.autoSelectedPackage.isRoot && !rootDmnoFolderExists) || !opts.silent;
 
   // if in a specific service, we'll just init that service
   if (!workspaceInfo.autoSelectedPackage.isRoot) {
@@ -89,20 +91,22 @@ program.action(async (opts: {
     }
 
     // first initialize in root
-    await initDmnoForService(workspaceInfo, rootPackage.path);
+    await initDmnoForService(workspaceInfo, rootPackage.path, opts.silent);
     // then let user select service(s) to init
     console.log();
-    const installPackagePaths = await checkbox({
-      message: 'Which service(s) would you like to initialize as dmno services?\n',
-      choices: workspaceInfo.workspacePackages.slice(1).map((packageInfo) => {
-        return {
-          value: packageInfo.path,
-          name: `${packageInfo.name} - ${kleur.italic().gray(packageInfo.relativePath)}`,
-        };
-      }),
-    });
-    for (const packagePath of installPackagePaths) {
-      await initDmnoForService(workspaceInfo, packagePath);
+    if (!opts.silent) {
+      const installPackagePaths = await checkbox({
+        message: 'Which service(s) would you like to initialize as dmno services?\n',
+        choices: workspaceInfo.workspacePackages.slice(1).map((packageInfo) => {
+          return {
+            value: packageInfo.path,
+            name: `${packageInfo.name} - ${kleur.italic().gray(packageInfo.relativePath)}`,
+          };
+        }),
+      });
+      for (const packagePath of installPackagePaths) {
+        await initDmnoForService(workspaceInfo, packagePath);
+      }
     }
   }
 
