@@ -1,7 +1,6 @@
 --- 
 title: What is DMNO?
 description: DMNO is a suite of developer tools that allow you configure your applications with type-safe, schema-driven environment variables.
-next: "Get Started"
 ---
 
 DMNO (👂 "domino") is a suite of developer tools that allow you configure, run, and deploy your applications. We help you connect the dots from local development all the way to production.
@@ -10,45 +9,58 @@ At the core is **DMNO Config** - the best way to deal with configuration / envir
 - a unified system to manage your config across _all_ of your services
 - validations, coercion logic, and full type safety
 - built in documentation, and magical IDE auto-completion
-- secure handling of your secrets, including leak detection (and prevention)
-- ability to sync secrets with various backends (ex: [1password](/docs/plugins/1password)) or [encrypt](/docs/plugins/encrypted-vault) them within your repo - _no more insecurely passing around `.env` files via Slack_ 🎉
+- secure handling of your secrets, including leak detection and prevention
+- ability to sync secrets with various backends (e.g., [1Password](/docs/plugins/1password)) or [encrypt](/docs/plugins/encrypted-vault) them within your repo - _no more insecurely passing around `.env` files via Slack_ 🎉
 - drop-in [integrations](/docs/integrations/overview) to use with your favorite frameworks
 - extensible type and plugin system to customize behavior
 
-While this tool is in itself incredibly useful (and usable on its own), it also forms the foundation for further tools to help you run your applications locally during development (**DMNO Dev**) and deploy them to the cloud (**DMNO Deploy**) - which will be released later in 2024.
+While this tool is in itself incredibly useful and usable on its own, it also forms the foundation for further tools to help you run your applications locally during development (**DMNO Dev**) and deploy them to the cloud (**DMNO Deploy**) - which will be released later in 2024.
 
-{/* > INSERT SCREENSHOT */}
+{/* > INSERT ROADMAP? */}
 
 
-## Who is DMNO for?
-
-The short answer is: anyone who uses environment variables to configure their applications - which, at this point, is basically everyone! Initially those who write Typescript (or Javascript) will benefit most, but almost anyone would benefit from DMNO's schema and validation system and it is specifically designed to handle polyglot use cases. Additionally, while working in a monorepo is by no means a requirement to use DMNO, it specifically alleviates some of the problems involved with dealing with config in a monorepo setting.
-
-We hope DMNO will become the default way to deal with config within javascript/typescript - but we have no plans to stop there!
+## Who is DMNO Config for?
 
 :::note[We designed DMNO for everyone]
 From a single developer working in a monolith to a huge team wrangling a sprawling monorepo.
 :::
 
+- **Solo developers** - who want the added safety and convenience of a full schema and validation system for their config.
+- **Teams** - who want to accelerate development work by avoiding entire classes of bugs related to config, and have a unified system to manage, and share their config across all of their services.
 
-## Why use DMNO instead of ____ ? 
+The short answer is: anyone who uses environment variables to configure their applications - which, at this point, is basically everyone! Initially those who write TypeScript or JavaScript will benefit most, but almost anyone would benefit from DMNO's schema and validation system and it is specifically designed to handle polyglot use cases. Additionally, while working in a monorepo is by no means a requirement to use DMNO, it specifically alleviates some of the problems involved with dealing with config in a monorepo setting.
 
-TL;DR, DMNO is: 
+We hope DMNO will become the default way to deal with config within JavaScript/Typescript - but we have no plans to stop there!
+
+## When should I use DMNO Config?
+
+- **When you're tired of managing `.env` files** - DMNO provides a better way to manage your environment variables, including a full schema, validation, and coercion logic.
+- **When you're tired of debugging config issues** - DMNO provides actionable error messages so you can avoid entire classes of config-related bugs.
+- **When you're tired of passing around `.env` files** - DMNO provides a secure way to handle your secrets, including leak detection, prevention, and encrypted storage.
+- **When you're tired of writing the same config logic over and over** - DMNO provides a unified system to manage your config across _all_ of your services.
+- **When you're tired of not having documentation for your config** - DMNO provides built in documentation, and magical IDE auto-completion.
+- **When you're tired of not having type safety for your config** - The rest of your code is typed, why not your config?
+- **When you're getting started on a new project** - DMNO is a great way to start a new project, as it will help you avoid common pitfalls and provide a solid foundation for your config.
+
+
+## Why use DMNO Config instead of ____ ? 
+
+TL;DR, DMNO Config is: 
 - Strongly typed
 - Schema-driven
 - Extensible (via custom types and plugins)
 - Incrementally adoptable (use as many or as few features as you like)
 {/* - A full suite of tools (not just config management)* */}
 
-Look, we realize there are no shortage of tools out there to help manage your environment variables. And for most people, it's a set it up and forget it type of thing. But even if it's not top of mind at the moment, we guarantee it comes up _regularly_ - like each time you onboard a new team member, set up a new internal service, add a new external SaaS, or someone forgets to update some API key in the 12 different external systems.
+We realize there are no shortage of tools out there to help manage your environment variables. And for most people, it's a set it up and forget it type of thing. But even if it's not top of mind at the moment, we guarantee it comes up _regularly_ - like each time you onboard a new team member, set up a new internal service, add a new external SaaS, or someone forgets to update some API key in the 12 different external systems.
 
 Or maybe you think you don't need a tool to help manage this stuff at all. We get it - and that's why we know we must build a tool _an order of magnitude_ better than the alternatives, and that's exactly what we're doing.
 
 We aim to make your config the bedrock of your stack, which will vastly improve your ability to debug configuration and avoid entire classes of bugs. A full schema of your config will also unlock some very interesting things in the not-too-distant future.
 
-## Current Requirements
+## Current requirements
 
-DMNO requires the following: 
+DMNO Config requires the following: 
 
 - Node.js LTS (currently v20.x)
 - One of the following package managers:
@@ -61,9 +73,9 @@ DMNO requires the following:
   - yarn workspaces
 
 Optionally: 
-- Typescript
+- TypeScript
 
 :::tip
-While Typescript is not required in your applications, you will get the full feature set (ex. Intellisense and inline docs) of DMNO by using it in a Typescript project. Note that our `config.mts` files themselves are written in Typescript, so you'll want to use an editor that at least supports it. 
+While TypeScript is not required in your applications, you will get the full feature set (e.g., IntelliSense and inline docs) of DMNO by using it in a TypeScript project. Note that our `config.mts` files themselves are written in TypeScript, so you'll want to use an editor that at least supports it. 
 :::
 

@@ -1,5 +1,5 @@
 ---
-title: Incremental Adoption
+title: Incremental adoption
 description: DMNO allows you to adopt it incrementally, both in terms of the services you use it with and the features you use within those services.
 ---
 
@@ -18,12 +18,12 @@ There are a few different ways you can adopt DMNO incrementally:
   - Add descriptions to items to [automatically attach documentation](/docs/guides/schema#docs--intellisense)
   - Add [specific types](/docs/guides/schema#data-types--extends) to each of the config items
   - Then add custom [validation rules](/docs/guides/schema#validations--required-config), coercion, and custom types
-  - Set [values](/docs/guides/schema#setting-item-values) from the schema itself (functions, switching [based on environment](/docs/guides/multi-env))
+  - Set [values](/docs/guides/schema#setting-item-values) from the schema itself (e.g., functions, switching [based on environment](/docs/guides/multi-env))
   - Add [plugins](/docs/plugins/overview) to fetch the config values from a secure source
 
 **In your code**: 
-  - We will support your existing methods of using env vars (ex. `process.env` in Node.js, `import.meta.env` in Vite, etc) while you migrate to DMNO, by reinjecting your resolved config items (as strings). You won't get type completion, full intellisense, and you won't get an error if you try to access a variable that doesn't exist, unfortunately.
-  - Once you've added DMNO to your project, you can start using the `DMNO_CONFIG`/`DMNO_PUBLIC_CONFIG` object in your code to access your config items. This will give you full type completion and intellisense, and actionable error messages if you try to access a variable that doesn't exist or fails validation.
+  - We will support your existing methods of using env vars (e.g., `process.env` in Node.js, `import.meta.env` in Vite, etc) while you migrate to DMNO, by reinjecting your resolved config items as strings. You won't get type completion, full IntelliSense, and you won't get an error if you try to access a variable that doesn't exist, unfortunately.
+  - Once you've added DMNO to your project, you can start using the `DMNO_CONFIG`/`DMNO_PUBLIC_CONFIG` object in your code to access your config items. This will give you full type completion and IntelliSense, and actionable error messages if you try to access a variable that doesn't exist or fails validation.
   - You can use `dmno run` to run your services with DMNO, and use `dmno dev` while you're actively working on your schema and your apps/services will autorefresh when you make changes to your schema.
 
 

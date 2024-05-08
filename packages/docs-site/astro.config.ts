@@ -47,7 +47,6 @@ export default defineConfig({
         }),
         starlightLinksValidator(),
       ],
-      pagination: false,
       expressiveCode: {
       },
       components: {
@@ -120,7 +119,7 @@ export default defineConfig({
               link: '/docs/guides/multi-env',
             },
             {
-              label: 'Dynamic vs static config',
+              label: 'Dynamic vs Static Config',
               link: '/docs/guides/dynamic-config',
             },
           ],
@@ -157,7 +156,7 @@ export default defineConfig({
             label: 'Vite',
             link: '/docs/integrations/vite/',
           }, {
-            label: 'Node.js (Express, Koa, etc.)',
+            label: 'Node.js',
             link: '/docs/integrations/node/',
           },
           // {

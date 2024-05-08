@@ -1,5 +1,5 @@
 ---
-title: DMNO Base Types
+title: DMNO base types
 description: DMNO comes with a comprehensive set of types to cover the majority of use cases. These types are used when defining your config schema and can be extended to create more application specific types as needed.
 next: Helper Methods
 ---
@@ -8,7 +8,7 @@ import { Tabs, TabItem, Code } from "@astrojs/starlight/components";
 import TabbedTypeSettings from '@/components/TabbedTypeSettings.astro';
 
 
-## Primitive Types
+## Primitive types
 
 DMNO comes with a comprehensive set of types to cover the majority of use cases. 
 
@@ -21,7 +21,7 @@ See [_creating your own types_](/docs/reference/helper-methods/#createdmnodataty
 
 `DmnoBaseTypes.string({ settingsSchema? })`
 
-DMNO Built-in data type for Strings. Includes the following (optional) settings: 
+DMNO Built-in data type for Strings. Includes the following optional settings: 
 
 <TabbedTypeSettings 
   typeName = "StringDataTypeSettings"
@@ -57,7 +57,7 @@ export default defineDmnoService({
 
 `DmnoBaseTypes.number({ settingsSchema? })`
 
-DMNO Built-in data type for Numbers. Includes the following (optional) settings: 
+DMNO Built-in data type for Numbers. Includes the following optional settings: 
 
 <TabbedTypeSettings 
   typeName = "NumberDataTypeSettings"
@@ -106,7 +106,7 @@ export default defineDmnoService({
 
 `DmnoBaseTypes.Enum({ settingsSchema? })`
 
-DMNO Built-in data type for Enums. Includes the following (optional) settings: 
+DMNO Built-in data type for Enums. Includes the following optional settings: 
 
 ```typescript
 type settingsSchema = {
@@ -386,7 +386,7 @@ export default defineDmnoService({
 
 ### `NodeEnvType` 
 
-DMNO Built-in data type for Node Environment variables, built using `Enum`. 
+DMNO Built-in data type for `NODE_ENV`, built using `Enum`. 
 
 Its definition looks like this:
 ```javascript

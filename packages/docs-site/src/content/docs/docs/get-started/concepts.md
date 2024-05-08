@@ -16,11 +16,11 @@ The top level folder of the repo. In the monolithic case, this is where all of y
 
 ### Service
 
-Within a monorepo, this is a workspace package that uses some config, and usually is a runnable/deployable chunk of your system. It could be an app, a site, a microservice, or occasionally even a shared library (if it uses config). In the DMNO world, these are all considered "services".
+Within a monorepo, this is a workspace package that uses some config, and usually is a runnable/deployable chunk of your system. It could be an app, a site, a microservice, or occasionally even a shared library, if it uses config. In the DMNO world, these are all considered "services".
 
 ### Pick
 
-When you reach into a parent (or sibling), you "pick" a config item. By default, any item from the parent can be _picked_ by a child. Additionally, any _output_ (config items with `expose: true`) of a sibling can be picked by any other service.
+When you reach into a parent or sibling, you "pick" a config item. By default, any item from the parent can be _picked_ by a child. Additionally, any _output_ (e.g., config items with `expose: true`) of a sibling can be picked by any other service.
 
 ### Plugin
 
