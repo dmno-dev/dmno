@@ -54,7 +54,7 @@ import TabbedCode from '@/components/TabbedCode.astro';
 
 6. ### **Use `DMNO_CONFIG` to access your config** 
 
-     We recommend migrating to `DMNO_CONFIG` as it provides helpful improvements like Typescript autocompletion and Intellisense.
+     We recommend migrating to `DMNO_CONFIG` as it provides helpful improvements like TypeScript autocompletion and IntelliSense.
       
     For example:
     ```diff lang="ts" ins="DMNO_CONFIG."
@@ -68,7 +68,7 @@ import TabbedCode from '@/components/TabbedCode.astro';
       const myConfigNum = DMNO_CONFIG.SOME_NUMBER;
       const IS_PROD = DMNO_CONFIG.NODE_ENV === 'production';
     ```
-    {/* TODO maybe include gif of Intellisense */}
+    {/* TODO maybe include gif of IntelliSense */}
 
     You _could_ continue to use `process.env`/`import.meta.env` to access your config and still benefit from DMNO's validation logic. But, `DMNO_CONFIG` gives you the full benefits of DMNO.
 

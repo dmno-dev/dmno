@@ -11,7 +11,7 @@ If you haven't already, follow our [Quickstart](/docs/get-started/quickstart) gu
 
 ## Project structure
 
-Using DMNO, we define a "configuration schema" for your entire project. We break that configuration up to live alongside each of the services in your code, and provide ways for them to reference each other as needed. Each service config is defined in a `config.mts` Typescript file that lives in a `.dmno` directory.
+Using DMNO, we define a "configuration schema" for your entire project. We break that configuration up to live alongside each of the services in your code, and provide ways for them to reference each other as needed. Each service config is defined in a `config.mts` TypeScript file that lives in a `.dmno` directory.
 
 You'll always have a `.dmno/config.mts` file at the root of your project, and if you are working in a monorepo, you'll have another `.dmno/config.mts` in each of your "services" that require configuration. You may have some workspace packages that are purely shared libraries, and don't have any configuration. These do not need a `.dmno` folder.
 
@@ -329,8 +329,8 @@ export default defineDmnoService({
 
 
 
-### Docs & Intellisense
-DMNO lets you attach additional information to items that serve as inline documentation about the item. This data is also used to generate very rich Typescript JSDoc comments for your config - giving you and your team ✨ magical IDE superpowers.
+### Docs & IntelliSense
+DMNO lets you attach additional information to items that serve as inline documentation about the item. This data is also used to generate very rich TypeScript JSDoc comments for your config - giving you and your team ✨ magical IDE superpowers.
 
 :::tip
 Some of these settings make more sense within the context of authoring reusable types, but they are all always available.
@@ -361,7 +361,7 @@ export default defineDmnoService({
 });
 ```
 
-An example of how the generated types show up with VSCode's Intellisense:
+An example of how the generated types show up with VSCode's IntelliSense:
 ![Intellisense demo](../../../../assets/docs-images/intellisense-demo.png)
 
 
