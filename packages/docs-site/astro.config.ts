@@ -34,6 +34,9 @@ export default defineConfig({
       customCss: [
         './src/style/global.less',
       ],
+      editLink: {
+        baseUrl: 'https://github.com/dmno-dev/dmno/edit/main/packages/docs-site/',
+      },
       plugins: [
         starlightBlog({
           title: '.blog/',
