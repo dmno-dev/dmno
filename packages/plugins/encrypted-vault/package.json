@@ -64,6 +64,6 @@
     "lodash-es": "^4.17.21"
   },
   "peerDependencies": {
-    "dmno": "workspace:*"
+    "dmno": "^0"
   }
 }
