@@ -47,7 +47,6 @@ export default defineConfig({
         }),
         starlightLinksValidator(),
       ],
-      pagination: false,
       expressiveCode: {
       },
       components: {
@@ -157,7 +156,7 @@ export default defineConfig({
             label: 'Vite',
             link: '/docs/integrations/vite/',
           }, {
-            label: 'Node.js (Express, Koa, etc.)',
+            label: 'Node.js',
             link: '/docs/integrations/node/',
           },
           // {

@@ -18,7 +18,7 @@ Run this in the root if you want the plugin to be shared, otherwise run it in th
 
 ## Initialize the plugin
 
-Initialize the plugin in the root (or service if not shared). Note the `vault/prod` alias, which we can refer to in other services or in the CLI. This is useful if you have multiple vaults.
+Initialize the plugin in the root, or service if not shared. Note the `vault/prod` alias, which we can refer to in other services or in the CLI. This is useful if you have multiple vaults.
 
 Also, note the `configPath` function. This is a helper function that will look up the value of the key that contains the key used to encrypt/decrypt the vault. This is useful for keeping the key out of the codebase. It will need to live in your `.env.local` file, or in an environment variable.
 
@@ -97,7 +97,7 @@ Add encrypted values to the vault:
 <TabbedCode command="dmno plugin -p vault -- rotate-key" />
 
 This will:
-- generate a new key, and share it (similar to the initial setup)
+- generate a new key, and share it, similar to the initial setup
 - re-encrypts all the values in the vault with the new key
 
 

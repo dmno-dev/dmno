@@ -8,11 +8,11 @@ import AstroLogo from "~icons/logos/astro";
 import TabbedCode from '@/components/TabbedCode.astro';
 import BugReportLink from '@/components/BugReportLink.astro';
 
-At DMNO we _love_ Astro (this very site is built with it). That's why we're very excited to make it easier (and safer) to use environment variables in all of your Astro apps, whether it's on the client or the server!
+At DMNO we _love_ Astro. This very site is built with it! That's why we're very excited to make it easier and safer to use environment variables in all of your Astro apps, whether it's on the client or the server.
 
 ## Setup
 
-### Install the dmno astro integration
+### Install the `dmno` astro integration
 
 Using astro's `add` command will automatically install dependencies and update your astro config.
 
@@ -56,7 +56,7 @@ See our [Schema Guide](/docs/guides/schema) for the specifics of how to write yo
 
 ### Set up Typescript
 
-Astro is built with TypeScript, and so is DMNO. This means that you get full type completion and intellisense for your config items. You just need to make sure the typescript compiler knows about them
+Astro is built with TypeScript, and so is DMNO. This means that you get full type completion and Intellisense for your config items. You just need to make sure the Typescript compiler knows about them
 
 By default, astro's generated tsconfig does not explicitly include any specific files, but to get `DMNO_CONFIG` autocompletion working everywhere, we'll have to specify the files we want to include, as well as reference the generated types.
 
@@ -92,13 +92,13 @@ DMNO globally injects your config into your application. You can access it via:
 - `DMNO_CONFIG` - includes _all_ of your config items
 - `DMNO_PUBLIC_CONFIG` - includes only items not marked with `sensitive: true`
 
-You can access these (with full type-safety and autocompletion) in templates and code.
+You can access these with full type-safety and autocompletion in templates and code.
 
 :::tip[Why globals?]
 It's really no different than using `process.env` or `import.meta.env` - but by using our own variables, we can provide a more consistent experience and do some magic ✨
 :::
 
-Now in your application code you'll have access to a global object with all of your _public_ config items (those which aren't marked `sensitive: true` ) called `DMNO_PUBLIC_CONFIG`. 
+Now in your application code you'll have access to a global object with all of your _public_ config items (i.e., those which aren't marked `sensitive: true` ) called `DMNO_PUBLIC_CONFIG`. 
 
 ```js
 const mySecretItem = DMNO_CONFIG.SECRET_API_KEY;
@@ -119,7 +119,7 @@ So, we make it easy for you:
 
 ### Static vs dynamic config
 
-DMNO gives you explicit control over how your config items are treated - whether they will be replaced into your bundled code at build time (static), or reloaded at boot time (dynamic). See the [dynamic config guide](/docs/guides/dynamic-config) for more details.
+DMNO gives you explicit control over how your config items are treated - whether they will be replaced into your bundled code at build time (i.e., static), or reloaded at boot time (i.e., dynamic). See the [dynamic config guide](/docs/guides/dynamic-config) for more details.
 
 Client-side loading of dynamic config is automatically enabled if you are not using `output: 'static'` mode and you have non-sensitive dynamic config items in your schema. It will be fetched on-demand. So, if you don't use those items on the client, that's also fine. This integration will automatically inject the API route required to fetch public+dynamic config.
 

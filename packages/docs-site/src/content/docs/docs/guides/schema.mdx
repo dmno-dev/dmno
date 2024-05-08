@@ -1,12 +1,6 @@
 ---
 title: Schema Authoring Guide
 description: Learn how to write a full DMNO schema for your project and unlock the full power of DMNO's config management.
-prev: 
-  link: /docs/get-started/quickstart
-  label: Quickstart
-next:
-  link: /docs/integrations/overview
-  label: Integrations
 ---
 
 import { FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
@@ -17,7 +11,7 @@ If you haven't already, follow our [Quickstart](/docs/get-started/quickstart) gu
 
 ## Project Structure
 
-Using DMNO, we define a "configuration schema" for your entire project. We break that configuration up to live alongside each of the services in your code, and provide ways for them to reference each other as needed. Each service config is defined in a `config.mts` (typescript) file that lives in a `.dmno` directory.
+Using DMNO, we define a "configuration schema" for your entire project. We break that configuration up to live alongside each of the services in your code, and provide ways for them to reference each other as needed. Each service config is defined in a `config.mts` Typescript file that lives in a `.dmno` directory.
 
 You'll always have a `.dmno/config.mts` file at the root of your project, and if you are working in a monorepo, you'll have another `.dmno/config.mts` in each of your "services" that require configuration. You may have some workspace packages that are purely shared libraries, and don't have any configuration. These do not need a `.dmno` folder.
 
@@ -55,17 +49,18 @@ A typical DMNO project structure:
 </Tabs>
 
 :::note
-There are many ways to organize package folders in a monorepo. We'll respect your monorepo's workspace settings (glob rules) for where to look (`package.json > workspaces`, `pnpm-workspace.yaml`, etc).
+There are many ways to organize package folders in a monorepo. We'll respect your monorepo's workspace settings' glob rules for where to look (e.g., `package.json > workspaces`, `pnpm-workspace.yaml`, etc).
 :::
 
 ### Root service config
 
-Each config.mts file will define settings for that service, including a full schema of all the config items used by the service. The root service config is a little special, in that it also can define some settings for the entire workspace - although in general most settings are inheritable from a _chain_ of ancestors, not just the root.
+Each `config.mts` file will define settings for that service, including a full schema of all the config items used by the service. The root service config is a little special, in that it also can define some settings for the entire workspace - although in general most settings are inheritable from a _chain_ of ancestors, not just the root.
 
 But as the root service is an ancestor of all other services, it is where any workspace-wide settings and config items will live.
 
-This file must have `export default defineDmnoWorkspace({ //...`. Here is an example:
-<br/>_(we'll get into more details below, so don't worry if some of it is confusing)_
+This file must have `export default defineDmnoWorkspace({ //...`. We'll get into more details below, so don't worry if some of it is confusing. Here is an example:
+
+
 
 ```typescript title=".dmno/config.mts" "defineDmnoWorkspace"
 import { defineDmnoWorkspace, NodeEnvType } from 'dmno';
@@ -136,7 +131,7 @@ export default defineDmnoService({
 ### Service names
 Every service must have a unique "service name" within your workspace. You can set it in the service's config, although if you do not specify a name, we will use the `name` field from that service's `package.json` file.
 
-We recommend you set it to something short - for example `api` instead of `@my-cool-org/api` - because you may be typing it into CLI commands (ex: `pnpm exec dmno load -s api`) and it will be visible in several places in terminal output and our UI (COMING SOON).
+We recommend you set it to something short - for example `api` instead of `@my-cool-org/api` - because you may be typing it into CLI commands (e.g., `pnpm exec dmno load -s api`) and it will be visible in several places in terminal output..
 
 You'll also use it as a reference to the service when services need to reference each other in their configuration, like when picking config (see next section).
 
@@ -211,7 +206,7 @@ The inability to easily share config in a monorepo was one of the main pain poin
 
 ## Defining config items
 
-Your service's config has a `schema` which is a key-value object that describes all of the configuration your service uses. Each item has a definition that describes what kind of data it is, how to validate it, how to handle it within your build, a rich description that feeds into your IDE tooling, and in some cases, what the value is or how to generate / fetch it (more on that later).
+Your service's config has a `schema` which is a key-value object that describes all of the configuration your service uses. Each item has a definition that describes what kind of data it is, how to validate it, how to handle it within your build, a rich description that feeds into your IDE tooling, and in some cases, what the value is or how to generate / fetch it. More on that later.
 
 We'll start with a simple example from our own monorepo, and then dig into what all the options are:
 ```ts
@@ -234,7 +229,7 @@ export default defineDmnoService({
 
 Each item is defined by `extend`ing some base type (whether explicitly or not) and adding additional overrides on top of it.
 
-Most of the time, you'll use existing data types, either from `DmnoBaseTypes` ([see reference](/docs/reference/base-types)) or from a published dmno plugin - some by dmno, some by others. These data types are factory functions, and accept settings that control reusable behavior (like validation rules). You should almost always be able to accomplish what you need with existing types - but of course you can author your own resuable types as well.
+Most of the time, you'll use existing data types, either from `DmnoBaseTypes` ([see reference](/docs/reference/base-types)) or from a published `dmno` plugin - some by `dmno`, some by others. These data types are factory functions, and accept settings that control reusable behavior like validation rules. You should almost always be able to accomplish what you need with existing types - but of course you can author your own resuable types as well.
 
 These types are also used to generate TypeScript types for your config and give you type safety when using your config in your application code.
 
@@ -311,7 +306,7 @@ export default defineDmnoService({
 Items can be marked as `sensitive: true` and they will be treated accordingly. That means:
 
 - We will mask their values when logging them to the console via the `dmno` CLI
-- They will NOT be exposed via `DMNO_PUBLIC_CONFIG` (only via `DMNO_CONFIG`)
+- They will NOT be exposed via `DMNO_PUBLIC_CONFIG`, only via `DMNO_CONFIG`
 - Depending on the integration, we will help make sure you don't accidentally leak them
 - More amazing security-related features coming soon!
 
@@ -334,8 +329,8 @@ export default defineDmnoService({
 
 
 
-### Docs & intellisense
-DMNO lets you attach additional information to items that serve as inline documentation about the item. This data is also used to generate very rich typescript JSDoc comments for your config - giving you and your team ✨ magical IDE superpowers.
+### Docs & Intellisense
+DMNO lets you attach additional information to items that serve as inline documentation about the item. This data is also used to generate very rich Typescript JSDoc comments for your config - giving you and your team ✨ magical IDE superpowers.
 
 :::tip
 Some of these settings make more sense within the context of authoring reusable types, but they are all always available.
@@ -371,7 +366,7 @@ An example of how the generated types show up with VSCode's Intellisense:
 
 
 ### Dynamic vs static
-Items can use `dynamic: true` (or false) to override their behaviour as to whether they should be bundled into your code at _build time_ versus always loaded at boot time. This is only relevant for some integrations/projects, and it's a _big_ topic. See our [dynamic config guide](/docs/guides/dynamic-config) for more details!
+Items can use `dynamic: true` or `false` to override their behaviour as to whether they should be bundled into your code at _build time_ versus always loaded at boot time. This is only relevant for some integrations/projects, and it's a _big_ topic. See our [dynamic config guide](/docs/guides/dynamic-config) for more details!
 
 
 ### Expose
@@ -381,7 +376,7 @@ Items marked with `expose: true` will be available to be "picked" by other servi
 ### Setting item values
 While some tools may let you set only default values for config items, DMNO lets you set the value from within your schema for all situations.
 
-This is possible because the dmno config loading process is broken up into 2 stages: first we load the schema, and then we "resolve" the values. While the resolution process does respect overrides passed in as env vars and from local override files, many of your values may be set _from the schema directly_.
+This is possible because the `dmno` config loading process is broken up into 2 stages: first we load the schema, and then we "resolve" the values. While the resolution process does respect overrides passed in as env vars and from local override files, many of your values may be set _from the schema directly_.
 
 We can use static values, inline functions, or a "resolver" - which is basically just a fancy function that will be called during the resolution process and passed some contextual data about the config item and the rest of the resolved config.
 

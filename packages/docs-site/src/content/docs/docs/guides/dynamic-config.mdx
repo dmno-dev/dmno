@@ -3,11 +3,11 @@ title: Dynamic vs Static Config
 description: Learn how to manage dynamic and static config items in DMNO in your static, server-rendered, or hybrid app.
 ---
 
-If you do any front-end development, you're probably used to the concept of replacing references to env vars with actual values _at build time_ (ex. [vite](https://vitejs.dev/config/shared-options.html#define), [webpack](https://webpack.js.org/plugins/define-plugin/)). This is useful so that:
+If you do any front-end development, you're probably used to the concept of replacing references to env vars with actual values _at build time_ (e.g., [vite](https://vitejs.dev/config/shared-options.html#define), [webpack](https://webpack.js.org/plugins/define-plugin/)). This is useful so that:
 - the client doesn't have to fetch config before using it
 - bundlers can drop unreachable code and dependendencies
 
-In most frameworks and build tools, this concept is tightly coupled with something being "public", and is triggered via a special prefix (ex: `NEXT_PUBLIC_`) but can also be dependent on _where and how_ you access the config, especially now that the days of static sites are ending and SSR/hybrid rendering is gaining in popularity.
+In most frameworks and build tools, this concept is tightly coupled with something being "public", and is triggered via a special prefix (e.g., `NEXT_PUBLIC_`) but can also be dependent on _where and how_ you access the config, especially now that the days of static sites are ending and SSR/hybrid rendering is gaining in popularity.
 
 
 ### Schema to the rescue
@@ -16,11 +16,11 @@ In DMNO, rather than relying on name prefixes and tightly coupling the concepts 
 - Is the config item _sensitive_ (`sensitive: true`)
 - Is the config item _dynamic_ (`dynamic: true`)
 
-Then in your code, simply use `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG` and we take care of the rest, including support for **static+secret** and **dynamic+public** config items! We'll also do our best to help you detect when something unexpected is happening like pre-rendering a dynamic config item (effectively freezing its value on _some_ pages) to help prevent errors and confusion.
+Then in your code, simply use `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG` and we take care of the rest, including support for **static+secret** and **dynamic+public** config items! We'll also do our best to help you detect when something unexpected is happening like pre-rendering a dynamic config item, effectively freezing its value on _some_ pages, to help prevent errors and confusion.
 
 ### Default dynamic behavior
 
-How items are treated by default (with respect to being dynamic) is something that likely depends on the kind of app/service you are building and how it will be deployed, so we let you control this default behaviour with the `settings.dynamicConfig` property in your service config.
+How items are treated by default, with respect to being dynamic, is something that likely depends on the kind of app/service you are building and how it will be deployed. So, we let you control this default behaviour with the `settings.dynamicConfig` property in your service config.
 
 The following table shows the different modes supported:
 
@@ -58,7 +58,7 @@ Service "settings" are inherited up through the chain of parent services if left
 
 ### Fetching dynamic config on the client
 
-To support accessing dynamic (non-sensitive) config in the client, we have to fetch it from the server, and in order to use the same access pattern (ie not make every call to get config async) we use a _blocking_ http call. This means you should use it sparingly (if at all) and probably not on page load. That said, it's not that different from making an additional blocking javascript request, and we can do some fancy tricks to minimize the impact. We're working on further tools and options around this in each integration, but it will likely be opt-in or triggered on-demand only as needed.
+To support accessing dynamic (i.e., non-sensitive) config in the client, we have to fetch it from the server, and in order to use the same access pattern (i.e., not make every call to get config async) we use a _blocking_ http call. This means you should use it sparingly, if at all, and probably not on page load. That said, it's not that different from making an additional blocking JavaScript request, and we can do some fancy tricks to minimize the impact. We're working on further tools and options around this in each integration, but it will likely be opt-in or triggered on-demand only as needed.
 
 Obviously a totally pre-rendered static build will not support dynamic config, and some integrations may require a few steps to wire up the endpoint that exposes these config values.
 

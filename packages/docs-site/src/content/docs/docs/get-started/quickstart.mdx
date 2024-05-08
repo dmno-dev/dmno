@@ -1,10 +1,6 @@
 ---
 title: DMNO Quickstart
 description: Get started with DMNO's quickstart guide and start managing your configuration more effectively.
-prev: What is DMNO?
-next: 
-  link: /docs/guides/schema
-  label: Schema Guide
 ---
 
 import { Steps, FileTree, Code } from '@astrojs/starlight/components';
@@ -16,14 +12,14 @@ import TabbedCode from '@/components/TabbedCode.astro';
 1. ### **Install `dmno`**
     <TabbedCode packageName="dmno" />
 
-2. ### **Initialize dmno in your project**
+2. ### **Initialize `dmno` in your project**
 
     Run this command in the root of your project:
     <TabbedCode command="dmno init" />
 
     ![dmno init](../../../../assets/tapes/init.gif)
 
-    This will create a `.dmno` folder in the root of your project (and if in a monorepo, any additional services of your choice) with a `config.mts` file. It will produce a file tree that looks something like this:
+    This will create a `.dmno` folder in the root of your project with a `config.mts` file. If in a monorepo, any additional services of your choice will get their own `.dmno` folders. It will produce a file tree that looks something like this:
 
     <FileTree>
     - / (root of your project)
@@ -48,7 +44,7 @@ import TabbedCode from '@/components/TabbedCode.astro';
 
 4. ### **Write your schema**
 
-    The config schema (and other settings) live in the `.dmno/config.mts` files. Simply defining each item with a description, `required`, and `sensitive` is a great first step. You can them improve your schema over time, adding validations, and setting values from within the schema itself.
+    The config schema and other settings live in the `.dmno/config.mts` files. Defining each item with a description, [`required`](/docs/guides/schema#validations--required-config), and [`sensitive`](/docs/guides/schema#secrets--security) is a great first step. You can then improve your schema over time, adding validations, and setting values from within the schema itself.
 
     Check out the [schema guide](/docs/guides/schema) for full details.
 
@@ -58,7 +54,7 @@ import TabbedCode from '@/components/TabbedCode.astro';
 
 6. ### **Use `DMNO_CONFIG` to access your config** 
 
-    You _could_ continue to use `process.env`/`import.meta.env` to access your config and still benefit from DMNO's validation logic. But we recommend migrating to `DMNO_CONFIG` as it provides a ton of helpful improvements:
+     We recommend migrating to `DMNO_CONFIG` as it provides helpful improvements like Typescript autocompletion and Intellisense.
       
     For example:
     ```diff lang="ts" ins="DMNO_CONFIG."
@@ -72,9 +68,12 @@ import TabbedCode from '@/components/TabbedCode.astro';
       const myConfigNum = DMNO_CONFIG.SOME_NUMBER;
       const IS_PROD = DMNO_CONFIG.NODE_ENV === 'production';
     ```
+    {/* TODO maybe include gif of Intellisense */}
+
+    You _could_ continue to use `process.env`/`import.meta.env` to access your config and still benefit from DMNO's validation logic. But, `DMNO_CONFIG` gives you the full benefits of DMNO.
 
     :::note[Secrets & DMNO_PUBLIC_CONFIG]
-    While building code for the browser (or another less-secure context), you can use the `DMNO_PUBLIC_CONFIG` object - it does not contain any items that are marked as `sensitive: true` in your schema
+    While building code for the browser or another less-secure context, you can use the `DMNO_PUBLIC_CONFIG` object - it does not contain any items that are marked as `sensitive: true` in your schema
     :::
 
 </Steps>

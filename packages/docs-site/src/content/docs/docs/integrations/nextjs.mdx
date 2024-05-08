@@ -32,7 +32,7 @@ See our [Schema Guide](/docs/guides/schema) for the specifics of how to write yo
 
 ## Setup
 
-In your `next.config.mjs` file, import and add the dmno plugin:
+In your `next.config.mjs` file, import and add the `dmno` plugin:
 
 ```diff lang="js"
 +import { dmnoNextConfigPlugin } from '@dmno/nextjs-integration';
@@ -107,7 +107,7 @@ And sometimes to other helper files that are trying to access config. If you eve
 _Hopefully this will be fixed soon or we can find a better workaround!_
 
 ### Adjusting package.json scripts
-Unlike some of our other integrations, the next integration requires that you run your next commands via `dmno run` ([docs](/docs/reference/cli/run)), so you must modify your package.json scripts:
+Unlike some of our other integrations, the next integration requires that you run your next commands via [`dmno run`](/docs/reference/cli/run), so you must modify your package.json scripts:
 
 ```diff lang="json" title="package.json" ins=/(dmno run (-w )?-- )/
 {
@@ -126,7 +126,7 @@ Unlike some of our other integrations, the next integration requires that you ru
 :::tip
 Scripts defined in package.json will resolve commands automatically from your installed `node_modules` directory, so using `dmno run -- othercommand` works.
 
-But if you are running a command manually, `dmno` will not usually be in your `PATH` and so your terminal will not know what to do. Typically you can use your package manager to find the dmno executable, for example: `pnpm exec dmno run -- othercommand` (or `npm exec` or `yarn exec`).
+But if you are running a command manually, `dmno` will not usually be in your `PATH` and so your terminal will not know what to do. Typically you can use your package manager to find the `dmno` executable, for example: `pnpm exec dmno run -- othercommand`, `npm exec` or `yarn exec`.
 :::
 
 
@@ -136,15 +136,15 @@ But if you are running a command manually, `dmno` will not usually be in your `P
 
 ### Security and secrets
 
-While building your site, nextjs does two builds - one for the client and one for the server. During the client build, we only replace references to `DMNO_PUBLIC_CONFIG` (which never contains anything sensitive) so you can't accidentally leak any secrets into the JS of your site. Any references to `DMNO_CONFIG` in the client code will also throw a helpful error.
+While building your site, nextjs does two builds - one for the client and one for the server. During the client build, we only replace references to `DMNO_PUBLIC_CONFIG` which never contains anything sensitive so you can't accidentally leak any secrets into the JS of your site. Any references to `DMNO_CONFIG` in the client code will also throw a helpful error.
 
-However, because NextJS does server-side rendering (regardless of if you are doing SSG or SSR or some hybrid), it is still possible to leak secrets in the _content_ of a server-rendered page. In general, try to use `DMNO_PUBLIC_CONFIG` and be careful about when/how you use secrets.
+However, because NextJS does server-side rendering regardless of if you are doing SSG or SSR or some hybrid, it is still possible to leak secrets in the _content_ of a server-rendered page. In general, try to use `DMNO_PUBLIC_CONFIG` and be careful about when/how you use secrets.
 
-While it's not perfect, this should be a bit better than standard env var handling in NextJS - and we are working on some more tooling to help detect (and stop) leaked secrets - just like we have in our other integrations.
+While it's not perfect, this should be a bit better than standard env var handling in NextJS - and we are working on some more tooling to help detect and stop leaked secrets - just like we have in our other integrations.
 
 ### Dynamic public config
 
-If you'd like to be able to alter certain configuration values at boot time and load them in the client (rather than relying on values bundled into your code), you need to expose an API endpoint which exposes this public+dynamic config. 
+If you'd like to be able to alter certain configuration values at boot time and load them in the client rather than relying on values bundled into your code, you need to expose an API endpoint which exposes this public+dynamic config. 
 
 See the [dynamic config guide](/docs/guides/dynamic-config) for more details.
 

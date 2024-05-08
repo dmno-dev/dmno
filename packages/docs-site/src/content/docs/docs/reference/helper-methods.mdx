@@ -126,7 +126,7 @@ type ConfigItemDefinition = {
         {
           name: 'expose',
           type: 'boolean',
-          description: 'Whether the item should be exposed to other services. i.e. is it "pickable"'
+          description: 'Whether the item should be exposed to other services. i.e., is it "pickable"'
         },
         {
           name: 'extends',
@@ -264,7 +264,7 @@ type DmnoServiceConfig = {
         {
           name: 'pick',
           type: 'Array<PickConfigItemDefinition | string>',
-          description: 'An array of items to pick from the parent (or other) service(s). This can be a string (the key) or a PickItemDefinition object.'
+          description: 'An array of items to pick from the parent or other service(s). This can be a string (the key) or a PickItemDefinition object.'
         },
         {
           name: 'schema',
@@ -280,7 +280,7 @@ type DmnoServiceConfig = {
 This is very similar to `defineDmnoWorkspace` with a few additions: 
 - `parent` is the name of the parent service.
 - `tags` is an array of tags for the service.
-- `pick` is an array of items to pick from the parent (or other) service(s). This can be a string (the key) or a `PickConfigItemDefinition` object (see below).
+- `pick` is an array of items to pick from the parent or other services. This can be a string (the key) or a `PickConfigItemDefinition` object.
 
 >The `schema` is the same as the `schema` property in the `defineDmnoWorkspace` method above. 
 
@@ -418,7 +418,7 @@ export default defineDmnoService({
 
 `switchBy('SWITCH_BY_KEY': string, { opts })`
 
-This method is used to define different configurations for different values of a particular config item. Its arguments are a string (the key name) and an object with the following properties:
+This method is used to define different configurations for different values of a particular config item. Its arguments are a string (i.e., the key name) and an object with the following properties:
 
 ```typescript
 type opts = {

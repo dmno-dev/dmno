@@ -14,13 +14,18 @@ const showDefaultBanner =
     {banner && <div class="sl-banner" set:html={banner.content} />}
     {
       showDefaultBanner && (
-        <div class="sl-banner">
-          🚧 DMNO is still in beta! Use with caution, and please{" "}
-          <a href="https://forms.gle/AfM99kTJ9p1c25g86" target="_blank">
-            let us know
-          </a>
-          what you think! 🚧
-        </div>
+        <>
+          <div class="sl-banner caution">
+            🚧 DMNO is still in beta! Use with caution!
+          </div>
+          <div class="sl-banner info">
+            ✨ If you've tried DMNO or looked through the docs,{" "}
+            <a href="https://forms.gle/AfM99kTJ9p1c25g86" target="_blank">
+              let us know
+            </a>
+            what you think!
+          </div>
+        </>
       )
     }
   </div>
@@ -50,18 +55,33 @@ const showDefaultBanner =
     /* float: right; */
 
     padding: var(--sl-nav-pad-y) var(--sl-nav-pad-x);
-    background: linear-gradient(
-      45deg,
-      var(--brand-orange--t2) 0%,
-      var(--brand-red--t2) 100%
-    );
-    border: 1px solid var(--brand-orange);
+
     border-width: 1px 4px;
-    color: var(--color-text-full-shade);
 
     line-height: var(--sl-line-height-headings);
     text-align: center;
     text-wrap: balance;
     // box-shadow: var(--sl-shadow-sm);
+  }
+  .sl-banner.caution {
+    background: linear-gradient(
+      45deg,
+      var(--brand-orange--t2) 0%,
+      var(--brand-red--t2) 100%
+    );
+    border-color: var(--brand-orange);
+    border: 1px solid var(--brand-orange);
+    color: var(--color-text-full-shade);
+  }
+  .sl-banner.info {
+    margin-top: 4px;
+    background: linear-gradient(
+      45deg,
+      var(--brand-blue--t2) 0%,
+      var(--brand-blue--t2) 100%
+    );
+    border-color: var(--brand-blue);
+    border: 1px solid var(--brand-blue);
+    color: var(--color-text-full-shade);
   }
 </style>
