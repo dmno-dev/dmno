@@ -5,7 +5,8 @@ import { outdent } from 'outdent';
 import { input, select } from '@inquirer/prompts';
 import validatePackageName from 'validate-npm-package-name';
 import boxen from 'boxen';
-import { ScannedWorkspaceInfo, pathExists } from '../../config-loader/find-services';
+import { tryCatch } from '@dmno/ts-lib';
+import { PackageManager, ScannedWorkspaceInfo, pathExists } from '../../config-loader/find-services';
 
 
 const DMNO_FOLDER_TSCONFIG = outdent`
@@ -85,6 +86,16 @@ function noopMessage(msg: string) {
 }
 
 
+function installPackage(
+  packagePath: string,
+  packageManager: PackageManager,
+  packageName: string,
+  isMonoRepoRoot?: boolean,
+) {
+  // `add` works in all 3, `install` does not
+  execSync(`cd ${packagePath} && ${packageManager} add ${packageName} ${isMonoRepoRoot && packageManager === 'pnpm' ? '-w' : ''}`);
+}
+
 export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, servicePath: string) {
   const rootPath = workspaceInfo.workspacePackages[0].path;
   const { packageManager } = workspaceInfo;
@@ -107,11 +118,21 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
   // might make this an actual cli option but not sure if needed
   const overwriteMode = !!process.env.DMNO_INIT_OVERWRITE;
 
-  if (!overwriteMode && await pathExists(`${servicePath}/node_modules/dmno`)) {
+  const packageJsonPath = `${servicePath}/package.json`;
+  const packageJson = await tryCatch(async () => {
+    const rawPackageJson = await fs.promises.readFile(packageJsonPath);
+    return JSON.parse(rawPackageJson.toString());
+  }, (err) => {
+    console.log(`Unable to parse ${kleur.green(packageJsonPath)}`);
+    throw err;
+  });
+  const isDmnoInstalled = !!packageJson.dependencies?.dmno || !!packageJson.devDependencies?.dmno;
+
+  if (!overwriteMode && isDmnoInstalled) {
     console.log(noopMessage('dmno already installed'));
   } else {
     try {
-      const dmnoCoreInstall = execSync(`cd ${servicePath} && ${packageManager} install dmno ${service.isRoot ? '-w' : ''}`);
+      installPackage(servicePath, packageManager, 'dmno', workspaceInfo.isMonorepo && service.isRoot);
       console.log(initSuccessMessage('dmno installed'));
     } catch (err) {
       console.log('💥 dmno install failed');

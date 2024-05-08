@@ -71,7 +71,7 @@ export class ConfigServer {
       ipc.log(`client ${destroyedSocketID} has disconnected!`);
     });
 
-    ipc.server.on('request', async (message: any, socket: any) => {
+    ipc.server.on('request', async (message, socket) => {
       debug('received request from IPC client', message);
       const handler = (this.requestHandlers as any)[message.requestType];
       if (!handler) {
