@@ -3,6 +3,7 @@ import kleur from 'kleur';
 import gradient from 'gradient-string';
 import { createDeferredPromise } from '@dmno/ts-lib';
 import { outdent } from 'outdent';
+import logUpdate from 'log-update';
 
 
 const TERMINAL_COLS = Math.floor(process.stdout.columns * 0.75);
@@ -28,9 +29,7 @@ export async function fallingDmnoLoader(
   const interval = setInterval(() => {
     currentCol++;
 
-
-    process.stdout.clearLine(0);
-    process.stdout.cursorTo(0);
+    logUpdate.clear();
 
     // ▌▞▂
 
@@ -53,7 +52,7 @@ export async function fallingDmnoLoader(
         else str += '▐'; // ▌▐
       }
     }
-    process.stdout.write(kleur.bold().green(str));
+    logUpdate(kleur.bold().green(str));
 
     if (currentCol > TERMINAL_COLS) {
       if (!isFalling) {
@@ -62,8 +61,7 @@ export async function fallingDmnoLoader(
       } else {
         clearInterval(interval);
         setTimeout(() => {
-          process.stdout.clearLine(0);
-          process.stdout.cursorTo(0);
+          logUpdate.clear();
 
           let str = '';
           for (let i = 0; i <= TERMINAL_COLS; i++) {
@@ -74,8 +72,8 @@ export async function fallingDmnoLoader(
             }
           }
 
-          process.stdout.write(kleur.bold().green(str));
-          process.stdout.write('\n');
+          logUpdate(kleur.bold().green(str));
+          logUpdate('\n');
           deferred.resolve();
         }, Math.floor(totalTime * 0.1));
       }
@@ -103,8 +101,7 @@ export async function fallingDmnosAnimation(
   const interval = setInterval(() => {
     currentCol++;
 
-    process.stdout.clearLine(0);
-    process.stdout.cursorTo(0);
+    logUpdate.clear();
 
     let str = '';
     if (!isFalling) {
@@ -122,7 +119,7 @@ export async function fallingDmnosAnimation(
         else str += '▐';
       }
     }
-    process.stdout.write(gradientColorizer(str + ' '.repeat(TERMINAL_COLS + 1 - str.length)));
+    logUpdate(gradientColorizer(str + ' '.repeat(TERMINAL_COLS + 1 - str.length)));
 
     if (currentCol === TERMINAL_COLS) {
       if (!isFalling) {
@@ -131,14 +128,14 @@ export async function fallingDmnosAnimation(
       } else {
         clearInterval(interval);
         setTimeout(() => {
-          process.stdout.clearLine(0);
-          process.stdout.cursorTo(0);
+          logUpdate.clear();
+
 
           let str = loadedText;
           str += '▂'.repeat(TERMINAL_COLS + 1 - str.length);
 
-          process.stdout.write(gradientColorizer(str));
-          process.stdout.write('\n');
+          logUpdate(gradientColorizer(str));
+          logUpdate('\n');
           deferred.resolve();
         }, Math.floor(totalTime * 0.1));
       }
