@@ -1,0 +1,32 @@
+---
+import type { Props } from "@astrojs/starlight/props";
+
+import EditLink from '@astrojs/starlight/components/EditLink.astro';
+import LastUpdated from '@astrojs/starlight/components/LastUpdated.astro';
+import Pagination from '@astrojs/starlight/components/Pagination.astro';
+
+import EmailSignup from './EmailSignup.vue';
+---
+
+<footer>
+	<div class="meta sl-flex">
+		<EditLink {...Astro.props} />
+		<LastUpdated {...Astro.props} />
+	</div>
+	<Pagination {...Astro.props} />
+  <EmailSignup client:load />
+</footer>
+
+<style>
+	.meta {
+		gap: 0.75rem 3rem;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		margin-block: 3rem 1.5rem;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+	}
+	.meta > :global(p:only-child) {
+		margin-inline-start: auto;
+	}
+</style>

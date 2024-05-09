@@ -5,9 +5,9 @@ import vue from '@astrojs/vue';
 import robotsTxt from 'astro-robots-txt';
 import starlightLinksValidator from 'starlight-links-validator';
 import partytown from '@astrojs/partytown';
-import dmnoAstroIntegration from '@dmno/astro-integration';
 import IconsVitePlugin from 'unplugin-icons/vite';
-
+import sitemap from '@astrojs/sitemap';
+import dmnoAstroIntegration from '@dmno/astro-integration';
 
 // https://astro.build/config
 export default defineConfig({
@@ -20,7 +20,6 @@ export default defineConfig({
     ],
   },
   integrations: [
-
     dmnoAstroIntegration(),
     starlight({
       title: '.docs/',
@@ -54,6 +53,7 @@ export default defineConfig({
       },
       components: {
         Header: './src/components/CustomStarlightHeader.astro',
+        Footer: './src/components/CustomStarlightFooter.astro',
         ThemeProvider: './src/components/CustomStarlightThemeProvider.astro',
         MobileMenuFooter: './src/components/CustomStarlightMobileMenuFooter.astro',
         Banner: './src/components/CustomStarlightBanner.astro',
@@ -84,6 +84,13 @@ export default defineConfig({
           tag: 'script',
           content: `!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
           posthog.init('${DMNO_CONFIG.POSTHOG_API_KEY}',{api_host:'https://us.i.posthog.com'})`,
+        },
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'sitemap',
+            href: '/sitemap-index.xml',
+          },
         },
       ],
       sidebar: [
@@ -229,16 +236,26 @@ export default defineConfig({
     }),
     robotsTxt({
       sitemap: false,
-      policy: [{
-        userAgent: '*',
-        // disable all crawling, except homepage (for now)
-        allow: '/$',
-        disallow: '/',
-      }],
+      policy: [
+        {
+          userAgent: '*',
+          // The next line enables or disables the crawling on the `robots.txt` level
+          disallow: DMNO_CONFIG.DMNO_ENV !== 'production' ? '/' : '',
+        },
+      ],
     }),
     partytown({
       config: {
         forward: ['dataLayer.push'],
+      },
+    }),
+    sitemap({
+      filter(page) {
+        return !(
+          page.includes('/deployment/')
+          || page.includes('/nuxtjs')
+          || page.includes('/blog')
+        );
       },
     }),
   ],

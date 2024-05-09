@@ -7,13 +7,22 @@ import type { Context } from '@netlify/functions';
 
 const ev = new EmailValidation({ allowFreemail: true });
 
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': '*',
+  'Access-Control-Allow-Methods': '*',
+};
+
 function errorResponse(message: string, statusCode = 400) {
-  return new Response(JSON.stringify({
+  return Response.json({
     message,
-  }), { status: statusCode });
+  }, { status: statusCode, headers: CORS_HEADERS });
 }
 function validResponse(obj: any) {
-  return new Response(JSON.stringify(obj));
+  return Response.json(obj, {
+    headers: CORS_HEADERS,
+  });
 }
 
 
@@ -27,7 +36,14 @@ const serviceAccountAuth = new JWT({
 const signupsDoc = new GoogleSpreadsheet(DMNO_CONFIG.SIGNUPS_GOOGLE_SHEET_ID, serviceAccountAuth);
 
 export default async (req: Request, context: Context) => {
-  if (req.method !== 'POST') return errorResponse('only POST supported');
+  // TODO: extract this to helper... set more strict in prod
+  if (req.method === 'OPTIONS') {
+    return new Response(undefined, { headers: CORS_HEADERS });
+  }
+
+  if (req.method !== 'POST') {
+    return errorResponse('only POST supported');
+  }
 
   let reqBody;
   try {
