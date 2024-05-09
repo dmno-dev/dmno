@@ -1,5 +1,13 @@
 # dmno
 
+## 0.0.3
+
+### Patch Changes
+
+- [#65](https://github.com/dmno-dev/dmno/pull/65) [`0a9397b`](https://github.com/dmno-dev/dmno/commit/0a9397b3f65308a899fde1cf4b42c3514ab73fb2) Thanks [@theoephraim](https://github.com/theoephraim)! - installer improvements and fix plugin dmno peerDependency
+
+- [#63](https://github.com/dmno-dev/dmno/pull/63) [`f0f7ad1`](https://github.com/dmno-dev/dmno/commit/f0f7ad1f39e7b68fbe3eb36e4d78596dde02079b) Thanks [@philmillman](https://github.com/philmillman)! - add --silent option to init
+
 ## 0.0.2
 
 ### Patch Changes
