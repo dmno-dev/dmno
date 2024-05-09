@@ -29,8 +29,6 @@ export async function fallingDmnoLoader(
   const interval = setInterval(() => {
     currentCol++;
 
-    // logUpdate.clear();
-
     // ▌▞▂
 
     let str = '';
@@ -61,8 +59,6 @@ export async function fallingDmnoLoader(
       } else {
         clearInterval(interval);
         setTimeout(() => {
-          // logUpdate.clear();
-
           let str = '';
           for (let i = 0; i <= TERMINAL_COLS; i++) {
             if (i < loadedText.length) {
@@ -101,8 +97,6 @@ export async function fallingDmnosAnimation(
   const interval = setInterval(() => {
     currentCol++;
 
-    // logUpdate.clear();
-
     let str = '';
     if (!isFalling) {
       for (let i = 0; i < currentCol; i++) {
@@ -128,9 +122,6 @@ export async function fallingDmnosAnimation(
       } else {
         clearInterval(interval);
         setTimeout(() => {
-          // logUpdate.clear();
-
-
           let str = loadedText;
           str += '▂'.repeat(TERMINAL_COLS + 1 - str.length);
 
