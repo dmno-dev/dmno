@@ -29,7 +29,7 @@ export async function fallingDmnoLoader(
   const interval = setInterval(() => {
     currentCol++;
 
-    logUpdate.clear();
+    // logUpdate.clear();
 
     // ▌▞▂
 
@@ -61,7 +61,7 @@ export async function fallingDmnoLoader(
       } else {
         clearInterval(interval);
         setTimeout(() => {
-          logUpdate.clear();
+          // logUpdate.clear();
 
           let str = '';
           for (let i = 0; i <= TERMINAL_COLS; i++) {
@@ -73,7 +73,7 @@ export async function fallingDmnoLoader(
           }
 
           logUpdate(kleur.bold().green(str));
-          logUpdate('\n');
+          console.log('\n');
           deferred.resolve();
         }, Math.floor(totalTime * 0.1));
       }
@@ -101,7 +101,7 @@ export async function fallingDmnosAnimation(
   const interval = setInterval(() => {
     currentCol++;
 
-    logUpdate.clear();
+    // logUpdate.clear();
 
     let str = '';
     if (!isFalling) {
@@ -128,14 +128,14 @@ export async function fallingDmnosAnimation(
       } else {
         clearInterval(interval);
         setTimeout(() => {
-          logUpdate.clear();
+          // logUpdate.clear();
 
 
           let str = loadedText;
           str += '▂'.repeat(TERMINAL_COLS + 1 - str.length);
 
           logUpdate(gradientColorizer(str));
-          logUpdate('\n');
+          console.log('\n');
           deferred.resolve();
         }, Math.floor(totalTime * 0.1));
       }
