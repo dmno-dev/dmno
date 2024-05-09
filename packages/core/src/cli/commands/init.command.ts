@@ -92,20 +92,26 @@ program.action(async (opts: {
 
     // first initialize in root
     await initDmnoForService(workspaceInfo, rootPackage.path, opts.silent);
-    // then let user select service(s) to init
-    console.log();
-    if (!opts.silent) {
-      const installPackagePaths = await checkbox({
-        message: 'Which service(s) would you like to initialize as dmno services?\n',
-        choices: workspaceInfo.workspacePackages.slice(1).map((packageInfo) => {
-          return {
-            value: packageInfo.path,
-            name: `${packageInfo.name} - ${kleur.italic().gray(packageInfo.relativePath)}`,
-          };
-        }),
-      });
-      for (const packagePath of installPackagePaths) {
-        await initDmnoForService(workspaceInfo, packagePath);
+
+    if (workspaceInfo.isMonorepo && !opts.silent) {
+      if (workspaceInfo.workspacePackages.length === 1) {
+        console.log('No packages found in your monorepo.');
+        console.log('After you create them, you can rerun this command `dmno init`');
+      } else {
+      // then let user select service(s) to init
+        console.log();
+        const installPackagePaths = await checkbox({
+          message: 'Which service(s) would you like to initialize as dmno services?\n',
+          choices: workspaceInfo.workspacePackages.slice(1).map((packageInfo) => {
+            return {
+              value: packageInfo.path,
+              name: `${packageInfo.name} - ${kleur.italic().gray(packageInfo.relativePath)}`,
+            };
+          }),
+        });
+        for (const packagePath of installPackagePaths) {
+          await initDmnoForService(workspaceInfo, packagePath);
+        }
       }
     }
   }
@@ -134,6 +140,7 @@ program.action(async (opts: {
       message: 'Can we add you to our email list?',
     });
     if (emailOptIn) {
+      console.log('💖 Great!');
       // we could use execSync('git config user.email').toString().trim();
       // but feels a little creepy?
       const email = await input({
@@ -142,10 +149,10 @@ program.action(async (opts: {
 
       console.log('🙏 Thanks so much!\n');
 
-      const userTestOptIn = await confirm({
+      const userStudyOptIn = await confirm({
         message: 'Would you be up for doing a user study and providing some feedback?',
       });
-      if (userTestOptIn) {
+      if (userStudyOptIn) {
         console.log("🌈 Amazing - we'll be in touch soon!");
       } else {
         console.log('No worries at all...');
@@ -155,7 +162,7 @@ program.action(async (opts: {
       // TODO: figure out how we want to disable this while we are building/testing this
       const response = await tryCatch(async () => {
         // TODO: would love to use dmno for this URL, but using dmno while _building_ dmno feels like it might be tricky
-        return await fetch('https://signup-api.dmno.dev', {
+        return await fetch('https://signup-api.dmno.dev/signup', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -163,7 +170,7 @@ program.action(async (opts: {
           body: JSON.stringify({
             email,
             emailOptIn,
-            userTestOptIn,
+            userStudyOptIn,
             source: 'cli',
             // TODO: more info about the current version of cli, system, etc?
           }),
@@ -183,8 +190,14 @@ program.action(async (opts: {
 
   console.log(joinAndCompact([
     ' ',
-    'For more info about how to finish integrating DMNO into your project, head over to',
-    kleur.bold().magenta('https://dmno.dev/docs/'),
+    'For details about how to start defining your config schema:',
+    kleur.bold().magenta('https://dmno.dev/docs/guides/schema'),
+    ' ',
+    'For drop-in integrations to use DMNO with your favorite tools:',
+    kleur.bold().magenta('https://dmno.dev/docs/integrations/overview'),
+    ' ',
+    'For plugins to securely manage your secrets:',
+    kleur.bold().magenta('https://dmno.dev/docs/plugins/overview'),
     ' ',
   ], '\n'));
 

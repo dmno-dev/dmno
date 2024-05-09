@@ -56,7 +56,7 @@
     "typescript": "^5.4.5"
   },
   "peerDependencies": {
-    "dmno": "workspace:*",
+    "dmno": "^0",
     "astro": "^4"
   }
 }

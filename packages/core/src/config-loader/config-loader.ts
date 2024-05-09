@@ -50,9 +50,16 @@ export class ConfigLoader {
   private async finishInit() {
     // console.time('find-services');
     const workspaceInfo = await findDmnoServices();
+
+    // during init there may be no services at all
+    if (!workspaceInfo.workspacePackages.length) return;
+
     // console.timeEnd('find-services');
     this.workspacePackagesData = workspaceInfo.workspacePackages;
     this.workspaceRootPath = workspaceInfo.workspacePackages[0].path; // first should always be root (and is also marked)
+
+    // TODO: we may want to do this on demand
+    // so it does not slow down `dmno init` or other commands that don't need it
     const { viteRunner } = await setupViteServer(this.workspaceRootPath, (ctx) => this.viteHotReloadHandler(ctx));
     this.viteRunner = viteRunner;
   }
