@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
 
@@ -52,6 +52,7 @@ jobs:
         fi
 
     - name: Init dmno ${{ matrix.package-manager }}
+      # uses: Yuri6037/Action-FakeTTY@v1.1
       run: |
         if [ "${{ matrix.package-manager }}" = "npm" ]; then
           npm exec -- dmno init --silent
