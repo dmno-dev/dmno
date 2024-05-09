@@ -113,7 +113,7 @@ const KNOWN_INTEGRATIONS_MAP = Object.freeze({
   koa: 'dmno',
 });
 
-export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, servicePath: string) {
+export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, servicePath: string, silent?: boolean) {
   const rootPath = workspaceInfo.workspacePackages[0].path;
   const { packageManager } = workspaceInfo;
 
@@ -191,7 +191,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
   } else {
     const recommendedName = service.isRoot ? 'root' : service.name.replace(/^@[^/]+\//, '');
 
-    let serviceName: string | undefined;
+    let serviceName: string | undefined = silent ? recommendedName : undefined;
     while (serviceName === undefined) {
       // TODO: better cli input with more options for dynamic help info
       serviceName = await input({

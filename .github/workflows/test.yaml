@@ -1,0 +1,66 @@
+name: Run tests
+# this workflow is manually triggered
+# TODO add inputs for node version and package manager
+on: workflow_dispatch
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+        package-manager: ['npm', 'pnpm', 'yarn']
+
+    steps:
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: create test dir dmno-${{ matrix.package-manager }}
+      run: mkdir dmno-${{ matrix.package-manager }} && cd dmno-${{ matrix.package-manager }}
+
+    - name: Install package manager ${{ matrix.package-manager }}
+      run: |
+        if [ "${{ matrix.package-manager }}" = "npm" ]; then
+          npm -v 
+        elif [ "${{ matrix.package-manager }}" = "pnpm" ]; then
+          npm install -g pnpm && pnpm -v
+        elif [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          npm install --global yarn && yarn -v
+        fi
+
+    - name: Init package.json ${{ matrix.package-manager }}
+      run: |
+        if [ "${{ matrix.package-manager }}" = "npm" ]; then
+          npm init -y
+        elif [ "${{ matrix.package-manager }}" = "pnpm" ]; then
+          pnpm init
+        elif [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn init -y
+        fi
+
+    - name: Install dmno ${{ matrix.package-manager }}
+      run: |
+        if [ "${{ matrix.package-manager }}" = "npm" ]; then
+          npm add dmno
+        elif [ "${{ matrix.package-manager }}" = "pnpm" ]; then
+          pnpm add dmno
+        elif [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn add dmno
+        fi
+
+    - name: Init dmno ${{ matrix.package-manager }}
+      run: |
+        if [ "${{ matrix.package-manager }}" = "npm" ]; then
+          npm exec -- dmno init --silent
+        elif [ "${{ matrix.package-manager }}" = "pnpm" ]; then
+          pnpm exec dmno init --silent
+        elif [ "${{ matrix.package-manager }}" = "yarn" ]; then
+          yarn exec dmno init --silent
+        fi
+
+    - name: Verify .dmno/ dir exists ${{ matrix.package-manager }}
+      run: ls -la .dmno/
+      
