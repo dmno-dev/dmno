@@ -69,7 +69,7 @@ program.action(async (opts: {
   }
   const rootDmnoFolderExists = await pathExists(`${rootPackage.path}/.dmno`);
   // we may change this logic later?
-  const showOnboarding = (workspaceInfo.autoSelectedPackage.isRoot && !rootDmnoFolderExists) || !opts.silent;
+  const showOnboarding = (workspaceInfo.autoSelectedPackage.isRoot && !rootDmnoFolderExists) && !opts.silent;
 
   // if in a specific service, we'll just init that service
   if (!workspaceInfo.autoSelectedPackage.isRoot) {
