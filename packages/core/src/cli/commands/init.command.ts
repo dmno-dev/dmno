@@ -138,6 +138,7 @@ program.action(async (opts: {
       message: 'Can we add you to our email list?',
     });
     if (emailOptIn) {
+      console.log('💖 Great!');
       // we could use execSync('git config user.email').toString().trim();
       // but feels a little creepy?
       const email = await input({
