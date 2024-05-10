@@ -199,8 +199,14 @@ starlight-file-tree,
   }
 
   // hide empty header on "terminal" code blocks
-  .frame.is-terminal figcaption:has(.title:empty) {
-    display: none;
+  .frame.is-terminal {
+    figcaption:has(.title:empty) {
+      display: none;
+    }
+
+    .copy {
+      top: 8px
+    }
   }
 
 
