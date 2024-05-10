@@ -1,26 +1,41 @@
 ---
 import { Tabs, TabItem, Code } from "@astrojs/starlight/components";
 // import DmnoTabs from "./DmnoTabs.astro";
-import { currentPm } from "./store";
 
-const { packageName, command } = Astro.props;
+const { packageName, command, dynamicExec } = Astro.props;
 
-const variant = packageName ? "packageName" : "command";
+let variant;
+switch (true) {
+  case Boolean(packageName):
+    variant = "packageName";
+    break;
+  case Boolean(command):
+    variant = "command";
+    break;
+  default:
+    variant = "dynamicExec";
+    break;
+}; 
+
 const platforms = [
   {
     name: "npm",
     packageName: `npm add ${packageName}`,
     command: `npm exec -- ${command}`,
+    dynamicExec: `npx ${dynamicExec}`,
+
   },
   {
     name: "pnpm",
     packageName: `pnpm add ${packageName}`,
     command: `pnpm exec ${command}`,
+    dynamicExec: `pnpm dlx ${dynamicExec}`,
   },
   {
     name: "Yarn",
     packageName: `yarn add ${packageName}`,
     command: `yarn exec -- ${command}`,
+    dynamicExec: `yarn dlx ${dynamicExec}`,
   },
 ];
 ---

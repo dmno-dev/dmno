@@ -12,11 +12,11 @@ At DMNO we _love_ Astro. This very site is built with it! That's why we're very 
 
 ## Setup
 
-### Install the `dmno` Astro integration
+### Initialize your Astro integration
 
-Using Astro's `add` command will automatically install dependencies and update your Astro config.
+Using `dmno init` we will automatically detect that you are using Astro and install the necessary packages and configuration for you.
 
-<TabbedCode command="astro add @dmno/astro-integration" />
+<TabbedCode dynamicExec="dmno init" />
 
 >Skip to [Scaffold...](#scaffold-your-dmno-config) once this is complete.
 
@@ -41,14 +41,6 @@ export default defineConfig({
   integrations: [dmnoAstroIntegration()],
 });
 ```
-
-### Scaffold your DMNO config
-
-Next, run the following command in a terminal at the root of your repo:
-
-<TabbedCode command="dmno init" />
-
-This will create a `.dmno` directory in the root of your project with a `config.mts` file. And it will also create `.dmno` folders and config files in each of the other directories for other apps/services (at your discretion) if you have a monorepo.
 
 ### Configure your environment variables
 
