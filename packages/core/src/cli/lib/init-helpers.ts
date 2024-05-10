@@ -125,9 +125,11 @@ const KNOWN_INTEGRATIONS_MAP: Record<string, { package: string, docs?: string }>
   },
   express: {
     package: 'dmno',
+    docs: 'https://dmno.dev/docs/integrations/node',
   },
   koa: {
     package: 'dmno',
+    docs: 'https://dmno.dev/docs/integrations/node',
   },
 };
 
@@ -320,7 +322,10 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
         ];
 
         if (suggestedDmnoIntegration.package === 'dmno') {
-          console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} - natively supported integration`, { type: 'noop' }));
+          console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} - natively supported integration`, {
+            type: 'noop',
+            docs: suggestedDmnoIntegration.docs,
+          }));
         } else if (packageJsonDeps[suggestedDmnoIntegration.package]) {
           console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} - integration already installed`, {
             type: 'noop',
@@ -331,16 +336,16 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
         } else {
           console.log(`It looks like this package uses ${kleur.green(knownIntegrationDep)}!`);
           const confirmIntegrationInstall = await confirm({
-            message: `Would you like to install the ${kleur.green(suggestedDmnoIntegration)} package?`,
+            message: `Would you like to install the ${kleur.green(suggestedDmnoIntegration.package)} package?`,
           });
 
           if (!confirmIntegrationInstall) {
             console.log('No worries - you can always install it later!');
           } else {
-            installPackage(servicePath, workspaceInfo.packageManager, suggestedDmnoIntegration, false);
+            installPackage(servicePath, workspaceInfo.packageManager, suggestedDmnoIntegration.package, false);
             await reloadPackageJson();
 
-            console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} integration installed!`, { package: suggestedDmnoIntegration, packageVersion: packageJsonDeps[suggestedDmnoIntegration] }));
+            console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} integration installed!`, { package: suggestedDmnoIntegration.package, packageVersion: packageJsonDeps[suggestedDmnoIntegration.package] }));
           }
         }
         break;
