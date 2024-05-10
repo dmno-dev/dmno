@@ -1,5 +1,13 @@
 # dmno
 
+## 0.0.4
+
+### Patch Changes
+
+- [#69](https://github.com/dmno-dev/dmno/pull/69) [`9527262`](https://github.com/dmno-dev/dmno/commit/952726200e57055a1e753f163599167633bf09aa) Thanks [@theoephraim](https://github.com/theoephraim)! - Load `DMNO_PUBLIC_CONFIG` when using `import 'dmno/load'`
+
+- [#66](https://github.com/dmno-dev/dmno/pull/66) [`9bc9a3d`](https://github.com/dmno-dev/dmno/commit/9bc9a3d62c687c4dba89119da1faecce42c06108) Thanks [@philmillman](https://github.com/philmillman)! - output via logUpdate
+
 ## 0.0.3
 
 ### Patch Changes
