@@ -81,15 +81,20 @@ function setupStepMessage(message: string, opts?: {
   path?: string,
   package?: string,
   packageVersion?: string,
+  docs?: string,
 }) {
   const icon = opts?.type === 'noop' ? '✅' : '✨';
   return [
     `${icon} ${message}`,
-    ...opts?.path ? [kleur.italic().gray(`   ${opts.path}`)] : [],
+    ...opts?.path ? [['   📂 ', kleur.italic().gray(opts.path)].join('')] : [],
     ...opts?.package ? [
-      kleur.italic().magenta(`   ${opts.package}`)
-      + (opts.packageVersion ? kleur.gray(` @ "${opts.packageVersion}"`) : ''),
+      [
+        '   📦 ',
+        kleur.italic().magenta(opts.package),
+        opts.packageVersion ? kleur.gray(` @ "${opts.packageVersion}"`) : '',
+      ].join(''),
     ] : [],
+    ...opts?.docs ? [kleur.green(`   📚 Read the docs @ ${opts.docs}`)] : [],
   ].join('\n');
 }
 
@@ -105,13 +110,26 @@ function installPackage(
 }
 
 
-const KNOWN_INTEGRATIONS_MAP = Object.freeze({
-  astro: '@dmno/astro-integration',
-  next: '@dmno/nextjs-integration',
-  vite: '@dmno/vite-integration',
-  express: 'dmno',
-  koa: 'dmno',
-});
+const KNOWN_INTEGRATIONS_MAP: Record<string, { package: string, docs?: string }> = {
+  astro: {
+    package: '@dmno/astro-integration',
+    docs: 'https://dmno.dev/docs/integrations/astro',
+  },
+  next: {
+    package: '@dmno/nextjs-integration',
+    docs: 'https://dmno.dev/docs/integrations/nextjs',
+  },
+  vite: {
+    package: '@dmno/vite-integration',
+    docs: 'https://dmno.dev/docs/integrations/vite',
+  },
+  express: {
+    package: 'dmno',
+  },
+  koa: {
+    package: 'dmno',
+  },
+};
 
 export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, servicePath: string, silent?: boolean) {
   const rootPath = workspaceInfo.workspacePackages[0].path;
@@ -301,8 +319,15 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
           knownIntegrationDep as keyof typeof KNOWN_INTEGRATIONS_MAP
         ];
 
-        if (packageJsonDeps[suggestedDmnoIntegration]) {
-          console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} integration already installed`, { type: 'noop', package: suggestedDmnoIntegration, packageVersion: packageJsonDeps[suggestedDmnoIntegration] }));
+        if (suggestedDmnoIntegration.package === 'dmno') {
+          console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} - natively supported integration`, { type: 'noop' }));
+        } else if (packageJsonDeps[suggestedDmnoIntegration.package]) {
+          console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} - integration already installed`, {
+            type: 'noop',
+            package: suggestedDmnoIntegration.package,
+            packageVersion: packageJsonDeps[suggestedDmnoIntegration.package],
+            docs: suggestedDmnoIntegration.docs,
+          }));
         } else {
           console.log(`It looks like this package uses ${kleur.green(knownIntegrationDep)}!`);
           const confirmIntegrationInstall = await confirm({
