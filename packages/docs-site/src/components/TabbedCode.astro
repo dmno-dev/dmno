@@ -44,7 +44,7 @@ const platforms = [
   {
     platforms.map((platform) => (
       <TabItem label={platform.name}>
-        <Code lang="bash" code={platform[variant]} />
+        <Code lang="bash" code={platform[variant as keyof typeof platform]} />
       </TabItem>
     ))
   }
