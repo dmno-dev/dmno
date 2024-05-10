@@ -22,7 +22,7 @@ export default defineConfig({
   integrations: [
     dmnoAstroIntegration(),
     starlight({
-      title: '.docs/',
+      title: 'dmno.dev',
       logo: {
         src: '@dmno/ui-lib/brand-assets/domino-logo-full-outline.svg',
       },
@@ -59,6 +59,13 @@ export default defineConfig({
         Banner: './src/components/CustomStarlightBanner.astro',
       },
       head: [
+        {
+          tag: 'meta',
+          attrs: {
+            property: 'og:image',
+            content: 'https://dmno.dev/og-image.png',
+          },
+        },
         {
           tag: 'script',
           attrs: {
