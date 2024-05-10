@@ -107,7 +107,7 @@ function installPackage(
 
 const KNOWN_INTEGRATIONS_MAP = Object.freeze({
   astro: '@dmno/astro-integration',
-  nextjs: '@dmno/nextjs-integration',
+  next: '@dmno/nextjs-integration',
   vite: '@dmno/vite-integration',
   express: 'dmno',
   koa: 'dmno',
