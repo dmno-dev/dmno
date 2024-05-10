@@ -1,9 +1,10 @@
 ---
 interface Props {
-  name: IconNames;
+  name: IconNames | Array<IconNames>,
+  class?: string,
 }
 
-const { name } = Astro.props;
+const { name, class: className, ...rest } = Astro.props;
 
 // object freeze lets extract a nice IconsName enum
 // the import is annoying, but slightly better than having 2 long lists...
@@ -12,20 +13,35 @@ const ICON_LOOKUP = Object.freeze({
   "folder-open": (await import("~icons/material-symbols/folder-open")).default,
   github: (await import("~icons/mdi/github")).default,
   discord: (await import("~icons/ic/baseline-discord")).default,
+  console: (await import("~icons/ph/caret-right")).default,
+  copy: (await import("~icons/ph/copy-light")).default,
+  check: (await import("~icons/material-symbols/check")).default,
 });
 
-const iconSvg = ICON_LOOKUP[name];
+const iconSvgs = Array.isArray(name) ? name.map((n) => ICON_LOOKUP[n]) : [ICON_LOOKUP[name]];
 
 type IconNames = keyof typeof ICON_LOOKUP;
 ---
 
-<div class="d-icon" set:html={iconSvg} />
+<div
+  class={`d-icon ${className}`}
+  set:html={iconSvgs.join('')}
+  data-show-icon={iconSvgs.length > 1 ? 1 : undefined}
+  {...rest}
+  />
 
-<style>
+<style lang="less" is:global>
   .d-icon {
     > svg {
+      pointer-events: none;
       width: 100%;
       height: 100%;
+      display: none;
+      &:nth-child(1) {
+        display: block;
+      }
     }
+    
+
   }
 </style>

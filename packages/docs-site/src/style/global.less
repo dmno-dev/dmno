@@ -7,18 +7,23 @@
 }
 
 body {
-  font-family: 'Inter';
+  font-family: var(--body-font);
 }
+
 
 h1,
 h2,
 h3,
 h4,
 h5 {
-  font-family: 'Inter';
+  font-family: var(--body-font);
 }
 
-
+:root {
+  --body-font: 'Inter', ui-sans-serif, Arial, 'Noto Sans', sans-serif;
+  --logo-font: 'Days One', sans-serif;
+  --code-font: 'Fira Code', ui-monospace, monospace;
+}
 
 // custom color palette
 :root {
@@ -205,6 +210,10 @@ starlight-file-tree,
     }
   }
 
+  .code {
+    font-family: 'Fira Code', ui-monospace, monospace;
+  }
+
   .ec-line.tm-label .code::before {
     padding-left: 6px !important;
     background: rgba(0, 0, 0, .3) !important;
@@ -267,6 +276,15 @@ starlight-file-tree,
   .starlight-aside__content {
     position: relative;
     z-index: 2;
+
+    a {
+      color: var(--sl-color-text-accent);
+
+      &:hover {
+        color: var(--color-text-full-shade);
+      }
+    }
+
   }
 
   /* gradient background as a pseudo element so we can fade it with opactiy */
@@ -366,16 +384,35 @@ starlight-file-tree,
 // and right align the next button
 .pagination-links {
   display: flex;
-  justify-content: left;
-  gap: 1rem;
+
+  flex-direction: column;
+  gap: .5rem;
+
+  @media (min-width: 50rem) {
+    flex-direction: row;
+    justify-content: left;
+    gap: 1rem;
+  }
 
   a {
     flex: 1;
-    max-width: 50%;
+
+    @media (min-width: 50rem) {
+      max-width: 50%;
+    }
+
+    box-shadow: none;
+    // border-color: var(--brand-pink--t1);
+
+    &:hover {
+      border-color: var(--color-text-full-shade);
+    }
   }
 
   a:first-child[rel='next'] {
-    margin-left: 50%;
+    @media (min-width: 50rem) {
+      margin-left: 50%;
+    }
   }
 
 }
@@ -391,4 +428,16 @@ starlight-file-tree,
   background: linear-gradient(30deg, var(--color-one) 0%, var(--color-two) 100%);
   background-clip: text;
   color: transparent;
+}
+
+// similar to sl-markdown content, need something to get links looking correct
+// will move to component
+.richtext {
+  a {
+    color: var(--sl-color-text-accent);
+
+    &:hover {
+      color: var(--color-text-full-shade);
+    }
+  }
 }

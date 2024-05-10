@@ -17,7 +17,7 @@ const props = defineProps({
 });
 
 
-const TIC_SEC_MS = 1.1 * 1000;
+const TIC_SEC_MS = 1.2 * 1000;
 const OFFSET = 25;
 
 // map cardinal direction to positions (slightly easioer to reason about)
@@ -95,7 +95,6 @@ defineExpose({ start, stop });
   &.dots-loader--1 {
     --dot-size: 25%;
   }
-
 
   > div {
     width: var(--dot-size);
