@@ -85,16 +85,16 @@ async function onSubmit() {
   }
 
   color:white;
-  padding: 2rem;
+  padding: 1rem;
   font-size: 14px;
   
 
   .footer-connect__wrap {
     display: grid;
-    gap: 2rem;
+    gap: 1rem;
     @media (min-width: 50rem) {
       grid-template-columns: 1fr 1fr;
-      gap: 4rem;
+      gap: 2rem;
 
 
       
@@ -103,7 +103,7 @@ async function onSubmit() {
         &:before {
           content: '';
           position: absolute;
-          left: -2rem;
+          left: -1rem;
           height: 100%;
           width: 1px;
           background: currentColor;
@@ -157,7 +157,8 @@ async function onSubmit() {
       bottom: 0;
       margin-right: 6px;
       margin-bottom: 6px;
-      width: 26px;
+      // padding: 0 8px;
+      width: auto;
       height: 26px;
       border-radius: 2px;
       display: flex;
@@ -174,12 +175,13 @@ async function onSubmit() {
 
   a.button {
     // border: 1px solid var(--brand-purple);
-    // background: linear-gradient(35deg, var(--brand-purple) 0%, var(--brand-blue) 100%);
-    background: var(--brand-purple);
+    background: linear-gradient(35deg, var(--brand-cyan) 0%, var(--brand-purple) 100%);
+    // background: var(--brand-purple);
+    // border: 1px solid var(--brand-pink);
+    border-radius: 4px;
     display: block;
     width: 100%;
     // height: 40px;
-    border-radius: 4px;
     text-decoration: none;
     text-align: center;
     color: white;

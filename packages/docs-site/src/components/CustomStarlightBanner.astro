@@ -8,7 +8,7 @@ const showDefaultBanner =
   Astro.url.pathname.startsWith("/docs/") &&
   !["/docs/"].includes(Astro.url.pathname);
 ---
-
+{ (banner || showDefaultBanner) &&
 <div class="sl-banner__wrap">
   <div class="sl-banner__wrap-inner">
     {banner && <div class="sl-banner" set:html={banner.content} />}
@@ -18,11 +18,9 @@ const showDefaultBanner =
           <div class="sl-banner caution">
             🚧 DMNO is still in beta! Use with caution!
           </div>
-          <div class="sl-banner info">
+          <div class="sl-banner info richtext">
             ✨ If you've tried DMNO or looked through the docs,{" "}
-            <a href="https://forms.gle/AfM99kTJ9p1c25g86" target="_blank">
-              let us know
-            </a>
+            <a href="https://forms.gle/AfM99kTJ9p1c25g86" target="_blank">let us know</a>
             what you think!
           </div>
         </>
@@ -30,6 +28,7 @@ const showDefaultBanner =
     }
   </div>
 </div>
+}
 
 <style lang="less">
   // set up to match the existing content width of the pages...
@@ -74,7 +73,7 @@ const showDefaultBanner =
     color: var(--color-text-full-shade);
   }
   .sl-banner.info {
-    margin-top: 4px;
+    margin-top: .5rem;
     background: linear-gradient(
       45deg,
       var(--brand-blue--t2) 0%,
