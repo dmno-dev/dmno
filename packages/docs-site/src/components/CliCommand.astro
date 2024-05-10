@@ -1,9 +1,10 @@
 ---
 import type { ImageMetadata } from "astro";
 import { Image } from "astro:assets";
-import { Code } from "@astrojs/starlight/components";
+import { Aside, Code } from "@astrojs/starlight/components";
 import allCommandsSpec from "@/utils/cli.json";
 import EncryptedVaultSpec from "@/utils/cli-plugin-vault.json";
+import DmnoExecPathAside from './DmnoExecPathAside.md';
 
 export const images = import.meta.glob<{ default: ImageMetadata }>(
   "../assets/tapes/*.gif",
@@ -54,6 +55,7 @@ const commandSpec = getCommand(name, plugin)!;
   })}
   {commandSpec.examples.length ? (
     <div>
+      <DmnoExecPathAside />
       <h4>Example(s)</h4>
       <Code code={formatExamples(commandSpec.examples)} lang="bash" />
     </div>

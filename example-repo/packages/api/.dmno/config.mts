@@ -17,10 +17,15 @@ export default defineDmnoService({
       value: OnePassBackend.item(),
     },
 
+    PUBLIC_EXAMPLE: {
+      value: 'non sensitive',
+    },
+
     SECRET_EXAMPLE: {
       extends: DmnoBaseTypes.string,
       required: true,
       value: OnePassBackend.itemByLink("https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&h=dmnoinc.1password.com&i=bphvvrqjegfmd5yoz4buw2aequ&v=ut2dftalm3ugmxc6klavms6tfq", 'username'),
+      sensitive: true,
     },
     SWITCHED_EXAMPLE: {
       value: switchByNodeEnv({
@@ -69,7 +74,6 @@ export default defineDmnoService({
         color: '336791', // postgres brand color :)
       },
 
-      required: true,
       sensitive: true,
     },
   },
