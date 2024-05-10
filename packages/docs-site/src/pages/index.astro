@@ -13,10 +13,10 @@ import RollupLogoSvg from '~icons/logos/rollup?raw';
 
 ---
 <StarlightPage frontmatter={{
-  title: 'DMNO', 
+  title: '👋',
   description: "Batteries included full-stack configuration",
   tableOfContents: false 
-  }}>
+}}>
   <div class="homepage not-content">
 
     <div class="hero">
@@ -95,10 +95,10 @@ import RollupLogoSvg from '~icons/logos/rollup?raw';
 
   {/* hide site title */}
   <style is:global>
-    .content-panel:has(h1#_top:empty) {
+    head:has(meta[content="👋"]) ~ body .content-panel:has(h1#_top) {
       display: none !important;
     }
-    .content-panel:has(h1#_top:empty) ~ .content-panel {
+    head:has(meta[content="👋"]) ~ body .content-panel:has(h1#_top) ~ .content-panel {
       border-top: none;
     }
     :root {

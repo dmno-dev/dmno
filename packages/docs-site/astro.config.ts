@@ -22,7 +22,7 @@ export default defineConfig({
   integrations: [
     dmnoAstroIntegration(),
     starlight({
-      title: 'dmno.dev',
+      title: 'DMNO',
       logo: {
         src: '@dmno/ui-lib/brand-assets/domino-logo-full-outline.svg',
       },
