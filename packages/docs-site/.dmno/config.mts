@@ -7,7 +7,6 @@ export default defineDmnoService({
     'DISCORD_JOIN_URL',
     'GENERAL_CONTACT_EMAIL',
     'POSTHOG_API_KEY',
-    { source: 'signup-api', key: 'SIGNUP_API_URL' },
   ],
   schema: {
     GOOGLE_TAG_MANAGER_ID: {
@@ -32,7 +31,10 @@ export default defineDmnoService({
         'deploy-preview': 'staging',
         'branch-deploy': 'staging',
         production: 'production',
-      })
+      }),
     },
+    SIGNUP_API_URL: {
+      value: 'https://signup-api.dmno.dev',
+    }
   }
 });
