@@ -1,12 +1,9 @@
 ---
 title: Announcing DMNO's Developer Preview
 date:  2024-04-30
-draft: true
 ---
 
 ## Hello DMNO 👋
-
-![DMNO_Overview.gif](https://media.giphy.com/media/3o7TKz3v6zrjg1Z1Qc/giphy.gif)
 
 We (Theo and Phil), are happy to announce the Developer Preview of our new project, DMNO. Our first release is a configuration engine that helps you manage your configuration in a single place, and access it in a type-safe way across your services.
 
@@ -27,8 +24,6 @@ We've also created a few plugins to help you securely manage your secrets and ot
 To get started you can check out our [quickstart guide](/docs/get-started/quickstart), or dive into our [schema guide](/docs/guides/schema).
 
 We've also create a short video that goes over the basics of DMNO, and how it can help you manage your configuration. Check it out below:
-
-![DMNO_Overview.gif](https://media.giphy.com/media/3o7TKz3v6zrjg1Z1Qc/giphy.gif)
 
 ## What's next?
 

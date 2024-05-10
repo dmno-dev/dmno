@@ -7,17 +7,13 @@ import TabbedCode from '@/components/TabbedCode.astro';
 
 At DMNO we're big fans of [Vite](https://vitejs.dev/), which is why we offer first class integration between Vite and DMNO. 
 
-To get started, install `dmno` and the `vite` plugin: 
+## Init
 
-<TabbedCode packageName="@dmno/vite-integration dmno" />
+To get started, `dmno init` will scaffold your project and install `dmno` and the `vite-integration` package. 
 
-### Scaffold your DMNO config
+<TabbedCode dynamicExec="dmno init" />
 
-Next, run the following command in a terminal at the root of your repo:
-
-<TabbedCode command="dmno init" />
-
-This will create a `.dmno` directory in the root of your project with a `config.mts` file. And it will also create `.dmno` folders and config files in each of the other directories for other apps/services if you have a monorepo.
+This will create a `.dmno` directory in the root of your project with a `config.mts` file.
 
 ### Configure your environment variables    
 
@@ -26,7 +22,7 @@ See our [Schema Guide](/docs/guides/schema) for the specifics of how to write yo
 
 ## Setup
 
-### Install the dmno vite plugin
+### Configure the dmno vite plugin
 
 Update your `vite.config.ts` - import the plugin, and add to `defineConfig`:
 

@@ -12,18 +12,15 @@ Now forget all of that, and let's simplify things with DMNO. 🥳
 
 ### Install dependencies
 
-First, install the `dmno` and `@dmno/nextjs-integration` packages.
+First let `dmno init` scaffold your project and install `dmno`. 
 
-<TabbedCode packageName="dmno @dmno/next-integration" />
+<TabbedCode dynamicExec="dmno init" />
 
-### Scaffold your DMNO config
+### Add the Next.js integration
 
-Run the following command in a terminal at the root of your repo:
+Next, install `@dmno/nextjs-integration`.
 
-<TabbedCode command="dmno init" />
-
-This will create a `.dmno` directory in the root of your project with a `config.mts` file. And it will also create `.dmno` folders and config files in each of the other directories for other apps/services if you have a monorepo.
-
+<TabbedCode packageName="@dmno/nextjs-integration" />
 
 ### Configure your environment variables
 

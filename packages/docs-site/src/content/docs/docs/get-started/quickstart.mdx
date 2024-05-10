@@ -9,13 +9,10 @@ import TabbedCode from '@/components/TabbedCode.astro';
 
 <Steps>
 
-1. ### **Install `dmno`**
-    <TabbedCode packageName="dmno" />
-
-2. ### **Initialize `dmno` in your project**
+1. ### **Setup `dmno` in your project**
 
     Run this command in the root of your project:
-    <TabbedCode command="dmno init" />
+    <TabbedCode dynamicExec="dmno init" />
 
     ![dmno init](../../../../assets/tapes/init.gif)
 
@@ -35,24 +32,24 @@ import TabbedCode from '@/components/TabbedCode.astro';
 
     </FileTree>
 
-3. ### **Start the development server**
+2. ### **Start the development server**
 
     This will give you instant feedback while you author your config schema.
     <TabbedCode command="dmno dev" />
 
     ![dmno init](../../../../assets/tapes/dev.gif)
 
-4. ### **Write your schema**
+3. ### **Write your schema**
 
     The config schema and other settings live in the `.dmno/config.mts` files. Defining each item with a description, [`required`](/docs/guides/schema#validations--required-config), and [`sensitive`](/docs/guides/schema#secrets--security) is a great first step. You can then improve your schema over time, adding validations, and setting values from within the schema itself.
 
     Check out the [schema guide](/docs/guides/schema) for full details.
 
-5. ### **Install framework specific integrations**
+4. ### **Install framework specific integrations**
 
-    We provide [drop-in integrations](/docs/integrations/overview) for many popular frameworks, and more are in the works. Install the relevant integrations in your services according to their instructions - this is the fastest way to get started.
+    We provide [drop-in integrations](/docs/integrations/overview) for many popular frameworks, and more are in the works. `dmno init` is smart enough to install the relevant integrations for each service. You can also read more about each integration on their respective [pages](docs/integrations/overview).
 
-6. ### **Use `DMNO_CONFIG` to access your config** 
+5. ### **Use `DMNO_CONFIG` to access your config** 
 
      We recommend migrating to `DMNO_CONFIG` as it provides helpful improvements like TypeScript autocompletion and IntelliSense.
       
