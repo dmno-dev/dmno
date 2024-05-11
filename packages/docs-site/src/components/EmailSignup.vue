@@ -47,7 +47,8 @@ async function onSubmit() {
       }),
     });
     if (response?.ok) {
-      (window as any).posthog.identify(email.value, { email: email.value });
+      // TODO: move to wrapped lib which is smarter about enabling posthog or not
+      (window as any).posthog.identify?.(email.value, { email: email.value });
       email.value = '';
       emailSubmitted.value = true;
     } else {
