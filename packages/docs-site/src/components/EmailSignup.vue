@@ -47,6 +47,7 @@ async function onSubmit() {
       }),
     });
     if (response?.ok) {
+      (window as any).posthog.identify(email.value, { email: email.value });
       email.value = '';
       emailSubmitted.value = true;
     } else {
