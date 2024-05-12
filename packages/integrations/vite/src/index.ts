@@ -17,7 +17,7 @@ const dmnoConfigValid = ConfigServerClient.checkServiceIsValid(dmnoService);
 injectDmnoGlobals(dmnoService, configItemKeysAccessed);
 
 export function injectDmnoConfigVitePlugin(
-  options: {
+  options?: {
     /**
      * option to bundle DMNO_CONFIG as well, which will include all config items
      * should be used carefully as it could leak secrets...
