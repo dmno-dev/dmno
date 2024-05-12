@@ -49,5 +49,6 @@
     "@iconify/json": "^2.2.206",
     "netlify-cli": "^17.1.0",
     "typedoc": "^0.25.12"
-  }
+  },
+  "version": null
 }

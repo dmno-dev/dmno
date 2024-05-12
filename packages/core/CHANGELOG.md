@@ -1,5 +1,11 @@
 # dmno
 
+## 0.0.5
+
+### Patch Changes
+
+- [#70](https://github.com/dmno-dev/dmno/pull/70) [`b4a0e09`](https://github.com/dmno-dev/dmno/commit/b4a0e0992ff8d0fb832e76b5aa70c2630b86fe3a) Thanks [@theoephraim](https://github.com/theoephraim)! - automatically set up typescript in dmno init
+
 ## 0.0.4
 
 ### Patch Changes
