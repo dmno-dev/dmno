@@ -1,18 +1,5 @@
 {
   "extends": "astro/tsconfigs/strict",
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.js",
-    "src/**/*.d.ts",
-    "src/**/*.mdx",
-    "src/**/*.astro",
-    "src/**/*.vue",
-
-    "astro.config.ts",
-
-    "./.dmno/.typegen/global.d.ts",
-    "./.dmno/.typegen/global-public.d.ts",
-  ],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {

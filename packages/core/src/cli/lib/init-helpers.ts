@@ -1,5 +1,6 @@
 import { execSync } from 'child_process';
 import fs from 'node:fs';
+import path from 'path';
 import kleur from 'kleur';
 import { outdent } from 'outdent';
 import { input, select, confirm } from '@inquirer/prompts';
@@ -317,41 +318,67 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     }
   }
 
-  // UPDATE tsconfig.json file(s)
-  const tsConfigFiles = await (
-    new fdir() // eslint-disable-line new-cap
-      .withRelativePaths()
-      .glob('./tsconfig.json', './tsconfig.*.json', 'jsconfig.json')
-      .withMaxDepth(0)
-      .crawl(service.path)
-      .withPromise()
-  );
-  if (!tsConfigFiles.length) {
-    console.log(setupStepMessage('Failed to inject DMNO types - no tsconfig/jsconfig found', {
-      type: 'failure',
+  // SET UP TYPESCRIPT
+  let srcDirPath = `${service.path}/src`;
+  if (!fs.existsSync(srcDirPath)) srcDirPath = service.path;
+  const dmnoEnvFilePath = `${srcDirPath}/dmno-env.d.ts`;
+  if (fs.existsSync(dmnoEnvFilePath)) {
+    console.log(setupStepMessage('injecting dmno types - dmno-env.d.ts already exists', {
+      type: 'noop',
+      path: dmnoEnvFilePath,
+      docs: '/guides/typescript',
+    }));
+  } else {
+    let globalDtsRelativePath = path.relative(srcDirPath, `${service.path}/.dmno/.typegen/global.d.ts`);
+    if (globalDtsRelativePath.startsWith('.dmno')) globalDtsRelativePath = `./${globalDtsRelativePath}`;
+    await fs.promises.writeFile(dmnoEnvFilePath, outdent`
+      // inject DMNO_CONFIG global
+      /// <reference types="${globalDtsRelativePath}" />
+      // inject DMNO_PUBLIC_CONFIG global
+      /// <reference types="${globalDtsRelativePath.replace('global.d.ts', 'global-public.d.ts')}" />
+
+    `);
+    console.log(setupStepMessage('injecting dmno types - created dmno-env.d.ts file', {
+      path: dmnoEnvFilePath,
       docs: '/guides/typescript',
     }));
   }
-  for (const tsConfigFileName of tsConfigFiles) {
-    const tsConfigPath = `${service.path}/${tsConfigFileName}`;
-    const originalTsConfigContents = (await fs.promises.readFile(tsConfigPath)).toString();
-    const updatedTsConfigContents = await injectDmnoTypesIntoTsConfig(originalTsConfigContents);
-    if (updatedTsConfigContents) {
-      // TODO: maybe want to confirm with the user and show a diff?
-      await fs.promises.writeFile(tsConfigPath, updatedTsConfigContents);
 
-      console.log(setupStepMessage(`injected DMNO types into ${tsConfigFileName}`, {
-        path: tsConfigPath,
-        // docs: suggestedDmnoIntegration.docs,
-      }));
-    } else {
-      console.log(setupStepMessage('tsconfig already includes DMNO types', {
-        type: 'noop',
-        path: tsConfigPath,
-        // docs: suggestedDmnoIntegration.docs,
-      }));
-    }
-  }
+
+  // const tsConfigFiles = await (
+  //   new fdir() // eslint-disable-line new-cap
+  //     .withRelativePaths()
+  //     .glob('./tsconfig.json', './tsconfig.*.json', 'jsconfig.json')
+  //     .withMaxDepth(0)
+  //     .crawl(service.path)
+  //     .withPromise()
+  // );
+  // if (!tsConfigFiles.length) {
+  //   console.log(setupStepMessage('Failed to inject DMNO types - no tsconfig/jsconfig found', {
+  //     type: 'failure',
+  //     docs: '/guides/typescript',
+  //   }));
+  // }
+  // for (const tsConfigFileName of tsConfigFiles) {
+  //   const tsConfigPath = `${service.path}/${tsConfigFileName}`;
+  //   const originalTsConfigContents = (await fs.promises.readFile(tsConfigPath)).toString();
+  //   const updatedTsConfigContents = await injectDmnoTypesIntoTsConfig(originalTsConfigContents);
+  //   if (updatedTsConfigContents) {
+  //     // TODO: maybe want to confirm with the user and show a diff?
+  //     await fs.promises.writeFile(tsConfigPath, updatedTsConfigContents);
+
+  //     console.log(setupStepMessage(`injected DMNO types into ${tsConfigFileName}`, {
+  //       path: tsConfigPath,
+  //       // docs: suggestedDmnoIntegration.docs,
+  //     }));
+  //   } else {
+  //     console.log(setupStepMessage('tsconfig already includes DMNO types', {
+  //       type: 'noop',
+  //       path: tsConfigPath,
+  //       // docs: suggestedDmnoIntegration.docs,
+  //     }));
+  //   }
+  // }
 
 
   // INSTALL KNOWN INTEGRATIONS

@@ -43,27 +43,6 @@ const nextConfig = {
 +export default dmnoNextConfigPlugin()(nextConfig);
 ```
 
-
-### Set up TypeScript
-
-You must include the DMNO generated types in your tsconfig to get access to `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG`.
-
-```diff lang="json" title="tsconfig.json"
-{
-  "extends": "astro/tsconfigs/strict",
-  "include": [
-    "next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts",
-    // add types for DMNO_CONFIG
-+    "./.dmno/.typegen/global.d.ts",
-+    "./.dmno/.typegen/global-public.d.ts",
-    // ...
-  ],
-  // ...
-}
-```
-After that, DMNO will automatically update your definitions as you add new items to your schema. 🎉
-
-
 ### Injecting config
 
 Unfortunately, NextJS has limited options to reliably inject code into their framework. So, we need to do a little more manual work to get things wired up correctly.

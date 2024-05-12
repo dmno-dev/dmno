@@ -2,9 +2,13 @@
 // TODO: need to fix the linting rules so it knows to allow dev deps here
 /* eslint-disable import/no-extraneous-dependencies */
 
+/// <reference types="./.dmno/.typegen/global.d.ts" />
+
 import { Plugin, defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { injectDmnoConfigVitePlugin } from '@dmno/vite-integration';
+
+console.log(DMNO_CONFIG.BOOLEAN_EXAMPLE);
 
 // https://vitejs.dev/config/
 export default defineConfig({

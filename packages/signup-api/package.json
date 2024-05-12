@@ -19,12 +19,12 @@
     "google-spreadsheet": "^4.1.1"
   },
   "devDependencies": {
-    "@dmno/encrypted-vault-plugin": "link:../plugins/encrypted-vault",
+    "@dmno/encrypted-vault-plugin": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "@netlify/functions": "^2.6.3",
     "@types/async": "^3.2.24",
-    "dmno": "link:../core",
+    "dmno": "workspace:*",
     "netlify-cli": "^17.1.0",
     "tsup": "^8.0.2",
     "typescript": "^5.4.5"
