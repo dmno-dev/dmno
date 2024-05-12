@@ -1,0 +1,9 @@
+{
+  "compilerOptions": { },
+  "include": [
+    "**/*.js",
+    // inject DMNO_CONFIG globals
+    ".dmno/.typegen/global.d.ts",
+    ".dmno/.typegen/global-public.d.ts",
+  ]
+}

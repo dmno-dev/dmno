@@ -1,0 +1,76 @@
+---
+title: TypeScript configuration
+description: Configuring TypeScript
+---
+
+Other tools try to _infer_ TypeScript types directly from a configuration schema. While it's impressive how far this approach has come since the early days, the types used during inference are extremely complex and there are always going to be limitations. Plus importing these config tools directly into your code can introduce huge headaches with ESM/commonjs and tsconfig files.
+
+Instead, while DMNO still uses TypeScript to define your schema (in your `.dmno/config.mts` files), it is **decoupled from your code**. We run our own build process (using [Vite](https://vitejs.dev)) that _just works_ without any configuration problems, and we generate extremely simple `.d.ts` files with unprecedented built-in documentation (JSDoc comments) to be consumed by your code. Our type system is also extremely rich and has a very flexible inheritance mechanism not possible in other systems.
+
+:::tip[Polyglot types coming soon]
+Decoupling the schema from the consumed types means it will be very easy to generate types to be used in other languages!
+:::
+
+
+### Accessing the types in your code
+
+To simplify accesing your config, we inject the `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG` globals. We must let TypeScript know about them in order to allow type-checking when _using_ your config and to get autocompletion/IntelliSense in your IDE.
+
+The DMNO Config loader automaticaly generates TS types to be consumed by your code into the `.dmno/.typegen` directory:
+- `.dmno/.typegen/global.d.ts` - injects the `DMNO_CONFIG` global
+- `.dmno/.typegen/global-public.d.ts` - injects the `DMNO_PUBLIC_CONFIG` global
+- `.dmno/schema.ts` - the actual schema of your config, used by the `.d.ts` files
+
+_We use these same types to give you autocompletion when authoring your schema itself!_
+
+
+The easiest way to let typescript know about them is to add them your `tsconfig.json` file(s):
+:::note[FYI]
+In most cases, running `dmno init` will have already made this change for you!
+:::
+
+```diff lang="jsonc"
+{
+  "compilerOptions": {
+    "strict": true,
+    // ...
+  },
+  "include": [
+    "src/**/*.ts",
++    // inject DMNO_CONFIG globals
++    ".dmno/.typegen/global.d.ts",
++    ".dmno/.typegen/global-public.d.ts",
+  ]
+}
+```
+
+
+
+
+In some exotic situations, it could be useful to use a [triple-slash](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html) reference. For example:
+```diff title="build-src/some-file.ts"
++/// <reference types="../.dmno/.typegen/global.d.ts" />
+console.log(DMNO_CONFIG.SOME_SECRET)
+```
+
+#### Pure JS projects
+Even if you are not writing TypeScript, these days you are still likely relying on TypeScript for autocompletion in your IDE. In this case you may use a [`jsconfig.json` file](https://code.visualstudio.com/docs/languages/jsconfig) - but otherwise everything should be the same, including that `dmno init` will have hopefully injected the DMNO types for you already.
+
+If you don't already have one of these config files, create a basic `jsconfig.json` file, and then re-run `dmno init`.
+```json title="jsconfig.json"
+{
+  "include": ["**/*.js"] // globs for the files you want to include
+}
+```
+
+:::caution
+Bottom line is that if you don't tell TypeScript somehow about the `DMNO_CONFIG` globals, then while things may still work, you'll be missing out!
+:::
+
+#### Injecting `DMNO_CONFIG` vs `DMNO_PUBLIC_CONFIG`
+
+To keep things simple, by default we always inject the global types for both `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG`. However there are cases where you may want to only inject one or the other:
+
+- In a front-end only (non-SSR) context, you could skip injecting `DMNO_CONFIG` because you'll only want to use non-sensitive config items. That said, injecting the _types_ doesn't actually inject your sensitive secrets, and we inject a placeholder proxy throws a helpful error if you try to use `DMNO_CONFIG`.
+- In a back-end only context, you could skip injecting `DMNO_PUBLIC_CONFIG` and exclusively use `DMNO_CONFIG` - just like we do in your `.dmno/config.mts` file. However there isn't really any harm in using the public version, and it can serve as an extra check that something is definitely not sensitive - which could be useful if you were for example returning a config item in an API response.
+

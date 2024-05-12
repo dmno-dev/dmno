@@ -9,6 +9,8 @@
     "./src/**/*.vue",
     "./src/**/*.mdx",
     "astro.config.ts",
+
+    // inject DMNO_CONFIG globals
     "./.dmno/.typegen/global.d.ts",
     "./.dmno/.typegen/global-public.d.ts",
   ]
