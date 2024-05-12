@@ -3,13 +3,4 @@
   "compilerOptions": {
     "jsx": "preserve"
   },
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.astro",
-    "./src/**/*.vue",
-    "./src/**/*.mdx",
-    "astro.config.ts",
-    "./.dmno/.typegen/global.d.ts",
-    "./.dmno/.typegen/global-public.d.ts",
-  ]
 }

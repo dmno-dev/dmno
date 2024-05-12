@@ -23,8 +23,6 @@
   },
   "include": [
     "next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts",
-    "./.dmno/.typegen/global.d.ts",
-    "./.dmno/.typegen/global-public.d.ts",
   ],
   "exclude": [ "node_modules" ]
 }

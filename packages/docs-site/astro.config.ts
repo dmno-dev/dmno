@@ -139,6 +139,10 @@ export default defineConfig({
               label: 'Dynamic vs Static Config',
               link: '/docs/guides/dynamic-config',
             },
+            {
+              label: 'Typescript',
+              link: '/docs/guides/typescript',
+            },
           ],
         }, {
           label: 'Plugins',

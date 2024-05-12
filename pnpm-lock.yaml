@@ -15,7 +15,7 @@ importers:
         specifier: ^2.27.1
         version: 2.27.1
       dmno:
-        specifier: link:./packages/core
+        specifier: workspace:*
         version: link:packages/core
       only-allow:
         specifier: ^1.2.1
@@ -181,7 +181,7 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0(astro@4.7.0(@types/node@20.12.7)(less@4.2.0)(typescript@5.4.5))(vite@5.2.10(@types/node@20.12.7)(less@4.2.0))(vue@3.4.25(typescript@5.4.5))
       '@dmno/astro-integration':
-        specifier: link:../integrations/astro
+        specifier: workspace:*
         version: link:../integrations/astro
       '@dmno/eslint-config':
         specifier: workspace:*
@@ -214,7 +214,7 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       dmno:
-        specifier: link:../core
+        specifier: workspace:*
         version: link:../core
       eslint-plugin-astro:
         specifier: ^0.31.4
@@ -516,7 +516,7 @@ importers:
         version: 4.1.1(google-auth-library@9.9.0)
     devDependencies:
       '@dmno/encrypted-vault-plugin':
-        specifier: link:../plugins/encrypted-vault
+        specifier: workspace:*
         version: link:../plugins/encrypted-vault
       '@dmno/eslint-config':
         specifier: workspace:*
@@ -531,7 +531,7 @@ importers:
         specifier: ^3.2.24
         version: 3.2.24
       dmno:
-        specifier: link:../core
+        specifier: workspace:*
         version: link:../core
       netlify-cli:
         specifier: ^17.1.0

@@ -1,13 +1,16 @@
 import { execSync } from 'child_process';
 import fs from 'node:fs';
+import path from 'path';
 import kleur from 'kleur';
 import { outdent } from 'outdent';
 import { input, select, confirm } from '@inquirer/prompts';
 import validatePackageName from 'validate-npm-package-name';
 import boxen from 'boxen';
-import { parse as parseJSONC } from 'jsonc-parser';
 import { tryCatch, promiseDelay } from '@dmno/ts-lib';
+import { fdir } from 'fdir';
 import { PackageManager, ScannedWorkspaceInfo, pathExists } from '../../config-loader/find-services';
+import { injectDmnoTypesIntoTsConfig } from './tsconfig-utils';
+import { joinAndCompact } from './formatting';
 
 const STEP_DELAY = 300;
 
@@ -77,25 +80,31 @@ const CONFIG_MTS = (serviceName?: string) => outdent`
 `;
 
 function setupStepMessage(message: string, opts?: {
-  type?: 'noop',
+  type?: 'noop' | 'failure',
   path?: string,
   package?: string,
   packageVersion?: string,
   docs?: string,
 }) {
-  const icon = opts?.type === 'noop' ? '✅' : '✨';
-  return [
-    `${icon} ${message}`,
-    ...opts?.path ? [['   📂 ', kleur.italic().gray(opts.path)].join('')] : [],
-    ...opts?.package ? [
-      [
-        '   📦 ',
-        kleur.italic().magenta(opts.package),
-        opts.packageVersion ? kleur.gray(` @ "${opts.packageVersion}"`) : '',
-      ].join(''),
-    ] : [],
-    ...opts?.docs ? [kleur.green(`   📚 Read the docs @ ${opts.docs}`)] : [],
-  ].join('\n');
+  const icon = {
+    noop: '✅',
+    failure: '🚫',
+    _default: '✨',
+  }[opts?.type || '_default'];
+  let docsLink = opts?.docs || '';
+
+  if (docsLink && docsLink.startsWith('/')) docsLink = `https://dmno.dev/docs${docsLink}`;
+
+  return joinAndCompact([
+    `${icon} ${opts?.type === 'failure' ? kleur.bgRed(message) : message}`,
+    opts?.path && ['   📂 ', kleur.italic().gray(opts.path)].join(''),
+    opts?.package && [
+      '   📦 ',
+      kleur.italic().magenta(opts.package),
+      opts.packageVersion ? kleur.gray(` @ "${opts.packageVersion}"`) : '',
+    ].join(''),
+    docsLink && (`   📚${kleur.italic(` see docs @ ${docsLink}`)}`),
+  ], '\n');
 }
 
 
@@ -113,23 +122,23 @@ function installPackage(
 const KNOWN_INTEGRATIONS_MAP: Record<string, { package: string, docs?: string }> = {
   astro: {
     package: '@dmno/astro-integration',
-    docs: 'https://dmno.dev/docs/integrations/astro',
+    docs: '/integrations/astro',
   },
   next: {
     package: '@dmno/nextjs-integration',
-    docs: 'https://dmno.dev/docs/integrations/nextjs',
+    docs: '/integrations/nextjs',
   },
   vite: {
     package: '@dmno/vite-integration',
-    docs: 'https://dmno.dev/docs/integrations/vite',
+    docs: '/integrations/vite',
   },
   express: {
     package: 'dmno',
-    docs: 'https://dmno.dev/docs/integrations/node',
+    docs: '/integrations/node',
   },
   koa: {
     package: 'dmno',
-    docs: 'https://dmno.dev/docs/integrations/node',
+    docs: '/integrations/node',
   },
 };
 
@@ -309,8 +318,67 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     }
   }
 
-  // UPDATE tsconfig.json
-  // TODO
+  // SET UP TYPESCRIPT
+  let srcDirPath = `${service.path}/src`;
+  if (!fs.existsSync(srcDirPath)) srcDirPath = service.path;
+  const dmnoEnvFilePath = `${srcDirPath}/dmno-env.d.ts`;
+  if (fs.existsSync(dmnoEnvFilePath)) {
+    console.log(setupStepMessage('injecting dmno types - dmno-env.d.ts already exists', {
+      type: 'noop',
+      path: dmnoEnvFilePath,
+      docs: '/guides/typescript',
+    }));
+  } else {
+    let globalDtsRelativePath = path.relative(srcDirPath, `${service.path}/.dmno/.typegen/global.d.ts`);
+    if (globalDtsRelativePath.startsWith('.dmno')) globalDtsRelativePath = `./${globalDtsRelativePath}`;
+    await fs.promises.writeFile(dmnoEnvFilePath, outdent`
+      // inject DMNO_CONFIG global
+      /// <reference types="${globalDtsRelativePath}" />
+      // inject DMNO_PUBLIC_CONFIG global
+      /// <reference types="${globalDtsRelativePath.replace('global.d.ts', 'global-public.d.ts')}" />
+
+    `);
+    console.log(setupStepMessage('injecting dmno types - created dmno-env.d.ts file', {
+      path: dmnoEnvFilePath,
+      docs: '/guides/typescript',
+    }));
+  }
+
+
+  // const tsConfigFiles = await (
+  //   new fdir() // eslint-disable-line new-cap
+  //     .withRelativePaths()
+  //     .glob('./tsconfig.json', './tsconfig.*.json', 'jsconfig.json')
+  //     .withMaxDepth(0)
+  //     .crawl(service.path)
+  //     .withPromise()
+  // );
+  // if (!tsConfigFiles.length) {
+  //   console.log(setupStepMessage('Failed to inject DMNO types - no tsconfig/jsconfig found', {
+  //     type: 'failure',
+  //     docs: '/guides/typescript',
+  //   }));
+  // }
+  // for (const tsConfigFileName of tsConfigFiles) {
+  //   const tsConfigPath = `${service.path}/${tsConfigFileName}`;
+  //   const originalTsConfigContents = (await fs.promises.readFile(tsConfigPath)).toString();
+  //   const updatedTsConfigContents = await injectDmnoTypesIntoTsConfig(originalTsConfigContents);
+  //   if (updatedTsConfigContents) {
+  //     // TODO: maybe want to confirm with the user and show a diff?
+  //     await fs.promises.writeFile(tsConfigPath, updatedTsConfigContents);
+
+  //     console.log(setupStepMessage(`injected DMNO types into ${tsConfigFileName}`, {
+  //       path: tsConfigPath,
+  //       // docs: suggestedDmnoIntegration.docs,
+  //     }));
+  //   } else {
+  //     console.log(setupStepMessage('tsconfig already includes DMNO types', {
+  //       type: 'noop',
+  //       path: tsConfigPath,
+  //       // docs: suggestedDmnoIntegration.docs,
+  //     }));
+  //   }
+  // }
 
 
   // INSTALL KNOWN INTEGRATIONS

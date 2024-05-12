@@ -15,9 +15,6 @@
     "rootDir": "./",
   },
   "include": [
-    "tsup.config.ts",
     "src/**/*.ts",
-    "./.dmno/.typegen/global.d.ts",
-    "./.dmno/.typegen/global-public.d.ts"
   ]
 }
