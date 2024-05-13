@@ -15,11 +15,11 @@ There are a few different ways you can adopt DMNO incrementally:
 **Feature by feature**: 
   - You can start by adding a list of environment variables to your schema, and use DMNO to validate that they exist
   - Mark items as `required` and `sensitive`
-  - Add descriptions to items to [automatically attach documentation](/docs/guides/schema#docs--intellisense)
-  - Add [specific types](/docs/guides/schema#data-types--extends) to each of the config items
-  - Then add custom [validation rules](/docs/guides/schema#validations--required-config), coercion, and custom types
-  - Set [values](/docs/guides/schema#setting-item-values) from the schema itself (e.g., functions, switching [based on environment](/docs/guides/multi-env))
-  - Add [plugins](/docs/plugins/overview) to fetch the config values from a secure source
+  - Add descriptions to items to [automatically attach documentation](/docs/guides/schema/#docs--intellisense)
+  - Add [specific types](/docs/guides/schema/#data-types--extends) to each of the config items
+  - Then add custom [validation rules](/docs/guides/schema/#validations--required-config), coercion, and custom types
+  - Set [values](/docs/guides/schema/#setting-item-values) from the schema itself (e.g., functions, switching [based on environment](/docs/guides/multi-env/))
+  - Add [plugins](/docs/plugins/overview/) to fetch the config values from a secure source
 
 **In your code**: 
   - We will support your existing methods of using env vars (e.g., `process.env` in Node.js, `import.meta.env` in Vite, etc) while you migrate to DMNO, by reinjecting your resolved config items as strings. You won't get type completion, full IntelliSense, and you won't get an error if you try to access a variable that doesn't exist, unfortunately.

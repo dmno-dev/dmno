@@ -106,42 +106,42 @@ export default defineConfig({
           items: [
             {
               label: 'What is DMNO?',
-              link: '/docs/get-started/what-is-dmno',
+              link: '/docs/get-started/what-is-dmno/',
             },
             {
               label: 'Quickstart',
-              link: '/docs/get-started/quickstart',
+              link: '/docs/get-started/quickstart/',
             },
             {
               label: 'Concepts',
-              link: '/docs/get-started/concepts',
+              link: '/docs/get-started/concepts/',
             },
             {
               label: 'Security',
-              link: '/docs/get-started/security',
+              link: '/docs/get-started/security/',
             }],
         }, {
           label: 'Guides',
           items: [
             {
               label: 'Schema Authoring',
-              link: '/docs/guides/schema',
+              link: '/docs/guides/schema/',
             },
             {
               label: 'Incremental Adoption',
-              link: '/docs/guides/incremental-adoption',
+              link: '/docs/guides/incremental-adoption/',
             },
             {
               label: 'Multiple Environments',
-              link: '/docs/guides/multi-env',
+              link: '/docs/guides/multi-env/',
             },
             {
               label: 'Dynamic vs Static Config',
-              link: '/docs/guides/dynamic-config',
+              link: '/docs/guides/dynamic-config/',
             },
             {
               label: 'Typescript',
-              link: '/docs/guides/typescript',
+              link: '/docs/guides/typescript/',
             },
           ],
         }, {
@@ -149,22 +149,22 @@ export default defineConfig({
           badge: 'New',
           items: [{
             label: 'Overview',
-            link: '/docs/plugins/overview',
+            link: '/docs/plugins/overview/',
           },
           {
             label: 'Encrypted Vaults',
-            link: '/docs/plugins/encrypted-vault',
+            link: '/docs/plugins/encrypted-vault/',
           },
           {
             label: '1Password',
-            link: '/docs/plugins/1password',
+            link: '/docs/plugins/1password/',
           }],
         }, {
           label: 'Integrations',
           badge: 'New',
           items: [{
             label: 'Overview',
-            link: '/docs/integrations/overview',
+            link: '/docs/integrations/overview/',
           },
           {
             label: 'Astro',
@@ -210,31 +210,31 @@ export default defineConfig({
               items: [
                 {
                   label: 'Commands',
-                  link: '/docs/reference/cli/commands',
+                  link: '/docs/reference/cli/commands/',
                 },
                 {
                   label: 'init',
-                  link: '/docs/reference/cli/init',
+                  link: '/docs/reference/cli/init/',
                 },
                 {
                   label: 'load',
-                  link: '/docs/reference/cli/load',
+                  link: '/docs/reference/cli/load/',
                 },
                 {
                   label: 'dev',
-                  link: '/docs/reference/cli/dev',
+                  link: '/docs/reference/cli/dev/',
                 },
                 {
                   label: 'run',
-                  link: '/docs/reference/cli/run',
+                  link: '/docs/reference/cli/run/',
                 },
                 {
                   label: 'plugin',
-                  link: '/docs/reference/cli/plugin',
+                  link: '/docs/reference/cli/plugin/',
                 },
                 {
                   label: 'clear-cache',
-                  link: '/docs/reference/cli/clear-cache',
+                  link: '/docs/reference/cli/clear-cache/',
                 },
               ],
             },
