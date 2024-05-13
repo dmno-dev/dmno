@@ -81,6 +81,8 @@
     "@inquirer/core": "^8.0.1",
     "@inquirer/prompts": "^5.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
+    "acorn": "^8.11.3",
+    "acorn-typescript": "^1.4.13",
     "async": "^3.2.5",
     "base64-arraybuffer": "^1.0.2",
     "boxen": "^7.1.1",

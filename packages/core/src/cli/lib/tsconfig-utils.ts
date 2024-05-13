@@ -3,11 +3,7 @@ import fs from 'fs';
 import {
   parse, modify, applyEdits, findNodeAtLocation, parseTree,
 } from 'jsonc-parser';
-
-function stringInsert(index: number, str: string, insertStr: string) {
-  if (index > 0) return str.substring(0, index) + insertStr + str.substring(index, str.length);
-  else return insertStr + str;
-}
+import { stringInsert } from './string-utils';
 
 /**
  * updates tsconfig.json file to inject our dmno global types
