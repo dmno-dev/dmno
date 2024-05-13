@@ -2,7 +2,6 @@ import { defineConfig } from 'astro/config';
 import dmnoAstroIntegration from '@dmno/astro-integration';
 import vue from "@astrojs/vue";
 import mdx from "@astrojs/mdx";
-
 import node from "@astrojs/node";
 
 // https://astro.build/config

@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-
+import fs from 'node:fs';
 import kleur from 'kleur';
 import _ from 'lodash-es';
 
@@ -11,7 +11,7 @@ import { ViteNodeRunner } from 'vite-node/client';
 import { ConfigLoaderRequestMap } from './ipc-requests';
 import { createDebugTimer } from '../cli/lib/debug-timer';
 import { setupViteServer } from './vite-server';
-import { WorkspacePackagesListing, findDmnoServices } from './find-services';
+import { ScannedWorkspaceInfo, WorkspacePackagesListing, findDmnoServices } from './find-services';
 import {
   DmnoService, DmnoWorkspace, DmnoServiceConfig, CacheMode,
 } from '../config-engine/config-engine';
@@ -45,18 +45,26 @@ export class ConfigLoader {
 
   viteRunner?: ViteNodeRunner;
 
-  workspacePackagesData: Array<WorkspacePackagesListing> = [];
-  workspaceRootPath?: string;
+  workspaceInfo!: ScannedWorkspaceInfo;
+  get workspacePackagesData() {
+    return this.workspaceInfo.workspacePackages;
+  }
+  get workspaceDmnoPackagesData() {
+    return this.workspaceInfo.workspacePackages.filter((p) => !!p.dmnoFolder);
+  }
+  get workspaceRootPath() {
+    return this.workspaceInfo.workspacePackages[0].path; // first should always be root (and is also marked)
+  }
+
   private async finishInit() {
     // console.time('find-services');
-    const workspaceInfo = await findDmnoServices();
+    this.workspaceInfo = await findDmnoServices();
+    const dmnoServicePackages = this.workspaceInfo.workspacePackages.filter((p) => p.dmnoFolder);
 
     // during init there may be no services at all
-    if (!workspaceInfo.workspacePackages.length) return;
+    if (!dmnoServicePackages.length) return;
 
     // console.timeEnd('find-services');
-    this.workspacePackagesData = workspaceInfo.workspacePackages;
-    this.workspaceRootPath = workspaceInfo.workspacePackages[0].path; // first should always be root (and is also marked)
 
     // TODO: we may want to do this on demand
     // so it does not slow down `dmno init` or other commands that don't need it
@@ -96,15 +104,12 @@ export class ConfigLoader {
 
     // TODO: we may want to set up an initial sort of the services so at least root is first?
     for (const w of this.workspacePackagesData) {
+      if (!w.dmnoFolder) continue;
       // not sure yet about naming the root file differently?
       // especially in the 1 service context, it may feel odd
       // const configFilePath = `${w.path}/.dmno/${isRoot ? 'workspace-' : ''}config.mts`;
       const configFilePath = `${w.path}/.dmno/config.mts`;
-      // TODO: do we want to allow .ts or .js too?
-      // having some issues when mixing esm with non-esm code in TSX...
-      // if (!fs.existsSync(configFilePath)) {
-      //   configFilePath = configFilePath.replace(/\.mts$/, '.ts');
-      // }
+
 
       const serviceInitOpts = {
         isRoot: w.isRoot,

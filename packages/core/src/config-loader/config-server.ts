@@ -3,6 +3,7 @@ import mitt, { Handler } from 'mitt';
 import Debug from 'debug';
 import { DeferredPromise, createDeferredPromise } from '@dmno/ts-lib';
 
+import kleur from 'kleur';
 import { ConfigLoader } from './config-loader';
 import { createDebugTimer } from '../cli/lib/debug-timer';
 import { ConfigLoaderRequestMap } from './ipc-requests';
@@ -149,9 +150,33 @@ export class ConfigServer {
     });
 
     this.registerRequestHandler('get-resolved-config', async (payload) => {
+      // if selecting by package name, we'll first make sure the package is valid and initialized
+      // this may need to move somewher else / happen earlier when setting up `dmno dev`?
+      if (payload.packageName) {
+        const packageManager = this.configLoader.workspaceInfo.packageManager;
+        const selectedPackageInfo = this.configLoader.workspacePackagesData.find((p) => p.name === payload.packageName);
+        if (selectedPackageInfo) {
+          if (!selectedPackageInfo.dmnoFolder) {
+            console.log(`\n🚨 Package ${selectedPackageInfo.name} has not yet been initialized as a DMNO service`);
+            console.log();
+            // TODO we'll want a helper to get commands for the current package manager (pnpm exec dmno)
+            // could also detect current directory and skip the cd
+            console.log('Please run the following command to get it set up:');
+            console.log(kleur.cyan(` cd ${selectedPackageInfo.path} && ${packageManager} exec dmno init`));
+            console.log();
+            process.exit(1);
+          }
+        } else {
+          throw new Error(`Package ${payload.packageName} does not exist in your workspace`);
+        }
+      }
+
+
       await this.workspace.resolveConfig();
       const service = this.workspace.getService(payload);
-      if (!service) throw new Error('Unable to select a service');
+      if (!service) {
+        throw new Error(`Unable to select service - ${payload.serviceName || payload.packageName}`);
+      }
 
       return service.toJSON();
     });

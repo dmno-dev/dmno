@@ -22,7 +22,7 @@ Runs the service in dev mode, and watches for changes and updates as needed.
   .option('--silent', 'do not log anything, useful when using in conjunction with a ConfigServerClient which will do its own logging')
   .example('dmno dev', 'Runs the service in dev mode');
 
-addServiceSelection(program);
+addServiceSelection(program, false);
 // TODO: need to clarify behaviour around "clear-cache" and if that clears once or on every load
 addCacheFlags(program);
 
@@ -54,7 +54,7 @@ program.action(async (opts: {
       const service = workspace.getService(opts.service);
 
       _.each(service.config, (item) => {
-        console.log(getItemSummary(item));
+        console.log(getItemSummary(item.toJSON()));
       });
     } else {
       console.log('config loaded!');
