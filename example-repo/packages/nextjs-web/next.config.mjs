@@ -1,5 +1,4 @@
 import { dmnoNextConfigPlugin } from '@dmno/nextjs-integration';
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   

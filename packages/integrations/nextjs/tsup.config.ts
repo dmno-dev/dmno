@@ -3,6 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: [ // Entry point(s)
     'src/index.ts', // main lib, users will import from here
+    'src/meta.ts', // exposes meta info about the integration
     'src/inject-dmno-client.ts',
     'src/inject-dmno-server.ts',
   ], 

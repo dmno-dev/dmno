@@ -25,6 +25,9 @@
   "exports": {
     ".": {
       "default": "./dist/index.mjs"
+    },
+    "./meta": {
+      "default": "./dist/meta.mjs"
     }
   },
   "typesVersions": {
