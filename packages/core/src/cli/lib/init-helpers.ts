@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
 import fs from 'node:fs';
 import path from 'path';
+import { parse as parseJSONC } from 'jsonc-parser';
 import buildEsmResolver from 'esm-resolve';
 import kleur from 'kleur';
 import { outdent } from 'outdent';
@@ -394,9 +395,15 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
             resolveToAbsolute: true,
           });
           const integrationMetaFile = esmResolver(`${suggestedDmnoIntegration.package}/meta`);
+          if (!integrationMetaFile) {
+            throw new Error('Unable to find integration meta info file');
+          }
           // TODO: add some typing on the meta provider stuff...
-          const metaProvider = await import(integrationMetaFile);
-          const configCodeMods = metaProvider.getInstallationCodemods?.();
+          const integrationMetaRaw = (await fs.promises.readFile(integrationMetaFile)).toString();
+          const integrationMeta = parseJSONC(integrationMetaRaw);
+          // currently we are assuming only a single codemod and that it will be for a config file
+          // but will likely change
+          const configCodeMods = integrationMeta.installationCodemods?.[0];
 
           const configFileFullPath = await findConfigFile(service.path, configCodeMods.glob);
           const configFileName = configFileFullPath.split('/').pop();
@@ -409,8 +416,11 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
             } else {
               const diffText = getDiffColoredText(originalConfigFileSrc, updatedConfigFileSrc);
 
-              console.log(kleur.magenta('DMNO will make the following changes to your config file:\n'));
-              console.log(boxen(diffText, { title: configFileName }));
+              console.log(kleur.magenta('DMNO will make the following changes to your config file:'));
+              // boxen wasn't handling indentation and line wrapping well
+              console.log(kleur.magenta(`-- ${configFileName} -----------`));
+              console.log(diffText.trim());
+              console.log(kleur.magenta('--------------------------------'));
 
               const confirmedConfigChanges = await confirm({
                 message: 'Continue?',

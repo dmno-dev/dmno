@@ -27,7 +27,7 @@
       "default": "./dist/index.mjs"
     },
     "./meta": {
-      "default": "./dist/meta.mjs"
+      "default": "./dmno.meta.json"
     }
   },
   "typesVersions": {

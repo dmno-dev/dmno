@@ -14,5 +14,6 @@ export function getDiffColoredText(input: string, output: string): string {
       .map(kleur[chunk.added ? 'green' : 'red'])
       .join('\n');
   }).join('');
+
   return diffText;
 }

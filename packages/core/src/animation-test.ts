@@ -1,4 +1,5 @@
 import { outdent } from 'outdent';
+import boxen from 'boxen';
 import logUpdate from 'log-update';
 import { DOMINO_WITH_D, fallingDmnosAnimation } from './cli/lib/loaders';
 

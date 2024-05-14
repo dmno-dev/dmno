@@ -3,7 +3,6 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: [ // Entry point(s)
     'src/index.ts', // main lib, users will import from here
-    'src/meta.ts', // exposes meta info about the integration
     'src/dev-toolbar-app.ts', // dev toolbar
     'src/astro-middleware.ts', // lead detection middleware
     'src/fetch-public-dynamic-config.json.ts', // injected api route to fetch dynamic public config

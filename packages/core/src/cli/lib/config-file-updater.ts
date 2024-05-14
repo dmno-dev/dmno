@@ -74,6 +74,7 @@ export async function updateConfigFile(
         + `${q}${moduleName}${q}${semi}`;
 
 
+      // TODO: if there are no existing imports, we may want to insert after any comments rather than the start of the file
       mods.push({
         insertAt: importNodes[0]?.start || 0,
         text: `${importStr}\n`,
@@ -138,6 +139,7 @@ export async function updateConfigFile(
         throw new Error('unable to find AST node to update');
       }
 
+      // TODO: handle key not existing yet
       // this action will ensure an array contains an item matching some code
       if ('arrayContains' in singleUpdate.action) {
         if (nodeToUpdate.type !== 'Property') {
@@ -166,7 +168,8 @@ export async function updateConfigFile(
           mods.push({
             insertAt: nodeToUpdate.value.start + 1,
             text:
-              // TODO: would be nice to figure out indents / line breaks too
+              // TODO: handle empty array
+              // TODO: better handling of indents / line breaks too, single line arrays
               '\n    '
               + singleUpdate.action.arrayContains
               + (arrayItems.length ? ',' : ''),
