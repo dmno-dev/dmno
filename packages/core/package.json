@@ -26,9 +26,9 @@
     "build": "tsup",
     "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
     "dev": "pnpm run build --watch",
-    "test": "vite-node ./src/test.ts",
     "lint": "eslint src --ext .ts,.cjs",
-    "lint:fix": "pnpm run lint --fix"
+    "lint:fix": "pnpm run lint --fix",
+    "test": "vitest"
   },
   "engines": {
     "node": ">=16"
@@ -75,7 +75,8 @@
     "@types/node-ipc": "^9.2.3",
     "@types/validate-npm-package-name": "^4.0.2",
     "@types/which": "^3.0.3",
-    "tsup": "^8.0.2"
+    "tsup": "^8.0.2",
+    "vitest": "^1.6.0"
   },
   "dependencies": {
     "@dagrejs/graphlib": "^2.2.2",

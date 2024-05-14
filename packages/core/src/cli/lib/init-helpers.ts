@@ -430,8 +430,6 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     }
   }
 
-
-
   // SECRETS PLUGINS
   // TODO
   // if (service.isRoot) {}

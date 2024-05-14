@@ -29,12 +29,12 @@ export async function findConfigFile(baseDir: string, glob: string) {
 export async function updateConfigFile(
   originalSrc: string,
   opts: {
-    imports: Array<{
+    imports?: Array<{
       moduleName: string,
       importDefaultAs?: string,
       importVars?: Array<string>;
     }>,
-    updates: Array<{
+    updates?: Array<{
       // so far, we only need to modify the default export, but we may need other options
       symbol: 'EXPORT',
       path?: Array<string>,
@@ -55,7 +55,7 @@ export async function updateConfigFile(
   const q = importNodes?.[0]?.source.raw?.endsWith('"') ? '"' : "'";
   const semi = (!importNodes.length || originalSrc.substr(importNodes[0].end - 1, 1) === ';') ? ';' : '';
 
-  for (const singleImport of opts.imports) {
+  for (const singleImport of opts.imports || []) {
     const { moduleName, importDefaultAs, importVars } = singleImport;
     // first see if the file is already imported
     const existingImportNode = importNodes.find((n) => n.source.value === moduleName);
@@ -93,7 +93,7 @@ export async function updateConfigFile(
     }
   }
 
-  for (const singleUpdate of opts.updates) {
+  for (const singleUpdate of opts.updates || []) {
     // currently we're always updating the default export
     // as we encounter more use cases, we can expand all our options here
     if (singleUpdate.symbol === 'EXPORT') {
