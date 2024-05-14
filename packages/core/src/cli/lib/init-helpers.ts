@@ -151,7 +151,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
 
   console.log(boxen(
     [
-      `Initializing DMNO in workspace ${service.isRoot ? 'root' : 'package'} - ${kleur.magenta(service.name)}`,
+      `Initializing dmno in workspace ${service.isRoot ? 'root' : 'package'} - ${kleur.magenta(service.name)}`,
       kleur.italic().gray(service.path),
     ].join('\n'),
     {
@@ -241,9 +241,9 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
 
       if (serviceName === '?') {
         console.log(boxen([
-          'Every "service" in dmno (including the root) has a name (which we refer to as the "service name").',
+          'Every "service" in dmno, including the root, has a name which we refer to as the "service name".',
           '',
-          'If you don\'t specify one, we\'ll use the name from your package.json file, but since package names often have a prefix/scope (ex: "@mycoolorg/some-service") and you may need to type this name in a few places - like selecting a service via the dmno CLI - you want to keep it simple.',
+          'If you don\'t specify one, we\'ll use the name from your package.json file. But, package names often have a prefix/scope (e.g., "@mycoolorg/some-service") and you may need to type this name in a few places - like selecting a service via the dmno CLI - you want to keep it simple.',
           '',
           'You can use our suggestion, write your own name, or delete the default to inherit the name from package.json.',
           '',
@@ -301,7 +301,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
       console.log(setupStepMessage('.gitignore already includes dmno files', { type: 'noop', path: gitIgnorePath }));
     } else {
       gitIgnore += outdent`
-        # DMNO files ###
+        # dmno files ###
         # local cache for resolved values
         **/.dmno/cache.json
         # encryption key used for cache
@@ -354,7 +354,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
   //     .withPromise()
   // );
   // if (!tsConfigFiles.length) {
-  //   console.log(setupStepMessage('Failed to inject DMNO types - no tsconfig/jsconfig found', {
+  //   console.log(setupStepMessage('Failed to inject dmno types - no tsconfig/jsconfig found', {
   //     type: 'failure',
   //     docs: '/guides/typescript',
   //   }));
@@ -367,12 +367,12 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
   //     // TODO: maybe want to confirm with the user and show a diff?
   //     await fs.promises.writeFile(tsConfigPath, updatedTsConfigContents);
 
-  //     console.log(setupStepMessage(`injected DMNO types into ${tsConfigFileName}`, {
+  //     console.log(setupStepMessage(`injected dmno types into ${tsConfigFileName}`, {
   //       path: tsConfigPath,
   //       // docs: suggestedDmnoIntegration.docs,
   //     }));
   //   } else {
-  //     console.log(setupStepMessage('tsconfig already includes DMNO types', {
+  //     console.log(setupStepMessage('tsconfig already includes dmno types', {
   //       type: 'noop',
   //       path: tsConfigPath,
   //       // docs: suggestedDmnoIntegration.docs,
@@ -390,12 +390,12 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
         ];
 
         if (suggestedDmnoIntegration.package === 'dmno') {
-          console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} - natively supported integration`, {
+          console.log(setupStepMessage(`dmno + ${knownIntegrationDep} - natively supported integration`, {
             type: 'noop',
             docs: suggestedDmnoIntegration.docs,
           }));
         } else if (packageJsonDeps[suggestedDmnoIntegration.package]) {
-          console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} - integration already installed`, {
+          console.log(setupStepMessage(`dmno + ${knownIntegrationDep} - integration already installed`, {
             type: 'noop',
             package: suggestedDmnoIntegration.package,
             packageVersion: packageJsonDeps[suggestedDmnoIntegration.package],
@@ -408,12 +408,12 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
           });
 
           if (!confirmIntegrationInstall) {
-            console.log('No worries - you can always install it later!');
+            console.log('No worries - you can always install it later.');
           } else {
             installPackage(servicePath, workspaceInfo.packageManager, suggestedDmnoIntegration.package, false);
             await reloadPackageJson();
 
-            console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} integration installed!`, { package: suggestedDmnoIntegration.package, packageVersion: packageJsonDeps[suggestedDmnoIntegration.package] }));
+            console.log(setupStepMessage(`dmno + ${knownIntegrationDep} integration installed!`, { package: suggestedDmnoIntegration.package, packageVersion: packageJsonDeps[suggestedDmnoIntegration.package] }));
           }
         }
         break;
