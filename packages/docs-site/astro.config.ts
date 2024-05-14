@@ -141,7 +141,7 @@ export default defineConfig({
               link: '/docs/guides/dynamic-config/',
             },
             {
-              label: 'Typescript',
+              label: 'TypeScript',
               link: '/docs/guides/typescript/',
             },
           ],
