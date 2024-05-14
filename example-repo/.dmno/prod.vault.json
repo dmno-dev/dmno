@@ -3,8 +3,8 @@
   "keyName": "prod-2024-04-09",
   "items": {
     "root!VAULT_ITEM_1": {
-      "encryptedValue": "QkPClOYpnJ/8xvifOwxpldl8sTtYO09KOanRkAn2Whriz1amfIY=",
-      "updatedAt": "2024-04-30T01:48:56.136Z"
+      "encryptedValue": "6ZaCq4ECzdGJG5yMF6IVCh4SeXqM4AN/vqwb0z/+gmjMaM8=",
+      "updatedAt": "2024-05-13T05:25:53.899Z"
     },
     "root!VAULT_ITEM_WITH_SWITCH#staging": {
       "encryptedValue": "iPyB5Fhah1CYJdXpv9O1FBrbaHzRr1vTGHntqRYAgjgywAOuGWWzVy1v",

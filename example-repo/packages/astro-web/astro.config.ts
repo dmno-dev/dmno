@@ -1,9 +1,8 @@
-import { defineConfig } from 'astro/config';
 import dmnoAstroIntegration from '@dmno/astro-integration';
+import { defineConfig } from 'astro/config';
 import vue from "@astrojs/vue";
-import mdx from "@astrojs/mdx";
-
 import node from "@astrojs/node";
+import mdx from "@astrojs/mdx";
 
 // https://astro.build/config
 export default defineConfig({
@@ -39,3 +38,4 @@ export default defineConfig({
     }),
   },
 });
+

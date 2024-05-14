@@ -42,7 +42,7 @@ export async function pathExists(p: string) {
 }
 
 
-export async function findDmnoServices(includeUnitialized = false): Promise<ScannedWorkspaceInfo> {
+export async function findDmnoServices(includeUnitialized = true): Promise<ScannedWorkspaceInfo> {
   const startAt = new Date();
   let cwd = process.cwd();
   debug(`begin scan for services from ${cwd}`);

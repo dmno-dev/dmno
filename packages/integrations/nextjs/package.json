@@ -26,6 +26,9 @@
     ".": {
       "default": "./dist/index.mjs"
     },
+    "./meta": {
+      "default": "./dmno.meta.json"
+    },
     "./inject": {
       "default": "./dist/inject-dmno-server.mjs"
     }
