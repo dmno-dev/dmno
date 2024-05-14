@@ -24,7 +24,7 @@ Next, install `@dmno/nextjs-integration`.
 
 ### Configure your environment variables
 
-See our [Schema Guide](/docs/guides/schema) for the specifics of how to write your first DMNO schema. 
+See our [Schema Guide](/docs/guides/schema/) for the specifics of how to write your first DMNO schema. 
 
 
 ## Setup
@@ -104,7 +104,7 @@ And sometimes to other helper files that are trying to access config. If you eve
 _Hopefully this will be fixed soon or we can find a better workaround!_
 
 ### Adjusting package.json scripts
-Unlike some of our other integrations, the next integration requires that you run your next commands via [`dmno run`](/docs/reference/cli/run), so you must modify your package.json scripts:
+Unlike some of our other integrations, the next integration requires that you run your next commands via [`dmno run`](/docs/reference/cli/run/), so you must modify your package.json scripts:
 
 ```diff lang="json" title="package.json" ins=/(dmno run (-w )?-- )/
 {
@@ -143,7 +143,7 @@ While it's not perfect, this should be a bit better than standard env var handli
 
 If you'd like to be able to alter certain configuration values at boot time and load them in the client rather than relying on values bundled into your code, you need to expose an API endpoint which exposes this public+dynamic config. 
 
-See the [dynamic config guide](/docs/guides/dynamic-config) for more details.
+See the [dynamic config guide](/docs/guides/dynamic-config/) for more details.
 
 Unfortunately, NextJS does not let us automatically inject the API route required to expose the config, so if you want to use this feature, you must add an api route:
 
@@ -174,4 +174,4 @@ Unfortunately, NextJS does not let us automatically inject the API route require
   </TabItem>
 </Tabs>
 
-NOTE - fetching this config makes a **blocking** http request, so you should think carefully about if and how you use this feature, especially if performance is important your site. See the [dynamic config guide](/docs/guides/dynamic-config) for more details.
+NOTE - fetching this config makes a **blocking** http request, so you should think carefully about if and how you use this feature, especially if performance is important your site. See the [dynamic config guide](/docs/guides/dynamic-config/) for more details.
