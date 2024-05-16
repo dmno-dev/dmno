@@ -33,6 +33,15 @@ export async function asyncEachSeries<V>(
 ): Promise<void> {
   return asyncForEach(iterable, iteratee, 1);
 }
+
+export async function asyncEachLimit<V>(
+  iterable: Iterable<V> | AsyncIterable<V>,
+  iteratee: (value: V, index: number, iterable: Iterable<V> | AsyncIterable<V>) => Promise<void> | void,
+  concurrency: number,
+): Promise<void> {
+  return asyncForEach(iterable, iteratee, concurrency);
+}
+
 export async function asyncEachParallel<V>(
   iterable: Iterable<V> | AsyncIterable<V>,
   iteratee: (value: V, index: number, iterable: Iterable<V> | AsyncIterable<V>) => Promise<void> | void,

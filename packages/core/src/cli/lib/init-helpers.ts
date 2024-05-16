@@ -5,18 +5,18 @@ import { parse as parseJSONC } from 'jsonc-parser';
 import buildEsmResolver from 'esm-resolve';
 import kleur from 'kleur';
 import { outdent } from 'outdent';
-import { input, select, confirm } from '@inquirer/prompts';
+import { input, confirm } from '@inquirer/prompts';
 import validatePackageName from 'validate-npm-package-name';
 import boxen from 'boxen';
 import { tryCatch, promiseDelay } from '@dmno/ts-lib';
-import { fdir } from 'fdir';
 import { PackageManager, ScannedWorkspaceInfo, pathExists } from '../../config-loader/find-services';
-import { injectDmnoTypesIntoTsConfig } from './tsconfig-utils';
 import { joinAndCompact } from './formatting';
 import { findConfigFile, updateConfigFile } from './config-file-updater';
 import { getDiffColoredText } from './diff-utils';
 import { loadServiceDotEnvFiles } from '../../lib/dotenv-utils';
-import { generateDmnoConfigInitialCode, generateDmnoSchemaCode, inferDmnoSchema } from './schema-scaffold';
+import {
+  findEnvVarsInCode, generateDmnoConfigInitialCode, inferDmnoSchema,
+} from './schema-scaffold';
 import { checkIsFileGitIgnored } from '../../lib/git-utils';
 
 const STEP_DELAY = 300;
@@ -317,7 +317,8 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
       }
     }
 
-    const inferredSchema = await inferDmnoSchema(dotEnvFiles);
+    const envVarsFromCode = await findEnvVarsInCode(service.path);
+    const inferredSchema = await inferDmnoSchema(dotEnvFiles, envVarsFromCode);
     const schemaMtsCode = generateDmnoConfigInitialCode(service.isRoot, serviceName, inferredSchema);
     configFileGenerated = true;
 

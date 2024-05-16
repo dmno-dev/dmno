@@ -1,13 +1,9 @@
 import fs from 'node:fs';
-import path from 'path';
-import { exec } from 'node:child_process';
-import { asyncMap } from 'modern-async';
 import _ from 'lodash-es';
 import { fdir } from 'fdir';
-import { outdent } from 'outdent';
-import { DotEnvSchemaItem, LoadedDotEnvFile, parseDotEnvContents } from '../../lib/dotenv-utils';
-import { checkIsFileGitIgnored } from '../../lib/git-utils';
+import { LoadedDotEnvFile } from '../../lib/dotenv-utils';
 import { joinAndCompact } from './formatting';
+import { asyncEachLimit } from '../../lib/async-utils';
 
 
 // data structure to store our scaffolded dmno config that will be transformed into actual code
@@ -23,7 +19,7 @@ export type DmnoConfigScaffoldItem = {
 type DmnoConfigScaffold = Record<string, DmnoConfigScaffoldItem>;
 
 
-export async function inferDmnoSchema(dotEnvFiles: Array<LoadedDotEnvFile>) {
+export async function inferDmnoSchema(dotEnvFiles: Array<LoadedDotEnvFile>, envVarsFromCode: EnvVarsFromCode) {
   const dmnoSchema: DmnoConfigScaffold = {};
 
   for (const dotEnvFile of dotEnvFiles) {
@@ -78,6 +74,11 @@ export async function inferDmnoSchema(dotEnvFiles: Array<LoadedDotEnvFile>) {
         }
       }
     }
+  }
+  for (const varKey in envVarsFromCode) {
+    // TODO: we could think about inferring static/dynamic based on whether it came from process.env or import.meta
+    // and also sensitivity based on public prefixes for the service's integration (ie NEXT_PUBLIC_...)
+    dmnoSchema[varKey] ||= {};
   }
   return dmnoSchema;
 }
@@ -172,4 +173,59 @@ export function inferTypeFromEnvStringVal(val: string): { type: InferredBasicTyp
   return { type: 'string' };
 }
 
+
+
+const ENV_VAR_REGEX = /(process\.env|import\.meta\.env)\.([A-Za-z_][A-Za-z0-9_$]*)/g;
+
+type EnvVarsFromCode = Record<string, Record<string, boolean>>;
+// ex: { SOME_VAR: { 'process.env': true } }
+export async function findEnvVarsInCode(dirPath: string) {
+  // TODO: we may want to prompt the user instead
+  // and eventually we may need to detect env var usage in other languages
+  const fileExtensions = [
+    'ts', 'mts', 'cts', 'tsx',
+    'js', 'mjs', 'cjs', 'jsx',
+    'mdx', 'astro', 'vue', 'svelte',
+  ];
+  const filesToSearch = await (
+    new fdir() // eslint-disable-line new-cap
+      .withBasePath()
+      .glob(`**/*.{${fileExtensions.join(',')}}`)
+      .exclude((dirName, _dirPath) => {
+        // this helps speed things up since it stops recursing into these directories
+        // we could skip folders that are gitignored?
+        return (
+          dirName === 'node_modules'
+          || dirName === '.dmno'
+          // || dirName === 'dist'
+          // || dirName === '.next'
+        );
+      })
+      .crawl(dirPath)
+      .withPromise()
+  );
+
+  const envVars: EnvVarsFromCode = {};
+  await asyncEachLimit(filesToSearch, async (filePath) => {
+    try {
+      const fileStat = await fs.promises.stat(filePath);
+      // we'll skip scanning files over 500kb for now... can probably even turn that way down
+      if (fileStat.size > 500 * 1000) return;
+
+      const contents = await fs.promises.readFile(filePath, 'utf-8');
+      const matches = contents.matchAll(ENV_VAR_REGEX);
+      if (!matches) return;
+
+      Array.from(matches).forEach((match) => {
+        const [_matchedString, globalName, varName] = match;
+        envVars[varName] ||= {};
+        envVars[varName][globalName] = true;
+      });
+    } catch (err) {
+      // fail silently for now
+      // console.log(err);
+    }
+  }, 10); // we'll do 10 files at a time, maybe could be higher?
+  return envVars;
+}
 
