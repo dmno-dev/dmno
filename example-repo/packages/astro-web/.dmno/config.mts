@@ -1,5 +1,5 @@
 import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheFunctionResult, createDmnoDataType, defineDmnoService, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from 'dmno';
-import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
+import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 
 const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
 
@@ -18,6 +18,8 @@ export default defineDmnoService({
     },
   ],
   schema: {
+    OP_TOKEN: { extends: OnePasswordTypes.serviceAccountToken },
+
     FOO: {
       value: 'foo-config-value',
       description: 'test of non-sensitive env var WITHOUT "PUBLIC_" prefix',
@@ -35,7 +37,7 @@ export default defineDmnoService({
       description: 'empty item, should be undefined, but not throw',
     },
     FN_FOO: {
-      value: (ctx) => DMNO_CONFIG.FOO,
+      value: (ctx) => `fn-prefix-${DMNO_CONFIG.FOO}`,
     },
     PUBLIC_DYNAMIC: {
       value: 'public-dynamic-init',

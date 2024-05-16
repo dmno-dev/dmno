@@ -1,4 +1,5 @@
 {
+  "integrationForPackage": "astro",
   "publicPrefix": "PUBLIC_",
   "installationCodemods": [
     {

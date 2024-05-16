@@ -1,4 +1,5 @@
 {
+  "integrationForPackage": "next",
   "publicPrefix": "NEXT_PUBLIC_",
   "installationCodemods": [
     {

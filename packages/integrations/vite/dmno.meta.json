@@ -1,4 +1,5 @@
 {
+  "integrationForPackage": "vite",
   "publicPrefix": "VITE_",
   "installationCodemods": [
     {

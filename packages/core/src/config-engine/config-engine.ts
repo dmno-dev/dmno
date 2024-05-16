@@ -4,8 +4,6 @@ import crypto from 'node:crypto';
 import { execSync } from 'node:child_process';
 import _ from 'lodash-es';
 import Debug from 'debug';
-import async from 'async';
-import dotenv from 'dotenv';
 import validatePackageName from 'validate-npm-package-name';
 import graphlib from '@dagrejs/graphlib';
 import {
@@ -27,6 +25,8 @@ import {
 } from './errors';
 import { DmnoPlugin } from './plugins';
 import { stringifyJsonWithCommentBanner } from '../lib/json-utils';
+import { loadDotEnvIntoObject, loadServiceDotEnvFiles } from '../lib/dotenv-utils';
+import { asyncMapValues } from '../lib/async-utils';
 
 const debug = Debug('dmno');
 
@@ -287,6 +287,7 @@ export class OverrideSource {
   constructor(
     readonly type: string,
     private values: NestedOverrideObj,
+    readonly enabled = true,
   ) {}
 
   /** get an env var override value using a dot notation path */
@@ -594,7 +595,7 @@ export class DmnoWorkspace {
     const serializedCache: SerializedCache = {
       version: '0.0.1',
       keyName: CacheEntry.encryptionKeyName,
-      items: await async.mapValues(this.valueCache, async (cacheItem) => cacheItem.getJSON()),
+      items: await asyncMapValues(this.valueCache, async (cacheItem) => cacheItem.getJSON()),
     };
     const serializedCacheStr = stringifyJsonWithCommentBanner(serializedCache);
     await fs.promises.writeFile(this.cacheFilePath, serializedCacheStr, 'utf-8');
@@ -721,14 +722,23 @@ export class DmnoService {
   async loadOverrideFiles() {
     this.overrideSources = [];
 
-    const localOverridesPath = path.resolve(this.path, '.dmno/.env.local');
-    if (fs.existsSync(localOverridesPath)) {
-      const fileRaw = await fs.promises.readFile(localOverridesPath, 'utf-8');
-      const fileObj = dotenv.parse(Buffer.from(fileRaw));
+    // TODO: this is not at all optimized for speed...
+    // particularly it is doing a check on if the file is gitignored
+    // and if we are loading not in dev mode, we may just want to load files that will be applied
+    const dotEnvFiles = await loadServiceDotEnvFiles(this.path, true);
 
-      // TODO: probably want to run these through the same nested separator logic?
-      this.overrideSources.push(new OverrideSource('dotenv/local', fileObj));
-    }
+    dotEnvFiles.forEach((dotEnvFile) => {
+      this.overrideSources.unshift(
+        new OverrideSource(
+          dotEnvFile.fileName,
+          dotEnvFile.envObj,
+          // TODO: specific env overrides are being enabled based on process.env.NODE_ENV
+          // we probably want to be smarter about how _that_ gets resolved first
+          // and store it at the workspace level or something...?
+          !dotEnvFile.applyForEnv || dotEnvFile.applyForEnv === process.env.NODE_ENV,
+        ),
+      );
+    });
 
     // load multiple override files
     // .env.{ENV}.local
@@ -755,7 +765,7 @@ export class DmnoService {
         // process.env overrides exist at the workspace root
         this.workspace.processEnvOverrides,
         // other override sources - (just env files for now)
-        ...this.overrideSources,
+        ...this.overrideSources.filter((o) => o.enabled),
       ], (overrideSource) => {
         const overrideVal = overrideSource.getOverrideForPath(itemPath);
         if (overrideVal !== undefined) {
