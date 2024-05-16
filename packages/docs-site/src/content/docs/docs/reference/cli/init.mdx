@@ -3,7 +3,10 @@ title: dmno init
 description: Initialize a new DMNO project using the `dmno init` command.
 ---
 
-import CliCommand from "@/components/CliCommand.astro";
+`dmno init` is the easiest way to get started with DMNO. 
 
+It will automatically detect your project type and install the necessary packages and configuration for you. This includes setting up your `config.mts` file, and creating a `.dmno` directory in the root of your project. It will also import any config items from your `.env` files and add them to the `schema` in your `config.mts` files. Finally, it will install and configure any necessary integrations for your project type.
+
+import CliCommand from "@/components/CliCommand.astro";
 
 <CliCommand name="init" />

@@ -16,7 +16,7 @@ import TabbedCode from '@/components/TabbedCode.astro';
 
     ![dmno init](../../../../assets/tapes/init.gif)
 
-    This will create a `.dmno` folder in the root of your project with a `config.mts` file. If in a monorepo, any additional services of your choice will get their own `.dmno` folders. It will produce a file tree that looks something like this:
+    This will create a `.dmno` folder in the root of your project with a `config.mts` file, including config items in your `schema` that we automatically imported from `.env` files. If in a monorepo, any additional services of your choice will get their own `.dmno` folders, and `config.mts` files. It will produce a file tree that looks something like this:
 
     <FileTree>
     - / (root of your project)
@@ -41,13 +41,15 @@ import TabbedCode from '@/components/TabbedCode.astro';
 
 3. ### **Write your schema**
 
-    The config schema and other settings live in the `.dmno/config.mts` files. Defining each item with a description, [`required`](/docs/guides/schema/#validations--required-config), and [`sensitive`](/docs/guides/schema/#secrets--security) is a great first step. You can then improve your schema over time, adding validations, and setting values from within the schema itself.
+    The config schema and other settings live in the `.dmno/config.mts` files. `dmno init` does its best to scaffold out the initial version of this schema based on your existing `.env` files. Augmented each item with a description, [`required`](/docs/guides/schema/#validations--required-config), and [`sensitive`](/docs/guides/schema/#secrets--security) is a great next step. You can then improve your schema over time, adding validations, and setting values from within the schema itself.
 
     Check out the [schema guide](/docs/guides/schema/) for full details.
 
-4. ### **Install framework specific integrations**
+    {/* And if you would like more information on how we use `.env` files check out [`.env' file guide]() */}
 
-    We provide [drop-in integrations](/docs/integrations/overview/) for many popular frameworks, and more are in the works. `dmno init` is smart enough to install the relevant integrations for each service. You can also read more about each integration on their respective [pages](/docs/integrations/overview/).
+4. ### **Configure framework specific integrations**
+
+    We provide [drop-in integrations](/docs/integrations/overview/) for many popular frameworks, and more are in the works. `dmno init` is smart enough to install the relevant integrations for each service. You can also read more about each integration on their respective [pages](/docs/integrations/overview/) and update them as needed.
 
 5. ### **Use `DMNO_CONFIG` to access your config** 
 

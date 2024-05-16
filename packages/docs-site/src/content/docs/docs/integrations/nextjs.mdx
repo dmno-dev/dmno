@@ -10,26 +10,21 @@ If you have an existing Next.js app, you're probably already familiar with how e
 
 Now forget all of that, and let's simplify things with DMNO. 🥳
 
-### Install dependencies
+### Initialize your Next.js integration
 
-First let `dmno init` scaffold your project and install `dmno`. 
+Using `dmno init` we will automatically detect that you are using Next.js and install the necessary packages and configuration for you.
 
 <TabbedCode dynamicExec="dmno init" />
 
-### Add the Next.js integration
+>Skip to [Configure...](#configure-your-environment-variables) once this is complete.
 
-Next, install `@dmno/nextjs-integration`.
+## Manual Setup
 
-<TabbedCode packageName="@dmno/nextjs-integration" />
+If you prefer, you can install `dmno` itself and the `nextjs-integration` package manually:
 
-### Configure your environment variables
+<TabbedCode packageName="@dmno/nextjs-integration dmno" />
 
-See our [Schema Guide](/docs/guides/schema/) for the specifics of how to write your first DMNO schema. 
-
-
-## Setup
-
-In your `next.config.mjs` file, import and add the `dmno` plugin:
+Then, in your `next.config.mjs` file, import and add the `dmno` plugin:
 
 ```diff lang="js"
 +import { dmnoNextConfigPlugin } from '@dmno/nextjs-integration';
@@ -42,6 +37,12 @@ const nextConfig = {
 -export default nextConfig;
 +export default dmnoNextConfigPlugin()(nextConfig);
 ```
+
+
+### Configure your environment variables
+
+`dmno init` will scaffold out the `schema` in your `config.mts` files based on your existing `.env` files. See our [Schema Guide](/docs/guides/schema/) for the specifics of how to author additional updates to your DMNO `schema`. 
+
 
 ### Injecting config
 
