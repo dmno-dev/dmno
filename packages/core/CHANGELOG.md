@@ -1,5 +1,16 @@
 # dmno
 
+## 0.0.6
+
+### Patch Changes
+
+- [#74](https://github.com/dmno-dev/dmno/pull/74) [`5d7ee8c`](https://github.com/dmno-dev/dmno/commit/5d7ee8c43a2d65e4ae7811e62ba3d2220f9ed608) Thanks [@theoephraim](https://github.com/theoephraim)! - - scaffold config.mts based on .env files and existing process.env/import.meta.env calls in code
+
+  - multiple .env files are loaded if present (ex: .env.production)
+  - dmno init also now does more to clean up / move existing .env files during dmno init
+
+- [#71](https://github.com/dmno-dev/dmno/pull/71) [`02bc2a6`](https://github.com/dmno-dev/dmno/commit/02bc2a63c8f5e814170c08caa40e886081c40445) Thanks [@theoephraim](https://github.com/theoephraim)! - auto-install dmno integrations into config files via dmno init
+
 ## 0.0.5
 
 ### Patch Changes
