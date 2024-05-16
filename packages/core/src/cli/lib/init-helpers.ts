@@ -15,6 +15,9 @@ import { injectDmnoTypesIntoTsConfig } from './tsconfig-utils';
 import { joinAndCompact } from './formatting';
 import { findConfigFile, updateConfigFile } from './config-file-updater';
 import { getDiffColoredText } from './diff-utils';
+import { loadServiceDotEnvFiles } from '../../lib/dotenv-utils';
+import { generateDmnoConfigInitialCode, generateDmnoSchemaCode, inferDmnoSchema } from './schema-scaffold';
+import { checkIsFileGitIgnored } from '../../lib/git-utils';
 
 const STEP_DELAY = 300;
 
@@ -40,55 +43,13 @@ const ENV_LOCAL = outdent`
 
 `;
 
-const CONFIG_MTS_ROOT = (serviceName?: string) => outdent`
-  import { DmnoBaseTypes, defineDmnoWorkspace, switchByNodeEnv, NodeEnvType } from 'dmno';
-
-  export default defineDmnoWorkspace({
-    ${serviceName ? `name: '${serviceName}'` : '// no name specified - inherit from package.json'},
-    schema: {
-      NODE_ENV: NodeEnvType, 
-      
-      MY_SECRET_ITEM: {
-        typeDescription: 'Example of a sensitive item that you will pass in via overrides',
-        sensitive: true,
-        required: true,
-      },
-
-      MY_PUBLIC_ITEM: {
-        typeDescription: 'Example of a sensitive item that you will pass in via overrides',
-        value: 'default value',
-      },
-
-      TOGGLED_ITEM: {
-        typeDescription: 'some item',
-        value: switchByNodeEnv({
-          _default: 'default value',
-          staging: 'staging value',
-          production: 'production value',
-        })
-      },
-    }
-  });
-`;
-const CONFIG_MTS = (serviceName?: string) => outdent`
-  import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv } from 'dmno';
-
-  export default defineDmnoService({
-    ${serviceName ? `name: '${serviceName}'` : '// no name specified - inherit from package.json'},
-    pick: [
-      'NODE_ENV',
-    ],
-    schema: {
-    }
-  });
-`;
-
 function setupStepMessage(message: string, opts?: {
   type?: 'noop' | 'failure' | 'skip',
   path?: string,
   package?: string,
   packageVersion?: string,
   docs?: string,
+  tip?: string,
 }) {
   const icon = {
     noop: '✅',
@@ -108,7 +69,9 @@ function setupStepMessage(message: string, opts?: {
       kleur.italic().magenta(opts.package),
       opts.packageVersion ? kleur.gray(` @ "${opts.packageVersion}"`) : '',
     ].join(''),
+    opts?.tip && `   🚧 ${opts.tip}`,
     docsLink && (`   📚${kleur.italic(` see docs @ ${docsLink}`)}`),
+    ' ',
   ], '\n');
 }
 
@@ -172,7 +135,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
   let packageJsonDeps: Record<string, string> = {};
 
   async function reloadPackageJson() {
-    const packageJsonPath = `${servicePath}/package.json`;
+    const packageJsonPath = `${service!.path}/package.json`;
     const packageJson = await tryCatch(async () => {
       const rawPackageJson = await fs.promises.readFile(packageJsonPath);
       return JSON.parse(rawPackageJson.toString());
@@ -197,7 +160,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     console.log(setupStepMessage('dmno already installed', { type: 'noop', package: 'dmno', packageVersion: dmnoVersionRange }));
   } else {
     try {
-      installPackage(servicePath, packageManager, 'dmno', workspaceInfo.isMonorepo && service.isRoot);
+      installPackage(service.path, packageManager, 'dmno', workspaceInfo.isMonorepo && service.isRoot);
       await reloadPackageJson();
 
       console.log(setupStepMessage('dmno installed', { package: 'dmno', packageVersion: packageJsonDeps.dmno }));
@@ -207,18 +170,112 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     }
   }
 
+  // INSTALL KNOWN INTEGRATIONS
+  for (const knownIntegrationDep in KNOWN_INTEGRATIONS_MAP) {
+    // currently we check dependencies, but we could look for specific config files instead
+    if (packageJsonDeps[knownIntegrationDep]) {
+      const suggestedDmnoIntegration = KNOWN_INTEGRATIONS_MAP[
+        knownIntegrationDep as keyof typeof KNOWN_INTEGRATIONS_MAP
+      ];
+
+      if (suggestedDmnoIntegration.package === 'dmno') {
+        console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} - natively supported integration`, {
+          type: 'noop',
+          docs: suggestedDmnoIntegration.docs,
+        }));
+      } else if (packageJsonDeps[suggestedDmnoIntegration.package]) {
+        console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} - integration already installed`, {
+          type: 'noop',
+          package: suggestedDmnoIntegration.package,
+          packageVersion: packageJsonDeps[suggestedDmnoIntegration.package],
+          docs: suggestedDmnoIntegration.docs,
+        }));
+      } else {
+        console.log(`It looks like this package uses ${kleur.green(knownIntegrationDep)}!`);
+        const confirmIntegrationInstall = await confirm({
+          message: `Would you like to install the ${kleur.green(suggestedDmnoIntegration.package)} package?`,
+        });
+
+        if (!confirmIntegrationInstall) {
+          console.log('No worries - you can always install it later!');
+        } else {
+          installPackage(service.path, workspaceInfo.packageManager, suggestedDmnoIntegration.package, false);
+          await reloadPackageJson();
+
+          console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} integration installed!`, { package: suggestedDmnoIntegration.package, packageVersion: packageJsonDeps[suggestedDmnoIntegration.package] }));
+        }
+      }
+
+      // RUN KNOWN INTEGRATIONS CONFIG CODEMODS
+      if (packageJsonDeps[suggestedDmnoIntegration.package]) {
+        try {
+          // import.meta.resolve isn't flexible enough for us at the moment
+          const esmResolver = buildEsmResolver(service.path, {
+            isDir: true,
+            constraints: 'node',
+            resolveToAbsolute: true,
+          });
+          const integrationMetaFile = esmResolver(`${suggestedDmnoIntegration.package}/meta`);
+          if (!integrationMetaFile) {
+            throw new Error('Unable to find integration meta info file');
+          }
+          // TODO: add some typing on the meta provider stuff...
+          const integrationMetaRaw = await fs.promises.readFile(integrationMetaFile, 'utf8');
+          const integrationMeta = parseJSONC(integrationMetaRaw);
+          // currently we are assuming only a single codemod and that it will be for a config file
+          // but will likely change
+          const configCodeMods = integrationMeta.installationCodemods?.[0];
+
+          const configFileFullPath = await findConfigFile(service.path, configCodeMods.glob);
+          const configFileName = configFileFullPath.split('/').pop();
+          if (configFileFullPath) {
+            const originalConfigFileSrc = await fs.promises.readFile(configFileFullPath, 'utf-8');
+            const updatedConfigFileSrc = await updateConfigFile(originalConfigFileSrc, configCodeMods);
+
+            if (originalConfigFileSrc === updatedConfigFileSrc) {
+              console.log(setupStepMessage(`${configFileName} already sets up ${suggestedDmnoIntegration.package}`, { type: 'noop', path: configFileFullPath }));
+            } else {
+              const diffText = getDiffColoredText(originalConfigFileSrc, updatedConfigFileSrc);
+
+              console.log(kleur.magenta('DMNO will make the following changes to your config file:'));
+              // boxen wasn't handling indentation and line wrapping well
+              console.log(kleur.magenta(`-- ${configFileName} -----------`));
+              console.log(diffText.trim());
+              console.log(kleur.magenta('--------------------------------'));
+
+              const confirmedConfigChanges = await confirm({
+                message: 'Continue?',
+              });
+              if (confirmedConfigChanges) {
+                await fs.promises.writeFile(configFileFullPath, updatedConfigFileSrc);
+                console.log(setupStepMessage(`${configFileName} updated to set up ${suggestedDmnoIntegration.package}`, { path: configFileFullPath }));
+              } else {
+                console.log(setupStepMessage(`Skipped ${configFileName} updates to set up ${suggestedDmnoIntegration.package}`, { type: 'skip', path: configFileFullPath }));
+              }
+            }
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    }
+  }
+
   // CREATE .dmno FOLDER
   await promiseDelay(STEP_DELAY);
   if (service.dmnoFolder) {
     console.log(setupStepMessage('.dmno folder already exists!', { type: 'noop' }));
   } else {
     // create dmno folder
-    await fs.promises.mkdir(`${servicePath}/.dmno`);
+    await fs.promises.mkdir(`${service.path}/.dmno`);
     console.log(setupStepMessage('.dmno folder created!'));
   }
 
+  const dotEnvFiles = await loadServiceDotEnvFiles(service.path);
+
   // CREATE .dmno/config.mts
-  const configMtsPath = `${servicePath}/.dmno/config.mts`;
+  let configFileGenerated = false;
+  const configMtsPath = `${service.path}/.dmno/config.mts`;
   if (!overwriteMode && await pathExists(configMtsPath)) {
     await promiseDelay(STEP_DELAY);
     console.log(setupStepMessage('.dmno/config.mts already exists!', { type: 'noop', path: configMtsPath }));
@@ -260,12 +317,86 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
       }
     }
 
+    const inferredSchema = await inferDmnoSchema(dotEnvFiles);
+    const schemaMtsCode = generateDmnoConfigInitialCode(service.isRoot, serviceName, inferredSchema);
+    configFileGenerated = true;
+
     await fs.promises.writeFile(
       configMtsPath,
-      service.isRoot ? CONFIG_MTS_ROOT(serviceName) : CONFIG_MTS(serviceName),
+      schemaMtsCode,
     );
     console.log(setupStepMessage('.dmno/config.mts created!', { path: configMtsPath }));
   }
+
+  // clean up dotenv files - delete samples and checked in files
+  const committedDotEnvFiles = dotEnvFiles.filter((d) => !d.isGitIgnored);
+  if (committedDotEnvFiles.length) {
+    await promiseDelay(STEP_DELAY);
+    if (configFileGenerated) {
+      for (const dotEnvFile of committedDotEnvFiles) {
+        console.log(`\nYou no longer need your ${kleur.blue(dotEnvFile.fileName)} file - as we've incorporated it into your new ${kleur.blue('.dmno/config.mts')} file.`);
+        const confirmDelete = await confirm({
+          message: `Can we delete ${kleur.blue(dotEnvFile.relativePath)}?`,
+        });
+        if (confirmDelete) {
+          await fs.promises.unlink(dotEnvFile.path);
+          console.log(setupStepMessage(`deleted dotenv file - ${dotEnvFile.fileName}`, { path: dotEnvFile.path }));
+        } else {
+          console.log(setupStepMessage(`did NOT delete ${kleur.blue(dotEnvFile.fileName)}`, {
+            type: 'skip',
+            tip: 'Please delete this file and migrate any useful into your config.mts file',
+            path: dotEnvFile.path,
+          }));
+        }
+      }
+    } else {
+      console.log(`\nWe recommend you delete any .env files (including samples) that you have checked into git, and instead incorporate them into your ${kleur.blue('.dmno/config.mts')} file. Please delete these files:`);
+      console.log(committedDotEnvFiles.map((f) => `  - ${kleur.blue(f.relativePath)}`).join('\n'));
+      console.log();
+    }
+  }
+
+  const ignoredDotEnvFiles = dotEnvFiles.filter((d) => d.isGitIgnored && !d.path.includes('/.dmno/'));
+  if (ignoredDotEnvFiles.length) {
+    await promiseDelay(STEP_DELAY);
+    console.log('\nTo avoid potential issues and confusion, we recommend you move any .env file(s) into your .dmno folder and load them via dmno.');
+
+    for (const dotEnvFile of ignoredDotEnvFiles) {
+      const confirmMove = await confirm({
+        message: `Can we move ${kleur.blue(dotEnvFile.relativePath)}?`,
+      });
+
+      const newPath = `${service.path}/.dmno/${dotEnvFile.fileName}`;
+
+      if (confirmMove) {
+        await fs.promises.rename(dotEnvFile.path, newPath);
+        // make sure that if the file was gitignored before the move that it still is - we don't want to help the user accidentally commit secrets
+        // .env.local will be handled by the root gitignore since we always are creating those files
+        if (dotEnvFile.fileName !== '.env.local' && dotEnvFile.isGitIgnored && !(await checkIsFileGitIgnored(newPath))) {
+          await fs.promises.appendFile(`${service.path}/.gitignore`, `\n./.dmno/${dotEnvFile.fileName}`);
+        }
+        console.log(setupStepMessage(`moved ${kleur.blue(dotEnvFile.relativePath)} to .dmno folder`, { path: newPath }));
+      } else {
+        console.log(setupStepMessage(`did NOT move ${kleur.blue(dotEnvFile.fileName)}`, {
+          type: 'skip',
+          tip: 'Please move this file into the .dmno folder',
+          path: dotEnvFile.path,
+        }));
+      }
+    }
+  }
+
+  // create empty .env.local
+  await promiseDelay(STEP_DELAY);
+  const envLocalPath = `${service.path}/.dmno/.env.local`;
+  if (!overwriteMode && await pathExists(envLocalPath)) {
+    console.log(setupStepMessage('.dmno/.env.local already exists!', { type: 'noop', path: envLocalPath }));
+  } else {
+    await fs.promises.writeFile(envLocalPath, ENV_LOCAL);
+    console.log(setupStepMessage('.dmno/.env.local created!', { path: envLocalPath }));
+  }
+
+
 
   // CREATE .dmno/tsconfig.json
   await promiseDelay(STEP_DELAY);
@@ -277,16 +408,6 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     console.log(setupStepMessage('.dmno/tsconfig.json created!', { path: tsConfigPath }));
   }
 
-  // create empty .env.local
-  await promiseDelay(STEP_DELAY);
-  const envLocalPath = `${service.path}/.dmno/.env.local`;
-  if (!overwriteMode && await pathExists(envLocalPath)) {
-    console.log(setupStepMessage('.dmno/.env.local already exists!', { type: 'noop', path: envLocalPath }));
-  } else {
-  // create tsconfig.json
-    await fs.promises.writeFile(envLocalPath, ENV_LOCAL);
-    console.log(setupStepMessage('.dmno/.env.local created!', { path: envLocalPath }));
-  }
 
   if (service.isRoot) {
     await promiseDelay(STEP_DELAY);
@@ -295,8 +416,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     let gitIgnore = '';
     let createdGitIgnore = false;
     try {
-      const rawGitIgnore = await fs.promises.readFile(gitIgnorePath);
-      gitIgnore = rawGitIgnore.toString();
+      gitIgnore = await fs.promises.readFile(gitIgnorePath, 'utf8');
     } catch (err) {
       await fs.promises.writeFile(gitIgnorePath, '');
       createdGitIgnore = true;
@@ -349,96 +469,8 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     }));
   }
 
-  // INSTALL KNOWN INTEGRATIONS
-  for (const knownIntegrationDep in KNOWN_INTEGRATIONS_MAP) {
-    // currently we check dependencies, but we could look for specific config files instead
-    if (packageJsonDeps[knownIntegrationDep]) {
-      const suggestedDmnoIntegration = KNOWN_INTEGRATIONS_MAP[
-        knownIntegrationDep as keyof typeof KNOWN_INTEGRATIONS_MAP
-      ];
+  // POPULATE BASIC SCHEMA IN config.mts
 
-      if (suggestedDmnoIntegration.package === 'dmno') {
-        console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} - natively supported integration`, {
-          type: 'noop',
-          docs: suggestedDmnoIntegration.docs,
-        }));
-      } else if (packageJsonDeps[suggestedDmnoIntegration.package]) {
-        console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} - integration already installed`, {
-          type: 'noop',
-          package: suggestedDmnoIntegration.package,
-          packageVersion: packageJsonDeps[suggestedDmnoIntegration.package],
-          docs: suggestedDmnoIntegration.docs,
-        }));
-      } else {
-        console.log(`It looks like this package uses ${kleur.green(knownIntegrationDep)}!`);
-        const confirmIntegrationInstall = await confirm({
-          message: `Would you like to install the ${kleur.green(suggestedDmnoIntegration.package)} package?`,
-        });
-
-        if (!confirmIntegrationInstall) {
-          console.log('No worries - you can always install it later!');
-        } else {
-          installPackage(servicePath, workspaceInfo.packageManager, suggestedDmnoIntegration.package, false);
-          await reloadPackageJson();
-
-          console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} integration installed!`, { package: suggestedDmnoIntegration.package, packageVersion: packageJsonDeps[suggestedDmnoIntegration.package] }));
-        }
-      }
-
-      // RUN KNOWN INTEGRATIONS CONFIG CODEMODS
-      if (packageJsonDeps[suggestedDmnoIntegration.package]) {
-        try {
-          // import.meta.resolve isn't flexible enough for us at the moment
-          const esmResolver = buildEsmResolver(service.path, {
-            isDir: true,
-            constraints: 'node',
-            resolveToAbsolute: true,
-          });
-          const integrationMetaFile = esmResolver(`${suggestedDmnoIntegration.package}/meta`);
-          if (!integrationMetaFile) {
-            throw new Error('Unable to find integration meta info file');
-          }
-          // TODO: add some typing on the meta provider stuff...
-          const integrationMetaRaw = (await fs.promises.readFile(integrationMetaFile)).toString();
-          const integrationMeta = parseJSONC(integrationMetaRaw);
-          // currently we are assuming only a single codemod and that it will be for a config file
-          // but will likely change
-          const configCodeMods = integrationMeta.installationCodemods?.[0];
-
-          const configFileFullPath = await findConfigFile(service.path, configCodeMods.glob);
-          const configFileName = configFileFullPath.split('/').pop();
-          if (configFileFullPath) {
-            const originalConfigFileSrc = (await fs.promises.readFile(configFileFullPath)).toString();
-            const updatedConfigFileSrc = await updateConfigFile(originalConfigFileSrc, configCodeMods);
-
-            if (originalConfigFileSrc === updatedConfigFileSrc) {
-              console.log(setupStepMessage(`${configFileName} already sets up ${suggestedDmnoIntegration.package}`, { type: 'noop', path: configFileFullPath }));
-            } else {
-              const diffText = getDiffColoredText(originalConfigFileSrc, updatedConfigFileSrc);
-
-              console.log(kleur.magenta('DMNO will make the following changes to your config file:'));
-              // boxen wasn't handling indentation and line wrapping well
-              console.log(kleur.magenta(`-- ${configFileName} -----------`));
-              console.log(diffText.trim());
-              console.log(kleur.magenta('--------------------------------'));
-
-              const confirmedConfigChanges = await confirm({
-                message: 'Continue?',
-              });
-              if (confirmedConfigChanges) {
-                await fs.promises.writeFile(configFileFullPath, updatedConfigFileSrc);
-                console.log(setupStepMessage(`${configFileName} updated to set up ${suggestedDmnoIntegration.package}`, { path: configFileFullPath }));
-              } else {
-                console.log(setupStepMessage(`Skipped ${configFileName} updates to set up ${suggestedDmnoIntegration.package}`, { type: 'skip', path: configFileFullPath }));
-              }
-            }
-          }
-        } catch (err) {
-          console.log(err);
-        }
-      }
-    }
-  }
 
   // SECRETS PLUGINS
   // TODO

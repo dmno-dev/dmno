@@ -12,3 +12,6 @@ export {
 } from './config-engine/errors';
 
 export * from './config-loader/config-server-client';
+
+// used by 1pass plugin - will likely extract eventually
+export * from './lib/dotenv-utils';

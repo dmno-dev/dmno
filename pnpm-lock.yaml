@@ -95,6 +95,9 @@ importers:
       mitt:
         specifier: ^3.0.1
         version: 3.0.1
+      modern-async:
+        specifier: ^2.0.0
+        version: 2.0.0
       node-ipc:
         specifier: npm:@achrinza/node-ipc@^10.1.10
         version: '@achrinza/node-ipc@10.1.10'
@@ -422,9 +425,6 @@ importers:
       async:
         specifier: ^3.2.5
         version: 3.2.5
-      dotenv:
-        specifier: ^16.4.5
-        version: 16.4.5
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -3683,6 +3683,9 @@ packages:
   copy-template-dir@1.4.0:
     resolution: {integrity: sha512-xkXSJhvKz4MfLbVkZ7GyCaFo4ciB3uKI/HHzkGwj1eyTH5+7RTFxW5CE0irWAZgV5oFcO9hd6+NVXAtY9hlo7Q==}
 
+  core-js-pure@3.37.1:
+    resolution: {integrity: sha512-J/r5JTHSmzTxbiYYrzXg9w1VpqrYt+gexenBE9pugeyhwPZTAEJddyiReJWsLO6uNQ8xJZFbod6XC7KKwatCiA==}
+
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
 
@@ -6267,6 +6270,9 @@ packages:
   mlly@1.6.1:
     resolution: {integrity: sha512-vLgaHvaeunuOXHSmEbZ9izxPx3USsk8KCQ8iC+aTlp5sKRSoZvwhHh5L9VbKSaVC6sJDqbyohIS76E2VmHIPAA==}
 
+  modern-async@2.0.0:
+    resolution: {integrity: sha512-Ta/oj3nQm2nEBU3VCADoeTEytjTpugrqdPk6qbbM1mJuLLUkm9541oWnszGmJHIOJmRjsPydKUj1AaDm4dlrlw==}
+
   module-definition@5.0.1:
     resolution: {integrity: sha512-kvw3B4G19IXk+BOXnYq/D/VeO9qfHaapMeuS7w7sNUqmGaA6hywdFHMi+VWeR9wUScXM7XjoryTffCZ5B0/8IA==}
     engines: {node: '>=14'}
@@ -6315,6 +6321,9 @@ packages:
 
   nan@2.19.0:
     resolution: {integrity: sha512-nO1xXxfh/RWNxfd/XPfbIfFk5vgLsAxUR9y5O0cHMJu/AW9U95JLXqthYHjEp+8gQ5p96K9jUp8nbVOxCdRbtw==}
+
+  nanoassert@2.0.0:
+    resolution: {integrity: sha512-7vO7n28+aYO4J+8w96AzhmU8G+Y/xpPDJz/se19ICsqj/momRbb9mh9ZUtkoJ5X3nTnPdhEJyc0qnM6yAsHBaA==}
 
   nanoid@3.3.7:
     resolution: {integrity: sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g==}
@@ -12709,6 +12718,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  core-js-pure@3.37.1: {}
+
   core-util-is@1.0.3: {}
 
   cp-file@10.0.0:
@@ -15991,6 +16002,11 @@ snapshots:
       pkg-types: 1.1.0
       ufo: 1.5.3
 
+  modern-async@2.0.0:
+    dependencies:
+      core-js-pure: 3.37.1
+      nanoassert: 2.0.0
+
   module-definition@5.0.1:
     dependencies:
       ast-module-types: 5.0.0
@@ -16035,6 +16051,8 @@ snapshots:
 
   nan@2.19.0:
     optional: true
+
+  nanoassert@2.0.0: {}
 
   nanoid@3.3.7: {}
 

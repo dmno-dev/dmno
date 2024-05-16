@@ -2,7 +2,6 @@ import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import _ from 'lodash-es';
-import dotenv from 'dotenv';
 import {
   ConfigValueResolver, DmnoPlugin, ResolverContext,
   DmnoPluginInputSchema,
@@ -12,6 +11,7 @@ import {
   GetPluginInputTypes,
   createResolver,
   _PluginInputTypesSymbol,
+  loadDotEnvIntoObject,
 } from 'dmno';
 
 import { OnePasswordTypes } from './data-types';
@@ -92,7 +92,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
       if (loadedEnvByService[serviceName]) {
         throw new ResolutionError(`Duplicate env item found - ${serviceName} `);
       }
-      const dotEnvObj = dotenv.parse(Buffer.from(field.value));
+      const dotEnvObj = loadDotEnvIntoObject(field.value);
       loadedEnvByService[serviceName] = dotEnvObj;
       // TODO: deal with nested objects -- are paths "." or "__"?
       // TODO: do we want to allow other formats?
