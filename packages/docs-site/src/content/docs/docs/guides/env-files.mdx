@@ -1,0 +1,32 @@
+---
+title: How DMNO uses .env files
+---
+
+DMNO uses `.env` files in two ways:
+1. To scaffold out the `schema` in your `config.mts` files when your run `dmno init`.
+2. To override or set values for config items in your `config.mts` files.
+
+Let's zoom in on each of these.
+
+## Scaffolding the schema
+
+When you run `dmno init`, DMNO will look for `.env` files in your project and use them to scaffold out the `schema` in your `config.mts` files.
+
+Additionally, it will do the following: 
+- Include relevant comments that describe the config item.
+- Infer the type of the config item based on the value in the `.env` file.
+- Include the value of the config item in the `config.mts` file, if the file was checked into source control, i.e., it is not `sensitive`. 
+
+:::note
+`dmno init` will also prompt you to delete the `.env` files that were previously checked into source control after the `schema` has been scaffolded. This is because the `.env` files are no longer needed once the `schema` has been created.
+::: 
+
+## Overriding and setting values
+
+You can use `.env.local`, files to override or set values for config items in your `config.mts` files. `dmno init` moves them into your `.dmno` folders for you. 
+
+When you run `dmno run`, `dmno load`, or `dmno dev`, DMNO will read the `.env` files in your project and use them to set the values for the config items in your `config.mts` files.
+
+This is useful for setting values that are sensitive or that you don't want to check into source control. If you're using our [1Password](/docs/plugins/1password) or [Encrypted Vault](/docs/plugins/encrypted-vaults) plugins, you would store the key used to decrypt the vault, or access 1Password in `.env.local`, for example. This allows you the simplicity of only having to worry about one single config item, while keeping everything secure.
+
+
