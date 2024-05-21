@@ -2,18 +2,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import kleur from 'kleur';
 import _ from 'lodash-es';
-import async from 'async';
 import readYamlFile from 'read-yaml-file';
 import { fdir } from 'fdir';
 import { tryCatch } from '@dmno/ts-lib';
 import Debug from 'debug';
+import { asyncMapValues } from '../lib/async-utils';
 
 const debug = Debug('dmno:find-services');
 
 export async function readJsonFile(path: string) {
-  const raw = await fs.promises.readFile(path);
-  const obj = JSON.parse(raw.toString());
-  return obj;
+  return JSON.parse(await fs.promises.readFile(path, 'utf8'));
 }
 
 export type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun' | 'moon';
@@ -42,7 +40,7 @@ export async function pathExists(p: string) {
 }
 
 
-export async function findDmnoServices(includeUnitialized = false): Promise<ScannedWorkspaceInfo> {
+export async function findDmnoServices(includeUnitialized = true): Promise<ScannedWorkspaceInfo> {
   const startAt = new Date();
   let cwd = process.cwd();
   debug(`begin scan for services from ${cwd}`);
@@ -59,7 +57,7 @@ export async function findDmnoServices(includeUnitialized = false): Promise<Scan
     // TODO: nx and lerna support? (lerna.json has packages array)
     // TODO: deno?
 
-    const filesFound = await async.mapValues({
+    const filesFound = await asyncMapValues({
       packageJson: 'package.json',
       yarnLock: 'yarn.lock',
       npmLock: 'package-lock.json',

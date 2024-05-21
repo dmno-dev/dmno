@@ -144,6 +144,10 @@ export default defineConfig({
               label: 'TypeScript',
               link: '/docs/guides/typescript/',
             },
+            {
+              label: '.env Files',
+              link: '/docs/guides/env-files/',
+            },
           ],
         }, {
           label: 'Plugins',

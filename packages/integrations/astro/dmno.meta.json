@@ -1,0 +1,20 @@
+{
+  "integrationForPackage": "astro",
+  "publicPrefix": "PUBLIC_",
+  "installationCodemods": [
+    {
+      "glob": "astro.config.*",
+      "imports": [ {
+          "moduleName": "@dmno/astro-integration",
+          "importDefaultAs": "dmnoAstroIntegration",
+        } ],
+      "updates": [ {
+          "symbol": "EXPORT",
+          "path": [ "integrations" ],
+          "action": {
+            "arrayContains": "dmnoAstroIntegration()",
+          },
+        } ],
+    }
+  ],
+}

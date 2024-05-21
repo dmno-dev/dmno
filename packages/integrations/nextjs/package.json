@@ -1,6 +1,6 @@
 {
   "name": "@dmno/nextjs-integration",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "tools for integrating dmno into nextjs",
   "author": "dmno-dev",
   "license": "MIT",
@@ -25,6 +25,9 @@
   "exports": {
     ".": {
       "default": "./dist/index.mjs"
+    },
+    "./meta": {
+      "default": "./dmno.meta.json"
     },
     "./inject": {
       "default": "./dist/inject-dmno-server.mjs"

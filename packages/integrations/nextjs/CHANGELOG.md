@@ -1,5 +1,11 @@
 # @dmno/nextjs-integration
 
+## 0.0.3
+
+### Patch Changes
+
+- [#71](https://github.com/dmno-dev/dmno/pull/71) [`02bc2a6`](https://github.com/dmno-dev/dmno/commit/02bc2a63c8f5e814170c08caa40e886081c40445) Thanks [@theoephraim](https://github.com/theoephraim)! - auto-install dmno integrations into config files via dmno init
+
 ## 0.0.2
 
 ### Patch Changes

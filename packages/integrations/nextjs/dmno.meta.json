@@ -1,0 +1,19 @@
+{
+  "integrationForPackage": "next",
+  "publicPrefix": "NEXT_PUBLIC_",
+  "installationCodemods": [
+    {
+      "glob": "next.config.*",
+      "imports": [ {
+          "moduleName": "@dmno/nextjs-integration",
+          "importDefaultAs": "dmnoNextConfigPlugin",
+        } ],
+      "updates": [ {
+          "symbol": "EXPORT",
+          "action": {
+            "wrapWithFn": "dmnoNextConfigPlugin()",
+          },
+        } ],
+    }
+  ],
+}

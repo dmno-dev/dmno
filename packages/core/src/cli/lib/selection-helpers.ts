@@ -37,10 +37,6 @@ export function addServiceSelection(program: Command, selectionRequired = true) 
 
       const namesMaxLen = getMaxLength(_.map(workspace.allServices, (s) => s.serviceName));
 
-
-
-
-
       // first display loading errors (which would likely cascade into schema errors)
       if (_.some(_.values(workspace.allServices), (s) => s.configLoadError)) {
         console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('We were unable to load all of your config')}  🚨 🚨 🚨\n`);

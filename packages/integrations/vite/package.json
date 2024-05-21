@@ -1,6 +1,6 @@
 {
   "name": "@dmno/vite-integration",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "tools for integrating dmno into vite",
   "author": "dmno-dev",
   "license": "MIT",
@@ -25,6 +25,9 @@
   "exports": {
     ".": {
       "default": "./dist/index.mjs"
+    },
+    "./meta": {
+      "default": "./dmno.meta.json"
     }
   },
   "typesVersions": {
