@@ -133,7 +133,7 @@ program.action(async (opts: {
       ' ',
       `This is early software that is changing fast and will be shaped by amazing users ${kleur.italic('just like you')}.`,
       "With your consent, we'd love to add you to our email list so we can keep you in the loop.",
-      kleur.italic().gray("We promise we won't share your email and we'll only send you really awesome stuff..."),
+      kleur.italic().gray("We promise we won't share your email and we'll only send you really awesome stuff."),
     ], '\n'));
 
     const emailOptIn = await confirm({
@@ -144,7 +144,7 @@ program.action(async (opts: {
       // we could use execSync('git config user.email').toString().trim();
       // but feels a little creepy?
       const email = await input({
-        message: 'What is your (work) email?',
+        message: 'What is your work email?',
       });
 
       console.log('🙏 Thanks so much!\n');
@@ -155,7 +155,7 @@ program.action(async (opts: {
       if (userStudyOptIn) {
         console.log("🌈 Amazing - we'll be in touch soon!");
       } else {
-        console.log('No worries at all...');
+        console.log('No worries at all.');
         console.log(`If you ever do want to chat hit us up on discord @ ${DISCORD_INVITE_URL}`);
       }
 
@@ -185,7 +185,7 @@ program.action(async (opts: {
     }
 
 
-    console.log(kleur.gray('\nDont worry, you wont see this onboarding stuff again...'));
+    console.log(kleur.gray('\nDont worry, you wont see this onboarding stuff again.'));
   }
 
   console.log(joinAndCompact([
