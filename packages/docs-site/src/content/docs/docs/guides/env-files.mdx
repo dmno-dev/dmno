@@ -1,0 +1,52 @@
+---
+title: How DMNO uses .env files
+---
+
+DMNO uses `.env` files in two ways:
+1. To scaffold out the initial [`schema`](/docs/guides/schema/#defining-config-items) in your `config.mts` files when your run `dmno init`
+2. To set value overrides to be used while resolving your config values
+
+Let's zoom in on each of these.
+
+## Scaffolding the schema
+
+When you run `dmno init`, DMNO will look for all `.env` files in your project and use them to scaffold out the `schema` in your `config.mts` files. This includes _all_ `.env` files, regardless of being gitignored or checked in, including samples, and environment specific files.
+
+We try to infer as much about each config item as possible by:
+- Including related comments as a `description`
+- Infer the type (`extends`) based on the value for basic types like `boolean`, `number`, `email`, `url`
+- Set the `value` and not mark it as `sensitive` if the file was checked into source control. This includes using `value: switchByNodeEnv(...)` if values were found in multiple environment specific files
+- Set an `exampleValue` from a value from a `.env.sample`
+
+This automatic scaffolding of your config `schema` is meant to be a good starting point, but you should review it and make adjustments as necessary.
+
+:::note
+`dmno init` will also prompt you to delete the `.env` files that were previously checked into source control because the values in those files have now been incorporated into your new config schema.
+:::
+
+## Setting overrides via `.env` files
+
+Whenever we are resolving your configuration values, dmno will load any `.env` files within a `.dmno` folder and apply those values as _overrides_. This means that they will take higher precendence than values set directly in your `schema`, and lower precedence than overrides set via actual environment variables passed in from your shell. The overall precedence order from highest to lowest is:
+- Environment variables from your shell (e.g., `ENV_VAR=xyz npm run dev`)
+- File based overrides
+  - `.env.*.local`  - applied only if `NODE_ENV` matches `*`
+  - `.env.*`
+  - `.env.local`
+  - `.env`
+- Values set via your `config.mts` schema
+
+:::note[Environment scoped files and NODE_ENV]
+To decide which `.env.*` files to enable, we use the current value of `NODE_ENV` that we find in actual environment variables via `process.env`, not any value set via your schema or another `.env` file.
+:::
+
+While we support it, **we do not recommend using complicated `.env` file setups like this within dmno!** It is supported purely to ease migration. Instead we recommend migrating this logic into the schema itself - setting values using functions and helpers like `switchBy` to express more complex overriding behaviour, and using plugins to load sensitive values securely. See our [Schema Authoring guide](/docs/guides/schema/#setting-item-values) for more details.
+
+We do, however, recommend using a single gitignored `.env.local` file to store any overrides you want to apply locally. This can be useful for short-lived temporary settings that you may want to toggle during development - like flags that enable certain debugging related features. It's also where we recommend storing sensitive keys that you don't want checked into version control; values that in deployed environments you would set via actual environment variables.
+
+If you're using [plugins](/docs/plugins/overview/) to handle your sensitive config values, you would store the sensitive keys that enable those plugins in your `.env.local` file. For example, for our [1Password](/docs/plugins/1password/) plugin, the 1Password service account token, or for our [Encrypted Vault](/docs/plugins/encrypted-vault/) plugin, the key used to decrypt the vault file. **This allows you the simplicity of only having to worry about one single config item, while keeping everything secure.**
+
+:::tip
+When running `dmno init`, we prompt you to move any gitignored `.env` files we find into your `.dmno` folder. This means that other tools that may be looking for will not find them - which is on purpose. Instead, you should pass resolved config to those external tools via `dmno run`, whether `.env` files are being used or not.
+:::
+
+{/* Will need to add a note about nested config and special `__` separator (ie PARENT__CHILD) */}
