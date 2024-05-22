@@ -14,8 +14,8 @@ const debug = Debug('dmno');
 const debugTimer = createDebugTimer('dmno:loader-client');
 
 function getCurrentPackageName() {
-  if (process.env.npm_package_name) return process.env.npm_package_name;
-  if (process.env.PNPM_PACKAGE_NAME) return process.env.PNPM_PACKAGE_NAME;
+  if (process.env.npm_package_name !== undefined) return process.env.npm_package_name;
+  if (process.env.PNPM_PACKAGE_NAME !== undefined) return process.env.PNPM_PACKAGE_NAME;
 }
 
 
@@ -205,6 +205,9 @@ export class ConfigServerClient {
 
   async getServiceConfig() {
     const packageName = getCurrentPackageName();
+    if (packageName === '') {
+      throw new Error('To use dmno, you must set a package "name" in your package.json file');
+    }
     // what to do if we can't figure out a package name?
 
     const serviceConfig = await this.makeRequest('get-resolved-config', { packageName });
