@@ -87,7 +87,7 @@ program.action(async (opts: {
     // First run in the root! show some special onboarding stuff...
 
     if (showOnboarding) {
-      console.log('Hello and welcome to dmno!');
+      console.log('👋 Hello and welcome to dmno!');
     }
 
     // first initialize in root

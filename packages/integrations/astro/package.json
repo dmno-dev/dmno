@@ -38,7 +38,8 @@
     }
   },
   "files": [
-    "/dist"
+    "/dist",
+    "/dmno.meta.json"
   ],
   "scripts": {
     "build": "tsup",
