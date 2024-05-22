@@ -8,7 +8,8 @@ import { injectDmnoConfigVitePlugin } from '@dmno/vite-integration';
 import { Plugin, defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 
-console.log(DMNO_CONFIG.BOOLEAN_EXAMPLE);
+// DMNO_CONFIG is avilable here!
+// console.log(DMNO_CONFIG.BOOLEAN_EXAMPLE);
 
 // https://vitejs.dev/config/
 export default defineConfig({

@@ -61,6 +61,18 @@ const secretItem = DMNO_CONFIG.MY_SECRET_ITEM;
 Under the hood, for your client code, vite replaces the references to your config with actual values at build time.
 :::
 
+### HTML Env Replacement
+Vite [natively supports](https://vitejs.dev/guide/env-and-mode#html-env-replacement) injecting env vars into HTML files using a special syntax like `%SOME_VAR%`.
+
+This plugin injects additional replacements for strings like `%DMNO_PUBLIC_CONFIG.SOME_VAR%`.
+
+Note that unlike the native functionality which does not replace missing/non-existant items, we will try to replace all items, and will throw helpful errors if something goes wrong.
+
+:::tip[HTML comments]
+Note that replacements anywhere in the file, including HTML comments, are still attempted and can cause errors. For example `<!-- %DMNO_PUBLIC_CONFIG.BAD_ITEM_KEY% -->` will still fail!
+:::
+
+
 ### SSR + dynamic config
 
 Currently our vite integration assumes you are doing _static_ builds, and not SSR. Therefore all config items are treated as "static".

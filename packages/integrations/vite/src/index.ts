@@ -77,6 +77,33 @@ export function injectDmnoConfigVitePlugin(
         });
       }
     },
+
+    transformIndexHtml(html) {
+      const publicConfig: Record<string, any> = (globalThis as any).DMNO_PUBLIC_CONFIG;
+      const allConfig: Record<string, any> = (globalThis as any).DMNO_CONFIG;
+      return html.replace(
+        // we'll match for both DMNO_CONFIG.xxx and DMNO_PUBLIC_CONFIG.xxx
+        // so that we can show more helpful error messages
+        /%DMNO(_PUBLIC)?_CONFIG\.([a-zA-Z_][a-zA-Z0-9._]*)%/g,
+        (_fullMatch, usedPublic, itemKey) => {
+          // we'll throw some better errors here that are more helpful than letting the injected DMNO_PUBLIC_CONFIG throw
+          if (!usedPublic) {
+            if (Object.hasOwn(publicConfig, itemKey)) {
+              throw new Error(`Only \`DMNO_PUBLIC_CONFIG\` is available in vite html replacements - use \`%DMNO_PUBLIC_CONFIG.${itemKey}%\` instead`);
+            } else if (Object.hasOwn(allConfig, itemKey)) {
+              throw new Error('Only `DMNO_PUBLIC_CONFIG` is available in vite html replacements');
+            }
+          } else {
+            if (Object.hasOwn(allConfig, itemKey) && !Object.hasOwn(publicConfig, itemKey)) {
+              throw new Error(`\`DMNO_PUBLIC_CONFIG.${itemKey}\` does not exist because it is a sensitive config item`);
+            }
+          }
+          // will still throw the "item does not exist" error if it reaches here
+          return publicConfig[itemKey];
+        },
+      );
+    },
+
     // handleHotUpdate({ file, server }) {
     //   console.log('hot update', file);
     // },
