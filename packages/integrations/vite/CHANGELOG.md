@@ -1,5 +1,15 @@
 # @dmno/vite-integration
 
+## 0.0.5
+
+### Patch Changes
+
+- [#78](https://github.com/dmno-dev/dmno/pull/78) [`75f971e`](https://github.com/dmno-dev/dmno/commit/75f971e296e7f3b9cc1efb4ad187b76b92e146ac) Thanks [@theoephraim](https://github.com/theoephraim)! - support html replacements
+
+- [#77](https://github.com/dmno-dev/dmno/pull/77) [`45ba2fd`](https://github.com/dmno-dev/dmno/commit/45ba2fd2a5407594cd540940b8f313f53de113aa) Thanks [@theoephraim](https://github.com/theoephraim)! - refactor config injection to standardize between integrations
+
+- [#79](https://github.com/dmno-dev/dmno/pull/79) [`2e7f2bd`](https://github.com/dmno-dev/dmno/commit/2e7f2bd02d2c7f8a49121d7d0d9c65e7f8063079) Thanks [@theoephraim](https://github.com/theoephraim)! - Fix dmno.meta.json and auto-install
+
 ## 0.0.4
 
 ### Patch Changes
