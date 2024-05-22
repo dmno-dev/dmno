@@ -1,5 +1,11 @@
 # dmno
 
+## 0.0.8
+
+### Patch Changes
+
+- [`b9a8c24`](https://github.com/dmno-dev/dmno/commit/b9a8c2452d42155b79a33ad2563d6c7d767a2344) Thanks [@theoephraim](https://github.com/theoephraim)! - fix bug for package.json with no name set
+
 ## 0.0.7
 
 ### Patch Changes
