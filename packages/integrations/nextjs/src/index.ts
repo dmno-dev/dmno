@@ -1,6 +1,7 @@
+import { injectDmnoGlobals } from 'dmno';
 import { NextConfig } from 'next';
 
-import { parsedDmnoLoadedEnv } from './inject-dmno-server';
+const { injectedDmnoEnv } = injectDmnoGlobals();
 
 // we make this a function becuase we'll likely end up adding some options
 export function dmnoNextConfigPlugin() {
@@ -56,15 +57,15 @@ export function dmnoNextConfigPlugin() {
 
         // Set up replacements / rewrites (using webpack DefinePlugin)
         const staticConfigReplacements: Record<string, string> = {};
-        for (const key in parsedDmnoLoadedEnv) {
+        for (const key in injectedDmnoEnv) {
           // TODO: deal with nested objects
 
-          if (!parsedDmnoLoadedEnv[key].dynamic) {
-            if (!parsedDmnoLoadedEnv[key].sensitive) {
-              staticConfigReplacements[`DMNO_PUBLIC_CONFIG.${key}`] = JSON.stringify(parsedDmnoLoadedEnv[key].value);
+          if (!injectedDmnoEnv[key].dynamic) {
+            if (!injectedDmnoEnv[key].sensitive) {
+              staticConfigReplacements[`DMNO_PUBLIC_CONFIG.${key}`] = JSON.stringify(injectedDmnoEnv[key].value);
             }
-            if (!parsedDmnoLoadedEnv[key].sensitive || isServer) {
-              staticConfigReplacements[`DMNO_CONFIG.${key}`] = JSON.stringify(parsedDmnoLoadedEnv[key].value);
+            if (!injectedDmnoEnv[key].sensitive || isServer) {
+              staticConfigReplacements[`DMNO_CONFIG.${key}`] = JSON.stringify(injectedDmnoEnv[key].value);
             }
           }
         }

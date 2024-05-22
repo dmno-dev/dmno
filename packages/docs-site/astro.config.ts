@@ -14,6 +14,8 @@ export default defineConfig({
   site: 'https://dmno.dev',
   vite: {
     plugins: [
+      // TODO: remove this ignore, seems to just be types/versioning issue with Vite between astro and this plugin
+      // @ts-ignore
       IconsVitePlugin({
         compiler: 'raw',
       }),

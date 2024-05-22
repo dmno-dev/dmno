@@ -13,5 +13,6 @@
     "types": [
       "unplugin-icons/types/raw"
     ]
-  }
+  },
+  "exclude": [ "dist", "~partytown" ]
 }

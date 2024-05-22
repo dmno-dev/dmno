@@ -1,4 +1,4 @@
-import { ConfigServerClient, injectDmnoGlobals } from 'dmno';
+import { ConfigServerClient, injectDmnoGlobals, serializedServiceToInjectedConfig } from 'dmno';
 import type { AstroIntegration } from 'astro';
 
 // console.log('dmno astro integration file loaded!');
@@ -9,15 +9,28 @@ import type { AstroIntegration } from 'astro';
 const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
 
 const dmnoService = await dmnoConfigClient.getServiceConfig();
-// add the full dmnoService so we can use it in the middleware to detect leaked secrets!
-(process as any).dmnoService = dmnoService;
 
 const configItemKeysAccessed: Record<string, boolean> = {};
 const dmnoConfigValid = ConfigServerClient.checkServiceIsValid(dmnoService);
 
-injectDmnoGlobals(dmnoService, configItemKeysAccessed);
+injectDmnoGlobals({
+  injectedConfig: serializedServiceToInjectedConfig(dmnoService),
+  trackingObject: configItemKeysAccessed,
+  dynamicAccessDisabled: true,
+});
 
 let enableDynamicPublicClientLoading = false;
+let astroCommand: 'dev' | 'build' | 'preview' = 'dev';
+
+const publicDynamicConfigItemKeys = (globalThis as any)._DMNO_PUBLIC_DYNAMIC_KEYS;
+
+const sensitiveItemKeys = (globalThis as any)._DMNO_SENSITIVE_KEYS as Array<string>;
+const sensitiveValueLookup: Record<string, string> = {};
+for (const itemKey of sensitiveItemKeys) {
+  const val = (globalThis as any).DMNO_CONFIG[itemKey];
+  if (val) sensitiveValueLookup[itemKey] = val.toString();
+}
+
 
 type DmnoAstroIntegrationOptions = {
   // TODO: figure out options - loading dynamic public config?
@@ -35,6 +48,8 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
           injectScript, addMiddleware, injectRoute,
         } = opts;
 
+        astroCommand = opts.command;
+
         if (opts.command === 'build' && !dmnoConfigValid) {
           throw new Error('DMNO config is not valid');
         }
@@ -42,9 +57,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
         if (opts.config.output === 'static') {
           enableDynamicPublicClientLoading = false;
         } else {
-          const hasPublicDynamicConfig = Object.values(dmnoService.config)
-            .find((i) => !i.dataType.sensitive && i.isDynamic);
-          enableDynamicPublicClientLoading = !!hasPublicDynamicConfig;
+          enableDynamicPublicClientLoading = publicDynamicConfigItemKeys.length > 0;
         }
 
         const staticConfigReplacements = {} as Record<string, string>;
@@ -93,7 +106,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
                 }
               },
 
-              // leak detection in built files
+              // leak detection in _built_ files
               transform(src, id) {
                 // TODO: can probably add some rules to skip leak detection on files coming from external deps
 
@@ -102,16 +115,11 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
                 // skip detection if backend file
                 if (id === 'astro:scripts/page-ssr.js') return src;
 
-                const dmnoService: Awaited<ReturnType<ConfigServerClient['getServiceConfig']>> = (process as any).dmnoService;
-                for (const itemKey in dmnoService.config) {
-                  const configItem = dmnoService.config[itemKey];
-                  if (configItem.dataType.sensitive) {
-                    const itemValue = configItem.resolvedValue;
-                    if (itemValue && src.includes(itemValue.toString())) {
-                      // console.log(src);
-                      // TODO: better error details to help user find the problem
-                      throw new Error(`🚨 DETECTED LEAKED CONFIG ITEM "${itemKey}" in file - ${id}`);
-                    }
+                for (const itemKey in sensitiveValueLookup) {
+                  if (src.includes(sensitiveValueLookup[itemKey])) {
+                    // console.log(src);
+                    // TODO: better error details to help user find the problem
+                    throw new Error(`🚨 DETECTED LEAKED CONFIG ITEM "${itemKey}" in file - ${id}`);
                   }
                 }
 
@@ -120,8 +128,6 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
             }],
           },
         });
-
-        // console.log('adding dmno env', dmnoEnv);
 
         // inject script into CLIENT context
         injectScript('page', [
@@ -156,20 +162,33 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
                 if (key in window._DMNO_PUBLIC_DYNAMIC_CONFIG) {
                   return window._DMNO_PUBLIC_DYNAMIC_CONFIG[key];
                 }
-          ` : '',
-          `     
-                throw new Error(\`❌ \${key} not found in your config, it may be sensitive,${!enableDynamicPublicClientLoading ? ' could be dynamic,' : ''} or it may not exist at all\`);
+          ` : `
+                if (${JSON.stringify(publicDynamicConfigItemKeys)}.includes(key)) {
+                  throw new Error(\`❌ Unable to access dynamic config item \\\`\${key}\\\` in Astro "static" output mode\`);
+                }
+          `,
+
+          // in dev mode, we'll give a more detailed error message, letting the user know if they tried to access a sensitive or non-existant item
+          astroCommand === 'dev' ? `
+                if (${JSON.stringify(sensitiveItemKeys)}.includes(key)) {
+                  throw new Error(\`❌ \\\`DMNO_PUBLIC_CONFIG.\${key}\\\` not found - it is sensitive and must be accessed via DMNO_CONFIG on the server only\`);
+                } else {
+                  throw new Error(\`❌ \\\`DMNO_PUBLIC_CONFIG.\${key}\\\` not found - it does not exist in your config schema\`);  
+                }
+          ` : ` 
+                throw new Error(\`❌ \\\`DMNO_PUBLIC_CONFIG.\${key}\\\` not found - it may be sensitive or it may not exist at all\`);
+          `,
+          `
               }
             });
           `,
 
           // DMNO_CONFIG proxy object just to give a helpful error message
+          // TODO: we could make this a warning instead? because it does get replaced during the build and doesn't actually harm anything
           `
             window.DMNO_CONFIG = new Proxy({}, {
               get(o, key) {
-                // TODO: we could make this a warning instead?
-                // because it does get replaced during the build and doesn't actually harm anything
-                throw new Error(\`❌ You should not access DMNO_CONFIG on the client, use DMNO_PUBLIC_CONFIG.\${key} instead \`);
+                throw new Error(\`❌ You cannot access DMNO_CONFIG on the client, try DMNO_PUBLIC_CONFIG.\${key} instead \`);
               }
             });
           `,

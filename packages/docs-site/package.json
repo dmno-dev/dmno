@@ -17,38 +17,38 @@
     "lint:fix": "pnpm run lint --fix"
   },
   "dependencies": {
-    "@astrojs/check": "^0.5.10",
+    "@astrojs/check": "^0.7.0",
     "@astrojs/partytown": "^2.1.0",
     "@astrojs/sitemap": "^3.1.4",
-    "@astrojs/starlight": "^0.22.1",
-    "@astrojs/vue": "^4.1.0",
+    "@astrojs/starlight": "^0.23.1",
+    "@astrojs/vue": "^4.2.0",
     "@dmno/astro-integration": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "@dmno/ui-lib": "workspace: *",
     "@iconify/vue": "^4.1.2",
-    "astro": "^4.7.0",
-    "astro-expressive-code": "^0.35.2",
+    "astro": "^4.8.6",
+    "astro-expressive-code": "^0.35.3",
     "astro-google-fonts-optimizer": "^0.2.2",
     "astro-iconify": "^1.2.0",
     "astro-robots-txt": "^1.0.0",
     "astro-sitemap": "^1.0.0",
     "dmno": "workspace:*",
-    "eslint-plugin-astro": "^0.31.4",
+    "eslint-plugin-astro": "^1.2.0",
     "eslint-plugin-mdx": "^3.1.5",
     "less": "^4.2.0",
     "nanostores": "^0.10.3",
-    "sharp": "^0.32.5",
-    "starlight-blog": "^0.5.0",
-    "starlight-links-validator": "^0.6.0",
+    "sharp": "^0.33.4",
+    "starlight-blog": "^0.8.2",
+    "starlight-links-validator": "^0.8.0",
     "typescript": "^5.4.5",
     "unplugin-icons": "^0.19.0",
-    "vue": "^3.3.4"
+    "vue": "^3.4.27"
   },
   "devDependencies": {
-    "@iconify/json": "^2.2.206",
-    "netlify-cli": "^17.1.0",
-    "typedoc": "^0.25.12"
+    "@iconify/json": "^2.2.212",
+    "netlify-cli": "^17.23.5",
+    "typedoc": "^0.25.13"
   },
   "version": null
 }
