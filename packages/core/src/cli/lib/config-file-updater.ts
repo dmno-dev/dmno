@@ -165,14 +165,16 @@ export async function updateConfigFile(
         if (itemFound) {
           break;
         } else {
+          const isMultiLine = originalSrc.substring(nodeToUpdate.value.start, nodeToUpdate.value.end).includes('\n');
+
           mods.push({
             insertAt: nodeToUpdate.value.start + 1,
             text:
               // TODO: handle empty array
               // TODO: better handling of indents / line breaks too, single line arrays
-              '\n    '
+              (isMultiLine ? '\n    ' : '')
               + singleUpdate.action.arrayContains
-              + (arrayItems.length ? ',' : ''),
+              + (arrayItems.length ? ', ' : ''),
           });
         }
 

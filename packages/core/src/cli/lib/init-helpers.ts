@@ -117,9 +117,10 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
   const service = workspaceInfo.workspacePackages.find((s) => s.path === servicePath);
   if (!service) throw new Error('service not found');
 
+  const projectLabel = workspaceInfo.isMonorepo ? `workspace ${service.isRoot ? 'root' : 'package'}` : 'your project';
   console.log(boxen(
     [
-      `Initializing dmno in workspace ${service.isRoot ? 'root' : 'package'} - ${kleur.magenta(service.name)}`,
+      `Initializing dmno in ${projectLabel} - ${kleur.magenta(service.name)}`,
       kleur.italic().gray(service.path),
     ].join('\n'),
     {
@@ -237,11 +238,11 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
             } else {
               const diffText = getDiffColoredText(originalConfigFileSrc, updatedConfigFileSrc);
 
-              console.log(kleur.magenta('DMNO will make the following changes to your config file:'));
+              console.log(kleur.italic().bgBlue(' DMNO will make the following changes to your config file '));
+              console.log(kleur.italic().gray(`> Filename: ${configFileName}\n`));
               // boxen wasn't handling indentation and line wrapping well
-              console.log(kleur.magenta(`-- ${configFileName} -----------`));
               console.log(diffText.trim());
-              console.log(kleur.magenta('--------------------------------'));
+              console.log(kleur.italic().bgBlue(' -------------------------------------------------------- '));
 
               const confirmedConfigChanges = await confirm({
                 message: 'Continue?',
