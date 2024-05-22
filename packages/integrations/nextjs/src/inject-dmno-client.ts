@@ -7,8 +7,6 @@ window.DMNO_CONFIG = new Proxy({}, {
 });
 
 
-
-
 declare const window: any;
 declare const XMLHttpRequest: any;
 

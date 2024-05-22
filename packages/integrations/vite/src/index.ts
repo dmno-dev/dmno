@@ -1,4 +1,4 @@
-import { ConfigServerClient, injectDmnoGlobals } from 'dmno';
+import { ConfigServerClient, injectDmnoGlobals, serializedServiceToInjectedConfig } from 'dmno';
 import type { Plugin } from 'vite';
 
 let firstLoad = !(process as any).dmnoConfigClient;
@@ -8,13 +8,11 @@ let firstLoad = !(process as any).dmnoConfigClient;
 const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
 
 const dmnoService = await dmnoConfigClient.getServiceConfig();
-// add the full dmnoService so we can use it in the middleware to detect leaked secrets!
-(process as any).dmnoService = dmnoService;
-
-const configItemKeysAccessed: Record<string, boolean> = {};
 const dmnoConfigValid = ConfigServerClient.checkServiceIsValid(dmnoService);
 
-injectDmnoGlobals(dmnoService, configItemKeysAccessed);
+injectDmnoGlobals({
+  injectedConfig: serializedServiceToInjectedConfig(dmnoService),
+});
 
 export function injectDmnoConfigVitePlugin(
   options?: {
@@ -23,7 +21,7 @@ export function injectDmnoConfigVitePlugin(
      * should be used carefully as it could leak secrets...
      * but necessary if bundling backend code using vite
      * */
-    injectPrivateConfig: boolean,
+    injectSensitiveConfig: boolean,
   },
 ): Plugin {
   const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
@@ -41,7 +39,7 @@ export function injectDmnoConfigVitePlugin(
           if (!configItem.dataType.sensitive) {
             publicConfigInjection[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
           }
-          if (options?.injectPrivateConfig) {
+          if (options?.injectSensitiveConfig) {
             publicConfigInjection[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
           }
         }

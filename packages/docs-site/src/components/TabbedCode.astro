@@ -55,7 +55,7 @@ const platforms = [
   const selector = ".main-frame > * .tablist-wrapper > ul > li > a";
   let activeTab = getCurrentPm();
   // fake a click event to show the correct tab based on contents of the page
-  document.addEventListener("DOMContentLoaded", (e) => {
+  document.addEventListener("DOMContentLoaded", (_e) => {
     const tabs = Array.from(
       document.querySelectorAll(selector),
     ) as HTMLElement[];

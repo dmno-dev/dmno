@@ -8,6 +8,7 @@ import { createDebugTimer } from '../cli/lib/debug-timer';
 import { ConfigLoaderRequestMap } from './ipc-requests';
 import { SerializedService } from './serialization-types';
 import { formatError, getItemSummary } from '../cli/lib/formatting';
+import { InjectedDmnoEnv } from '../config-engine/config-engine';
 
 const debug = Debug('dmno');
 const debugTimer = createDebugTimer('dmno:loader-client');
@@ -240,49 +241,15 @@ export class ConfigServerClient {
   }
 }
 
-
-const originalProcessEnv = structuredClone(process.env);
-export function injectDmnoGlobals(dmnoService: SerializedService, trackAccess?: Record<string, boolean>) {
-  const dmnoEnvValues: Record<string, any> = {};
-
-  process.env = { ...originalProcessEnv };
-
-  for (const itemKey in dmnoService.config) {
-    const configItem = dmnoService.config[itemKey];
-
-    if (configItem.isValid) {
-      dmnoEnvValues[itemKey] = configItem.resolvedValue;
-
-      // feed our dmno config back into process.env
-      // TODO: might want some different logic around nested items
-      process.env[itemKey] = configItem.resolvedValue?.toString() || '';
-    }
+export function serializedServiceToInjectedConfig(service: SerializedService): InjectedDmnoEnv {
+  const injectedEnv: InjectedDmnoEnv = {};
+  for (const itemKey in service.config) {
+    const configItem = service.config[itemKey];
+    injectedEnv[itemKey] = {
+      sensitive: !!configItem.dataType.sensitive,
+      dynamic: !!configItem.isDynamic,
+      value: configItem.resolvedValue,
+    };
   }
-
-  // We attach some stuff to the locally running process / globalThis
-
-  (globalThis as any).DMNO_CONFIG = new Proxy({}, {
-    get(o, key) {
-      const keyStr = key.toString();
-      if (trackAccess) trackAccess[keyStr] = true;
-      // console.log('get DMNO_CONFIG - ', key);
-      if (key in dmnoEnvValues) return dmnoEnvValues[keyStr];
-      throw new Error(`❌ ${keyStr} is not a config item (1)`);
-    },
-  });
-
-  // attach the same proxy object so we can throw nice errors
-  (globalThis as any).DMNO_PUBLIC_CONFIG = new Proxy({}, {
-    get(o, key) {
-      const keyStr = key.toString();
-      if (trackAccess) trackAccess[keyStr] = true;
-      // console.log('get DMNO_PUBLIC_CONFIG - ', keyStr);
-      if (dmnoService.config[keyStr]?.dataType.sensitive) {
-        throw new Error(`❌ ${keyStr} is not a public config item! Use \`DMNO_CONFIG.${keyStr}\` instead`);
-      }
-      if (key in dmnoEnvValues) return dmnoEnvValues[keyStr];
-      throw new Error(`❌ ${keyStr} is not a config item (2)`);
-    },
-  });
+  return injectedEnv;
 }
-

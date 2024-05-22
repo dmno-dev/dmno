@@ -192,6 +192,18 @@ export type DmnoServiceConfig = {
   schema: Record<string, ConfigItemDefinitionOrShorthand>,
 };
 
+
+
+
+export type InjectedDmnoEnvItem = {
+  value: any,
+  sensitive?: boolean | 1 | '1',
+  dynamic?: boolean | 1 | '1',
+};
+export type InjectedDmnoEnv = Record<string, InjectedDmnoEnvItem>;
+
+
+
 export function defineDmnoService(opts: DmnoServiceConfig) {
   debug('LOADING SCHEMA!', opts);
   // we'll mark the object so we know it was initialized via defineDmnoWorkspace
@@ -823,7 +835,7 @@ export class DmnoService {
     });
     return env;
   }
-  getInjectedEnvJSON() {
+  getInjectedEnvJSON(): InjectedDmnoEnv {
     const env: Record<string, any> = _.mapValues(this.config, (item) => {
       return item.toInjectedJSON();
     });
@@ -1075,7 +1087,7 @@ export abstract class DmnoConfigItemBase {
   }
 
   /** this is the shape that gets injected into an serialized json env var by `dmno run` */
-  toInjectedJSON() {
+  toInjectedJSON(): InjectedDmnoEnvItem {
     return {
       ...this.type.getDefItem('sensitive') && { sensitive: 1 },
       ...this.isDynamic && { dynamic: 1 },

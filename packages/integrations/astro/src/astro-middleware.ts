@@ -1,52 +1,14 @@
-import { ConfigServerClient, DmnoService } from 'dmno';
+import { injectDmnoGlobals } from 'dmno';
 import { MiddlewareHandler } from 'astro';
 
-// console.log('custom astro middleware loaded!', (globalThis as any).DMNO_CONFIG, process.env);
+// we'll inject the globals again for the case we're running in a built SSR env
+injectDmnoGlobals();
 
-
-// we use this file to inject code rather than `injectScript('page-ssr'`
-// because page-ssr is not injected when handling api endpoints and other middlewares
-
-const sensitiveLookup: Record<string, string> = {};
-if (!(globalThis as any).DMNO_CONFIG) {
-  if (!process.env.DMNO_LOADED_ENV) {
-    throw new Error('You must run this server via `dmno run`');
-  }
-  const dmnoLoadedEnv = JSON.parse(process.env.DMNO_LOADED_ENV);
-  for (const itemKey in dmnoLoadedEnv) {
-    if (dmnoLoadedEnv[itemKey].sensitive && dmnoLoadedEnv[itemKey].value) {
-      sensitiveLookup[itemKey] = dmnoLoadedEnv[itemKey].value.toString();
-    }
-  }
-  console.log('sensitive values loaded: ', sensitiveLookup);
-
-  (globalThis as any).DMNO_CONFIG = new Proxy({}, {
-    get(o, key) {
-      if (key in dmnoLoadedEnv) return dmnoLoadedEnv[key.toString()].value;
-      throw new Error(`❌ ${key.toString()} is not a config item (ssr 1)`);
-    },
-  });
-
-  // attach the same proxy object so we can throw nice errors
-  (globalThis as any).DMNO_PUBLIC_CONFIG = new Proxy({}, {
-    get(o, key) {
-      if (key in dmnoLoadedEnv) {
-        if (dmnoLoadedEnv[key.toString()].sensitive) {
-          throw new Error(`❌ ${key.toString()} is not a public config item!`);
-        }
-        return dmnoLoadedEnv[key.toString()].value;
-      }
-      throw new Error(`❌ ${key.toString()} is not a config item (ssr 2)`);
-    },
-  });
-} else {
-  const dmnoService: Awaited<ReturnType<ConfigServerClient['getServiceConfig']>> = (process as any).dmnoService;
-  for (const itemKey in dmnoService.config) {
-    const configItem = dmnoService.config[itemKey];
-    if (configItem.dataType.sensitive && configItem.resolvedValue) {
-      sensitiveLookup[itemKey] = configItem.resolvedValue.toString();
-    }
-  }
+const sensitiveItemKeys = (globalThis as any)._DMNO_SENSITIVE_KEYS as Array<string>;
+const sensitiveValueLookup: Record<string, string> = {};
+for (const itemKey of sensitiveItemKeys) {
+  const val = (globalThis as any).DMNO_CONFIG[itemKey];
+  if (val) sensitiveValueLookup[itemKey] = val.toString();
 }
 
 
@@ -59,8 +21,8 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   const bodyText = await response.clone().text();
 
   // scan for leaked secrets!
-  for (const itemKey in sensitiveLookup) {
-    if (bodyText.includes(sensitiveLookup[itemKey])) {
+  for (const itemKey in sensitiveValueLookup) {
+    if (bodyText.includes(sensitiveValueLookup[itemKey])) {
       // TODO: better error details to help user _find_ the problem
       throw new Error(`🚨 DETECTED LEAKED CONFIG ITEM! ${itemKey}`);
     }

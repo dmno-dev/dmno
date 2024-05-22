@@ -12,14 +12,16 @@ console.log("DMNO_CONFIG.SECRET_STATIC", DMNO_CONFIG.SECRET_STATIC);
 <h2>Now = {new Date().toISOString()}</h2>
 
 <ul>
+  <!-- process.env and import.meta.env have no type completion -->
   <li>process.env.PUBLIC_STATIC = {process.env.PUBLIC_STATIC}</li>
   <li>import.meta.env.PUBLIC_STATIC = {import.meta.env.PUBLIC_STATIC}</li>
   <li>DMNO_PUBLIC_CONFIG.PUBLIC_STATIC = {DMNO_PUBLIC_CONFIG.PUBLIC_STATIC}</li>
   <li>DMNO_CONFIG.PUBLIC_STATIC = {DMNO_CONFIG.PUBLIC_STATIC}</li>
   <hr />
 
-  <li>process.env.PUBLIC_DYNAMIC = {process.env.PUBLIC_DYNAMIC}</li>
-  <li>import.meta.env.PUBLIC_DYNAMIC = {import.meta.env.PUBLIC_DYNAMIC}</li>
+  <!-- inconsistent handling of dynamic/static items depends on how/where you reference items -->
+  <li>process.env.PUBLIC_DYNAMIC = {process.env.PUBLIC_DYNAMIC}</li> <!-- always uses env vars -->
+  <li>import.meta.env.PUBLIC_DYNAMIC = {import.meta.env.PUBLIC_DYNAMIC}</li> <!-- rewritten at build time because of PUBLIC_ prefix -->
   <li>
     DMNO_PUBLIC_CONFIG.PUBLIC_DYNAMIC = {DMNO_PUBLIC_CONFIG.PUBLIC_DYNAMIC}
   </li>

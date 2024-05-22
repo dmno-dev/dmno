@@ -1,5 +1,5 @@
 --- 
-title: Astro
+title: Astro Integration
 description: Use DMNO to manage your Astro app's environment variables for static, hybrid, and server-side rendering.
 ---
 
@@ -8,13 +8,13 @@ import AstroLogo from "~icons/logos/astro";
 import TabbedCode from '@/components/TabbedCode.astro';
 import BugReportLink from '@/components/BugReportLink.astro';
 
-At DMNO we _love_ Astro. This very site is built with it! That's why we're very excited to make it easier and safer to use environment variables in all of your Astro apps, whether it's on the client or the server.
+At DMNO we _love_ [Astro](https://astro.build/). This very site is built with it! That's why we're very excited to make it easier and safer to use environment variables in all of your Astro-powered projects, whether it's on the client or the server.
 
 ## Setup
 
 ### Initialize your Astro integration
 
-Using `dmno init` we will automatically detect that you are using Astro and install the necessary packages and configuration for you.
+Using [`dmno init`](/docs/reference/cli/init/) will automatically detect that you are using Astro and install the necessary packages and configuration for you.
 
 <TabbedCode dynamicExec="dmno init" />
 
@@ -26,7 +26,7 @@ If you run into any issues, feel free to <BugReportLink label='integrations/astr
 
 #### Manual install instructions
 
-If you prefer, you can install `dmno` itself and the `astro-integration` package manually: 
+If you prefer, you can install the `dmno` and `@dmno/astro-integration` packages manually:
 
 <TabbedCode packageName="@dmno/astro-integration dmno" />
 
@@ -44,7 +44,7 @@ export default defineConfig({
 
 ### Configure your environment variables
 
-`dmno init` will scaffold out the `schema` in your `config.mts` files based on your existing `.env` files. See our [Schema Guide](/docs/guides/schema/) for the specifics of how to author additional updates to your DMNO `schema`.
+`dmno init` will scaffold out the `schema` in your `config.mts` files based on any existing `.env` files and references to `process.env`/`import.meta.env` found within your codebase. See our [Schema Guide](/docs/guides/schema/) for the specifics of how to author additional updates to your DMNO `schema`.
 
 ## Accessing config
 
@@ -52,20 +52,13 @@ DMNO globally injects your config into your application. You can access it via:
 - `DMNO_CONFIG` - includes _all_ of your config items
 - `DMNO_PUBLIC_CONFIG` - includes only items not marked with `sensitive: true`
 
-You can access these with full type-safety and autocompletion in templates and code.
+You can now access these with full type-safety and autocompletion just about everywhere in your code - including astro components, vue/react/etc, mdx files, even your `astro.config.*`!
 
 :::tip[Why globals?]
-It's really no different than using `process.env` or `import.meta.env` - but by using our own variables, we can provide a more consistent experience and do some magic ✨
+It's really no different than using `process.env` or `import.meta.env` - but by using our own variables, we can provide a more consistent experience and sprinkle some extra magic on top ✨
 :::
 
-Now in your application code you'll have access to a global object with all of your _public_ config items (i.e., those which aren't marked `sensitive: true` ) called `DMNO_PUBLIC_CONFIG`. 
-
-```js
-const mySecretItem = DMNO_CONFIG.SECRET_API_KEY;
-const nonSecretItem = DMNO_PUBLIC_CONFIG.PUBLISHABLE_ITEM;
-```
-
-### Client vs server/SSR/security/etc 
+### Protecting secrets from leaking
 
 In theory, you should only access `DMNO_PUBLIC_CONFIG` on the _client_, and you can access both `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG` on the server.
 
@@ -73,17 +66,21 @@ Sounds easy, right? Except in a world of hybrid client/server rendering and rehy
 
 So, we make it easy for you:
 
-- In the browser/client, you only have access to `DMNO_PUBLIC_CONFIG` and if you try to access `DMNO_CONFIG`, we'll throw an error 🛑
+- Within the browser/client, you only have access to `DMNO_PUBLIC_CONFIG` and if you try to access `DMNO_CONFIG`, we'll throw a helpful error 🛑
 - We also inject a middleware that detects any leaked secrets, just in case you leaked a secret into ANYTHING getting sent over the wire.
 
+![Leaked secret error](../../../../assets/docs-images/astro/leaked-secret-error.png)
+_an example of our middleware in action_
 
 ### Static vs dynamic config
 
-DMNO gives you explicit control over how your config items are treated - whether they will be replaced into your bundled code at build time (i.e., static), or reloaded at boot time (i.e., dynamic). See the [dynamic config guide](/docs/guides/dynamic-config) for more details.
+DMNO gives you explicit control over how your config items are treated - whether they will be replaced into your bundled code at build time (i.e., static), or reloaded at boot time (i.e., dynamic). See the [dynamic config guide](/docs/guides/dynamic-config/) for more details.
 
-Client-side loading of dynamic config is automatically enabled if you are not using `output: 'static'` mode and you have non-sensitive dynamic config items in your schema. It will be fetched on-demand. So, if you don't use those items on the client, that's also fine. This integration will automatically inject the API route required to fetch public+dynamic config.
+Client-side loading of dynamic config is automatically enabled if you are not using `output: 'static'` mode and you have non-sensitive dynamic config items in your schema. It will be fetched on-demand, so if you don't use those items on the client, that's also fine. This integration will automatically inject the API route required to fetch public+dynamic config.
 
 Additionally, this integration throws an error during `astro build` if you try to use a dynamic config item during a pre-render of any static page/endpoint - regardless of the [output mode](https://docs.astro.build/en/basics/rendering-modes/#server-output-modes) you are using.
+
+No matter what, dealing with config in a hybrid server/client rendering setup is confusing and full of footguns, so we do our best to protect you 🛡️ and make it as easy as possible.
 
 ---
 
@@ -99,7 +96,7 @@ In most Astro projects, it should just work, but if you are seeing type errors a
 import { defineConfig } from 'astro/config';
 // ...
 ```
-see our [TypeScript guide](/docs/guides/typescript) for more details.
+see our [TypeScript guide](/docs/guides/typescript/) for more details.
 
 
 ### Injecting config into markdown files

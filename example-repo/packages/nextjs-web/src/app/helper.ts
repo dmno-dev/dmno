@@ -1,7 +1,7 @@
 import '@dmno/nextjs-integration/inject';
 
 console.log('\n>>> helper file loaded');
-console.log('> process.env.DMNO_LOADED_ENV', !!process.env.DMNO_LOADED_ENV);
+console.log('> process.env.DMNO_INJECTED_ENV', !!process.env.DMNO_INJECTED_ENV);
 console.log('> DMNO_CONFIG?', !!(globalThis as any).DMNO_CONFIG);
 // console.log(globalThis);
 

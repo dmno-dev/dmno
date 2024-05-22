@@ -3,11 +3,11 @@ import { defineConfig } from 'tsup';
 // TODO: move some of this (to `dmno/load`?) so we can fetch replacements ready to use
 
 // @ts-ignore
-if (!process.env.DMNO_LOADED_ENV) {
+if (!process.env.DMNO_INJECTED_ENV) {
   throw new Error('You must run this via `dmno run`');
 }
 // @ts-ignore
-const parsedLoadedEnv = JSON.parse(process.env.DMNO_LOADED_ENV);
+const parsedLoadedEnv = JSON.parse(process.env.DMNO_INJECTED_ENV);
 const replacements: Record<string, string> = {};
 for (const itemKey in parsedLoadedEnv) {
   if (parsedLoadedEnv[itemKey].value === undefined) continue;

@@ -146,22 +146,22 @@ If you'd like to be able to alter certain configuration values at boot time and 
 
 See the [dynamic config guide](/docs/guides/dynamic-config/) for more details.
 
-Unfortunately, NextJS does not let us automatically inject the API route required to expose the config, so if you want to use this feature, you must add an api route:
+Unfortunately, NextJS does not let us automatically inject the API route required to expose these config values, so if you want to use this feature, you must manually add an api route:
 
 <Tabs syncKey="nextjs-router-type">
   <TabItem label="App Router">
     ```ts title="app/fetch-dynamic-public-config/route.ts"
-    import { publicDynamicConfig } from '@dmno/nextjs-integration/inject';
+    import { publicDynamicEnvObj } from '@dmno/nextjs-integration/inject';
 
     export const dynamic = 'force-dynamic';
     export async function GET() {
-      return Response.json(publicDynamicConfig);
+      return Response.json(publicDynamicEnvObj);
     }
     ```
   </TabItem>
   <TabItem label="Pages Router">
     ```ts title="pages/api/fetch-dynamic-public-config.ts"
-    import { publicDynamicConfig } from '@dmno/nextjs-integration/inject';
+    import { publicDynamicEnvObj } from '@dmno/nextjs-integration/inject';
     import type { NextApiRequest, NextApiResponse } from 'next'
     
     export const dynamic = 'force-dynamic';
@@ -169,7 +169,7 @@ Unfortunately, NextJS does not let us automatically inject the API route require
       req: NextApiRequest,
       res: NextApiResponse<ResponseData>
     ) {
-      res.status(200).json(publicDynamicConfig)
+      res.status(200).json(publicDynamicEnvObj)
     }
     ```
   </TabItem>
