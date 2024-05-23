@@ -1,5 +1,11 @@
 # @dmno/vite-integration
 
+## 0.0.6
+
+### Patch Changes
+
+- [#81](https://github.com/dmno-dev/dmno/pull/81) [`f16be40`](https://github.com/dmno-dev/dmno/commit/f16be4052ce4d9f6202c3d0e96f6fc1e265e6002) Thanks [@theoephraim](https://github.com/theoephraim)! - better handling of package detection, various fixes for vite integration
+
 ## 0.0.5
 
 ### Patch Changes

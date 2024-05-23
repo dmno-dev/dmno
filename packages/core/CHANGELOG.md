@@ -1,5 +1,13 @@
 # dmno
 
+## 0.0.9
+
+### Patch Changes
+
+- [#80](https://github.com/dmno-dev/dmno/pull/80) [`c63c2e9`](https://github.com/dmno-dev/dmno/commit/c63c2e9f89c1c83f348bf8fed810c56c32f3d609) Thanks [@theoephraim](https://github.com/theoephraim)! - astro reload issue in single repo mode
+
+- [#81](https://github.com/dmno-dev/dmno/pull/81) [`f16be40`](https://github.com/dmno-dev/dmno/commit/f16be4052ce4d9f6202c3d0e96f6fc1e265e6002) Thanks [@theoephraim](https://github.com/theoephraim)! - better handling of package detection, various fixes for vite integration
+
 ## 0.0.8
 
 ### Patch Changes

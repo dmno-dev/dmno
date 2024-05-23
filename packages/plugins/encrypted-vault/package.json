@@ -1,6 +1,6 @@
 {
   "name": "@dmno/encrypted-vault-plugin",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "dmno plugin to store secrets encrypted in your repo",
   "author": "dmno-dev",
   "license": "MIT",

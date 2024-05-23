@@ -1,5 +1,11 @@
 # @dmno/astro-integration
 
+## 0.0.5
+
+### Patch Changes
+
+- [#80](https://github.com/dmno-dev/dmno/pull/80) [`c63c2e9`](https://github.com/dmno-dev/dmno/commit/c63c2e9f89c1c83f348bf8fed810c56c32f3d609) Thanks [@theoephraim](https://github.com/theoephraim)! - astro reload issue in single repo mode
+
 ## 0.0.4
 
 ### Patch Changes
