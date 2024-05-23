@@ -145,7 +145,6 @@ export const SetupCommand = createDmnoPluginCliCommand({
 
         // TODO: do we want to make sure the env local file is git-ignored?
 
-
         console.log([
           `🔏 Your key has been written into your ${createdEnvLocal ? '✨NEW✨ ' : ''}.env.local file at`,
           kleur.green(`> ${envLocalPath}`),

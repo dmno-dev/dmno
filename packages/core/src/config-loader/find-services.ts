@@ -98,7 +98,7 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
   });
 
 
-  let packagesGlobs: Array<string> | undefined;
+  let packagePatterns: Array<string> | undefined;
   let isMonorepo = false;
 
   debug('looking for workspace globs');
@@ -108,7 +108,7 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
     if (await pathExists(pnpmWorkspaceYamlPath)) {
       const pnpmWorkspacesYaml = await readYamlFile(`${rootServicePath}/pnpm-workspace.yaml`);
       isMonorepo = true;
-      packagesGlobs = (pnpmWorkspacesYaml as any).packages;
+      packagePatterns = (pnpmWorkspacesYaml as any).packages;
       debug('looked in pnpm-workspace.yaml for "packages" field');
     } else {
       debug('no pnpm-workspace.yaml found');
@@ -117,13 +117,13 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
     const rootPackageJson = await readJsonFile(`${rootServicePath}/package.json`);
     if (rootPackageJson.workspaces) {
       isMonorepo = true;
-      packagesGlobs = rootPackageJson.workspaces;
+      packagePatterns = rootPackageJson.workspaces;
     }
     debug('looked in package.json for "workspaces" field');
   } else if (packageManager === 'moon') {
     const moonWorkspacesYaml = await readYamlFile(`${rootServicePath}/.moon/workspace.yml`);
     isMonorepo = true;
-    packagesGlobs = (moonWorkspacesYaml as any).projects;
+    packagePatterns = (moonWorkspacesYaml as any).projects;
     debug('looked in .moon/workspace.yml for "projects" field');
   }
 
@@ -133,14 +133,17 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
   // console.log('packages globs', packagesGlobs);
 
 
-  const packagePaths = [rootServicePath];
-  if (isMonorepo && packagesGlobs?.length) {
+  let packagePaths = [rootServicePath];
+  if (isMonorepo && packagePatterns?.length) {
+    const fullPackagePatterns = packagePatterns.map((gi) => path.resolve(`${rootServicePath}/${gi}`));
+    const packageGlobs = fullPackagePatterns.filter((s) => s.includes('*'));
+    const packageDirs = fullPackagePatterns.filter((s) => !s.includes('*'));
     const expandedPathsFromGlobs = await (
       // tried a few different libs here (tiny-glob being the other main contender) and this is WAY faster especially with some tuning :)
       new fdir() // eslint-disable-line new-cap
         .withBasePath()
         .onlyDirs()
-        .glob(...packagesGlobs.map((gi) => path.resolve(`${rootServicePath}/${gi}`)))
+        .glob(...packageGlobs)
         .exclude((dirName, _dirPath) => {
           // this helps speed things up since it stops recursing into these directories
           return (
@@ -155,11 +158,13 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
         .crawl(rootServicePath)
         .withPromise()
     );
+    packagePaths.push(...packageDirs);
     packagePaths.push(...expandedPathsFromGlobs);
+    packagePaths = packagePaths.map((p) => p.replace(/\/$/, '')); // remove trailing slash
+    packagePaths = _.uniq(packagePaths);
   }
 
-  const workspacePackages = _.compact(await Promise.all(packagePaths.map(async (packagePathWithSlash) => {
-    const packagePath = packagePathWithSlash.replace(/\/$/, ''); // remove trailing slash
+  const workspacePackages = _.compact(await Promise.all(packagePaths.map(async (packagePath) => {
     const packageJson = await tryCatch(
       async () => await readJsonFile(`${packagePath}/package.json`),
       (err) => {
@@ -190,7 +195,6 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
   // this shouldnt really be an issue, but it's noteable
   const packageManagerCurrentPackageName = process.env.npm_package_name || process.env.PNPM_PACKAGE_NAME;
   const packageFromCurrentPackageName = workspacePackages.find((p) => p.name === packageManagerCurrentPackageName);
-  const autoSelectedPackagePath = packageFromPwd?.path || packageFromCurrentPackageName?.path;
 
   debug(`completed scanning in ${+new Date() - +startAt}ms`);
 

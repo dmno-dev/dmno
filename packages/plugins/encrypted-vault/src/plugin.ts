@@ -21,7 +21,8 @@ import {
 
 import { EncryptedVaultTypes } from './data-types';
 
-
+const __dirname = globalThis.__dirname ?? import.meta.dirname;
+const __filename = globalThis.__filename ?? import.meta.filename;
 
 export class EncryptedVaultItem {
   private encryptedValue?: string;

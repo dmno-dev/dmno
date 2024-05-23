@@ -23,7 +23,7 @@ export class ConfigServerClient {
   eventBus = mitt();
 
   readonly serverId: string;
-  ipc: typeof ipc;
+  private ipc: typeof ipc;
   constructor() {
     this.ipc = ipc;
 

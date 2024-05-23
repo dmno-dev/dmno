@@ -11,7 +11,7 @@ import boxen from 'boxen';
 import { tryCatch, promiseDelay } from '@dmno/ts-lib';
 import { PackageManager, ScannedWorkspaceInfo, pathExists } from '../../config-loader/find-services';
 import { joinAndCompact } from './formatting';
-import { findConfigFile, updateConfigFile } from './config-file-updater';
+import { findOrCreateConfigFile, updateConfigFile } from './config-file-updater';
 import { getDiffColoredText } from './diff-utils';
 import { loadServiceDotEnvFiles } from '../../lib/dotenv-utils';
 import {
@@ -208,7 +208,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
       }
 
       // RUN KNOWN INTEGRATIONS CONFIG CODEMODS
-      if (packageJsonDeps[suggestedDmnoIntegration.package]) {
+      if (suggestedDmnoIntegration.package !== 'dmno' && packageJsonDeps[suggestedDmnoIntegration.package]) {
         try {
           // import.meta.resolve isn't flexible enough for us at the moment
           const esmResolver = buildEsmResolver(service.path, {
@@ -227,18 +227,25 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
           // but will likely change
           const configCodeMods = integrationMeta.installationCodemods?.[0];
 
-          const configFileFullPath = await findConfigFile(service.path, configCodeMods.glob);
+          const { createWithContents, path: configFileFullPath } = await findOrCreateConfigFile(
+            service.path,
+            configCodeMods.glob,
+            configCodeMods.createFileIfNotFound,
+          );
           const configFileName = configFileFullPath.split('/').pop();
           if (configFileFullPath) {
-            const originalConfigFileSrc = await fs.promises.readFile(configFileFullPath, 'utf-8');
+            const originalConfigFileSrc = createWithContents ?? await fs.promises.readFile(configFileFullPath, 'utf-8');
             const updatedConfigFileSrc = await updateConfigFile(originalConfigFileSrc, configCodeMods);
 
             if (originalConfigFileSrc === updatedConfigFileSrc) {
               console.log(setupStepMessage(`${configFileName} already sets up ${suggestedDmnoIntegration.package}`, { type: 'noop', path: configFileFullPath }));
             } else {
-              const diffText = getDiffColoredText(originalConfigFileSrc, updatedConfigFileSrc);
-
-              console.log(kleur.italic().bgBlue(' DMNO will make the following changes to your config file '));
+              const diffText = getDiffColoredText(createWithContents ? '' : originalConfigFileSrc, updatedConfigFileSrc);
+              if (createWithContents) {
+                console.log(kleur.italic().bgBlue(` DMNO will create a new ${knownIntegrationDep} config file for you `));
+              } else {
+                console.log(kleur.italic().bgBlue(' DMNO will make the following changes to your config file '));
+              }
               console.log(kleur.italic().gray(`> Filename: ${configFileName}\n`));
               // boxen wasn't handling indentation and line wrapping well
               console.log(diffText.trim());
@@ -424,6 +431,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
       createdGitIgnore = true;
     }
     // TODO: check for each item rather than all or nothing
+    // TODO: show some kind of warning if user is not within a git repo
     if (gitIgnore.includes('**/.dmno/cache.json')) {
       console.log(setupStepMessage('.gitignore already includes dmno files', { type: 'noop', path: gitIgnorePath }));
     } else {

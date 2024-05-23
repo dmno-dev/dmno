@@ -28,6 +28,7 @@ export function injectDmnoConfigVitePlugin(
 
   return {
     name: 'inject-dmno-config',
+    enforce: 'pre', // not positive this matters
     async config(config, env) {
       const dmnoService = await dmnoConfigClient.getServiceConfig();
 

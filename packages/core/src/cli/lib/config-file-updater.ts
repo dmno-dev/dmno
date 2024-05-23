@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import _ from 'lodash-es';
 import * as acorn from 'acorn';
 import tsPlugin from 'acorn-typescript';
@@ -10,7 +11,14 @@ type ConfigFileUpdateActions =
   | { wrapWithFn: string };
 
 
-export async function findConfigFile(baseDir: string, glob: string) {
+export async function findOrCreateConfigFile(
+  baseDir: string,
+  glob: string,
+  createSettings?: {
+    fileName: string,
+    contents: string,
+  },
+) {
   const expandedPathsFromGlobs = await (
     new fdir() // eslint-disable-line new-cap
       .withRelativePaths()
@@ -19,11 +27,16 @@ export async function findConfigFile(baseDir: string, glob: string) {
       .withPromise()
   );
   if (!expandedPathsFromGlobs.length) {
-    throw new Error(`failed to find matching config file in ${baseDir} with glob "${glob}"`);
+    if (createSettings) {
+      const newFilePath = `${baseDir}/${createSettings.fileName}`;
+      return { createWithContents: createSettings.contents, path: newFilePath };
+    } else {
+      throw new Error(`failed to find matching config file in ${baseDir} with glob "${glob}"`);
+    }
   } else if (expandedPathsFromGlobs.length > 1) {
     throw new Error(`found multiple matching config files in ${baseDir} with glob "${glob}"`);
   }
-  return `${baseDir}/${expandedPathsFromGlobs[0]}`;
+  return { path: `${baseDir}/${expandedPathsFromGlobs[0]}` };
 }
 
 export async function updateConfigFile(
@@ -99,6 +112,7 @@ export async function updateConfigFile(
     // as we encounter more use cases, we can expand all our options here
     if (singleUpdate.symbol === 'EXPORT') {
       let nodeToUpdate: acorn.AnyNode | undefined;
+      let pathNodeToUpdate: acorn.AnyNode | undefined;
       for (const n of ast.body) {
         // matches `export default ...`
         if (n.type === 'ExportDefaultDeclaration') {
@@ -126,11 +140,8 @@ export async function updateConfigFile(
           throw new Error('Expected to find an object node to use apply the path selector');
         }
         // currently only supports path of depth 1, but should support going deeper
-        nodeToUpdate = nodeToUpdate.properties.find((n) => n.type === 'Property' && (n.key as any).name === singleUpdate.path![0]);
-        if (!nodeToUpdate) {
-          throw new Error('Could not find path -' + singleUpdate.path.join('.'));
-        }
-        if (nodeToUpdate.type !== 'Property') {
+        pathNodeToUpdate = nodeToUpdate.properties.find((n) => n.type === 'Property' && (n.key as any).name === singleUpdate.path![0]);
+        if (pathNodeToUpdate && pathNodeToUpdate.type !== 'Property') {
           throw new Error('Node is not a property');
         }
       }
@@ -139,18 +150,35 @@ export async function updateConfigFile(
         throw new Error('unable to find AST node to update');
       }
 
-      // TODO: handle key not existing yet
       // this action will ensure an array contains an item matching some code
       if ('arrayContains' in singleUpdate.action) {
-        if (nodeToUpdate.type !== 'Property') {
+        // handle the case where the path doesn't exist in the object yet
+        if (!pathNodeToUpdate) {
+          if (nodeToUpdate.type === 'ObjectExpression') {
+            const trailingSpace = originalSrc.charAt(nodeToUpdate.end - 2) === ' ';
+            mods.push({
+              insertAt: nodeToUpdate.end - (trailingSpace ? 2 : 1),
+              text: [
+                nodeToUpdate.properties.length ? ', ' : ' ',
+                `${singleUpdate.path}: [${singleUpdate.action.arrayContains}]`,
+                !trailingSpace ? ' ' : '',
+              ].join(''),
+            });
+            break;
+          } else {
+            throw new Error(`Unable to insert new array at path ${singleUpdate.path}`);
+          }
+        }
+
+        if (pathNodeToUpdate.type !== 'Property') {
           throw new Error('node to update is not an object property');
-        } else if (nodeToUpdate.value.type !== 'ArrayExpression') {
+        } else if (pathNodeToUpdate.value.type !== 'ArrayExpression') {
           throw new Error('node property value is not an array');
         }
 
-        const arrayItems = nodeToUpdate.value.elements;
+        const arrayItems = pathNodeToUpdate.value.elements;
         let itemFound = false;
-        for (const arrayItem of nodeToUpdate.value.elements) {
+        for (const arrayItem of pathNodeToUpdate.value.elements) {
           if (!arrayItem) continue;
           const itemStr = originalSrc.substring(arrayItem.start, arrayItem.end);
 
@@ -165,10 +193,10 @@ export async function updateConfigFile(
         if (itemFound) {
           break;
         } else {
-          const isMultiLine = originalSrc.substring(nodeToUpdate.value.start, nodeToUpdate.value.end).includes('\n');
+          const isMultiLine = originalSrc.substring(pathNodeToUpdate.value.start, pathNodeToUpdate.value.end).includes('\n');
 
           mods.push({
-            insertAt: nodeToUpdate.value.start + 1,
+            insertAt: pathNodeToUpdate.value.start + 1,
             text:
               // TODO: handle empty array
               // TODO: better handling of indents / line breaks too, single line arrays

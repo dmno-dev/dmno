@@ -55,7 +55,7 @@
     "@types/async": "^3.2.24",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^20.12.12",
-    "astro": "^4.8.6",
+    "astro": "^4.9.1",
     "dmno": "workspace:*",
     "tsup": "^8.0.2",
     "typescript": "^5.4.5"

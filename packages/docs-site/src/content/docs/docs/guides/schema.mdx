@@ -63,7 +63,7 @@ This file must have `export default defineDmnoWorkspace({ //...`. We'll get into
 
 
 ```typescript title=".dmno/config.mts" "defineDmnoWorkspace"
-import { defineDmnoWorkspace, NodeEnvType } from 'dmno';
+import { defineDmnoWorkspace, DmnoBaseTypes, NodeEnvType } from 'dmno';
 
 export default defineDmnoWorkspace({
   // service name (optional, but recommended)
@@ -102,7 +102,7 @@ The rest of your services (if you are working in a monorepo) are very similar, h
 An example service config:
 
 ```typescript title="packages/api/.dmno/config.mts" "defineDmnoService"
-import { defineDmnoService } from 'dmno';
+import { defineDmnoService, DmnoBaseTypes } from 'dmno';
 import { StripeDataTypes } from 'stripe-dmno-plugin'; // doesn't exist yet
 
 export default defineDmnoService({

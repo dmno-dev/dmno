@@ -11,7 +11,7 @@ import { asyncMap } from 'modern-async';
 import { checkIsFileGitIgnored } from './git-utils';
 
 // altered slightly from dotenv to capture trailing comments and handle newlines differently
-const DOTENV_LINE = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?[^\S\r\n]*(#.*)?(?:$|$)/mg;
+const DOTENV_LINE = /(?:^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?[^\S\r\n]*(#.*)?(?:$)/mg;
 
 
 
@@ -33,18 +33,18 @@ export function parseDotEnvContents(dotEnvStr: string) {
   const dotenvItems: Array<DotEnvSchemaItem> = [];
 
   while (dotEnvStr) {
-    const nextNewLineLoc = dotEnvStr.indexOf('\n');
-    if (nextNewLineLoc === -1) break;
+    let nextEndLineLoc = dotEnvStr.indexOf('\n');
+    if (nextEndLineLoc === -1) nextEndLineLoc = dotEnvStr.length;
 
     // if line is blank, we reset any accumulating comments
-    if (!dotEnvStr.substring(0, nextNewLineLoc).trim()) {
+    if (!dotEnvStr.substring(0, nextEndLineLoc).trim()) {
       preComments = [];
-      dotEnvStr = dotEnvStr.substring(nextNewLineLoc + 1);
+      dotEnvStr = dotEnvStr.substring(nextEndLineLoc + 1);
       continue;
     }
 
     if (dotEnvStr.startsWith('#')) {
-      const commentLineContent = dotEnvStr.substring(1, nextNewLineLoc);
+      const commentLineContent = dotEnvStr.substring(1, nextEndLineLoc);
 
       // if it looks like a commented out item rather than an actual comment, we'll just ignore the line
       if (commentLineContent.match(DOTENV_LINE)) {
@@ -52,7 +52,7 @@ export function parseDotEnvContents(dotEnvStr: string) {
       } else {
         preComments.push(commentLineContent);
       }
-      dotEnvStr = dotEnvStr.substring(nextNewLineLoc + 1);
+      dotEnvStr = dotEnvStr.substring(nextEndLineLoc + 1);
       continue;
     }
 
