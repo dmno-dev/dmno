@@ -105,7 +105,7 @@ export async function generateTypescriptTypes(service: DmnoService) {
   tsSrc.push('\n');
 
   const publicKeysForPick = _.map(publicKeys, JSON.stringify).join(' | ');
-  tsSrc.push(`export type DmnoGeneratedPublicConfigSchema = Pick<DmnoGeneratedConfigSchema, ${publicKeysForPick}>`);
+  tsSrc.push(`export type DmnoGeneratedPublicConfigSchema = Pick<DmnoGeneratedConfigSchema, ${publicKeysForPick || 'never'}>`);
 
   return tsSrc.join('\n');
 }

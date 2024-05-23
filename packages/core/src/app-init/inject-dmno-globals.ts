@@ -1,9 +1,6 @@
 import type { InjectedDmnoEnv, InjectedDmnoEnvItem } from '../config-engine/config-engine';
 
 const originalProcessEnv = structuredClone(process.env);
-const sensitiveValueLookup: Record<string, { value: string, masked: string }> = {};
-const publicDynamicKeys: Array<string> = [];
-const sensitiveKeys: Array<string> = [];
 
 export function injectDmnoGlobals(
   opts?: {
@@ -13,6 +10,10 @@ export function injectDmnoGlobals(
     onItemAccess?: (item: InjectedDmnoEnvItem) => void;
   },
 ) {
+  const sensitiveValueLookup: Record<string, { value: string, masked: string }> = {};
+  const publicDynamicKeys: Array<string> = [];
+  const sensitiveKeys: Array<string> = [];
+
   // if we've already injected the globals and we didnt have any options passed in, we can bail
   if (!opts && (globalThis as any).DMNO_CONFIG) {
     return {};
