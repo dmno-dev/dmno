@@ -4,33 +4,52 @@ import type { AstroIntegration } from 'astro';
 // console.log('dmno astro integration file loaded!');
 
 
-/// initialize a dmno config server client, but only once
+// initialize a dmno config server client, but only once
 (process as any).dmnoConfigClient ||= new ConfigServerClient();
 const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
 
-const dmnoService = await dmnoConfigClient.getServiceConfig();
 
-const configItemKeysAccessed: Record<string, boolean> = {};
-const dmnoConfigValid = ConfigServerClient.checkServiceIsValid(dmnoService);
+// Unsure why, but in some cases this whole file reloads, and in others it doesnt
+// so we may need to reload the config multiple times
+// TODO: try to clean this logic up a bit?
+let dmnoService: Awaited<ReturnType<typeof dmnoConfigClient.getServiceConfig>>;
+let configItemKeysAccessed: Record<string, boolean> = {};
+let dmnoConfigValid = true;
+let publicDynamicItemKeys: Array<string> = [];
+let sensitiveItemKeys: Array<string> = [];
+let sensitiveValueLookup: Record<string, string> = {};
 
-injectDmnoGlobals({
-  injectedConfig: serializedServiceToInjectedConfig(dmnoService),
-  trackingObject: configItemKeysAccessed,
-  dynamicAccessDisabled: true,
-});
+async function reloadDmnoConfig() {
+  dmnoService = await dmnoConfigClient.getServiceConfig();
+  dmnoConfigValid = ConfigServerClient.checkServiceIsValid(dmnoService);
+  configItemKeysAccessed = {};
+
+  injectDmnoGlobals({
+    injectedConfig: serializedServiceToInjectedConfig(dmnoService),
+    trackingObject: configItemKeysAccessed,
+    dynamicAccessDisabled: true,
+  });
+  publicDynamicItemKeys = (globalThis as any)._DMNO_PUBLIC_DYNAMIC_KEYS;
+  sensitiveItemKeys = (globalThis as any)._DMNO_SENSITIVE_KEYS;
+  sensitiveValueLookup = {};
+  for (const itemKey of sensitiveItemKeys) {
+    const val = (globalThis as any).DMNO_CONFIG[itemKey];
+    if (val) sensitiveValueLookup[itemKey] = val.toString();
+  }
+}
+
+// we do want to run this right away so the globals get injected into the astro.config file
+await reloadDmnoConfig();
+
 
 let enableDynamicPublicClientLoading = false;
 let astroCommand: 'dev' | 'build' | 'preview' = 'dev';
 
-const publicDynamicConfigItemKeys = (globalThis as any)._DMNO_PUBLIC_DYNAMIC_KEYS;
 
-const sensitiveItemKeys = (globalThis as any)._DMNO_SENSITIVE_KEYS as Array<string>;
-const sensitiveValueLookup: Record<string, string> = {};
-for (const itemKey of sensitiveItemKeys) {
-  const val = (globalThis as any).DMNO_CONFIG[itemKey];
-  if (val) sensitiveValueLookup[itemKey] = val.toString();
-}
 
+
+
+let dmnoHasTriggeredReload = false;
 
 type DmnoAstroIntegrationOptions = {
   // TODO: figure out options - loading dynamic public config?
@@ -43,6 +62,11 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
     name: 'dmno-astro-integration',
     hooks: {
       'astro:config:setup': async (opts) => {
+        // this handles the case where astro's vite server reloaded but this file did not get reloaded
+        if (dmnoHasTriggeredReload) {
+          await reloadDmnoConfig();
+          dmnoHasTriggeredReload = false;
+        }
         const {
           isRestart, logger, addDevToolbarApp, updateConfig,
           injectScript, addMiddleware, injectRoute,
@@ -57,7 +81,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
         if (opts.config.output === 'static') {
           enableDynamicPublicClientLoading = false;
         } else {
-          enableDynamicPublicClientLoading = publicDynamicConfigItemKeys.length > 0;
+          enableDynamicPublicClientLoading = publicDynamicItemKeys.length > 0;
         }
 
         const staticConfigReplacements = {} as Record<string, string>;
@@ -102,6 +126,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
                   dmnoConfigClient.eventBus.on('reload', () => {
                     // eslint-disable-next-line @typescript-eslint/no-floating-promises
                     server.restart();
+                    dmnoHasTriggeredReload = true;
                   });
                 }
               },
@@ -163,7 +188,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
                   return window._DMNO_PUBLIC_DYNAMIC_CONFIG[key];
                 }
           ` : `
-                if (${JSON.stringify(publicDynamicConfigItemKeys)}.includes(key)) {
+                if (${JSON.stringify(publicDynamicItemKeys)}.includes(key)) {
                   throw new Error(\`❌ Unable to access dynamic config item \\\`\${key}\\\` in Astro "static" output mode\`);
                 }
           `,
