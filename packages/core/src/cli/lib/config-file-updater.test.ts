@@ -105,8 +105,7 @@ describe('update - arrayContains', () => {
     }));
   });
 
-  // TODO: fix and enable these... some are actually broken, some are just formatting/spacing issues
-  describe.skip('edge cases', () => {
+  describe('edge cases', () => {
     test('empty object', updateConfigTest('export default {}', {
       updates: [{ symbol: 'EXPORT', path: ['p'], action: { arrayContains: 'foo()' } }],
     }, {

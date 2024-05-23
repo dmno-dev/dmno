@@ -28,15 +28,21 @@ If you prefer, you can install `dmno` itself and the `vite-integration` package 
 
 Update your `vite.config.ts` - import the plugin, and add to `defineConfig`:
 
-```diff lang="ts" title="vite.config.ts" ins="dmnoVitePlugin()"
-+import { dmnoVitePlugin } from '@dmno/vite-integration';
+```diff lang="ts" title="vite.config.ts" ins="injectDmnoConfigVitePlugin()"
++import { injectDmnoConfigVitePlugin } from '@dmno/vite-integration';
 
 export default {
   // ...
-  plugins: [dmnoVitePlugin()],
+  plugins: [injectDmnoConfigVitePlugin()],
 };
-
 ```
+
+:::tip[Ordering]
+You should import the `@dmno/vite-integration` first because it loads your config and re-injects it into process.env, just in case any other plugins are looking for something there.
+
+The order of `injectDmnoConfigVitePlugin()` in the plugins does not matter.
+:::
+
 
 ### Configure your environment variables    
 

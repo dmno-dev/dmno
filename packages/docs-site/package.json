@@ -27,7 +27,7 @@
     "@dmno/tsconfig": "workspace:*",
     "@dmno/ui-lib": "workspace: *",
     "@iconify/vue": "^4.1.2",
-    "astro": "^4.8.6",
+    "astro": "^4.9.1",
     "astro-expressive-code": "^0.35.3",
     "astro-google-fonts-optimizer": "^0.2.2",
     "astro-iconify": "^1.2.0",
