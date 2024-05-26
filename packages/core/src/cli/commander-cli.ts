@@ -16,7 +16,7 @@ import { addDocsCommand } from './lib/cli-schema-generation';
 import { customizeHelp } from './lib/help-customizations';
 import { initCliRunCtx } from './lib/cli-ctx';
 
-import { LoadCommand } from './commands/load.command';
+import { ResolveCommand } from './commands/resolve.command';
 import { RunCommand } from './commands/run.command';
 import { DevCommand } from './commands/dev.command';
 import { PluginCommand } from './commands/plugin.command';
@@ -27,11 +27,11 @@ import { ClearCacheCommand } from './commands/clear-cache.command';
 
 const debug = Debug('dmno:cli');
 
-const program = new DmnoCommand('dmno2')
-  .description('DMNO CLI - https://dmno.dev')
+const program = new DmnoCommand('dmno')
+  .description('dmnno cli - https://dmno.dev')
   .version('0.0.1');
 
-program.addCommand(LoadCommand);
+program.addCommand(ResolveCommand);
 program.addCommand(RunCommand);
 program.addCommand(DevCommand);
 program.addCommand(InitCommand);

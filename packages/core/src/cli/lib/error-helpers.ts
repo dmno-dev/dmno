@@ -1,7 +1,7 @@
 import kleur from 'kleur';
 import _ from 'lodash-es';
 
-export function exitWithErrorMessage(title: string, more: string | Array<string>) {
+export function exitWithErrorMessage(title: string, more?: string | Array<string>) {
   console.error('\n💥', kleur.red(title), '💥');
 
   if (more) {

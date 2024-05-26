@@ -9,5 +9,7 @@ import CliCommand from "@/components/CliCommand.astro";
 <CliCommand name="run" />
 
 :::caution
-Because of the way variable expansion works in the shell, you will need to use `printenv` (or if you trust the command, `eval`) to expand variables in your command. This is because the shell will expand the variables _before_ passing them to `dmno run`.
+While `dmno run -- echo $SOME_ITEM` seems like it should work, your shell will try to resolve that variable _before_ dmno injects your resolved config as env vars.
+
+Instead you must use `printenv` - for example `dmno run -- printenv SOME_ITEM`.
 :::

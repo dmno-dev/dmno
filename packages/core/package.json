@@ -85,7 +85,6 @@
     "acorn-typescript": "^1.4.13",
     "base64-arraybuffer": "^1.0.2",
     "boxen": "^7.1.1",
-    "cli-table3": "^0.6.4",
     "commander": "^12.0.0",
     "debug": "^4.3.4",
     "diff": "^5.2.0",

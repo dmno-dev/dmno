@@ -3,7 +3,6 @@ import _ from 'lodash-es';
 import { ExecaChildProcess, execa } from 'execa';
 import which from 'which';
 
-import CliTable from 'cli-table3';
 import { tryCatch } from '@dmno/ts-lib';
 import { DmnoCommand } from '../lib/DmnoCommand';
 import { formatError, formattedValue, getItemSummary } from '../lib/formatting';
@@ -11,22 +10,26 @@ import { executeCommandWithEnv } from '../lib/execute-command';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 import { addCacheFlags } from '../lib/cache-helpers';
+import { addWatchMode } from '../lib/watch-mode-helpers';
+
 
 const program = new DmnoCommand('run')
   .summary('Injects loaded config into an external command')
   .description('Runs a command with the resolved config for a service')
   .usage('[options] -- [command to pass config to]')
-  .option('-w,--watch', 'watch config for changes and restart command')
   .argument('external command')
-  .example('dmno run --service service1 -- echo $SERVICE1_CONFIG', 'Runs the echo command with the resolved config for service1')
+  .example('dmno run --service service1 -- printenv $SOME_ITEM', 'Runs the echo command with the resolved config for service1')
   .example('dmno run —-service service1 -- somecommand --some-option=(printenv SOME_VAR)', 'Runs the somecommand with the resolved config using SOME_VAR via printenv');
 
+addWatchMode(program);
 addServiceSelection(program);
 addCacheFlags(program);
 
 
+let commandProcess: ExecaChildProcess | undefined;
+let childCommandKilledFromRestart = false;
+
 program.action(async (_command, opts: {
-  watch: boolean,
   service: string,
 }, more) => {
   const commandToRunAsArgs = more.args;
@@ -43,120 +46,107 @@ program.action(async (_command, opts: {
 
   const ctx = getCliRunCtx();
 
-  let commandProcess: ExecaChildProcess | undefined;
+  // if subcommand is still running, we'll kill it
+  // this could be a re-run via watch mode
+  if (commandProcess && commandProcess.exitCode === null) {
+    childCommandKilledFromRestart = true;
+    commandProcess.kill(2);
+  }
 
-  let childCommandKilled = false;
+  // TODO: this isn't quite right...
+  const workspace = ctx.workspace;
+  if (!workspace) return;
+  await workspace.resolveConfig();
+  const service = await ctx.selectedService;
+  if (!service) return;
+  const serviceEnv = service.getEnv();
 
-  async function rerunChildProcess() {
-    // if subcommand is still running, we'll kill it
-    if (commandProcess && commandProcess.exitCode === null) {
-      childCommandKilled = true;
-      commandProcess.kill(2);
-      console.log(kleur.blue().italic('reloading due to config change'));
+
+  // TODO: should show nice errors, and that logic should probably move within the services/items
+  // TODO: service.isValid is not correct
+  const invalidItems = _.filter(service.config, (i) => !i.isValid);
+  if (invalidItems.length) {
+    console.log('');
+    console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your config is currently invalid ')}  🚨 🚨 🚨\n`);
+    _.each(invalidItems, (item) => {
+      console.log(getItemSummary(item.toJSON()));
+    });
+
+    if (!ctx.watchEnabled) {
+      console.log('\n', kleur.bgRed(' Exiting without running script... '), '\n');
+    }
+    return ctx.exit();
+  }
+
+  commandProcess = execa(pathAwareCommand || rawCommand, commandArgsOnly, {
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      ...serviceEnv,
+      DMNO_INJECTED_ENV: JSON.stringify(service.getInjectedEnvJSON()),
+    },
+  });
+  // console.log('PARENT PID = ', process.pid);
+  // console.log('CHILD PID = ', commandProcess.pid);
+
+  let exitCode: number;
+  try {
+    const commandResult = await commandProcess;
+    // console.log(commandResult);
+    exitCode = commandResult.exitCode;
+  } catch (error) {
+    // console.log('child command error!', error);
+    if ((error as any).signal === 'SIGINT' && childCommandKilledFromRestart) {
+      // console.log('child command failed due to being killed form restart');
+      childCommandKilledFromRestart = false;
+      return;
     }
 
-    // reload the workspace, service, config
-    const workspace = await tryCatch(async () => {
-      return await ctx.configLoader.getWorkspace();
-    }, (err) => {
-      // TODO: in watch mode, we may want to wait and reload on update?
-      console.log(kleur.red().bold('Loading config failed'));
-      console.log(err.message);
+    // console.log('child command result error', error);
+    if ((error as any).signal === 'SIGINT' || (error as any).signal === 'SIGKILL') {
       process.exit(1);
-    });
-    await workspace.resolveConfig();
-    const service = workspace.getService(opts.service);
-    const serviceEnv = service.getEnv();
-
-
-    // TODO: should show nice errors, and that logic should probably move within the services/items
-    // TODO: service.isValid is not correct
-    const invalidItems = _.filter(service.config, (i) => !i.isValid);
-    if (invalidItems.length) {
-      console.log('');
-      console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your config is currently invalid ')}  🚨 🚨 🚨\n`);
-      _.each(invalidItems, (item) => {
-        console.log(getItemSummary(item.toJSON()));
-      });
-
-      if (!opts.watch) {
-        console.log('\n', kleur.bgRed(' Exiting without running script... '), '\n');
-        process.exit(1);
-      } else {
-        console.log(kleur.gray('\n👀 watching your config files for changes... hit CTRL+C to exit'));
-      }
     } else {
-      // console.log(service.getLoadedEnv());
+      console.log((error as Error).message);
+      console.log(`command [${commandToRunStr}] failed`);
+      console.log('try running the same command without dmno');
+      console.log('if you get a different result, dmno may be the problem...');
+      // console.log(`Please report issue here: <${REPORT_ISSUE_LINK}>`);
+    }
+    exitCode = (error as any).exitCode || 1;
+  }
 
-      commandProcess = execa(pathAwareCommand || rawCommand, commandArgsOnly, {
-        stdio: 'inherit',
-        env: {
-          ...process.env,
-          ...serviceEnv,
-          DMNO_INJECTED_ENV: JSON.stringify(service.getInjectedEnvJSON()),
-        },
-      });
-      // console.log('PARENT PID = ', process.pid);
-      // console.log('CHILD PID = ', commandProcess.pid);
-
-      let exitCode: number;
-      try {
-        const commandResult = await commandProcess;
-        // console.log(commandResult);
-        exitCode = commandResult.exitCode;
-      } catch (error) {
-        // console.log('child command result error', error);
-        if ((error as any).signal === 'SIGINT' || (error as any).signal === 'SIGKILL') {
-          process.exit(1);
-        } else {
-          console.log((error as Error).message);
-          console.log(`command [${commandToRunStr}] failed`);
-          console.log('try running the same command without dmno');
-          console.log('if you get a different result, dmno may be the problem...');
-          // console.log(`Please report issue here: <${REPORT_ISSUE_LINK}>`);
-        }
-        exitCode = (error as any).exitCode || 1;
-      }
-
-      if (opts.watch) {
-        if (!childCommandKilled) {
-          if (exitCode === 0) {
-            console.log('\n✅ command completed successfully');
-          } else {
-            console.log(`\n💥 command failed - exit code = ${exitCode}`);
-          }
-
-          console.log(kleur.gray('\n👀 watching your config files for changes... hit CTRL+C to exit'));
-        }
+  if (ctx.watchEnabled) {
+    if (!childCommandKilledFromRestart) {
+      if (exitCode === 0) {
+        console.log('\n✅ command completed successfully');
       } else {
-        process.exit(exitCode);
+        console.log(`\n💥 command failed - exit code = ${exitCode}`);
       }
     }
   }
 
-  if (opts.watch) {
-    ctx.configLoader.devMode = true;
-    ctx.configLoader.onReload = rerunChildProcess;
-  }
-  await rerunChildProcess();
-
-  // try to make sure we shut down cleanly and kill the child process
-  process.on('exit', (code: any, signal: any) => {
-    console.log('exit!', code, signal);
-    commandProcess?.kill(9);
-  });
-
-  let isTerminating = false;
-  ['SIGTERM', 'SIGINT'].forEach((signal) => {
-    process.on(signal, () => {
-      console.log('SIGNAL = ', signal);
-      isTerminating = true;
+  // if first run, we need to attach some extra exit handling
+  if (!ctx.isWatchModeRestart) {
+    // try to make sure we shut down cleanly and kill the child process
+    process.on('exit', (code: any, signal: any) => {
+      // if (childCommandKilledFromRestart) {
+      //   childCommandKilledFromRestart = false;
+      //   return;
+      // }
+      // console.log('exit!', code, signal);
       commandProcess?.kill(9);
-      process.exit(1);
     });
-  });
 
-  // TODO: handle other signals?
+
+    ['SIGTERM', 'SIGINT'].forEach((signal) => {
+      process.on(signal, () => {
+        // console.log('SIGNAL = ', signal);
+        commandProcess?.kill(9);
+        process.exit(1);
+      });
+    });
+    // TODO: handle other signals?
+  }
 });
 
 export const RunCommand = program;

@@ -2,7 +2,6 @@ import { execSync, fork } from 'child_process';
 import { inherits } from 'util';
 import kleur from 'kleur';
 import _ from 'lodash-es';
-import CliTable from 'cli-table3';
 import { select } from '@inquirer/prompts';
 import { ExecaChildProcess, execa } from 'execa';
 import which from 'which';
@@ -24,7 +23,7 @@ const program = new DmnoCommand('plugin')
   .example('dmno plugin -p my-plugin', 'Runs the CLI for the my-plugin plugin')
   .example('dmno plugin -p my-plugin -s my-service', 'Runs the CLI for the my-plugin plugin with the my-service service');
 
-addServiceSelection(program, false);
+addServiceSelection(program, { });
 addPluginSelection(program);
 
 let isTerminating = false;

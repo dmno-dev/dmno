@@ -72,12 +72,12 @@ export class ConfigLoader {
     this.viteRunner = viteRunner;
   }
 
-  onReload?: () => void;
+  onReload?: () => void | Promise<void>;
 
   private async viteHotReloadHandler(ctx: HmrContext) {
     if (this.devMode) {
       await this.reload();
-      if (this.onReload) this.onReload();
+      if (this.onReload) await this.onReload();
     }
   }
 

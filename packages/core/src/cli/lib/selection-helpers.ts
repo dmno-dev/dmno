@@ -26,9 +26,13 @@ function getServiceLabel(s: DmnoService, padNameEnd: number) {
   ].join(' ');
 }
 
-export function addServiceSelection(program: Command, selectionRequired = true) {
+export function addServiceSelection(program: Command, opts?: {
+  disableAutoSelect?: boolean,
+  disableMenuSelect?: boolean,
+  allowNoSelection?: boolean
+}) {
   return program
-    .option('-s, --service <service>', 'which service to load')
+    .option('-s, --service [service]', 'which service to load')
     .hook('preAction', async (thisCommand, actionCommand) => {
       const ctx = getCliRunCtx();
 
@@ -53,15 +57,22 @@ export function addServiceSelection(program: Command, selectionRequired = true) 
 
           console.log(service.configLoadError.cleanedStack?.join('\n'), '\n');
         });
-        process.exit(1);
+        console.log('bailing from schema load errors');
+        return ctx.exit();
       }
 
-
+      // handle explicit selection via the flag
+      // if the user types just -s with no arg, we'll treat that as saying they want the menu
+      const explicitMenuOptIn = thisCommand.opts().service === true;
+      if (explicitMenuOptIn) {
+        thisCommand.opts().service = undefined;
+      }
 
       const explicitSelection = thisCommand.opts().service;
-      if (explicitSelection) {
-        if (!_.find(workspace.allServices, (s) => s.serviceName === explicitSelection)) {
-          exitWithErrorMessage(
+      if (!explicitMenuOptIn && explicitSelection) {
+        ctx.selectedService = _.find(workspace.allServices, (s) => s.serviceName === explicitSelection);
+        if (!ctx.selectedService) {
+          return exitWithErrorMessage(
             `Invalid service selection: ${kleur.bold(explicitSelection)}`,
             [
               'Maybe you meant one of:',
@@ -69,54 +80,60 @@ export function addServiceSelection(program: Command, selectionRequired = true) 
             ],
           );
         }
-        return;
       }
 
-      if (!selectionRequired) return;
-
-      let autoSelectService: DmnoService | undefined;
-
-      // filled by package manager with package name if running an package.json script
-      const packageName = process.env.npm_package_name || process.env.PNPM_PACKAGE_NAME;
-      if (packageName) {
+      // handle auto-selection based on what package manager has passed in as the current package when running scripts via the package manager
+      if (!explicitMenuOptIn && !opts?.disableAutoSelect) {
+        // filled by package manager with package name if running an package.json script
+        const packageName = process.env.npm_package_name || process.env.PNPM_PACKAGE_NAME;
+        if (packageName) {
         // console.log('auto select package name', packageName);
-        autoSelectService = _.find(workspace.allServices, (service) => {
-          return service.packageName === packageName;
-        });
+          const autoServiceFromPackageManager = _.find(workspace.allServices, (service) => {
+            return service.packageName === packageName;
+          });
 
-        // This fully selects it and moves on
-        // TODO: not totally sure, so we should see how this feels...
-        if (autoSelectService) {
-          thisCommand.opts().service = autoSelectService.serviceName;
-          return;
+          // This fully selects it and moves on
+          // TODO: not totally sure, so we should see how this feels...
+          if (autoServiceFromPackageManager) {
+            ctx.selectedService = autoServiceFromPackageManager;
+            ctx.autoSelectedService = true;
+            return;
+          }
         }
       }
 
-
-      // try to select based on current working directory
+      // handle picking from a menu, default selection will be based on CWD
       // this pre-selects the menu, but does not continue automatically
       // NOTE - `pnpm --filter=child-package exec dmno` changes the cwd correctly
-      if (!autoSelectService) {
+      if (explicitMenuOptIn || !opts?.disableMenuSelect) {
         // order our services by folder depth (descending)
         // so we can look for whiuch folder the user is in
         const servicesOrderedByDirDepth = _.orderBy(workspace.allServices, (s) => s.path.split('/').length, ['desc']);
 
         const cwd = process.cwd();
-        autoSelectService = _.find(servicesOrderedByDirDepth, (service) => {
+        const autoServiceFromCwd = _.find(servicesOrderedByDirDepth, (service) => {
           return cwd.includes(service.path);
         });
+
+        const menuSelection = await select({
+          message: 'Please select a service?',
+          choices: _.map(workspace.allServices, (service) => ({
+            name: getServiceLabel(service, namesMaxLen),
+            value: service.serviceName,
+          })),
+          default: autoServiceFromCwd?.serviceName,
+        });
+
+        ctx.selectedService = _.find(workspace.allServices, (s) => s.serviceName === menuSelection);
+        ctx.autoSelectedService = false;
+        return;
       }
 
-      const menuSelection = await select({
-        message: 'Which service?',
-        choices: _.map(workspace.allServices, (service) => ({
-          name: getServiceLabel(service, namesMaxLen),
-          value: service.serviceName,
-        })),
-        default: autoSelectService?.serviceName,
-      });
-      thisCommand.opts().service = menuSelection;
+      if (!opts?.allowNoSelection) {
+        exitWithErrorMessage('You must select a service');
+      }
     });
+
   // .hook('postAction', async (thisCommand, actionCommand) => {
   //   console.log('postAction Hook!');
   //   console.log(thisCommand, actionCommand);

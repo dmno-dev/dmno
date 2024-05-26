@@ -2,7 +2,6 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import kleur from 'kleur';
 import _ from 'lodash-es';
-import CliTable from 'cli-table3';
 import boxen from 'boxen';
 import outdent from 'outdent';
 import {
@@ -16,7 +15,6 @@ import { PackageManager, findDmnoServices, pathExists } from '../../config-loade
 import { DmnoCommand } from '../lib/DmnoCommand';
 
 import { formatError, formattedValue, joinAndCompact } from '../lib/formatting';
-import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 import {
   DMNO_DEV_BANNER, fallingDmnoLoader, fallingDmnosAnimation,

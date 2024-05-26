@@ -1,6 +1,5 @@
 import kleur from 'kleur';
 import _ from 'lodash-es';
-import CliTable from 'cli-table3';
 import { outdent } from 'outdent';
 import gradient from 'gradient-string';
 import { DmnoCommand } from '../lib/DmnoCommand';
@@ -22,7 +21,7 @@ Runs the service in dev mode, and watches for changes and updates as needed.
   .option('--silent', 'do not log anything, useful when using in conjunction with a ConfigServerClient which will do its own logging')
   .example('dmno dev', 'Runs the service in dev mode');
 
-addServiceSelection(program, false);
+addServiceSelection(program, { allowNoSelection: true });
 // TODO: need to clarify behaviour around "clear-cache" and if that clears once or on every load
 addCacheFlags(program);
 

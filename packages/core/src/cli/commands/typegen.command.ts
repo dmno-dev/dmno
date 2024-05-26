@@ -1,6 +1,5 @@
 import kleur from 'kleur';
 import _ from 'lodash-es';
-import CliTable from 'cli-table3';
 import { tryCatch } from '@dmno/ts-lib';
 import { DmnoCommand } from '../lib/DmnoCommand';
 import { formatError, formattedValue } from '../lib/formatting';
