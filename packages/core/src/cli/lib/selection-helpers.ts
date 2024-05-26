@@ -8,22 +8,16 @@ import { fallingDmnoLoader } from './loaders';
 import { getCliRunCtx } from './cli-ctx';
 import { DmnoService, DmnoWorkspace } from '../../config-engine/config-engine';
 import { DmnoPlugin } from '../../config-engine/plugins';
-
-function getMaxLength(strings: Array<string>, extraBuffer = 4) {
-  let max = 0;
-  for (let i = 0; i < strings.length; i++) {
-    if (strings[i].length > max) max = strings[i].length;
-  }
-  if (max) max += extraBuffer;
-  return max;
-}
+import { getMaxLength } from './string-utils';
+import { joinAndCompact } from './formatting';
 
 
 function getServiceLabel(s: DmnoService, padNameEnd: number) {
-  return [
+  return joinAndCompact([
     `- ${s.serviceName.padEnd(padNameEnd)}`,
     kleur.gray(s.packageName),
-  ].join(' ');
+    s.configLoadError && kleur.red('  schema load error'),
+  ], ' ');
 }
 
 export function addServiceSelection(program: Command, opts?: {
@@ -41,25 +35,34 @@ export function addServiceSelection(program: Command, opts?: {
 
       const namesMaxLen = getMaxLength(_.map(workspace.allServices, (s) => s.serviceName));
 
-      // first display loading errors (which would likely cascade into schema errors)
-      if (_.some(_.values(workspace.allServices), (s) => s.configLoadError)) {
-        console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('We were unable to load all of your config')}  🚨 🚨 🚨\n`);
-        console.log(kleur.gray('The following services are failing to load:\n'));
+      // // first display loading errors (which would likely cascade into schema errors)
+      // if (_.some(_.values(workspace.allServices), (s) => s.configLoadError)) {
+      //   console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('We were unable to load all of your config')}  🚨 🚨 🚨\n`);
+      //   console.log(kleur.gray('The following services are failing to load:\n'));
 
-        // NOTE - we dont use a table here because word wrapping within the table
-        // breaks clicking/linking into your code
+      //   // NOTE - we dont use a table here because word wrapping within the table
+      //   // breaks clicking/linking into your code
 
-        _.each(workspace.allServices, (service) => {
-          if (!service.configLoadError) return;
-          console.log(kleur.bold().red(`💥 Service ${kleur.underline(service.serviceName)} failed to load 💥\n`));
+      //   _.each(workspace.allServices, (service) => {
+      //     if (!service.configLoadError) return;
+      //     console.log(kleur.bold().red(`💥 Service ${kleur.underline(service.serviceName)} failed to load 💥\n`));
 
-          console.log(kleur.bold(service.configLoadError.message), '\n');
+      //     console.log(kleur.bold(service.configLoadError.message), '\n');
 
-          console.log(service.configLoadError.cleanedStack?.join('\n'), '\n');
-        });
-        console.log('bailing from schema load errors');
-        return ctx.exit();
+      //     console.log(service.configLoadError.cleanedStack?.join('\n'), '\n');
+      //   });
+      //   console.log('bailing from schema load errors');
+      //   return ctx.exit();
+      // }
+
+      // handle re-selecting the same service on a restart, which could be a bit weird if the name(s) have changed
+      // but we try to just select the same one and not worry too much
+      if (ctx.isWatchModeRestart && ctx.selectedService) {
+        ctx.selectedService = ctx.workspace.getService({ serviceName: ctx.selectedService.serviceName })
+      || ctx.workspace.getService({ packageName: ctx.selectedService.packageName });
+        if (ctx.selectedService) return;
       }
+
 
       // handle explicit selection via the flag
       // if the user types just -s with no arg, we'll treat that as saying they want the menu
@@ -71,15 +74,15 @@ export function addServiceSelection(program: Command, opts?: {
       const explicitSelection = thisCommand.opts().service;
       if (!explicitMenuOptIn && explicitSelection) {
         ctx.selectedService = _.find(workspace.allServices, (s) => s.serviceName === explicitSelection);
-        if (!ctx.selectedService) {
-          return exitWithErrorMessage(
-            `Invalid service selection: ${kleur.bold(explicitSelection)}`,
-            [
-              'Maybe you meant one of:',
-              ..._.map(workspace.allServices, (s) => getServiceLabel(s, namesMaxLen)),
-            ],
-          );
-        }
+        if (ctx.selectedService) return;
+
+        return exitWithErrorMessage(
+          `Invalid service selection: ${kleur.bold(explicitSelection)}`,
+          [
+            'Maybe you meant one of:',
+            ..._.map(workspace.allServices, (s) => getServiceLabel(s, namesMaxLen)),
+          ],
+        );
       }
 
       // handle auto-selection based on what package manager has passed in as the current package when running scripts via the package manager
@@ -133,17 +136,7 @@ export function addServiceSelection(program: Command, opts?: {
         exitWithErrorMessage('You must select a service');
       }
     });
-
-  // .hook('postAction', async (thisCommand, actionCommand) => {
-  //   console.log('postAction Hook!');
-  //   console.log(thisCommand, actionCommand);
-  // })
-  // .hook('preSubcommand', async (thisCommand, actionCommand) => {
-  //   console.log('preSubcommand Hook!');
-  //   console.log(thisCommand, actionCommand);
-  // });
 }
-
 
 function getPluginLabel(p: DmnoPlugin, padNameEnd: number) {
   return [
@@ -196,5 +189,3 @@ export function addPluginSelection(program: Command) {
       ctx.selectedPlugin = workspace.plugins[menuSelection];
     });
 }
-
-// if (!selectionRequired) return;

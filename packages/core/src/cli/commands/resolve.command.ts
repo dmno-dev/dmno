@@ -3,7 +3,7 @@ import _ from 'lodash-es';
 import { tryCatch } from '@dmno/ts-lib';
 import { outdent } from 'outdent';
 import boxen from 'boxen';
-import { DmnoCommand } from '../lib/DmnoCommand';
+import { DmnoCommand } from '../lib/dmno-command';
 
 import {
   formatError, formattedValue, getItemSummary, joinAndCompact,
@@ -31,7 +31,6 @@ addServiceSelection(program);
 addCacheFlags(program);
 
 
-
 program.action(async (opts: {
   // these args should be handled already by the helpers
   // service?: string,
@@ -47,36 +46,33 @@ program.action(async (opts: {
 
   if (opts.format) ctx.expectingOutput = true;
 
-  // TODO: should probably toggle on some "silent" mode and then run all logs through a helper
-
   if (!ctx.selectedService) return; // error message already handled
-
 
   ctx.log(`\nResolving config for service ${kleur.magenta(ctx.selectedService.serviceName)}\n`);
 
   const workspace = ctx.workspace!;
 
-  // // first display loading errors (which would likely cascade into schema errors)
-  // if (_.some(_.values(workspace.allServices), (s) => s.configLoadError)) {
-  //   console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('We were unable to load all of your config')}  🚨 🚨 🚨\n`);
-  //   console.log(kleur.gray('The following services are failing to load:\n'));
 
-  //   // NOTE - we dont use a table here because word wrapping within the table
-  //   // breaks clicking/linking into your code
+  // TODO: be smarter about which services to show errors for, and move this all to somewhere general
 
-  //   _.each(workspace.allServices, (service) => {
-  //     if (!service.configLoadError) return;
-  //     console.log(kleur.bold().red(`💥 Service ${kleur.underline(service.serviceName)} failed to load 💥\n`));
+  // first display loading errors (which would likely cascade into schema errors)
+  if (_.some(_.values(workspace.allServices), (s) => s.configLoadError)) {
+    console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('We were unable to load all of your config')}  🚨 🚨 🚨\n`);
+    console.log(kleur.gray('The following services are failing to load:\n'));
 
-  //     console.log(kleur.bold(service.configLoadError.message), '\n');
+    // NOTE - we dont use a table here because word wrapping within the table
+    // breaks clicking/linking into your code
 
-  //     console.log(service.configLoadError.cleanedStack?.join('\n'), '\n');
-  //   });
-  //   return ctx.exit();
-  // }
+    _.each(workspace.allServices, (service) => {
+      if (!service.configLoadError) return;
+      console.log(kleur.bold().red(`💥 Service ${kleur.underline(service.serviceName)} failed to load 💥\n`));
 
-  // console.dir(workspace.services.root.config, { depth: null });
-  // console.dir(workspace.plugins, { depth: null });
+      console.log(kleur.bold(service.configLoadError.message), '\n');
+
+      console.log(service.configLoadError.cleanedStack?.join('\n'), '\n');
+    });
+    return ctx.exit();
+  }
 
   // now show plugin errors - which would also likely cause further errors
   if (_.some(_.values(workspace.plugins), (p) => !p.isValid)) {
@@ -114,39 +110,15 @@ program.action(async (opts: {
     console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your config schema is invalid')}  🚨 🚨 🚨\n`);
     console.log(kleur.gray('The following services have issues:\n'));
 
-    const errorsTable = new CliTable({
-      colWidths: [
-        Math.floor(TERMINAL_COLS * 0.25),
-        Math.floor(TERMINAL_COLS * 0.75),
-      ],
-      wordWrap: true,
-    });
-
-    // header row
-    errorsTable.push(
-      [
-        'Service',
-        'Error(s)',
-      ].map((t) => kleur.bold().magenta(t)),
-    );
 
     _.each(workspace.allServices, (service) => {
       if (!service.schemaErrors?.length) return;
 
-      errorsTable.push([
-        service.serviceName,
-        _.map(service.schemaErrors, formatError).join('\n'),
-      ]);
+      console.log(service.serviceName);
+      console.log(_.map(service.schemaErrors, formatError).join('\n'));
     });
-    console.log(errorsTable.toString());
+    // console.log(errorsTable.toString());
     return ctx.exit();
-  }
-
-  if (!ctx.selectedService) {
-    return exitWithErrorMessage(
-      'You must select a specific service',
-      ['try re-running with the `-s` flag'],
-    );
   }
 
   const service = ctx.selectedService;
@@ -180,17 +152,16 @@ program.action(async (opts: {
   }
 
 
-  let exposedConfig = service.config;
-  if (opts.public) {
-    exposedConfig = _.pickBy(exposedConfig, (c) => !c.type.getDefItem('sensitive'));
-  }
-  const valuesOnly = _.mapValues(exposedConfig, (val) => {
-    return val.resolvedValue;
-  });
 
 
   // console.log(service.config);
   if (opts.format === 'json') {
+    let exposedConfig = service.config;
+    if (opts.public) {
+      exposedConfig = _.pickBy(exposedConfig, (c) => !c.type.getDefItem('sensitive'));
+    }
+    const valuesOnly = _.mapValues(exposedConfig, (val) => val.resolvedValue);
+
     console.log(JSON.stringify(valuesOnly));
   } else if (opts.format === 'json-full') {
     // TODO: this includes sensitive info when using --public option

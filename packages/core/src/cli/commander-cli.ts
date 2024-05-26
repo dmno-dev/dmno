@@ -10,7 +10,7 @@ import './lib/init-process';
 import _ from 'lodash-es';
 import kleur from 'kleur';
 import Debug from 'debug';
-import { DmnoCommand } from './lib/DmnoCommand';
+import { DmnoCommand } from './lib/dmno-command';
 
 import { addDocsCommand } from './lib/cli-schema-generation';
 import { customizeHelp } from './lib/help-customizations';

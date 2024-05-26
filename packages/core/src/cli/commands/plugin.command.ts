@@ -7,7 +7,7 @@ import { ExecaChildProcess, execa } from 'execa';
 import which from 'which';
 import Debug from 'debug';
 import { tryCatch } from '@dmno/ts-lib';
-import { DmnoCommand } from '../lib/DmnoCommand';
+import { DmnoCommand } from '../lib/dmno-command';
 import { formatError, formattedValue } from '../lib/formatting';
 import { executeCommandWithEnv } from '../lib/execute-command';
 import { fallingDmnoLoader } from '../lib/loaders';

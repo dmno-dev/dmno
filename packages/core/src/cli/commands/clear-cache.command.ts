@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import kleur from 'kleur';
 import _ from 'lodash-es';
 import { outdent } from 'outdent';
-import { DmnoCommand } from '../lib/DmnoCommand';
+import { DmnoCommand } from '../lib/dmno-command';
 import { formatError, formattedValue, getItemSummary } from '../lib/formatting';
 import { executeCommandWithEnv } from '../lib/execute-command';
 import { getCliRunCtx } from '../lib/cli-ctx';

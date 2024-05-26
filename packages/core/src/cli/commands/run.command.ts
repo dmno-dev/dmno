@@ -4,7 +4,7 @@ import { ExecaChildProcess, execa } from 'execa';
 import which from 'which';
 
 import { tryCatch } from '@dmno/ts-lib';
-import { DmnoCommand } from '../lib/DmnoCommand';
+import { DmnoCommand } from '../lib/dmno-command';
 import { formatError, formattedValue, getItemSummary } from '../lib/formatting';
 import { executeCommandWithEnv } from '../lib/execute-command';
 import { addServiceSelection } from '../lib/selection-helpers';

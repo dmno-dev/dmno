@@ -12,7 +12,7 @@ import { tryCatch } from '@dmno/ts-lib';
 
 import gradient from 'gradient-string';
 import { PackageManager, findDmnoServices, pathExists } from '../../config-loader/find-services';
-import { DmnoCommand } from '../lib/DmnoCommand';
+import { DmnoCommand } from '../lib/dmno-command';
 
 import { formatError, formattedValue, joinAndCompact } from '../lib/formatting';
 import { getCliRunCtx } from '../lib/cli-ctx';

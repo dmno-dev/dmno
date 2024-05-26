@@ -24,6 +24,7 @@ export type CliRunCtx = {
 
   /** ctx + watch mode aware exit helper  */
   exit(exitCode?: number): void;
+  isExited: boolean,
   /** log that swallows if command is expecting strictly formatted output (like JSON) */
   log: typeof console.log;
   /** log that always runs, meant to be called by anything that spits out strict formatted output */
@@ -32,7 +33,11 @@ export type CliRunCtx = {
 
 const ctxHelpers = {
   exit(this: CliRunCtx, exitCode = 1) {
-    if (!this.watchEnabled) process.exit(exitCode);
+    if (this.watchEnabled) {
+      this.isExited = true;
+    } else {
+      process.exit(exitCode);
+    }
   },
   log(this: CliRunCtx, ...strs: Array<string>) {
     if (!this.expectingOutput) {
