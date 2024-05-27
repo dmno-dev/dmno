@@ -1,5 +1,13 @@
 # dmno
 
+## 0.0.10
+
+### Patch Changes
+
+- [#82](https://github.com/dmno-dev/dmno/pull/82) [`0ff07e9`](https://github.com/dmno-dev/dmno/commit/0ff07e9b628e1cc1ce57c16ab5b8fc381407ac91) Thanks [@theoephraim](https://github.com/theoephraim)! - rename `load` to `resolve`, add `printenv`, add `-w` to resolve, refactor cli errors and watch mode
+
+- [#83](https://github.com/dmno-dev/dmno/pull/83) [`f7f7612`](https://github.com/dmno-dev/dmno/commit/f7f7612c4e1041ce4640747a1c5ef92b14033347) Thanks [@theoephraim](https://github.com/theoephraim)! - respect env var public prefixes (ex: NEXT*PUBLIC*) during schema scaffold
+
 ## 0.0.9
 
 ### Patch Changes
