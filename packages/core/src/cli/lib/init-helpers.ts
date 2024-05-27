@@ -172,6 +172,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
   }
 
   // INSTALL KNOWN INTEGRATIONS
+  const installedIntegrationPublicPrefixes: Array<string> = [];
   for (const knownIntegrationDep in KNOWN_INTEGRATIONS_MAP) {
     // currently we check dependencies, but we could look for specific config files instead
     if (packageJsonDeps[knownIntegrationDep]) {
@@ -223,6 +224,12 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
           // TODO: add some typing on the meta provider stuff...
           const integrationMetaRaw = await fs.promises.readFile(integrationMetaFile, 'utf8');
           const integrationMeta = parseJSONC(integrationMetaRaw);
+
+          // track the public env var prefix (ex: `NEXT_PUBLIC_`)
+          if (integrationMeta.publicPrefix) {
+            installedIntegrationPublicPrefixes.push(integrationMeta.publicPrefix);
+          }
+
           // currently we are assuming only a single codemod and that it will be for a config file
           // but will likely change
           const configCodeMods = integrationMeta.installationCodemods?.[0];
@@ -326,7 +333,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     }
 
     const envVarsFromCode = await findEnvVarsInCode(service.path);
-    const inferredSchema = await inferDmnoSchema(dotEnvFiles, envVarsFromCode);
+    const inferredSchema = await inferDmnoSchema(dotEnvFiles, envVarsFromCode, installedIntegrationPublicPrefixes);
     const schemaMtsCode = generateDmnoConfigInitialCode(service.isRoot, serviceName, inferredSchema);
     configFileGenerated = true;
 
@@ -513,48 +520,6 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
   //     }));
   //   }
   // }
-
-
-  // INSTALL KNOWN INTEGRATIONS
-  if (!workspaceInfo.isMonorepo || !service.isRoot) {
-    for (const knownIntegrationDep in KNOWN_INTEGRATIONS_MAP) {
-      if (packageJsonDeps[knownIntegrationDep]) {
-        const suggestedDmnoIntegration = KNOWN_INTEGRATIONS_MAP[
-          knownIntegrationDep as keyof typeof KNOWN_INTEGRATIONS_MAP
-        ];
-
-        if (suggestedDmnoIntegration.package === 'dmno') {
-          console.log(setupStepMessage(`dmno + ${knownIntegrationDep} - natively supported integration`, {
-            type: 'noop',
-            docs: suggestedDmnoIntegration.docs,
-          }));
-        } else if (packageJsonDeps[suggestedDmnoIntegration.package]) {
-          console.log(setupStepMessage(`dmno + ${knownIntegrationDep} - integration already installed`, {
-            type: 'noop',
-            package: suggestedDmnoIntegration.package,
-            packageVersion: packageJsonDeps[suggestedDmnoIntegration.package],
-            docs: suggestedDmnoIntegration.docs,
-          }));
-        } else {
-          console.log(`It looks like this package uses ${kleur.green(knownIntegrationDep)}!`);
-          const confirmIntegrationInstall = await confirm({
-            message: `Would you like to install the ${kleur.green(suggestedDmnoIntegration.package)} package?`,
-          });
-
-          if (!confirmIntegrationInstall) {
-            console.log('No worries - you can always install it later.');
-          } else {
-            installPackage(servicePath, workspaceInfo.packageManager, suggestedDmnoIntegration.package, false);
-            await reloadPackageJson();
-
-            console.log(setupStepMessage(`dmno + ${knownIntegrationDep} integration installed!`, { package: suggestedDmnoIntegration.package, packageVersion: packageJsonDeps[suggestedDmnoIntegration.package] }));
-          }
-        }
-        break;
-      }
-    }
-  }
-
 
 
   // SECRETS PLUGINS
