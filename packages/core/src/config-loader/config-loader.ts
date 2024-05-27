@@ -72,12 +72,12 @@ export class ConfigLoader {
     this.viteRunner = viteRunner;
   }
 
-  onReload?: () => void;
+  onReload?: () => void | Promise<void>;
 
   private async viteHotReloadHandler(ctx: HmrContext) {
     if (this.devMode) {
       await this.reload();
-      if (this.onReload) this.onReload();
+      if (this.onReload) await this.onReload();
     }
   }
 
@@ -163,10 +163,15 @@ export class ConfigLoader {
 
     this.dmnoWorkspace.initServicesDag();
     this.dmnoWorkspace.processConfig();
-    if (this.devMode) {
-      await this.regenerateAllTypeFiles();
-      await this.dmnoWorkspace.resolveConfig();
-    }
+
+    // TODO: currently this reloads EVERYTHING always. We need to be smarter about it
+    await this.regenerateAllTypeFiles();
+    await this.dmnoWorkspace.resolveConfig();
+
+    // if (this.devMode) {
+    //   await this.regenerateAllTypeFiles();
+    //   await this.dmnoWorkspace.resolveConfig();
+    // }
     this.schemaLoaded = true;
   }
 

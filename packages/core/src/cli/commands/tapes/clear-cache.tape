@@ -6,7 +6,7 @@ Output "./src/assets/tapes/clear-cache.gif"
 
 # TODO show a cached value
 
-Type "pnpm exec dmno load -s root" 
+Type "pnpm exec dmno resolve -s root" 
 Enter
 Sleep 4000ms
 

@@ -1,11 +1,9 @@
 import fs from 'node:fs/promises';
 import kleur from 'kleur';
 import _ from 'lodash-es';
-import CliTable from 'cli-table3';
 import { outdent } from 'outdent';
-import { DmnoCommand } from '../lib/DmnoCommand';
+import { DmnoCommand } from '../lib/dmno-command';
 import { formatError, formattedValue, getItemSummary } from '../lib/formatting';
-import { executeCommandWithEnv } from '../lib/execute-command';
 import { getCliRunCtx } from '../lib/cli-ctx';
 import { ConfigServer } from '../../config-loader/config-server';
 import { addCacheFlags } from '../lib/cache-helpers';
@@ -22,6 +20,7 @@ const program = new DmnoCommand('clear-cache')
   `)
   .example('dmno clear-cache', 'Clear the entire cache');
   // .example('dmno cache clear -s web', 'Clear items from the cache used by the "web" service only');
+
 
 // addServiceSelection(program);
 

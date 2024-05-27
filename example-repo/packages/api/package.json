@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "dmno run -w -- node --watch --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm ./src/main.ts",
+    "run-check-env": "node --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm ./src/scripts/check-env.ts",
     "build": "tsup src/main.ts",
     "boot": "node --experimental-specifier-resolution=node ./dist/main.js",
     "runscript": "node --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm",
@@ -13,7 +14,7 @@
     "lint:fix": "pnpm run lint --fix",
     "nodev": "node -v",
     "whichnode": "which node",
-    "dmno": "dmno load",
+    "dmno": "dmno resolve",
     "migrate": "dmno run -- prisma migrate"
   },
   "dependencies": {

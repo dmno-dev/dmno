@@ -131,7 +131,7 @@ export default defineDmnoService({
 ### Service names
 Every service must have a unique "service name" within your workspace. You can set it in the service's config, although if you do not specify a name, we will use the `name` field from that service's `package.json` file.
 
-We recommend you set it to something short - for example `api` instead of `@my-cool-org/api` - because you may be typing it into CLI commands (e.g., `pnpm exec dmno load -s api`) and it will be visible in several places in terminal output..
+We recommend you set it to something short - for example `api` instead of `@my-cool-org/api` - because you may be typing it into CLI commands (e.g., `pnpm exec dmno resolve -s api`) and it will be visible in several places in terminal output..
 
 You'll also use it as a reference to the service when services need to reference each other in their configuration, like when picking config (see next section).
 

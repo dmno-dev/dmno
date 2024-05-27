@@ -224,8 +224,8 @@ export default defineConfig({
                   link: '/docs/reference/cli/init/',
                 },
                 {
-                  label: 'load',
-                  link: '/docs/reference/cli/load/',
+                  label: 'resolve',
+                  link: '/docs/reference/cli/resolve/',
                 },
                 {
                   label: 'dev',

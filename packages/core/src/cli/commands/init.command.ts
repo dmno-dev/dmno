@@ -2,7 +2,6 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import kleur from 'kleur';
 import _ from 'lodash-es';
-import CliTable from 'cli-table3';
 import boxen from 'boxen';
 import outdent from 'outdent';
 import {
@@ -13,10 +12,9 @@ import { tryCatch } from '@dmno/ts-lib';
 
 import gradient from 'gradient-string';
 import { PackageManager, findDmnoServices, pathExists } from '../../config-loader/find-services';
-import { DmnoCommand } from '../lib/DmnoCommand';
+import { DmnoCommand } from '../lib/dmno-command';
 
 import { formatError, formattedValue, joinAndCompact } from '../lib/formatting';
-import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 import {
   DMNO_DEV_BANNER, fallingDmnoLoader, fallingDmnosAnimation,
@@ -24,8 +22,7 @@ import {
 } from '../lib/loaders';
 import { initDmnoForService } from '../lib/init-helpers';
 import { DISCORD_INVITE_URL, GITHUB_REPO_URL } from '../../lib/constants';
-
-const TERMINAL_COLS = process.stdout.columns - 10 || 100;
+import { CliExitError } from '../lib/cli-error';
 
 const program = new DmnoCommand('init')
   .summary('Sets up dmno')
@@ -76,8 +73,9 @@ program.action(async (opts: {
     // ensure dmno has already been set up at the root
     // TODO: we could do some other checks for this too
     if (!rootDmnoFolderExists) {
-      console.log('Workspace root .dmno folder does not exist yet... Please run `dmno init` in the root');
-      process.exit(1);
+      throw new CliExitError('Workspace root .dmno folder does not exist yet', {
+        suggestion: 'Please first run `dmno init` in the root of your monorepo',
+      });
     }
     // initialize dmno in this service only
     await initDmnoForService(workspaceInfo, workspaceInfo.autoSelectedPackage.path);

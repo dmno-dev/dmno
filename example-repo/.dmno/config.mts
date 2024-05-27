@@ -11,7 +11,7 @@ import { GA4MeasurementId } from './custom-types.mjs';
 
 const OnePassBackend = new OnePasswordDmnoPlugin('1pass', {
   token: configPath('OP_TOKEN'),
-  envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=n4wmgfq77mydg5lebtroa3ykvm&h=dmnoinc.1password.com'
+  envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=n4wmgfq77mydg5lebtroa3ykvm&h=dmnoinc.1password.com',
   // token: InjectPluginInputByType,
   // token: 'asdf',
 });
@@ -30,7 +30,7 @@ const ProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
 export default defineDmnoWorkspace({
   name: 'root',
   schema: {
-    NODE_ENV: NodeEnvType, 
+    NODE_ENV: NodeEnvType,
     DMNO_ENV: {
       typeDescription: 'standardized environment flag set by DMNO',
       value: (ctx) => ctx.get('NODE_ENV'),

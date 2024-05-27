@@ -1,5 +1,5 @@
 import _ from 'lodash-es';
-import { DmnoCommand } from './DmnoCommand';
+import { DmnoCommand } from './dmno-command';
 
 // this adds a hidden command which spits out a json schema of the entire cli
 export function addDocsCommand(program: DmnoCommand) {
