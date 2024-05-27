@@ -5,7 +5,6 @@ import { LoadedDotEnvFile } from '../../lib/dotenv-utils';
 import { joinAndCompact } from './formatting';
 import { asyncEachLimit } from '../../lib/async-utils';
 
-
 // data structure to store our scaffolded dmno config that will be transformed into actual code
 // it will be a subset of our actual config, and we'll need to store the
 export type DmnoConfigScaffoldItem = {
@@ -18,16 +17,22 @@ export type DmnoConfigScaffoldItem = {
 };
 type DmnoConfigScaffold = Record<string, DmnoConfigScaffoldItem>;
 
-
-export async function inferDmnoSchema(dotEnvFiles: Array<LoadedDotEnvFile>, envVarsFromCode: EnvVarsFromCode) {
+export async function inferDmnoSchema(
+  dotEnvFiles: Array<LoadedDotEnvFile>,
+  envVarsFromCode: EnvVarsFromCode,
+  publicPrefixes?: Array<string>,
+) {
   const dmnoSchema: DmnoConfigScaffold = {};
 
   for (const dotEnvFile of dotEnvFiles) {
     for (const itemKey in dotEnvFile.items) {
       const dotEnvItem = dotEnvFile.items[itemKey];
+
+      const itemHasPublicPrefix = _.some(publicPrefixes, (prefix) => itemKey.startsWith(prefix));
+
       dmnoSchema[itemKey] ||= {
         // we default everything is sensitive, and can then undo it later
-        sensitive: true,
+        ...!itemHasPublicPrefix && { sensitive: true },
       };
 
       let coercedItemVal: any | undefined;
