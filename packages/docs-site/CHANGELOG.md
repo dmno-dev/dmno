@@ -4,6 +4,13 @@
 
 ### Patch Changes
 
+- Updated dependencies []:
+  - @dmno/astro-integration@0.0.6
+
+## null
+
+### Patch Changes
+
 - Updated dependencies [[`c63c2e9`](https://github.com/dmno-dev/dmno/commit/c63c2e9f89c1c83f348bf8fed810c56c32f3d609), [`f16be40`](https://github.com/dmno-dev/dmno/commit/f16be4052ce4d9f6202c3d0e96f6fc1e265e6002)]:
   - @dmno/astro-integration@0.0.5
   - dmno@0.0.9

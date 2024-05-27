@@ -1,5 +1,11 @@
 # @dmno/astro-integration
 
+## 0.0.6
+
+### Patch Changes
+
+- republish - publishing workflow error
+
 ## 0.0.5
 
 ### Patch Changes
