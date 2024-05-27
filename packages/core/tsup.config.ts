@@ -4,7 +4,7 @@ export default defineConfig({
   entry: [ // Entry point(s)
     'src/index.ts', // main lib, users will import from here
     'src/app-init/auto-load-global.ts', // import used in node apps to load into global DMNO_CONFIG
-    'src/cli/commander-cli.ts', // cli that gets run via `dmno` command
+    'src/cli/cli-executable.ts', // cli that gets run via `dmno` command
     'src/cli/plugin-cli-lib.ts', // helpers used to create clis for dmno plugins
   ], 
 

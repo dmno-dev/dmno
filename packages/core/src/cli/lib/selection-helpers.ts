@@ -2,7 +2,6 @@ import { Command } from 'commander';
 import _ from 'lodash-es';
 import kleur from 'kleur';
 import { select } from '@inquirer/prompts';
-import { exitWithErrorMessage } from './error-helpers';
 import { SerializedDmnoPlugin, SerializedService } from '../../config-loader/serialization-types';
 import { fallingDmnoLoader } from './loaders';
 import { getCliRunCtx } from './cli-ctx';
@@ -10,6 +9,7 @@ import { DmnoService, DmnoWorkspace } from '../../config-engine/config-engine';
 import { DmnoPlugin } from '../../config-engine/plugins';
 import { getMaxLength } from './string-utils';
 import { joinAndCompact } from './formatting';
+import { CliExitError } from './cli-error';
 
 
 function getServiceLabel(s: DmnoService, padNameEnd: number) {
@@ -76,13 +76,12 @@ export function addServiceSelection(program: Command, opts?: {
         ctx.selectedService = _.find(workspace.allServices, (s) => s.serviceName === explicitSelection);
         if (ctx.selectedService) return;
 
-        return exitWithErrorMessage(
-          `Invalid service selection: ${kleur.bold(explicitSelection)}`,
-          [
+        throw new CliExitError(`Invalid service selection: ${kleur.bold(explicitSelection)}`, {
+          suggestion: [
             'Maybe you meant one of:',
             ..._.map(workspace.allServices, (s) => getServiceLabel(s, namesMaxLen)),
           ],
-        );
+        });
       }
 
       // handle auto-selection based on what package manager has passed in as the current package when running scripts via the package manager
@@ -133,7 +132,9 @@ export function addServiceSelection(program: Command, opts?: {
       }
 
       if (!opts?.allowNoSelection) {
-        exitWithErrorMessage('You must select a service');
+        throw new CliExitError('You must select a service', {
+          suggestion: 'Try rerunning using -s flag',
+        });
       }
     });
 }
@@ -162,16 +163,14 @@ export function addPluginSelection(program: Command) {
       const explicitSelection = thisCommand.opts().plugin;
       if (explicitSelection) {
         ctx.selectedPlugin = workspace.plugins[explicitSelection];
-        if (!ctx.selectedPlugin) {
-          exitWithErrorMessage(
-            `Invalid plugin selection: ${kleur.bold(explicitSelection)}`,
-            [
-              'Maybe you meant one of:',
-              ..._.map(pluginsArray, (p) => getPluginLabel(p, namesMaxLen)),
-            ],
-          );
-        }
-        return;
+        if (ctx.selectedPlugin) return;
+
+        throw new CliExitError(`Invalid plugin selection: ${kleur.bold(explicitSelection)}`, {
+          suggestion: [
+            'Maybe you meant one of:',
+            ..._.map(pluginsArray, (p) => getPluginLabel(p, namesMaxLen)),
+          ],
+        });
       }
 
       const sortedPluginsArray = _.sortBy(pluginsArray, (p) => (p.cliPath ? 0 : 1));

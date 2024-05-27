@@ -11,10 +11,9 @@ import {
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 import { addCacheFlags } from '../lib/cache-helpers';
-import { exitWithErrorMessage } from '../lib/error-helpers';
 import { addWatchMode } from '../lib/watch-mode-helpers';
-
-const TERMINAL_COLS = process.stdout.columns - 10 || 100;
+import { CliExitError } from '../lib/cli-error';
+import { checkForConfigErrors, checkForSchemaErrors } from '../lib/check-errors-helpers';
 
 const program = new DmnoCommand('resolve')
   .summary('Loads config schema and resolves config values')
@@ -51,108 +50,10 @@ program.action(async (opts: {
   ctx.log(`\nResolving config for service ${kleur.magenta(ctx.selectedService.serviceName)}\n`);
 
   const workspace = ctx.workspace!;
-
-
-  // TODO: be smarter about which services to show errors for, and move this all to somewhere general
-
-  // first display loading errors (which would likely cascade into schema errors)
-  if (_.some(_.values(workspace.allServices), (s) => s.configLoadError)) {
-    console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('We were unable to load all of your config')}  🚨 🚨 🚨\n`);
-    console.log(kleur.gray('The following services are failing to load:\n'));
-
-    // NOTE - we dont use a table here because word wrapping within the table
-    // breaks clicking/linking into your code
-
-    _.each(workspace.allServices, (service) => {
-      if (!service.configLoadError) return;
-      console.log(kleur.bold().red(`💥 Service ${kleur.underline(service.serviceName)} failed to load 💥\n`));
-
-      console.log(kleur.bold(service.configLoadError.message), '\n');
-
-      console.log(service.configLoadError.cleanedStack?.join('\n'), '\n');
-    });
-    return ctx.exit();
-  }
-
-  // now show plugin errors - which would also likely cause further errors
-  if (_.some(_.values(workspace.plugins), (p) => !p.isValid)) {
-    console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your plugins were unable to initialize correctly')}  🚨 🚨 🚨\n`);
-
-    _.each(workspace.plugins, (plugin) => {
-      _.each(plugin.inputItems, (item) => {
-        if (item.isValid) return;
-
-        console.log();
-
-        console.log([
-          kleur.blue(plugin.initByService?.serviceName || ''),
-          `${kleur.gray(' > ')}${plugin.instanceName}`,
-          `${kleur.gray(' > ')}${item.key}`,
-        ].join(''));
-
-        console.log(formattedValue(item.resolvedValue, false));
-
-        const errors = _.compact([
-          item.coercionError,
-          ...item.validationErrors || [],
-          item.schemaError,
-        ]);
-        console.log(errors?.map((err) => err.message).join('\n'));
-      });
-    });
-
-
-    return ctx.exit();
-  }
-
-  // now show schema errors
-  if (_.some(_.values(workspace.allServices), (s) => s.schemaErrors?.length)) {
-    console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your config schema is invalid')}  🚨 🚨 🚨\n`);
-    console.log(kleur.gray('The following services have issues:\n'));
-
-
-    _.each(workspace.allServices, (service) => {
-      if (!service.schemaErrors?.length) return;
-
-      console.log(service.serviceName);
-      console.log(_.map(service.schemaErrors, formatError).join('\n'));
-    });
-    // console.log(errorsTable.toString());
-    return ctx.exit();
-  }
-
   const service = ctx.selectedService;
+  checkForSchemaErrors(workspace);
   await service.resolveConfig();
-
-  const failingItems = _.filter(service.config, (item) => !item.isValid);
-
-  // TODO: make isValid flag on service to work
-  if (failingItems.length > 0) {
-    console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline(`Configuration of service "${kleur.magenta(service.serviceName)}" is currently invalid `)}  🚨 🚨 🚨\n`);
-    console.log('Invalid items:\n');
-
-    _.each(failingItems, (item) => {
-      console.log(getItemSummary(item.toJSON()));
-      console.log();
-    });
-    if (opts.showAll) {
-      console.log();
-      console.log(joinAndCompact([
-        'Valid items:',
-        kleur.italic().gray('(remove `--show-all` flag to hide)'),
-      ]));
-      console.log();
-      const validItems = _.filter(service.config, (i) => !!i.isValid);
-      _.each(validItems, (item) => {
-        console.log(getItemSummary(item.toJSON()));
-      });
-    }
-
-    return ctx.exit();
-  }
-
-
-
+  checkForConfigErrors(service, { showAll: opts?.showAll });
 
   // console.log(service.config);
   if (opts.format === 'json') {

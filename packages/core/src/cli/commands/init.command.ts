@@ -22,8 +22,7 @@ import {
 } from '../lib/loaders';
 import { initDmnoForService } from '../lib/init-helpers';
 import { DISCORD_INVITE_URL, GITHUB_REPO_URL } from '../../lib/constants';
-
-const TERMINAL_COLS = process.stdout.columns - 10 || 100;
+import { CliExitError } from '../lib/cli-error';
 
 const program = new DmnoCommand('init')
   .summary('Sets up dmno')
@@ -74,8 +73,9 @@ program.action(async (opts: {
     // ensure dmno has already been set up at the root
     // TODO: we could do some other checks for this too
     if (!rootDmnoFolderExists) {
-      console.log('Workspace root .dmno folder does not exist yet... Please run `dmno init` in the root');
-      process.exit(1);
+      throw new CliExitError('Workspace root .dmno folder does not exist yet', {
+        suggestion: 'Please first run `dmno init` in the root of your monorepo',
+      });
     }
     // initialize dmno in this service only
     await initDmnoForService(workspaceInfo, workspaceInfo.autoSelectedPackage.path);

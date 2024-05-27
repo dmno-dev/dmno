@@ -58,7 +58,7 @@
     }
   },
   "bin": {
-    "dmno": "./dist/cli/commander-cli.mjs"
+    "dmno": "./dist/cli/cli-executable.mjs"
   },
   "devDependencies": {
     "@dmno/encryption-lib": "workspace:*",

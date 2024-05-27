@@ -6,7 +6,8 @@ import { outdent } from 'outdent';
 import logUpdate from 'log-update';
 
 
-const TERMINAL_COLS = Math.floor(process.stdout.columns * 0.75);
+const TERMINAL_COLS = Math.floor(process.stdout.columns * 0.9);
+const LOADER_WIDTH = Math.min(TERMINAL_COLS, 100);
 
 const gradientColorizer = gradient('cyan', 'pink');
 
@@ -18,7 +19,7 @@ export async function fallingDmnoLoader(
   if (loadingText) loadingText += ' ';
   if (loadedText) loadedText += ' ';
 
-  const frameDelay = Math.floor(totalTime / TERMINAL_COLS / 2);
+  const frameDelay = Math.floor(totalTime / LOADER_WIDTH / 2);
 
   // console.log(kleur.green('Loading DMNO schema'));
 
@@ -41,7 +42,7 @@ export async function fallingDmnoLoader(
         }
       }
     } else {
-      for (let i = 0; i <= TERMINAL_COLS; i++) {
+      for (let i = 0; i <= LOADER_WIDTH; i++) {
         if (i < loadingText.length) {
           str += loadingText.slice(i, i + 1);
         } else if (i <= currentCol - 2) str += '▂';
@@ -52,7 +53,7 @@ export async function fallingDmnoLoader(
     }
     logUpdate(kleur.bold().green(str));
 
-    if (currentCol > TERMINAL_COLS) {
+    if (currentCol > LOADER_WIDTH) {
       if (!isFalling) {
         currentCol = 0;
         isFalling = true;
@@ -60,7 +61,7 @@ export async function fallingDmnoLoader(
         clearInterval(interval);
         setTimeout(() => {
           let str = '';
-          for (let i = 0; i <= TERMINAL_COLS; i++) {
+          for (let i = 0; i <= LOADER_WIDTH; i++) {
             if (i < loadedText.length) {
               str += loadedText.slice(i, i + 1);
             } else {
@@ -88,7 +89,7 @@ export async function fallingDmnosAnimation(
   if (loadingText) loadingText += ' ';
   if (loadedText) loadedText += ' ';
 
-  const frameDelay = Math.floor(totalTime / TERMINAL_COLS / 2);
+  const frameDelay = Math.floor(totalTime / LOADER_WIDTH / 2);
 
   const deferred = createDeferredPromise();
 
@@ -104,7 +105,7 @@ export async function fallingDmnosAnimation(
         else str += '▐';
       }
     } else {
-      for (let i = 0; i < TERMINAL_COLS; i++) {
+      for (let i = 0; i < LOADER_WIDTH; i++) {
         if (i === 0) str += '👉';
         // else if (i < loadingText.length) {
         //   str += loadingText.slice(i, i + 1);
@@ -113,9 +114,9 @@ export async function fallingDmnosAnimation(
         else str += '▐';
       }
     }
-    logUpdate(gradientColorizer(str + ' '.repeat(TERMINAL_COLS + 1 - str.length)));
+    logUpdate(gradientColorizer(str + ' '.repeat(LOADER_WIDTH + 1 - str.length)));
 
-    if (currentCol === TERMINAL_COLS) {
+    if (currentCol === LOADER_WIDTH) {
       if (!isFalling) {
         currentCol = 0;
         isFalling = true;
@@ -123,7 +124,7 @@ export async function fallingDmnosAnimation(
         clearInterval(interval);
         setTimeout(() => {
           let str = loadedText;
-          str += '▂'.repeat(TERMINAL_COLS + 1 - str.length);
+          str += '▂'.repeat(LOADER_WIDTH + 1 - str.length);
 
           logUpdate(gradientColorizer(str));
           console.log('\n');

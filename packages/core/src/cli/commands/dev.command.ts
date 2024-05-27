@@ -4,7 +4,6 @@ import { outdent } from 'outdent';
 import gradient from 'gradient-string';
 import { DmnoCommand } from '../lib/dmno-command';
 import { formatError, formattedValue, getItemSummary } from '../lib/formatting';
-import { executeCommandWithEnv } from '../lib/execute-command';
 import { getCliRunCtx } from '../lib/cli-ctx';
 import { ConfigServer } from '../../config-loader/config-server';
 import { addCacheFlags } from '../lib/cache-helpers';

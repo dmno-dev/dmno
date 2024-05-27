@@ -6,11 +6,11 @@ import which from 'which';
 import { tryCatch } from '@dmno/ts-lib';
 import { DmnoCommand } from '../lib/dmno-command';
 import { formatError, formattedValue, getItemSummary } from '../lib/formatting';
-import { executeCommandWithEnv } from '../lib/execute-command';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 import { addCacheFlags } from '../lib/cache-helpers';
 import { addWatchMode } from '../lib/watch-mode-helpers';
+import { checkForConfigErrors, checkForSchemaErrors } from '../lib/check-errors-helpers';
 
 
 const program = new DmnoCommand('run')
@@ -53,30 +53,16 @@ program.action(async (_command, opts: {
     commandProcess.kill(2);
   }
 
-  // TODO: this isn't quite right...
-  const workspace = ctx.workspace;
-  if (!workspace) return;
-  await workspace.resolveConfig();
-  const service = await ctx.selectedService;
-  if (!service) return;
+  if (!ctx.selectedService) return;
+
+  // TODO: not quite right
+  const workspace = ctx.workspace!;
+  const service = ctx.selectedService;
+  checkForSchemaErrors(workspace);
+  await service.resolveConfig();
+  checkForConfigErrors(service);
+
   const serviceEnv = service.getEnv();
-
-
-  // TODO: should show nice errors, and that logic should probably move within the services/items
-  // TODO: service.isValid is not correct
-  const invalidItems = _.filter(service.config, (i) => !i.isValid);
-  if (invalidItems.length) {
-    console.log('');
-    console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your config is currently invalid ')}  🚨 🚨 🚨\n`);
-    _.each(invalidItems, (item) => {
-      console.log(getItemSummary(item.toJSON()));
-    });
-
-    if (!ctx.watchEnabled) {
-      console.log('\n', kleur.bgRed(' Exiting without running script... '), '\n');
-    }
-    return ctx.exit();
-  }
 
   commandProcess = execa(pathAwareCommand || rawCommand, commandArgsOnly, {
     stdio: 'inherit',

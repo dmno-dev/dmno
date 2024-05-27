@@ -1,6 +1,6 @@
 import { Command } from 'commander';
-import { exitWithErrorMessage } from './error-helpers';
 import { getCliRunCtx } from './cli-ctx';
+import { CliExitError } from './cli-error';
 
 export function addCacheFlags(program: Command) {
   return program
@@ -8,10 +8,10 @@ export function addCacheFlags(program: Command) {
     .option('--clear-cache', 'clears the cache before continuing, will write new values to cache')
     .hook('preAction', async (thisCommand, actionCommand) => {
       if (thisCommand.opts().skipCache && thisCommand.opts().clearCache) {
-        exitWithErrorMessage(
-          'Invalid cli flag combo',
-          'Cannot use --skip-cache + --clear-cache at the same time',
-        );
+        throw new CliExitError('Invalid cli flag combo', {
+          details: 'Cannot use --skip-cache + --clear-cache at the same time',
+          forceExit: true,
+        });
       }
       const ctx = getCliRunCtx();
       ctx.configLoader.setCacheMode(

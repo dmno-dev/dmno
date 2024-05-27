@@ -55,7 +55,7 @@ export const DeleteItemCommand = createDmnoPluginCliCommand({
     console.log(vaultObj.items.length);
     if (_.values(vaultObj.items).length === 0) {
       console.log(kleur.red('Vault has 0 items, so there is nothing to delete'));
-      process.exit(1);
+      process.exit(0);
     }
 
     const itemsInVault = _.mapValues(vaultObj.items, (vaultItem, vaultItemKey) => ({

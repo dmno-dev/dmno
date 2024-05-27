@@ -1,11 +1,5 @@
 import { Command } from 'commander';
 import _ from 'lodash-es';
-import kleur from 'kleur';
-import { select } from '@inquirer/prompts';
-import { exitWithErrorMessage } from './error-helpers';
-import { CliRunCtx, getCliRunCtx } from './cli-ctx';
-import { getMaxLength } from './string-utils';
-import { DmnoService } from '../../config-engine/config-engine';
 
 interface CliCommandExample {
   command: string;

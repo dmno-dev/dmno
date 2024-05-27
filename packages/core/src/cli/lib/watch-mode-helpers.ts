@@ -1,9 +1,10 @@
 import { Command } from 'commander';
 import kleur from 'kleur';
 import { CliRunCtx, getCliRunCtx } from './cli-ctx';
+import { CliExitError } from './cli-error';
 
 
-const WATCH_MODE_LOG = [
+export const WATCHING_FILES_MESSAGE = [
   '',
   kleur.gray('👀 watching your config files for changes... (CTRL+C to exit)'),
 ].join('\n');
@@ -24,29 +25,22 @@ async function rerunCliAction(ctx: CliRunCtx, thisCommand: Command) {
   // we track that this is a re-run, so actions and hooks can alter their behaviour if necessary
   ctx.isWatchModeRestart = true;
 
-  // normally hooks/actions would call process.exit, but instead they call ctx.exit which in watch mode will just
-  // let us stop the re-run
-  ctx.isExited = false; // we reset it on each re-run here!
-
   // we'll re-run our lifecycle hooks, which means they must be aware of how to handle being run multiple times
   // usually this means just skipping unless something specific is going on
 
   // rerun pre-hooks
   for (const preHook of (thisCommand as any)._lifeCycleHooks.preAction) {
     // if the hook exited we stop the rest
-    if (!ctx.isExited) await preHook(thisCommand);
+    await preHook(thisCommand);
   }
-  if (!ctx.isExited) {
-    // re-run the action handler
-    await (thisCommand as any)._actionHandler(thisCommand.processedArgs);
-  }
+  // re-run the action handler
+  await (thisCommand as any)._actionHandler(thisCommand.processedArgs);
 
   // rerun post-hooks
   for (const postHook of (thisCommand as any)._lifeCycleHooks.postAction) {
-    if (!ctx.isExited) await postHook(thisCommand.processedArgs);
+    await postHook(thisCommand.processedArgs);
   }
 
-  console.log(WATCH_MODE_LOG);
 
 
   // isRerunInProgress = false;
@@ -55,6 +49,7 @@ async function rerunCliAction(ctx: CliRunCtx, thisCommand: Command) {
   //   await rerunCliAction(ctx, thisCommand);
   // }
 }
+
 
 export function addWatchMode(program: Command) {
   program
@@ -69,17 +64,37 @@ export function addWatchMode(program: Command) {
       // enable dev-mode and attach reload handler that re-runs the command's action
       ctx.configLoader.devMode = true;
       ctx.configLoader.onReload = async () => {
-        return rerunCliAction(ctx, thisCommand);
+        try {
+          await rerunCliAction(ctx, thisCommand);
+        } catch (err) {
+          if (err instanceof CliExitError) {
+            // in watch mode, we just log but do not actually exit
+            console.error(err.getFormattedOutput());
+
+            // unless error is marked as forcing an actual exit
+            if (err.forceExit) process.exit(1);
+          } else {
+            throw err;
+          }
+        } finally {
+          // print "watching your files..."
+          console.log(WATCHING_FILES_MESSAGE);
+        }
       };
     })
     .hook('postAction', async (thisCommand, actionCommand) => {
       const ctx = getCliRunCtx();
+
+      // we skip this logic entirely if this is a re-run
       if (ctx.isWatchModeRestart) return;
 
+      // if the command supports watch mode but it is not enabled, we'll exit when the action is complete
       if (!thisCommand.opts().watch) {
         process.exit(0);
+
+      // otherwise we let the user know we are now waiting for changes to restart
       } else {
-        console.log(WATCH_MODE_LOG);
+        console.log(WATCHING_FILES_MESSAGE);
       }
     });
 }

@@ -163,10 +163,15 @@ export class ConfigLoader {
 
     this.dmnoWorkspace.initServicesDag();
     this.dmnoWorkspace.processConfig();
-    if (this.devMode) {
-      await this.regenerateAllTypeFiles();
-      await this.dmnoWorkspace.resolveConfig();
-    }
+
+    // TODO: currently this reloads EVERYTHING always. We need to be smarter about it
+    await this.regenerateAllTypeFiles();
+    await this.dmnoWorkspace.resolveConfig();
+
+    // if (this.devMode) {
+    //   await this.regenerateAllTypeFiles();
+    //   await this.dmnoWorkspace.resolveConfig();
+    // }
     this.schemaLoaded = true;
   }
 
