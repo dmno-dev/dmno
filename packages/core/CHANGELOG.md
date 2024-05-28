@@ -1,5 +1,11 @@
 # dmno
 
+## 0.0.12
+
+### Patch Changes
+
+- [#85](https://github.com/dmno-dev/dmno/pull/85) [`59139ee`](https://github.com/dmno-dev/dmno/commit/59139ee78154cfdaf15abfd7bc180c9ff99f11fb) Thanks [@theoephraim](https://github.com/theoephraim)! - Fix schema scaffolding bug and general scaffolding improvements
+
 ## 0.0.11
 
 ### Patch Changes
