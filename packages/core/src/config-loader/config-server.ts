@@ -123,7 +123,7 @@ export class ConfigServer {
 
   eventBus = mitt();
   onEvent(eventType: string, handler: Handler) {
-    console.log('loader process subscribe to event', eventType, handler);
+    // console.log('loader process subscribe to event', eventType, handler);
     this.eventBus.on(eventType, handler);
   }
 
@@ -136,7 +136,7 @@ export class ConfigServer {
 
   onReload?: () => void;
   private onConfigReload() {
-    this.broadcastIpcEvent('reload', { foo: 1 });
+    this.broadcastIpcEvent('reload', {});
     if (this.onReload) this.onReload();
   }
 

@@ -9,6 +9,7 @@ import { ConfigLoaderRequestMap } from './ipc-requests';
 import { SerializedService } from './serialization-types';
 import { formatError, getItemSummary } from '../cli/lib/formatting';
 import { InjectedDmnoEnv } from '../config-engine/config-engine';
+import { detectPackageManagerSync } from '../lib/detect-package-manager';
 
 const debug = Debug('dmno');
 const debugTimer = createDebugTimer('dmno:loader-client');
@@ -50,7 +51,10 @@ export class ConfigServerClient {
 
   private ownedDmnoConfigServerProcess?: ChildProcess;
   private initOwnedConfigServer() {
-    this.ownedDmnoConfigServerProcess = spawn('pnpm', 'exec dmno dev --silent'.split(' '), {
+    const { packageManager } = detectPackageManagerSync();
+
+    // use `pnpm exec` or `npm exec` etc...
+    this.ownedDmnoConfigServerProcess = spawn(packageManager, 'exec -- dmno dev --silent'.split(' '), {
       stdio: 'inherit',
       env: {
         ...process.env,
@@ -85,7 +89,7 @@ export class ConfigServerClient {
     });
 
     this.ownedDmnoConfigServerProcess.on('exit', (code, signal) => {
-      console.log('dmno config server process exit', code, signal);
+      // console.log('dmno config server process exit', code, signal);
       if (!this.isShuttingDown) process.exit(code || 1);
     });
   }
@@ -118,7 +122,7 @@ export class ConfigServerClient {
       });
 
       this.ipc.of.dmno.on('event', (eventMessage) => {
-        console.log('received IPC event message', eventMessage);
+        // console.log('received IPC event message', eventMessage);
         this.eventBus.emit(eventMessage.type, eventMessage.payload);
       });
 

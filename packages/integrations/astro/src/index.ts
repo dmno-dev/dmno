@@ -27,7 +27,6 @@ async function reloadDmnoConfig() {
   injectDmnoGlobals({
     injectedConfig: serializedServiceToInjectedConfig(dmnoService),
     trackingObject: configItemKeysAccessed,
-    dynamicAccessDisabled: true,
   });
   publicDynamicItemKeys = (globalThis as any)._DMNO_PUBLIC_DYNAMIC_KEYS;
   sensitiveItemKeys = (globalThis as any)._DMNO_SENSITIVE_KEYS;
@@ -44,8 +43,6 @@ await reloadDmnoConfig();
 
 let enableDynamicPublicClientLoading = false;
 let astroCommand: 'dev' | 'build' | 'preview' = 'dev';
-
-
 
 
 
@@ -124,6 +121,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
                 // console.log('astro vite plugin configure server');
                 if (!isRestart) {
                   dmnoConfigClient.eventBus.on('reload', () => {
+                    opts.logger.info('💫 dmno config updated - restarting astro server');
                     // eslint-disable-next-line @typescript-eslint/no-floating-promises
                     server.restart();
                     dmnoHasTriggeredReload = true;
@@ -245,17 +243,17 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
         // otherwise, we want to check which config was used during prerendering
         // so if any were expected to be dyanmic (ie loaded at boot time) we can throw/warn
 
-        let dynamicConfigPrerendered = false;
-        for (const itemKey in configItemKeysAccessed) {
-          const configItem = dmnoService.config[itemKey];
-          if (configItem.isDynamic) {
-            dynamicConfigPrerendered = true;
-            opts.logger.error(`Dynamic config item "${itemKey}" was used during pre-render`);
-            opts.logger.error('> Change to `{ "dynamic": "false" }` to make it static');
-          }
-        }
-        if (dynamicConfigPrerendered) {
-          throw new Error('Dynamic config used during static pre-rendering');
+        // TODO: currently we're just showing a warning, may want to throw? have more settings?
+        const dynamicKeysUsedDuringPrerender = Object.keys(configItemKeysAccessed)
+          .filter((k) => dmnoService.config[k].isDynamic);
+        if (dynamicKeysUsedDuringPrerender.length) {
+          opts.logger.warn('Dynamic config items were accessed during pre-render:');
+          dynamicKeysUsedDuringPrerender.forEach((k) => {
+            opts.logger.warn(`- ${k}`);
+          });
+          opts.logger.warn('> Change service\'s default behavior by adjusting `settings.dynamicConfig`');
+          opts.logger.warn('> Or adjust individual items to `{ "dynamic": "false" }` to make them static');
+          opts.logger.warn('> See https://dmno.dev/docs/guides/dynamic-config/ for more info');
         }
       },
     },
