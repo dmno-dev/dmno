@@ -6,7 +6,6 @@ export function injectDmnoGlobals(
   opts?: {
     injectedConfig?: InjectedDmnoEnv,
     trackingObject?: Record<string, boolean>,
-    dynamicAccessDisabled?: boolean,
     onItemAccess?: (item: InjectedDmnoEnvItem) => void;
   },
 ) {

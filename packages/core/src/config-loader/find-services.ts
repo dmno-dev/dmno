@@ -7,6 +7,7 @@ import { fdir } from 'fdir';
 import { tryCatch } from '@dmno/ts-lib';
 import Debug from 'debug';
 import { asyncMapValues } from '../lib/async-utils';
+import { PackageManager, detectPackageManager } from '../lib/detect-package-manager';
 
 const debug = Debug('dmno:find-services');
 
@@ -14,7 +15,7 @@ export async function readJsonFile(path: string) {
   return JSON.parse(await fs.promises.readFile(path, 'utf8'));
 }
 
-export type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun' | 'moon';
+
 export type WorkspacePackagesListing = {
   name: string,
   version?: string,
@@ -42,61 +43,8 @@ export async function pathExists(p: string) {
 
 export async function findDmnoServices(includeUnitialized = true): Promise<ScannedWorkspaceInfo> {
   const startAt = new Date();
-  let cwd = process.cwd();
-  debug(`begin scan for services from ${cwd}`);
 
-  const cwdParts = cwd.split('/');
-
-  let packageManager: PackageManager | undefined;
-  let possibleRootPackage: string | undefined;
-
-  while (!packageManager) {
-    // we could also try to detect the current package manager via env vars (ex: process.env.PNPM_PACKAGE_NAME)
-    // and then not check for all of the lockfiles...?
-
-    // TODO: nx and lerna support? (lerna.json has packages array)
-    // TODO: deno?
-
-    const filesFound = await asyncMapValues({
-      packageJson: 'package.json',
-      yarnLock: 'yarn.lock',
-      npmLock: 'package-lock.json',
-      pnpmLock: 'pnpm-lock.yaml',
-      pnpmWorkspace: 'pnpm-workspace.yaml',
-      bunLock: 'bun.lockb',
-      moonWorkspace: '.moon/workspace.yml',
-    // eslint-disable-next-line @typescript-eslint/no-loop-func
-    }, async (filePath) => pathExists(path.resolve(cwd, filePath)));
-
-    if (filesFound.packageJson) possibleRootPackage = cwd;
-
-    if (filesFound.pnpmLock || filesFound.pnpmWorkspace) packageManager = 'pnpm';
-    else if (filesFound.npmLock) packageManager = 'npm';
-    else if (filesFound.yarnLock) packageManager = 'yarn';
-    else if (filesFound.bunLock) packageManager = 'bun';
-    else if (filesFound.moonWorkspace) packageManager = 'moon';
-
-    if (!packageManager) {
-      cwdParts.pop();
-      cwd = cwdParts.join('/');
-    }
-    // show some hopefully useful error messaging if we hit the root folder without finding anything
-    if (cwd === '') {
-      console.log(kleur.red('Unable to find detect your package manager and workspace root!'));
-      if (possibleRootPackage) {
-        console.log(`But it looks like your workspace root might be ${kleur.green().italic(possibleRootPackage)}`);
-      }
-      console.log('We look for lock files (ex: package-lock.json) so you may just need to run a dependency install (ie `npm install`)');
-      process.exit(1);
-    }
-  }
-  const rootServicePath = cwd;
-
-  debug('finished scanning for workspace root', {
-    packageManager,
-    rootServicePath,
-  });
-
+  const { packageManager, rootWorkspacePath: rootServicePath } = await detectPackageManager();
 
   let packagePatterns: Array<string> | undefined;
   let isMonorepo = false;

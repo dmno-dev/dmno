@@ -13,7 +13,7 @@ for (const itemKey of sensitiveItemKeys) {
 
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
-  console.log(`custom astro middleware executed - ${context.url}`);
+  // console.log(`custom astro middleware executed - ${context.url}`);
 
   const response = await next();
 
