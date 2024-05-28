@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
 import fs from 'node:fs';
 import path from 'path';
+import _ from 'lodash-es';
 import { parse as parseJSONC } from 'jsonc-parser';
 import buildEsmResolver from 'esm-resolve';
 import kleur from 'kleur';
@@ -112,6 +113,7 @@ const KNOWN_INTEGRATIONS_MAP: Record<string, { package: string, docs?: string }>
 
 export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, servicePath: string, silent?: boolean) {
   const rootPath = workspaceInfo.workspacePackages[0].path;
+  const nonRootPaths = workspaceInfo.workspacePackages.slice(1).map((s) => s.path);
   const { packageManager } = workspaceInfo;
 
   const service = workspaceInfo.workspacePackages.find((s) => s.path === servicePath);
@@ -286,7 +288,9 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     console.log(setupStepMessage('.dmno folder created!'));
   }
 
-  const dotEnvFiles = await loadServiceDotEnvFiles(service.path);
+  const dotEnvFiles = await loadServiceDotEnvFiles(service.path, {
+    excludeDirs: service.isRoot ? nonRootPaths : [],
+  });
 
   // CREATE .dmno/config.mts
   let configFileGenerated = false;
@@ -332,7 +336,9 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
       }
     }
 
-    const envVarsFromCode = await findEnvVarsInCode(service.path);
+    const envVarsFromCode = await findEnvVarsInCode(service.path, {
+      excludeDirs: service.isRoot ? nonRootPaths : [],
+    });
     const inferredSchema = await inferDmnoSchema(dotEnvFiles, envVarsFromCode, installedIntegrationPublicPrefixes);
     const schemaMtsCode = generateDmnoConfigInitialCode(service.isRoot, serviceName, inferredSchema);
     configFileGenerated = true;
@@ -341,7 +347,10 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
       configMtsPath,
       schemaMtsCode,
     );
-    console.log(setupStepMessage('.dmno/config.mts created!', { path: configMtsPath }));
+    console.log(setupStepMessage('.dmno/config.mts created!', {
+      path: configMtsPath,
+      tip: 'Please review and update this file!',
+    }));
   }
 
   // clean up dotenv files - delete samples and checked in files

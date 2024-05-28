@@ -737,7 +737,7 @@ export class DmnoService {
     // TODO: this is not at all optimized for speed...
     // particularly it is doing a check on if the file is gitignored
     // and if we are loading not in dev mode, we may just want to load files that will be applied
-    const dotEnvFiles = await loadServiceDotEnvFiles(this.path, true);
+    const dotEnvFiles = await loadServiceDotEnvFiles(this.path, { onlyLoadDmnoFolder: true });
 
     dotEnvFiles.forEach((dotEnvFile) => {
       this.overrideSources.unshift(
