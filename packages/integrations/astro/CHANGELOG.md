@@ -1,5 +1,11 @@
 # @dmno/astro-integration
 
+## 0.0.7
+
+### Patch Changes
+
+- [#84](https://github.com/dmno-dev/dmno/pull/84) [`cff6475`](https://github.com/dmno-dev/dmno/commit/cff6475e3a45418ace18cbb2851a5c133713d26e) Thanks [@theoephraim](https://github.com/theoephraim)! - spawn dmno dev using correct package manager, astro integration cleanup, dynamic item prerender warning
+
 ## 0.0.6
 
 ### Patch Changes
