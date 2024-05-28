@@ -154,14 +154,26 @@ export type LoadedDotEnvFile = Awaited<ReturnType<typeof loadDotEnvFile>>;
 
 export async function loadServiceDotEnvFiles(
   servicePath: string,
-  onlyLoadDmnoFolder = false,
+  opts?: {
+    onlyLoadDmnoFolder?: boolean,
+    excludeDirs?: Array<string>,
+  },
 ): Promise<Array<LoadedDotEnvFile>> {
   let globs = ['**/.env', '**/.env.*', '**/.env.*.local'];
-  if (onlyLoadDmnoFolder) globs = globs.map((p) => p.replace('**/', './.dmno/'));
+  if (opts?.onlyLoadDmnoFolder) globs = globs.map((p) => p.replace('**/', './.dmno/'));
   const dotEnvFilePaths = await new fdir() // eslint-disable-line new-cap
     .withRelativePaths()
     .glob(...globs)
-    .exclude((dirName, _dirPath) => (dirName !== '.dmno' && dirName.startsWith('.')) || dirName === 'node_modules')
+    .exclude((excludeDirName, exdlueDirPath) => {
+      // skip .XXX folders (other than .dmno)
+      if (excludeDirName !== '.dmno' && excludeDirName.startsWith('.')) return true;
+      // skip node_modules
+      if (excludeDirName === 'node_modules') return true;
+      // exclude directories - note as passed in, they do not have trailing slashes)
+      // but the dirPath does, so we must trailing slash
+      if (opts?.excludeDirs?.includes(exdlueDirPath.replace(/\/$/, ''))) return true;
+      return false;
+    })
     .crawl(servicePath)
     .withPromise();
 
