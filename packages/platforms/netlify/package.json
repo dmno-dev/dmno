@@ -1,0 +1,66 @@
+{
+  "name": "@dmno/netlify-platform",
+  "version": "0.0.0",
+  "description": "tools to use dmno with netlify",
+  "author": "dmno-dev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmno-dev/dmno.git",
+    "directory": "packages/platforms/netlify"
+  },
+  "bugs": "https://github.com/dmno-dev/dmno/issues",
+  "homepage": "https://dmno.dev/docs/platforms/netlify",
+  "keywords": [
+    "dmno",
+    "netlify",
+    "config",
+    "env vars",
+    "environment variables",
+    "secrets",
+    "dmno-plugin"
+  ],
+  "type": "module",
+  "main": "dist/build-plugin",
+  "exports": {
+    ".": {
+      "default": "./dist/index.mjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "index": [
+        "./dist/index.d.mts"
+      ],
+      "functions-dmno-loader": [
+        "./dist/functions-dmno-loader.d.mts"
+      ]
+    }
+  },
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
+    "dev": "pnpm run build --watch",
+    "lint": "eslint src --ext .ts,.cjs,.mjs",
+    "lint:fix": "pnpm run lint --fix"
+  },
+  "devDependencies": {
+    "@dmno/eslint-config": "workspace:*",
+    "@dmno/tsconfig": "workspace:*",
+    "@types/lodash-es": "^4.17.12",
+    "@types/node": "^20.12.7",
+    "dmno": "workspace:*",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^7.3.0",
+    "lodash-es": "^4.17.21"
+  },
+  "peerDependencies": {
+    "dmno": "^0"
+  }
+}

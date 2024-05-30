@@ -1,6 +1,15 @@
 import type { InjectedDmnoEnv, InjectedDmnoEnvItem } from '../config-engine/config-engine';
 
-const originalProcessEnv = structuredClone(process.env);
+// shim process.env in case we are loading in an env without it
+const processExists = !!globalThis.process;
+const process = globalThis.process ?? { env: {} };
+
+let originalProcessEnv: Record<string, string> = {};
+try {
+  originalProcessEnv = structuredClone(process.env) as any;
+} catch (err) {
+  console.log('error cloning process.env', err);
+}
 
 export function injectDmnoGlobals(
   opts?: {
