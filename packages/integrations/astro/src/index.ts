@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'url';
 import { ConfigServerClient, injectDmnoGlobals, serializedServiceToInjectedConfig } from 'dmno';
 import type { AstroIntegration } from 'astro';
 
@@ -8,6 +9,7 @@ import type { AstroIntegration } from 'astro';
 (process as any).dmnoConfigClient ||= new ConfigServerClient();
 const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
 
+const __dirname = fileURLToPath(import.meta.url);
 
 // Unsure why, but in some cases this whole file reloads, and in others it doesnt
 // so we may need to reload the config multiple times
@@ -222,18 +224,18 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
           injectRoute({
             pattern: 'public-dynamic-config.json',
             // Use relative path syntax for a local route.
-            entrypoint: `${import.meta.dirname}/fetch-public-dynamic-config.json.mjs`,
+            entrypoint: `${__dirname}/fetch-public-dynamic-config.json.mjs`,
           });
         }
 
         // add leak detection middleware!
         addMiddleware({
-          entrypoint: `${import.meta.dirname}/astro-middleware.mjs`,
+          entrypoint: `${__dirname}/astro-middleware.mjs`,
           order: 'post', // not positive on this?
         });
 
         // enable the toolbar (currently does nothing...)
-        addDevToolbarApp(`${import.meta.dirname}/dev-toolbar-app.mjs`);
+        addDevToolbarApp(`${__dirname}/dev-toolbar-app.mjs`);
       },
       'astro:build:done': async (opts) => {
         // if we didn't actually pre-render any pages, we can move one

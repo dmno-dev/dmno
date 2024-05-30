@@ -20,23 +20,37 @@ const dmnoEnv = execSync('npm exec -- dmno resolve -f json-injected').toString()
 // });
 
 
-export function onBuild(args: any) {
-  // const netlifyFolderPath = args.utils.cache.getCacheDir().replace(/\/[^/]+$/, '');
-  const netlifyFolderPath = '/opt/build/repo/.netlify';
-  console.log('on build!', dmnoEnv, netlifyFolderPath);
-  updateDmnoInjectFile(netlifyFolderPath);
+const INJECT_DMNO_ENV_SRC = `
+globalThis.process = globalThis.process || { env: {} };
+globalThis.process.env.DMNO_INJECTED_ENV = ${dmnoEnv};
+`
+
+export async function onBuild(args: any) {
+  // const netlifyFolderPath = args.constants.IS_LOCAL ? args.utils.cache.getCacheDir().replace(/\/[^/]+$/, '') : '/opt/build/repo/.netlify';
+  
+  const allFunctions = await args.utils.functions.listAll();
+  for (const fn of allFunctions) {
+    const originalSrc = await fs.promises.readFile(fn.mainFile, 'utf8');
+    const updatedSrc = INJECT_DMNO_ENV_SRC + originalSrc;
+    await fs.promises.writeFile(fn.mainFile, updatedSrc, 'utf8');
+  }
 }
 
 function updateDmnoInjectFile(netlifyFolderPath: string) {
   
   const injectorSrc = fs.readFileSync(`${import.meta.dirname}/injector.js`, 'utf8');
 
-  const fullSrc = `
-  // globalThis.process = globalThis.process || { env: {} };
+  const injectDmnoConfigSrc = `
+    globalThis.process = globalThis.process || { env: {} };
+    globalThis.process.env.DMNO_INJECTED_ENV = ${dmnoEnv};
+  `
+
+  // const fullSrc = `
+  // // globalThis.process = globalThis.process || { env: {} };
   // globalThis.process.env.DMNO_INJECTED_ENV = ${dmnoEnv};
-  ${injectorSrc.replace('injectDmnoGlobals();', '')}
-  injectDmnoGlobals({ injectedConfig: ${dmnoEnv} });
-  `;
+  // ${injectorSrc.replace('injectDmnoGlobals();', '')}
+  // injectDmnoGlobals({ injectedConfig: ${dmnoEnv} });
+  // `;
 
   // const injectSrc = `
   // import { injectDmnoGlobals } from 'dmno';
@@ -50,7 +64,7 @@ function updateDmnoInjectFile(netlifyFolderPath: string) {
   //     return INJECTED_DMNO_ENV[key.toString()];
   //   }
   // });`;
-  fs.writeFileSync(`${netlifyFolderPath}/inject-dmno-config.js`, fullSrc, 'utf8');
+  fs.writeFileSync(`${netlifyFolderPath}/inject-dmno-config.js`, injectDmnoConfigSrc, 'utf8');
 }
 
 

@@ -1,8 +1,5 @@
-import { injectDmnoGlobals } from 'dmno';
+import 'dmno/load';
 import { MiddlewareHandler } from 'astro';
-
-// we'll inject the globals again for the case we're running in a built SSR env
-injectDmnoGlobals();
 
 const sensitiveItemKeys = (globalThis as any)._DMNO_SENSITIVE_KEYS as Array<string>;
 const sensitiveValueLookup: Record<string, string> = {};
