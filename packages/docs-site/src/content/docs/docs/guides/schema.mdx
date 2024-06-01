@@ -95,7 +95,7 @@ The rest of your services (if you are working in a monorepo) are very similar, h
 
 - `parent` - set the service's parent (by name), otherwise will default to the root service
 {/* - `tags` - array of strings, not yet used for anything */}
-- `pick` - pick specific config items from other services to use in this one (more on that below)
+- `pick` - pick specific config items from other services to use in this one (see [sharing config](/docs/guides/schema/#sharing-config-between-services) for more info)
 
 An example service config:
 
@@ -409,8 +409,8 @@ export default defineDmnoService({
     SOME_API_KEY: {
       value: switchByNodeEnv({
         // static values for pre-prod, so not a problem to include here
-        _default: 'abc123',
-        development: 'dev123',
+        _default: 'dev123',
+        test: 'test123',
         staging: 'staging123',
         // sensitive key we don't want in our repo
         production: prodOnePassSecrets.item(),
