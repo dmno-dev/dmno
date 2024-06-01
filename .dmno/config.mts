@@ -42,6 +42,6 @@ export default defineDmnoWorkspace({
     GITHUB_TOKEN: {
       description: 'Personal github access token, used for changesets publishing',
       sensitive: true,
-    }
+    },
   }
 });

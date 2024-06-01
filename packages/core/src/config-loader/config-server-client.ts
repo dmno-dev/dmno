@@ -218,6 +218,15 @@ export class ConfigServerClient {
     return serviceConfig;
   }
 
+  async getServiceConfigForInjection() {
+    const packageName = getCurrentPackageName();
+    if (packageName === '') {
+      throw new Error('To use dmno, you must set a package "name" in your package.json file');
+    }
+    const serviceConfig = await this.makeRequest('get-resolved-config-for-inject', { packageName });
+    return serviceConfig;
+  }
+
   static checkServiceIsValid(service: SerializedService, log = true) {
     if (service.configLoadError) {
       console.log('🚨 🚨 🚨  unable to load config schema  🚨 🚨 🚨');
@@ -248,15 +257,3 @@ export class ConfigServerClient {
   }
 }
 
-export function serializedServiceToInjectedConfig(service: SerializedService): InjectedDmnoEnv {
-  const injectedEnv: InjectedDmnoEnv = {};
-  for (const itemKey in service.config) {
-    const configItem = service.config[itemKey];
-    injectedEnv[itemKey] = {
-      sensitive: !!configItem.dataType.sensitive,
-      dynamic: !!configItem.isDynamic,
-      value: configItem.resolvedValue,
-    };
-  }
-  return injectedEnv;
-}

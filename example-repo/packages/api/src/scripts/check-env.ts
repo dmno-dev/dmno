@@ -1,4 +1,4 @@
-import 'dmno/load';
+import 'dmno/inject';
 
 console.log('Checking if ENV is loaded...');
 console.log('-- process.env --------------------');

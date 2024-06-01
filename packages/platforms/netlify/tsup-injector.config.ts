@@ -5,7 +5,7 @@ export default defineConfig({
     'src/build-plugin/injector.ts',
   ], 
   treeshake: true,
-  noExternal: ["dmno/load"],
+  noExternal: ["dmno/inject"],
   outDir: "dist/build-plugin", // Output directory
   
   format: ['esm'], // Output format(s)

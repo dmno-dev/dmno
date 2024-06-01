@@ -1,1 +1,1 @@
-import 'dmno/load';
+import 'dmno/inject';

@@ -1,7 +1,9 @@
 // build plugin
 
 import { execSync } from 'node:child_process';
-import fs, { FSWatcher } from 'node:fs';
+import fs from 'node:fs';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 //onPreBuild - runs before the build command is executed.
 //onBuild - runs directly after the build command is executed and before Functions bundling.
@@ -19,57 +21,62 @@ const dmnoEnv = execSync('npm exec -- dmno resolve -f json-injected').toString()
 //   injectedConfig: JSON.parse(dmnoEnv),
 // });
 
+// const INJECT_DMNO_ENV_SRC = `globalThis._DMNO_INJECTED_ENV = ${dmnoEnv};`
+// const INJECT_DMNO_ENV_SRC = `import { injectDmnoGlobals } from 'dmno/injector'; injectDmnoGlobals({ injectedConfig: ${dmnoEnv} });`;
 
-const INJECT_DMNO_ENV_SRC = `
-globalThis.process = globalThis.process || { env: {} };
-globalThis.process.env.DMNO_INJECTED_ENV = ${dmnoEnv};
-`
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const INJECTOR_FULL_SRC = fs.readFileSync(`${__dirname}/injector.js`, 'utf8');
+console.log(INJECTOR_FULL_SRC);
 
 export async function onBuild(args: any) {
-  // const netlifyFolderPath = args.constants.IS_LOCAL ? args.utils.cache.getCacheDir().replace(/\/[^/]+$/, '') : '/opt/build/repo/.netlify';
+  console.log('onBuild hook!');
+  const netlifyFolderPath = args.constants.IS_LOCAL ? args.utils.cache.getCacheDir().replace(/\/[^/]+$/, '') : '/opt/build/repo/.netlify';
   
-  const allFunctions = await args.utils.functions.listAll();
+  updateDmnoInjectFile(netlifyFolderPath);
+
+  // handle regular "functions" (lambdas)
+  const allFunctions = await args.utils.functions.list();
+  console.log(allFunctions);
   for (const fn of allFunctions) {
     const originalSrc = await fs.promises.readFile(fn.mainFile, 'utf8');
-    const updatedSrc = INJECT_DMNO_ENV_SRC + originalSrc;
+
+    // NOTE - if we inject the config directly, other imports get hoisted above it
+    // so we have to inject an import that includes the config instead
+    // TODO: resolve correct path
+    const updatedSrc = `import '../../inject-dmno-config.js';\n` + originalSrc;
     await fs.promises.writeFile(fn.mainFile, updatedSrc, 'utf8');
+    console.log('updated function @ '+fn.mainFile, originalSrc.substr(0,100));
+  }
+
+  // handle "edge functions"
+  const edgeFnsDir = `${netlifyFolderPath}/edge-functions`;
+  if (fs.existsSync(edgeFnsDir)) {
+    const edgeFnFileNames = await fs.promises.readdir(edgeFnsDir, { recursive: true });
+    for (const edgeFnFileName of edgeFnFileNames) {
+      if (edgeFnFileName.startsWith('.vendor')) continue;
+      if (!(edgeFnFileName.endsWith('.mjs') || edgeFnFileName.endsWith('.cjs') || edgeFnFileName.endsWith('.js'))) continue;
+      const fullFilePath = `${edgeFnsDir}/${edgeFnFileName}`;
+      const originalSrc = await fs.promises.readFile(fullFilePath, 'utf8');
+      // TODO: resolve correct path
+      // see same note above about import vs directly injecting
+      const updatedSrc = `import '../../inject-dmno-config.js';\n` + originalSrc;
+      await fs.promises.writeFile(fullFilePath, updatedSrc, 'utf8');
+      console.log('updated EDGE function @ '+fullFilePath, originalSrc.substr(0,100));    
+    }
   }
 }
 
 function updateDmnoInjectFile(netlifyFolderPath: string) {
-  
-  const injectorSrc = fs.readFileSync(`${import.meta.dirname}/injector.js`, 'utf8');
-
-  const injectDmnoConfigSrc = `
-    globalThis.process = globalThis.process || { env: {} };
-    globalThis.process.env.DMNO_INJECTED_ENV = ${dmnoEnv};
-  `
-
-  // const fullSrc = `
-  // // globalThis.process = globalThis.process || { env: {} };
-  // globalThis.process.env.DMNO_INJECTED_ENV = ${dmnoEnv};
-  // ${injectorSrc.replace('injectDmnoGlobals();', '')}
-  // injectDmnoGlobals({ injectedConfig: ${dmnoEnv} });
-  // `;
-
-  // const injectSrc = `
-  // import { injectDmnoGlobals } from 'dmno';
-  // const INJECTED_DMNO_ENV = JSON.parse(${JSON.stringify(dmnoEnv)});
-  // injectDmnoGlobals({ injectConfig: INJECTED_DMNO_ENV });
-  // `;
-
-  // globalThis.DMNO_CONFIG = new Proxy({}, {
-  //   get(_obj, key) {
-  //     console.log('get dmno config', key.toString());
-  //     return INJECTED_DMNO_ENV[key.toString()];
-  //   }
-  // });`;
-  fs.writeFileSync(`${netlifyFolderPath}/inject-dmno-config.js`, injectDmnoConfigSrc, 'utf8');
+  // fs.writeFileSync(`${netlifyFolderPath}/inject-dmno-config.js`, INJECT_DMNO_ENV_SRC, 'utf8');
+  const injectorSrcWithEnv = INJECTOR_FULL_SRC.replace('injectDmnoGlobals();', `injectDmnoGlobals({ injectedConfig: ${dmnoEnv} });`)
+  fs.writeFileSync(`${netlifyFolderPath}/inject-dmno-config.js`, injectorSrcWithEnv, 'utf8');
 }
 
 
 export function onPreBuild() {
-  console.log('onPreBuild!');
+  console.log('onPreBuild hook!');
 }
 
 function getNetlifyFolderPath(eventArgs: any) {

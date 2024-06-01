@@ -1,37 +1,68 @@
+import { dirname } from 'node:path';
 import { fileURLToPath } from 'url';
-import { ConfigServerClient, injectDmnoGlobals, serializedServiceToInjectedConfig } from 'dmno';
+import { execSync } from 'node:child_process';
+import { injectDmnoGlobals } from 'dmno/injector';
 import type { AstroIntegration } from 'astro';
+import type { ConfigServerClient } from 'dmno';
+
+// console.time('dmno load');
+
+let enableDynamicPublicClientLoading = false;
+let astroCommand: 'dev' | 'build' | 'preview' | undefined;
 
 // console.log('dmno astro integration file loaded!');
 
+// // initialize a dmno config server client, but only once
+// (process as any).dmnoConfigClient ||= new ConfigServerClient();
+// const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
 
-// initialize a dmno config server client, but only once
-(process as any).dmnoConfigClient ||= new ConfigServerClient();
-const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
+const __dirname = dirname(fileURLToPath(import.meta.url));
+// console.log('DIRNAME = ', __dirname);
 
-const __dirname = fileURLToPath(import.meta.url);
-
-// Unsure why, but in some cases this whole file reloads, and in others it doesnt
-// so we may need to reload the config multiple times
-// TODO: try to clean this logic up a bit?
-let dmnoService: Awaited<ReturnType<typeof dmnoConfigClient.getServiceConfig>>;
+// // Unsure why, but in some cases this whole file reloads, and in others it doesnt
+// // so we may need to reload the config multiple times
+// // TODO: try to clean this logic up a bit?
 let configItemKeysAccessed: Record<string, boolean> = {};
 let dmnoConfigValid = true;
+let dynamicItemKeys: Array<string> = [];
 let publicDynamicItemKeys: Array<string> = [];
 let sensitiveItemKeys: Array<string> = [];
 let sensitiveValueLookup: Record<string, string> = {};
+let viteDefineReplacements = {} as Record<string, string>;
+let dmnoConfigClient: ConfigServerClient;
+
 
 async function reloadDmnoConfig() {
-  dmnoService = await dmnoConfigClient.getServiceConfig();
-  dmnoConfigValid = ConfigServerClient.checkServiceIsValid(dmnoService);
-  configItemKeysAccessed = {};
+  let injectionResult: ReturnType<typeof injectDmnoGlobals>;
+  const injectedEnvExists = (globalThis as any)._DMNO_INJECTED_ENV || globalThis.process?.env.DMNO_INJECTED_ENV;
 
-  injectDmnoGlobals({
-    injectedConfig: serializedServiceToInjectedConfig(dmnoService),
-    trackingObject: configItemKeysAccessed,
-  });
-  publicDynamicItemKeys = (globalThis as any)._DMNO_PUBLIC_DYNAMIC_KEYS;
-  sensitiveItemKeys = (globalThis as any)._DMNO_SENSITIVE_KEYS;
+  if (astroCommand === 'dev' || !injectedEnvExists) {
+    const { ConfigServerClient } = await import('dmno');
+    // console.log('creating dmno config client?', !(process as any).dmnoConfigClient);
+    (process as any).dmnoConfigClient ||= new ConfigServerClient();
+    dmnoConfigClient = (process as any).dmnoConfigClient;
+    const injectedConfig = await dmnoConfigClient.getServiceConfigForInjection();
+    console.log('fetched injected config from dmno dev server', injectedConfig);
+    // dmnoConfigValid = ConfigServerClient.checkServiceIsValid(dmnoService);
+    configItemKeysAccessed = {};
+
+    injectionResult = injectDmnoGlobals({
+      injectedConfig,
+      trackingObject: configItemKeysAccessed,
+    });
+  } else if (injectedEnvExists) {
+    console.log('using injected dmno config');
+    injectionResult = injectDmnoGlobals();
+  } else {
+    console.log('using CLI to get injected env');
+    const injectedDmnoEnv = execSync('npm exec -- dmno resolve -f json-injected').toString();
+    injectionResult = injectDmnoGlobals({ injectedConfig: JSON.parse(injectedDmnoEnv) });
+  }
+
+  viteDefineReplacements = injectionResult.staticReplacements || {};
+  dynamicItemKeys = injectionResult.dynamicKeys || [];
+  publicDynamicItemKeys = injectionResult.publicDynamicKeys || [];
+  sensitiveItemKeys = injectionResult.sensitiveKeys || [];
   sensitiveValueLookup = {};
   for (const itemKey of sensitiveItemKeys) {
     const val = (globalThis as any).DMNO_CONFIG[itemKey];
@@ -39,13 +70,9 @@ async function reloadDmnoConfig() {
   }
 }
 
-// we do want to run this right away so the globals get injected into the astro.config file
+// // we do want to run this right away so the globals get injected into the astro.config file
 await reloadDmnoConfig();
-
-
-let enableDynamicPublicClientLoading = false;
-let astroCommand: 'dev' | 'build' | 'preview' = 'dev';
-
+// console.timeEnd('dmno load');
 
 
 let dmnoHasTriggeredReload = false;
@@ -61,18 +88,20 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
     name: 'dmno-astro-integration',
     hooks: {
       'astro:config:setup': async (opts) => {
-        // this handles the case where astro's vite server reloaded but this file did not get reloaded
-        if (dmnoHasTriggeredReload) {
-          await reloadDmnoConfig();
-          dmnoHasTriggeredReload = false;
-        }
         const {
           isRestart, logger, addDevToolbarApp, updateConfig,
           injectScript, addMiddleware, injectRoute,
         } = opts;
-
         astroCommand = opts.command;
 
+        // this handles the case where astro's vite server reloaded but this file did not get reloaded
+        // we need to reload if we just found out we are in dev mode - so it will use the config client
+        if (astroCommand === 'dev' || dmnoHasTriggeredReload) {
+          await reloadDmnoConfig();
+          dmnoHasTriggeredReload = false;
+        }
+
+        // TODO: this doesnt work yet
         if (opts.command === 'build' && !dmnoConfigValid) {
           throw new Error('DMNO config is not valid');
         }
@@ -83,25 +112,6 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
           enableDynamicPublicClientLoading = publicDynamicItemKeys.length > 0;
         }
 
-        const staticConfigReplacements = {} as Record<string, string>;
-
-        for (const itemKey in dmnoService.config) {
-          const configItem = dmnoService.config[itemKey];
-
-          if (configItem.dataType.sensitive) {
-            // if it's sensitive and static, we'll inject only into DMNO_CONFIG
-            if (!configItem.isDynamic) {
-              staticConfigReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
-            }
-          } else {
-            // if public and static, we'll inject into vite's rewrites
-            if (!configItem.isDynamic) {
-              // add rollup rewrite/define for non-sensitive items
-              staticConfigReplacements[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
-              staticConfigReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
-            }
-          }
-        }
 
         updateConfig({
           vite: {
@@ -115,20 +125,20 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
                 // inject rollup rewrites via config.define
                 config.define = {
                   ...config.define,
-                  ...staticConfigReplacements,
+                  ...viteDefineReplacements,
                 };
               },
 
-              async configureServer(server) {
-                // console.log('astro vite plugin configure server');
-                if (!isRestart) {
+              ...astroCommand === 'dev' && !isRestart && !!dmnoConfigClient && {
+                async configureServer(server) {
+                  console.log('initializing dmno reload > astro reload trigger');
                   dmnoConfigClient.eventBus.on('reload', () => {
                     opts.logger.info('💫 dmno config updated - restarting astro server');
                     // eslint-disable-next-line @typescript-eslint/no-floating-promises
                     server.restart();
                     dmnoHasTriggeredReload = true;
                   });
-                }
+                },
               },
 
               // leak detection in _built_ files
@@ -245,9 +255,9 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
         // otherwise, we want to check which config was used during prerendering
         // so if any were expected to be dyanmic (ie loaded at boot time) we can throw/warn
 
-        // TODO: currently we're just showing a warning, may want to throw? have more settings?
+        // // TODO: currently we're just showing a warning, may want to throw? have more settings?
         const dynamicKeysUsedDuringPrerender = Object.keys(configItemKeysAccessed)
-          .filter((k) => dmnoService.config[k].isDynamic);
+          .filter((k) => dynamicItemKeys.includes(k));
         if (dynamicKeysUsedDuringPrerender.length) {
           opts.logger.warn('Dynamic config items were accessed during pre-render:');
           dynamicKeysUsedDuringPrerender.forEach((k) => {

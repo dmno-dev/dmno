@@ -7,6 +7,10 @@
       "outputs": [ "dist/**" ],
       "outputMode": "new-only"
     },
+    "build:tarball": {
+      "dependsOn": [ "^build" ],
+      "inputs": [ "tsconfig.json", "tsconfig.*.json", "tsup.config.ts", "src/**" ]
+    },
     "dev": {
       "cache": false,
       "persistent": true

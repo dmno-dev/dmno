@@ -31,9 +31,6 @@
     "*": {
       "index": [
         "./dist/index.d.mts"
-      ],
-      "functions-dmno-loader": [
-        "./dist/functions-dmno-loader.d.mts"
       ]
     }
   },
@@ -43,6 +40,7 @@
   "scripts": {
     "build": "tsup",
     "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
+    "build:tarball": "turbo build && pnpm pack --pack-destination \"../../../../tmp-package-registry\"",
     "dev": "pnpm run build --watch",
     "lint": "eslint src --ext .ts,.cjs,.mjs",
     "lint:fix": "pnpm run lint --fix"

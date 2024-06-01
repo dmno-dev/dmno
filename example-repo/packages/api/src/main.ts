@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-import 'dmno/load'; // import first to load global DMNO_CONFIG
+import 'dmno/inject'; // import first to load global DMNO_CONFIG
 
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
