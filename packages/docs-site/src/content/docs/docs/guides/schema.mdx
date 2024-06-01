@@ -58,12 +58,10 @@ Each `config.mts` file will define settings for that service, including a full s
 
 But as the root service is an ancestor of all other services, it is where any workspace-wide settings and config items will live.
 
-This file must have `export default defineDmnoWorkspace({ //...`. We'll get into more details below, so don't worry if some of it is confusing. Here is an example:
-
-
+This file must have `export default defineDmnoWorkspace({ //...`. Here is an example:
 
 ```typescript title=".dmno/config.mts" "defineDmnoWorkspace"
-import { defineDmnoWorkspace, DmnoBaseTypes, NodeEnvType } from 'dmno';
+import { DmnoBaseTypes, defineDmnoWorkspace, NodeEnvType } from 'dmno';
 
 export default defineDmnoWorkspace({
   // service name (optional, but recommended)
@@ -131,7 +129,7 @@ export default defineDmnoService({
 ### Service names
 Every service must have a unique "service name" within your workspace. You can set it in the service's config, although if you do not specify a name, we will use the `name` field from that service's `package.json` file.
 
-We recommend you set it to something short - for example `api` instead of `@my-cool-org/api` - because you may be typing it into CLI commands (e.g., `pnpm exec dmno resolve -s api`) and it will be visible in several places in terminal output..
+We recommend you set it to something short - for example `api` instead of `@my-cool-org/api` - because you may be typing it into CLI commands (e.g., `pnpm exec dmno resolve -s api`) and it will be visible in several places in terminal output.
 
 You'll also use it as a reference to the service when services need to reference each other in their configuration, like when picking config (see next section).
 
@@ -227,13 +225,17 @@ export default defineDmnoService({
 
 ### Data types & `extends`
 
-Each item is defined by `extend`ing some base type (whether explicitly or not) and adding additional overrides on top of it.
+:::note[DMNO Types]
+DMNO has a full-featured type system that extends beyond what TypeScript is capable of on its own. When these docs refer to types we are usually talking about the DMNO type system, unless otherwise specified. See [DmnoBaseTypes](/docs/reference/base-types/) for more info.
+:::
 
-Most of the time, you'll use existing data types, either from `DmnoBaseTypes` ([see reference](/docs/reference/base-types/)) or from a published `dmno` plugin - some by `dmno`, some by others. These data types are factory functions, and accept settings that control reusable behavior like validation rules. You should almost always be able to accomplish what you need with existing types - but of course you can author your own resuable types as well.
+Each item is defined by extending some base type (whether explicitly or not) and adding additional overrides on top of it.
+
+Most of the time, you'll use existing data types, either from [`DmnoBaseTypes`](/docs/reference/base-types/) or from a published `dmno` plugin - some by `dmno`, some by others. These data types are factory functions, and accept settings that control reusable behavior like validation rules. You should almost always be able to accomplish what you need with existing types - but of course you can author your own resuable types as well.
 
 These types are also used to generate TypeScript types for your config and give you type safety when using your config in your application code.
 
-Again the syntax for `extend` is fairly rich, so best to illustrate via some examples:
+Again, the syntax for `extends` is rich, and best illustrated via some examples:
 ```ts
 export default defineDmnoService({
   schema: {
@@ -257,12 +259,6 @@ export default defineDmnoService({
     FALLBACK_TO_STRING_UNABLE_TO_INFER: { // assumes string
       value: somePlugin.item(),
     },
-
-    // shorthand is provided for items w/o settings other than extends
-    // (not recommended because attaching additional metadata/info is helpful)
-    SHORTHAND_TYPE_NAME: 'number',
-    SHORTHAND_TYPE_UNINITIALIZED: DmnoBaseTypes.number,
-    SHORTHAND_TYPE_INITIALIZED: DmnoBaseTypes.number({ min: 100 }),
 
     // of course you can use your own custom types (or from plugins)
     USE_CUSTOM_TYPE: {
@@ -378,7 +374,7 @@ While some tools may let you set only default values for config items, DMNO lets
 
 This is possible because the `dmno` config loading process is broken up into 2 stages: first we load the schema, and then we "resolve" the values. While the resolution process does respect overrides passed in as env vars and from local override files, many of your values may be set _from the schema directly_.
 
-We can use static values, inline functions, or a "resolver" - which is basically just a fancy function that will be called during the resolution process and passed some contextual data about the config item and the rest of the resolved config.
+We can use static values, inline functions, or a resolver - which is basically just a fancy function that will be called during the resolution process and passed some contextual data about the config item and the rest of the resolved config.
 
 An example of setting the `value` to each of these cases in our schema:
 ```ts
@@ -402,9 +398,9 @@ export default defineDmnoService({
 });
 ```
 
-Internally, we even wrap the static values and inline functions into resolvers, so that we can always display some additional metadata about _how_ the value is being set - even without actually resolving it. These resolvers can also return more resolvers, and have a notion of multiple "branches" built in, leading to some very powerful composition capabilities.
+Internally, we even wrap the static values and inline functions into resolvers, so that we can always display some additional metadata about _how_ the value is being set - even without actually resolving it. These resolvers can also return more resolvers, and have a notion of multiple branches built in, leading to some very powerful composition capabilities.
 
-An quick example to illustrate using our built-in `switchByNodeEnv` resolver which selects a value based on the current value of `NODE_ENV` within your config.
+An quick example to illustrate using our built-in [`switchByNodeEnv`](/docs/reference/helper-methods/#switchbynodeenv) resolver which selects a value based on the current value of `NODE_ENV` within your config.
 
 ```ts
 export default defineDmnoService({
@@ -412,8 +408,10 @@ export default defineDmnoService({
   schema: {
     SOME_API_KEY: {
       value: switchByNodeEnv({
-        // some dev env key, so not a problem to expose
+        // static values for pre-prod, so not a problem to include here
         _default: 'abc123',
+        development: 'dev123',
+        staging: 'staging123',
         // sensitive key we don't want in our repo
         production: prodOnePassSecrets.item(),
       }),
