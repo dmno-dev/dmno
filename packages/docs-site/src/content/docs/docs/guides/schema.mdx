@@ -58,12 +58,14 @@ Each `config.mts` file will define settings for that service, including a full s
 
 But as the root service is an ancestor of all other services, it is where any workspace-wide settings and config items will live.
 
-This file must have `export default defineDmnoWorkspace({ //...`. Here is an example:
+This file must have `export default defineDmnoService({ //...`. Here is an example:
 
-```typescript title=".dmno/config.mts" "defineDmnoWorkspace"
-import { DmnoBaseTypes, defineDmnoWorkspace, NodeEnvType } from 'dmno';
+```typescript title=".dmno/config.mts" "defineDmnoService"
+import { DmnoBaseTypes, defineDmnoService, NodeEnvType } from 'dmno';
 
-export default defineDmnoWorkspace({
+export default defineDmnoService({
+  // you must mark the root with `isRoot: true`
+  isRoot: true,
   // service name (optional, but recommended)
   name: 'root',
   // workspace level settings, inherited by children (optional)

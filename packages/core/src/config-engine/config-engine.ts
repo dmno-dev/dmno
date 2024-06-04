@@ -159,19 +159,6 @@ type DynamicConfigModes =
   /* default_dynamic */
   'default_dynamic';
 
-/**
- * options for defining a service's config schema
- * @category HelperMethods
- */
-export type DmnoWorkspaceConfig = {
-  /** root service name, if empty will fallback to name from package.json */
-  name?: string,
-  /** settings for the root service - children will be inherit individual settings unless overridden */
-  settings?: DmnoServiceSettings,
-  /** config schema items that live in the workspace root */
-  schema: Record<string, ConfigItemDefinitionOrShorthand>,
-};
-
 
 type DmnoServiceSettings = {
   /** default behaviour for "dynamic" vs "static" behaviour of config items */
@@ -183,6 +170,8 @@ type DmnoServiceSettings = {
  * @category HelperMethods
  */
 export type DmnoServiceConfig = {
+  /** set to true if this is the root service */
+  isRoot?: boolean,
   /** service name - if empty, name from package.json will be used */
   name?: string,
   /** name of parent service (if applicable) - if empty this service will be a child of the root service */
@@ -198,6 +187,16 @@ export type DmnoServiceConfig = {
 };
 
 
+// having some trouble making the rest of the code work with this type
+// so we'll apply the extra root restrictions only when calling `defineDmnoService`
+type DmnoServiceConfigWithRootExlusions = DmnoServiceConfig & {
+  isRoot: true,
+  parent: never,
+  pick: never,
+  tags: never,
+};
+
+
 
 
 export type InjectedDmnoEnvItem = {
@@ -209,17 +208,10 @@ export type InjectedDmnoEnv = Record<string, InjectedDmnoEnvItem>;
 
 
 
-export function defineDmnoService(opts: DmnoServiceConfig) {
+export function defineDmnoService(opts: DmnoServiceConfigWithRootExlusions) {
   debug('LOADING SCHEMA!', opts);
-  // we'll mark the object so we know it was initialized via defineDmnoWorkspace
+  // we'll mark the object so we know it was initialized via defineDmnoService
   (opts as any)._isDmnoServiceConfig = true;
-  return opts;
-}
-
-export function defineDmnoWorkspace(opts: DmnoWorkspaceConfig) {
-  debug('LOADING ROOT SCHEMA!', opts);
-  // we'll mark the object so we know it was initialized via defineDmnoWorkspace
-  (opts as any)._isDmnoWorkspaceConfig = true;
   return opts;
 }
 
@@ -675,12 +667,9 @@ export class DmnoService {
     packageName: string,
     path: string,
     workspace: DmnoWorkspace,
-  } & (
-    // TODO: this type difference should be applied to rawConfig too
-    // but they are currently close enough that it doesn't matter
-    { isRoot: true, rawConfig: DmnoWorkspaceConfig | ConfigLoadError, } |
-    { isRoot: false, rawConfig: DmnoServiceConfig | ConfigLoadError }
-  )) {
+    isRoot: boolean,
+    rawConfig: DmnoServiceConfig | ConfigLoadError
+  }) {
     this.workspace = opts.workspace;
     this.isRoot = opts.isRoot;
     this.packageName = opts.packageName;

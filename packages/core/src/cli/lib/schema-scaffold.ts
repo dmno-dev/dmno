@@ -151,26 +151,26 @@ export function generateDmnoConfigInitialCode(
   serviceName: string,
   configSchemaScaffold: DmnoConfigScaffold,
 ) {
-  const defineFn = isRoot ? 'defineDmnoWorkspace' : 'defineDmnoService';
   const schemaConfigAsCode = generateDmnoSchemaCode(configSchemaScaffold);
   const usesSwitchByNodeEnv = schemaConfigAsCode.includes('value: switchByNodeEnv({');
   const dmnoImports = [
     'DmnoBaseTypes',
-    defineFn,
+    'defineDmnoService',
     usesSwitchByNodeEnv && 'switchByNodeEnv',
   ];
-  return [
+  return joinAndCompact([
     `import { ${joinAndCompact(dmnoImports, ', ')} } from 'dmno';`,
     '',
-    `export default ${defineFn}({`,
+    'export default defineDmnoService({',
+    isRoot && '  isRoot: true,',
     serviceName ? `  name: '${serviceName}',` : '  // no name specified - inherit from package.json',
-    isRoot ? undefined : '  pick: [],',
+    !isRoot && '  pick: [],',
     '  schema: {',
     ...schemaConfigAsCode.split('\n').map((line) => `    ${line}`),
     '  },',
     '});',
     '',
-  ].join('\n');
+  ], '\n');
 }
 
 

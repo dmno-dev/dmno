@@ -1,7 +1,8 @@
-import { DmnoBaseTypes, defineDmnoWorkspace, switchByNodeEnv, NodeEnvType } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv, NodeEnvType } from 'dmno';
 
-export default defineDmnoWorkspace({
+export default defineDmnoService({
   name: 'root',
+  isRoot: true,
   schema: {
     GITHUB_ORG_NAME: {
       value: 'dmno-dev',

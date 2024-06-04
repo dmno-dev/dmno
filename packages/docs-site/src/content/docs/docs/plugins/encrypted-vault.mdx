@@ -30,7 +30,7 @@ const MyProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
 });
 
 
-export default defineDmnoWorkspace({
+export default defineDmnoService({
   schema: {
     DMNO_VAULT_KEY: {
       extends: EncryptedVaultTypes.encryptionKey,

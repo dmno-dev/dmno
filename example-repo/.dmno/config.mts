@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, defineDmnoWorkspace, configPath, switchByNodeEnv, NodeEnvType, switchBy } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, configPath, switchByNodeEnv, NodeEnvType, switchBy } from 'dmno';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
@@ -27,8 +27,9 @@ const ProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
 
 
 
-export default defineDmnoWorkspace({
+export default defineDmnoService({
   name: 'root',
+  isRoot: true,
   schema: {
     NODE_ENV: NodeEnvType,
     DMNO_ENV: {
