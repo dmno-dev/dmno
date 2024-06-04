@@ -22,7 +22,7 @@ export default defineDmnoService({
 
     FOO: {
       extends: DmnoBaseTypes.string({ startsWith: 'abc_' }),
-      value: 'foo-config-value',
+      value: 'abc_foo-config-value',
       description: 'test of non-sensitive env var WITHOUT "PUBLIC_" prefix',
     },
     PUBLIC_FOO: {

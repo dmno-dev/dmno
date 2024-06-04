@@ -1,4 +1,5 @@
-import { ConfigServerClient, injectDmnoGlobals, serializedServiceToInjectedConfig } from 'dmno';
+import _ from 'lodash-es';
+import { ConfigServerClient, injectDmnoGlobals } from 'dmno';
 import type { Plugin } from 'vite';
 
 let firstLoad = !(process as any).dmnoConfigClient;
@@ -7,11 +8,13 @@ let firstLoad = !(process as any).dmnoConfigClient;
 (process as any).dmnoConfigClient ||= new ConfigServerClient();
 const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
 
-const dmnoService = await dmnoConfigClient.getServiceConfig();
-const dmnoConfigValid = ConfigServerClient.checkServiceIsValid(dmnoService);
+const serializedService = await dmnoConfigClient.getServiceConfig();
+// TODO: make valid check work again
+// const dmnoConfigValid = ConfigServerClient.checkServiceIsValid(dmnoService);
+const dmnoConfigValid = true;
 
 injectDmnoGlobals({
-  injectedConfig: serializedServiceToInjectedConfig(dmnoService),
+  injectedConfig: serializedService.injectedEnv,
 });
 
 export function injectDmnoConfigVitePlugin(
@@ -30,26 +33,17 @@ export function injectDmnoConfigVitePlugin(
     name: 'inject-dmno-config',
     enforce: 'pre', // not positive this matters
     async config(config, env) {
-      const dmnoService = await dmnoConfigClient.getServiceConfig();
-
-      const publicConfigInjection = {} as Record<string, string>;
-
-      for (const itemKey in dmnoService.config) {
-        const configItem = dmnoService.config[itemKey];
-        if (configItem.isValid) {
-          if (!configItem.dataType.sensitive) {
-            publicConfigInjection[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
-          }
-          if (options?.injectSensitiveConfig) {
-            publicConfigInjection[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(configItem.resolvedValue);
-          }
-        }
-      }
+      const serializedService = await dmnoConfigClient.getServiceConfig();
+      const { staticReplacements } = injectDmnoGlobals({
+        injectedConfig: serializedService.injectedEnv,
+      });
 
       // inject rollup rewrites via config.define
       config.define = {
         ...config.define,
-        ...publicConfigInjection,
+        ...options?.injectSensitiveConfig
+          ? staticReplacements
+          : _.pickBy(staticReplacements, (val, key) => key.startsWith('DMNO_PUBLIC_CONFIG.')),
       };
 
       // build mode - just need to load once

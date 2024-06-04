@@ -21,16 +21,21 @@
     "dmno-plugin"
   ],
   "type": "module",
-  "main": "dist/build-plugin",
   "exports": {
     ".": {
-      "default": "./dist/index.mjs"
+      "default": "./dist/build-plugin/index.js"
+    },
+    "./types": {
+      "default": "./dist/index.js"
     }
   },
   "typesVersions": {
     "*": {
       "index": [
-        "./dist/index.d.mts"
+        "./dist/build-plugin/index.d.ts"
+      ],
+      "types": [
+        "./dist/index.d.ts"
       ]
     }
   },
@@ -38,7 +43,7 @@
     "/dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup --config tsup-injector.config.ts && tsup",
     "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
     "build:tarball": "turbo build && pnpm pack --pack-destination \"../../../../tmp-package-registry\"",
     "dev": "pnpm run build --watch",

@@ -24,6 +24,7 @@
     "@astrojs/vue": "^4.2.0",
     "@dmno/astro-integration": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
+    "@dmno/netlify-platform": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "@dmno/ui-lib": "workspace: *",
     "@iconify/vue": "^4.1.2",

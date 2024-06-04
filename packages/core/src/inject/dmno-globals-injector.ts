@@ -2,10 +2,12 @@ import type { InjectedDmnoEnv, InjectedDmnoEnvItem } from '../config-engine/conf
 
 const processExists = !!globalThis.process;
 let originalProcessEnv: Record<string, string> = {};
-try {
-  originalProcessEnv = structuredClone(globalThis.process.env) as any;
-} catch (err) {
-  console.log('error cloning process.env', err);
+if (processExists) {
+  try {
+    originalProcessEnv = structuredClone(globalThis.process.env) as any;
+  } catch (err) {
+    // console.log('error cloning process.env', err);
+  }
 }
 
 export function injectDmnoGlobals(
@@ -36,8 +38,8 @@ export function injectDmnoGlobals(
     injectedDmnoEnv = JSON.parse(globalThis.process.env.DMNO_INJECTED_ENV);
   }
   if (!injectedDmnoEnv) {
-    console.log(globalThis);
-    console.log(globalThis.process.env);
+    // console.log(globalThis);
+    // console.log(globalThis.process.env);
     throw new Error('Unable to find `process.env.DMNO_INJECTED_ENV` - run this command via `dmno run` - see https://dmno.dev/docs/reference/cli/run for more info');
   }
 

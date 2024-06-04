@@ -2,7 +2,7 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: [ // Entry point(s)
-    'src/preset.ts', // preset + data types
+    'src/index.ts', // preset + data types
     'src/build-plugin/index.ts',
     // 'src/build-plugin/injector.ts',
   ], 

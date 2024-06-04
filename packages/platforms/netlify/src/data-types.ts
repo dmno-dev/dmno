@@ -17,16 +17,33 @@ export const NetlifyDataTypes = {
   // https://docs.netlify.com/configure-builds/environment-variables/#build-metadata
   NetlifyIdentifier: createDmnoDataType({
     extends: DmnoBaseTypes.boolean,
-    description: 'always true when running on netlify',
+    typeDescription: 'always true - can be used to check if the build is running on Netlify',
     ...getCommonTypeInfo('build-metadata'),
   }),
   NetlifyContext: createDmnoDataType({
-    extends: DmnoBaseTypes.enum(['dev', 'branch-deploy', 'deploy-preview', 'production']),
-    description: 'netlify build context',
+    extends: DmnoBaseTypes.enum({
+      'dev': {
+        description: 'local development environments run using Netlify Dev'
+      },
+      'branch-deploy': {
+        description: 'deploys from branches that are not the site’s main production branch.'
+      },
+      'deploy-preview': {
+        description: 'previews built for pull/merge requests'
+      },
+      'production': {
+        description: 'This main site’s deployment, attached to the Git branch you set when the site is created'
+      },
+    }),
+    typeDescription: 'Netlify deploy context - can be used to detect if this is production or what type of staging/preview env it is',
     ...getCommonTypeInfo('build-metadata'),
+    externalDocs: {
+      description: 'Netlify docs - deploy contexts',
+      url: 'https://docs.netlify.com/site-deploys/overview/#deploy-contexts',
+    },
   }),
   NetlifyBuildId: createDmnoDataType({
-    typeDescription: 'Unique ID for the netlify build',
+    typeDescription: 'unique ID for the Netlify build',
     exampleValue: '5d4aeac2ccabf517d2f219b8',
     ...getCommonTypeInfo('build-metadata'),
   })
@@ -34,7 +51,7 @@ export const NetlifyDataTypes = {
 
 // https://docs.netlify.com/configure-builds/environment-variables/#git-metadata
 
-export const NetlifyEnvPreset = {
+export const NetlifyEnvSchema = {
   CONTEXT: NetlifyDataTypes.NetlifyContext,
   NETLIFY: NetlifyDataTypes.NetlifyIdentifier,
   BUILD_ID: NetlifyDataTypes.NetlifyBuildId,

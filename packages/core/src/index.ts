@@ -1,4 +1,5 @@
 export * from './config-engine/config-engine';
+export * from './config-engine/authoring-utils';
 export * from './config-engine/base-types';
 export * from './config-engine/common-types';
 // TODO: probably want to clean up how these are exported

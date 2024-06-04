@@ -54,6 +54,7 @@
     "@dmno/ts-lib": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "@types/async": "^3.2.24",
+    "@types/debug": "^4.1.12",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^20.12.12",
     "astro": "^4.9.1",
@@ -64,5 +65,8 @@
   "peerDependencies": {
     "astro": "^4",
     "dmno": "^0"
+  },
+  "dependencies": {
+    "debug": "^4.3.4"
   }
 }

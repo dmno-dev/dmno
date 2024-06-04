@@ -859,6 +859,7 @@ export class DmnoService {
       injectedPluginNames: _.map(this.injectedPlugins, (p) => p.instanceName),
 
       config: _.mapValues(this.config, (item, _key) => item.toJSON()),
+      injectedEnv: this.getInjectedEnvJSON(),
     };
   }
 }

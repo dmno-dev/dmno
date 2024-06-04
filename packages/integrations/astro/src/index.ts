@@ -1,27 +1,19 @@
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'url';
-import { execSync } from 'node:child_process';
-import { injectDmnoGlobals } from 'dmno/injector';
+import Debug from 'debug';
+import { ConfigServerClient, injectDmnoGlobals } from 'dmno';
 import type { AstroIntegration } from 'astro';
-import type { ConfigServerClient } from 'dmno';
 
-// console.time('dmno load');
+const debug = Debug('dmno:astro-integration');
 
-let enableDynamicPublicClientLoading = false;
-let astroCommand: 'dev' | 'build' | 'preview' | undefined;
-
-// console.log('dmno astro integration file loaded!');
-
-// // initialize a dmno config server client, but only once
-// (process as any).dmnoConfigClient ||= new ConfigServerClient();
-// const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
+debug('Loaded DMNO astro integration file');
+const startLoadAt = new Date();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-// console.log('DIRNAME = ', __dirname);
 
-// // Unsure why, but in some cases this whole file reloads, and in others it doesnt
-// // so we may need to reload the config multiple times
-// // TODO: try to clean this logic up a bit?
+let astroCommand: 'dev' | 'build' | 'preview' | undefined;
+let dmnoHasTriggeredReload = false;
+let enableDynamicPublicClientLoading = false;
 let configItemKeysAccessed: Record<string, boolean> = {};
 let dmnoConfigValid = true;
 let dynamicItemKeys: Array<string> = [];
@@ -31,33 +23,32 @@ let sensitiveValueLookup: Record<string, string> = {};
 let viteDefineReplacements = {} as Record<string, string>;
 let dmnoConfigClient: ConfigServerClient;
 
-
 async function reloadDmnoConfig() {
   let injectionResult: ReturnType<typeof injectDmnoGlobals>;
   const injectedEnvExists = (globalThis as any)._DMNO_INJECTED_ENV || globalThis.process?.env.DMNO_INJECTED_ENV;
 
-  if (astroCommand === 'dev' || !injectedEnvExists) {
-    const { ConfigServerClient } = await import('dmno');
-    // console.log('creating dmno config client?', !(process as any).dmnoConfigClient);
+  if (injectedEnvExists && astroCommand !== 'dev') {
+    debug('using injected dmno config');
+    injectionResult = injectDmnoGlobals();
+  } else {
+    debug('using injected dmno config server');
     (process as any).dmnoConfigClient ||= new ConfigServerClient();
     dmnoConfigClient = (process as any).dmnoConfigClient;
-    const injectedConfig = await dmnoConfigClient.getServiceConfigForInjection();
-    console.log('fetched injected config from dmno dev server', injectedConfig);
-    // dmnoConfigValid = ConfigServerClient.checkServiceIsValid(dmnoService);
+    const serializedService = await dmnoConfigClient.getServiceConfig();
+    const injectedConfig = serializedService.injectedEnv;
+    dmnoConfigValid = serializedService.isValid;
     configItemKeysAccessed = {};
 
     injectionResult = injectDmnoGlobals({
       injectedConfig,
       trackingObject: configItemKeysAccessed,
     });
-  } else if (injectedEnvExists) {
-    console.log('using injected dmno config');
-    injectionResult = injectDmnoGlobals();
-  } else {
-    console.log('using CLI to get injected env');
-    const injectedDmnoEnv = execSync('npm exec -- dmno resolve -f json-injected').toString();
-    injectionResult = injectDmnoGlobals({ injectedConfig: JSON.parse(injectedDmnoEnv) });
   }
+
+  // We may want to fetch via the CLI instead - it would be slightly faster during a build
+  // however we dont know if we are in dev/build mode until later and we do need the config injected right away
+  // const injectedDmnoEnv = execSync('npm exec -- dmno resolve -f json-injected').toString();
+  // injectionResult = injectDmnoGlobals({ injectedConfig: JSON.parse(injectedDmnoEnv) });
 
   viteDefineReplacements = injectionResult.staticReplacements || {};
   dynamicItemKeys = injectionResult.dynamicKeys || [];
@@ -70,20 +61,17 @@ async function reloadDmnoConfig() {
   }
 }
 
-// // we do want to run this right away so the globals get injected into the astro.config file
+// we run this right away so the globals get injected into the astro.config file
 await reloadDmnoConfig();
-// console.timeEnd('dmno load');
 
-
-let dmnoHasTriggeredReload = false;
+const loadingTime = +new Date() - +startLoadAt;
+debug(`Initial dmno env load completed in ${loadingTime}ms`);
 
 type DmnoAstroIntegrationOptions = {
   // TODO: figure out options - loading dynamic public config?
 };
 
 function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions): AstroIntegration {
-  // console.log('dmno astro integration initialized');
-
   return {
     name: 'dmno-astro-integration',
     hooks: {
@@ -101,7 +89,6 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
           dmnoHasTriggeredReload = false;
         }
 
-        // TODO: this doesnt work yet
         if (opts.command === 'build' && !dmnoConfigValid) {
           throw new Error('DMNO config is not valid');
         }
@@ -118,9 +105,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
             plugins: [{
               name: 'astro-vite-plugin',
               async config(config, env) {
-                // console.log('vite plugin config!');
-
-                // console.log('STATIC REPLACEMENTS', staticConfigReplacements);
+                debug('Injecting static replacements', viteDefineReplacements);
 
                 // inject rollup rewrites via config.define
                 config.define = {
@@ -131,7 +116,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
 
               ...astroCommand === 'dev' && !isRestart && !!dmnoConfigClient && {
                 async configureServer(server) {
-                  console.log('initializing dmno reload > astro reload trigger');
+                  debug('initializing dmno reload > astro restart trigger');
                   dmnoConfigClient.eventBus.on('reload', () => {
                     opts.logger.info('💫 dmno config updated - restarting astro server');
                     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -145,14 +130,11 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
               transform(src, id) {
                 // TODO: can probably add some rules to skip leak detection on files coming from external deps
 
-                // console.log('vite plugin transform - ', id);
-
                 // skip detection if backend file
                 if (id === 'astro:scripts/page-ssr.js') return src;
 
                 for (const itemKey in sensitiveValueLookup) {
                   if (src.includes(sensitiveValueLookup[itemKey])) {
-                    // console.log(src);
                     // TODO: better error details to help user find the problem
                     throw new Error(`🚨 DETECTED LEAKED CONFIG ITEM "${itemKey}" in file - ${id}`);
                   }

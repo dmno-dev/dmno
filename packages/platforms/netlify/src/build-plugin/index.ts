@@ -1,51 +1,70 @@
-// build plugin
+// Netlify build plugin that injects DMNO_CONFIG into functions and edge functions
+// see https://docs.netlify.com/integrations/build-plugins/create-plugins/
+
+/*
+note that there are many subtle challenges here... small changes may break things
+  
+Notes to self
+- edge functions are running in a different runtime (Deno) and we cannot inject any env vars directly
+- we do not have access to the file system in Deno
+- workflow for authoring functions directly may be very different than using an integration like Astro's netlify adapter, which completely builds the functions itself
+*/
 
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
-import { dirname } from 'node:path';
+import path, { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-//onPreBuild - runs before the build command is executed.
-//onBuild - runs directly after the build command is executed and before Functions bundling.
-//onPostBuild - runs after the build command completes; after onBuild tasks and Functions bundling are executed; and before the deploy stage. This is when file-based uploads for Netlify Blobs occur. Can be used to prevent a build from being deployed.
-//onError - runs when an error occurs in the build or deploy stage, failing the build. Can’t be used to prevent a build from being deployed.
-//onSuccess - runs when the deploy succeeds. Can’t be used to prevent a build from being deployed.
-//onEnd - runs after completion of the deploy stage, regardless of build error or success; is useful for resources cleanup. Can’t be used to prevent a build from being deployed.
-
-//onPreDev - runs before onDev.
-//onDev - runs directly before the dev command.
-
-
-const dmnoEnv = execSync('npm exec -- dmno resolve -f json-injected').toString();
-// injectDmnoGlobals({
-//   injectedConfig: JSON.parse(dmnoEnv),
-// });
-
-// const INJECT_DMNO_ENV_SRC = `globalThis._DMNO_INJECTED_ENV = ${dmnoEnv};`
-// const INJECT_DMNO_ENV_SRC = `import { injectDmnoGlobals } from 'dmno/injector'; injectDmnoGlobals({ injectedConfig: ${dmnoEnv} });`;
-
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+const dmnoEnv = execSync('npm exec -- dmno resolve -f json-injected').toString();
+
+function getNetlifyFolderPath(eventArgs: any) {
+  if (eventArgs.constants.IS_LOCAL) {
+    return eventArgs.utils.cache.getCacheDir().replace(/\/[^/]+$/, '');
+  } return '/opt/build/repo/.netlify';
+}
+
+// this is the source of `dmno/inject` but bundled into a single file
+// TODO: we should probably expose this directly from dmno itself rather than rebundling it within this package
 const INJECTOR_FULL_SRC = fs.readFileSync(`${__dirname}/injector.js`, 'utf8');
-console.log(INJECTOR_FULL_SRC);
+
+function updateDmnoInjectFile(netlifyFolderPath: string) {
+  const injectorSrcWithEnv = INJECTOR_FULL_SRC.replace('injectDmnoGlobals();', `injectDmnoGlobals({ injectedConfig: ${dmnoEnv} });`)
+  fs.writeFileSync(`${netlifyFolderPath}/inject-dmno-config.js`, injectorSrcWithEnv, 'utf8');
+}
+
+const IMPORT_INJECTOR_REGEX = /^import ["'](\.\.\/)+\.netlify\/inject-dmno-config\.js["']/m;
 
 export async function onBuild(args: any) {
-  console.log('onBuild hook!');
-  const netlifyFolderPath = args.constants.IS_LOCAL ? args.utils.cache.getCacheDir().replace(/\/[^/]+$/, '') : '/opt/build/repo/.netlify';
-  
+  const netlifyFolderPath = getNetlifyFolderPath(args);
   updateDmnoInjectFile(netlifyFolderPath);
+
+  const injectorImportPath = `${netlifyFolderPath}/inject-dmno-config.js`;
 
   // handle regular "functions" (lambdas)
   const allFunctions = await args.utils.functions.list();
   console.log(allFunctions);
   for (const fn of allFunctions) {
+    
+
     const originalSrc = await fs.promises.readFile(fn.mainFile, 'utf8');
+    
+    if (originalSrc.match(IMPORT_INJECTOR_REGEX)) {
+      console.log('function @ '+fn.mainFile+' already imports dmno config injector');
+      continue;
+    }
+    // TODO: we could show a better error here if the user is directly authoring their functions and has not imported the config injector
+    // the built functions are already in the .netlify folder when being built by in integration
+    // versus in the `netlify/functions` folder when direct authoring
+    // const isDirectAuthoring = fn.mainFile.includes('/netlify/functions/')
 
     // NOTE - if we inject the config directly, other imports get hoisted above it
     // so we have to inject an import that includes the config instead
-    // TODO: resolve correct path
-    const updatedSrc = `import '../../inject-dmno-config.js';\n` + originalSrc;
+    const relativeImportPath = path.relative(dirname(fn.mainFile), injectorImportPath);
+    console.log(fn.mainFile, injectorImportPath, relativeImportPath);
+
+    const updatedSrc = `import '${relativeImportPath}';\n` + originalSrc;
     await fs.promises.writeFile(fn.mainFile, updatedSrc, 'utf8');
     console.log('updated function @ '+fn.mainFile, originalSrc.substr(0,100));
   }
@@ -57,9 +76,15 @@ export async function onBuild(args: any) {
     for (const edgeFnFileName of edgeFnFileNames) {
       if (edgeFnFileName.startsWith('.vendor')) continue;
       if (!(edgeFnFileName.endsWith('.mjs') || edgeFnFileName.endsWith('.cjs') || edgeFnFileName.endsWith('.js'))) continue;
+
       const fullFilePath = `${edgeFnsDir}/${edgeFnFileName}`;
       const originalSrc = await fs.promises.readFile(fullFilePath, 'utf8');
       // TODO: resolve correct path
+      if (originalSrc.match(IMPORT_INJECTOR_REGEX)) {
+        console.log('edge function @ '+fullFilePath+' already imports dmno config injector');
+        continue;
+      }
+
       // see same note above about import vs directly injecting
       const updatedSrc = `import '../../inject-dmno-config.js';\n` + originalSrc;
       await fs.promises.writeFile(fullFilePath, updatedSrc, 'utf8');
@@ -68,81 +93,10 @@ export async function onBuild(args: any) {
   }
 }
 
-function updateDmnoInjectFile(netlifyFolderPath: string) {
-  // fs.writeFileSync(`${netlifyFolderPath}/inject-dmno-config.js`, INJECT_DMNO_ENV_SRC, 'utf8');
-  const injectorSrcWithEnv = INJECTOR_FULL_SRC.replace('injectDmnoGlobals();', `injectDmnoGlobals({ injectedConfig: ${dmnoEnv} });`)
-  fs.writeFileSync(`${netlifyFolderPath}/inject-dmno-config.js`, injectorSrcWithEnv, 'utf8');
-}
 
-
-export function onPreBuild() {
-  console.log('onPreBuild hook!');
-}
-
-function getNetlifyFolderPath(eventArgs: any) {
-  return eventArgs.utils.cache.getCacheDir().replace(/\/[^/]+$/, '');
-}
 
 export function onPreDev(args: any) {
-  const { netlifyConfig } = args;
-  
-  // console.log(netlifyConfig);
-  // console.log(utils);
-  console.log('PRE DEV!', {
-    'netlifyConfig.build.environment': {
-      CONTEXT_FOO: netlifyConfig.build.environment.CONTEXT_FOO,
-      BUILD_FOO: netlifyConfig.build.environment.BUILD_FOO,
-      UI_FOO: netlifyConfig.build.environment.UI_FOO,
-    },
-    'process.env': {
-      CONTEXT_FOO: process.env.CONTEXT_FOO,
-      BUILD_FOO: process.env.BUILD_FOO,
-      UI_FOO: process.env.UI_FOO,
-    }
-  });
-
-
   const netlifyFolderPath = getNetlifyFolderPath(args);
   updateDmnoInjectFile(netlifyFolderPath);
 }
 
-export async function onDev(args: any) {
-
-  // console.log('watching file', `${netlifyFolderPath}/edge-functions-serve/dev.js`);
-  // watcher = fs.watch(`${netlifyFolderPath}`, { persistent: false, recursive: true }, () => {
-  //   console.log('file change!');
-  // })
-
-
-  // const blobStore = await getDeployStore();
-  // await blobStore.setJSON('INJECTED_DMNO_ENV', {
-  //   CONTEXT_FOO: process.env.CONTEXT_FOO,
-  //   BUILD_FOO: process.env.BUILD_FOO,
-  //   UI_FOO: process.env.UI_FOO,
-  // });
-
-  // process.DMNO_TEST = 'foo';
-
-  
-}
-
-
-// TRIGGER RESTART BY
-// save netlify.toml? save each fn?
-
-
-// export const onPreBuild = function({
-//   constants,
-//   inputs,
-//   netlifyConfig,
-//   packageJson,
-
-// }) {
-
-//   // process.env - includes all Netlify build environment variables and any variables you declare using the Netlify UI or TOML. We recommend you use this when you only need to get values during the build process.
-//   // netlifyConfig.build.environment - includes only the variables you declare using the Netlify UI or TOML. We recommend you use this when you need to modify values during the build process.
-
-//   console.log(netlifyConfig.build.environment)
-
-//   console.log("Hello world from onPreBuild event!");
-// }
