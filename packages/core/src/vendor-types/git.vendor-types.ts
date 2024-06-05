@@ -7,9 +7,39 @@ const commonTypeInfo = {
 };
 
 export const GitDataTypes = {
+  OrgName: createDmnoDataType({
+    typeLabel: 'git/orgName',
+    typeDescription: 'organization name on github',
+    ...commonTypeInfo,
+  }),
+  UserName: createDmnoDataType({
+    typeLabel: 'git/username',
+    typeDescription: 'username on github',
+    ...commonTypeInfo,
+  }),
+  RepoName: createDmnoDataType({
+    typeLabel: 'git/repoName',
+    typeDescription: '',
+    externalDocs: {
+      description: 'Remote repoisitories (Github docs)',
+      url: 'https://docs.github.com/en/get-started/getting-started-with-git/about-remote-repositories#about-remote-repositories',
+    },
+    ...commonTypeInfo,
+  }),
+  PublicRepoUrl: createDmnoDataType({
+    typeLabel: 'git/repoUrl',
+    typeDescription: 'Public web address of the git repository',
+    exampleValue: 'https://github.com/dmno-dev/dmno',
+    externalDocs: {
+      description: 'Remote repoisitories (Github docs)',
+      url: 'https://docs.github.com/en/get-started/getting-started-with-git/about-remote-repositories#about-remote-repositories',
+    },
+    ...commonTypeInfo,
+  }),
   RemoteUrl: createDmnoDataType({
     typeLabel: 'git/remoteUrl',
     typeDescription: 'Remote URL of a git repository',
+    exampleValue: 'https://github.com/dmno-dev/dmno.git',
     externalDocs: {
       description: 'Remote repoisitories (Github docs)',
       url: 'https://docs.github.com/en/get-started/getting-started-with-git/about-remote-repositories#about-remote-repositories',

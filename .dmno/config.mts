@@ -1,16 +1,19 @@
 import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv, NodeEnvType } from 'dmno';
+import { GitDataTypes } from 'dmno/vendor-types';
 
 export default defineDmnoService({
   name: 'root',
   isRoot: true,
   schema: {
     GITHUB_ORG_NAME: {
-      value: 'dmno-dev',
+      extends: GitDataTypes.OrgName,
       required: true,
+      value: 'dmno-dev',
     },
     GITHUB_REPO_NAME: {
-      value: 'dmno',
+      extends: GitDataTypes.RepoName,
       required: true,
+      value: 'dmno',
     },
     GITHUB_ORG_URL: {
       extends: DmnoBaseTypes.url({ allowedDomains: ['github.com'] }),
@@ -18,19 +21,22 @@ export default defineDmnoService({
       required: true,
     },
     GITHUB_REPO_URL: {
-      extends: DmnoBaseTypes.url({ allowedDomains: ['github.com'] }),
+      extends: GitDataTypes.PublicRepoUrl,
       value: (ctx) => `${DMNO_CONFIG.GITHUB_ORG_URL}/${DMNO_CONFIG.GITHUB_REPO_NAME}`,
       required: true,
     },
     DISCORD_JOIN_URL: {
+      extends: 'url',
       description: 'Link to discord',
+      required: true,
       externalDocs: {
         description: 'discord support docs',
         url: 'https://support.discord.com/hc/en-us/articles/208866998-Invites-101',
       },
-      extends: 'url',
+      ui: {
+        icon: 'ic:baseline-discord'
+      },
       value: 'https://chat.dmno.dev',
-      required: true,
     },
     GENERAL_CONTACT_EMAIL: {
       value: 'hello@dmno.dev',

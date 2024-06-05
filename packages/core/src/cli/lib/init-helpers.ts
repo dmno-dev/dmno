@@ -58,8 +58,8 @@ function setupStepMessage(message: string, opts?: {
     skip: '⏭️ ',
     _default: '✨',
   }[opts?.type || '_default'];
-  let docsLink = opts?.docs || '';
 
+  let docsLink = opts?.docs || '';
   if (docsLink && docsLink.startsWith('/')) docsLink = `https://dmno.dev/docs${docsLink}`;
 
   return joinAndCompact([
@@ -71,8 +71,7 @@ function setupStepMessage(message: string, opts?: {
       opts.packageVersion ? kleur.gray(` @ "${opts.packageVersion}"`) : '',
     ].join(''),
     opts?.tip && `   🚧 ${opts.tip}`,
-    docsLink && (`   📚${kleur.italic(` see docs @ ${docsLink}`)}`),
-    ' ',
+    !!docsLink && (`   📚 ${kleur.italic(`see docs @ ${docsLink}`)}`),
   ], '\n');
 }
 
@@ -129,7 +128,6 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
       padding: 1, borderStyle: 'round', borderColor: 'greenBright',
     },
   ));
-  console.log();
 
   // hidden env flag to force overwriting existing files
   // might make this an actual cli option but not sure if needed
@@ -281,11 +279,11 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
   // CREATE .dmno FOLDER
   await promiseDelay(STEP_DELAY);
   if (service.dmnoFolder) {
-    console.log(setupStepMessage('.dmno folder already exists!', { type: 'noop' }));
+    // console.log(setupStepMessage('.dmno folder already exists!', { type: 'noop' }));
   } else {
     // create dmno folder
     await fs.promises.mkdir(`${service.path}/.dmno`);
-    console.log(setupStepMessage('.dmno folder created!'));
+    // console.log(setupStepMessage('.dmno folder created!'));
   }
 
   const dotEnvFiles = await loadServiceDotEnvFiles(service.path, {
@@ -299,48 +297,23 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     await promiseDelay(STEP_DELAY);
     console.log(setupStepMessage('.dmno/config.mts already exists!', { type: 'noop', path: configMtsPath }));
   } else {
-    const recommendedName = service.isRoot ? 'root' : service.name.replace(/^@[^/]+\//, '');
-
-    let serviceName: string | undefined = silent ? recommendedName : undefined;
-    while (serviceName === undefined) {
-      // TODO: better cli input with more options for dynamic help info
-      serviceName = await input({
-        message: 'What do you want to name this service? (enter "?" for help)',
-        default: recommendedName,
-        validate(value) {
-          // leaving empty will package name from package.json
-          if (!value) return true;
-          if (value === '?') return true;
-
-          // TODO: better error messages?
-          const validationResult = validatePackageName(value);
-          if (validationResult.validForNewPackages) return true;
-          return validationResult.errors?.[0] || 'invalid name';
-        },
-      });
-      serviceName = serviceName.trim();
-
-      if (serviceName === '?') {
-        console.log(boxen([
-          'Every "service" in dmno, including the root, has a name which we refer to as the "service name".',
-          '',
-          'If you don\'t specify one, we\'ll use the name from your package.json file. But, package names often have a prefix/scope (e.g., "@mycoolorg/some-service") and you may need to type this name in a few places - like selecting a service via the dmno CLI - you want to keep it simple.',
-          '',
-          'You can use our suggestion, write your own name, or delete the default to inherit the name from package.json.',
-          '',
-          kleur.italic(`you can always change this later by editing ${kleur.blue('.dmno/config.mts')}`),
-        ].join('\n'), {
-          padding: 1, margin: 1, borderStyle: 'double', title: 'Help - service name',
-        }));
-        serviceName = undefined;
-      }
+    let recommendedServiceName: string | undefined;
+    if (workspaceInfo.isMonorepo) {
+      if (service.isRoot) recommendedServiceName = 'root';
+      else recommendedServiceName = service.name.replace(/^@[^/]+\//, '');
     }
+    // we used to prompt the user here to pick/confirm the service name, but it was a bit confusing
 
     const envVarsFromCode = await findEnvVarsInCode(service.path, {
       excludeDirs: service.isRoot ? nonRootPaths : [],
     });
     const inferredSchema = await inferDmnoSchema(dotEnvFiles, envVarsFromCode, installedIntegrationPublicPrefixes);
-    const schemaMtsCode = generateDmnoConfigInitialCode(service.isRoot, serviceName, inferredSchema);
+    const schemaMtsCode = generateDmnoConfigInitialCode({
+      isMonorepo: workspaceInfo.isMonorepo,
+      isRoot: service.isRoot,
+      serviceName: recommendedServiceName,
+      configSchemaScaffold: inferredSchema,
+    });
     configFileGenerated = true;
 
     await fs.promises.writeFile(
@@ -349,7 +322,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     );
     console.log(setupStepMessage('.dmno/config.mts created!', {
       path: configMtsPath,
-      tip: 'Please review and update this file!',
+      tip: 'Please review and update this config file!',
     }));
   }
 
@@ -375,9 +348,15 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
         }
       }
     } else {
-      console.log(`\nWe recommend you delete any .env files (including samples) that you have checked into git, and instead incorporate them into your ${kleur.blue('.dmno/config.mts')} file. Please delete these files:`);
-      console.log(committedDotEnvFiles.map((f) => `  - ${kleur.blue(f.relativePath)}`).join('\n'));
-      console.log();
+      boxen(
+        [
+          `We recommend you delete any .env files (including samples) that you have checked into git, and instead incorporate them into your ${kleur.blue('.dmno/config.mts')} file. Please delete these files:`,
+          ...committedDotEnvFiles.map((f) => `  - ${kleur.blue(f.relativePath)}`),
+        ].join('\n'),
+        {
+          padding: 1, borderStyle: 'round', borderColor: 'redBright',
+        },
+      );
     }
   }
 
@@ -469,7 +448,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     }
   }
 
-  // SET UP TYPESCRIPT
+  // SET UP TYPESCRIPT dmno-env.d.ts file
   let srcDirPath = `${service.path}/src`;
   if (!fs.existsSync(srcDirPath)) srcDirPath = service.path;
   const dmnoEnvFilePath = `${srcDirPath}/dmno-env.d.ts`;

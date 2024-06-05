@@ -127,7 +127,7 @@ export async function fallingDmnosAnimation(
           str += '▂'.repeat(LOADER_WIDTH + 1 - str.length);
 
           logUpdate(gradientColorizer(str));
-          console.log('\n');
+          console.log();
           deferred.resolve();
         }, Math.floor(totalTime * 0.1));
       }

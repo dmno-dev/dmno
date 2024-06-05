@@ -30,13 +30,13 @@ _We use these same types to give you autocompletion when authoring your schema i
 The easiest way to let TypeScript know about them is to create a `dmno-env.d.ts` file in your source code that imports them via [triple-slash](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html) references. 
 
 :::note[FYI]
-Running `dmno init` will do this for you, creating the file either at the root of your project or in a `src` directory if you have one.
+Running `dmno init` will do this for you, creating the file either at the root of your service or in a `src` directory if you have one.
 
 In many cases this will be enough and TypeScript will already pick up the new types.
 :::
 
 
-```ts title="src/dmno-env.ts"
+```ts title="src/dmno-env.d.ts"
 // inject DMNO_CONFIG global
 /// <reference types="../.dmno/.typegen/global.d.ts" />
 // inject DMNO_PUBLIC_CONFIG global

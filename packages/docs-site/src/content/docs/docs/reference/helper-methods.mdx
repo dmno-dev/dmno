@@ -28,13 +28,15 @@ This method is used to define the configuration schema in each of your services,
 type DmnoServiceConfig = {
   isRoot?: boolean,
   name?: string,
-  parent?: string,
-  tags?: string[],
   settings?: {
     dynamicConfig: DynamicConfigModes,
-  }
-  pick?: Array<PickConfigItemDefinition | string>,
+  },
   schema: Record<string, ConfigItemDefinitionOrShorthand>,
+  // rest of props only available when isRoot !== true 
+  parent?: string,
+  tags?: string[],
+  pick?: Array<PickConfigItemDefinition | string>,
+  
 };
       `}
     />

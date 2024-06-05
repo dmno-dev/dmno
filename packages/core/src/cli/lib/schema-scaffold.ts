@@ -1,3 +1,5 @@
+/* eslint-disable no-nested-ternary */
+
 import fs from 'node:fs';
 import _ from 'lodash-es';
 import { fdir } from 'fdir';
@@ -146,12 +148,13 @@ export function generateDmnoSchemaCode(schemaScaffold: DmnoConfigScaffold) {
 }
 
 
-export function generateDmnoConfigInitialCode(
+export function generateDmnoConfigInitialCode(opts: {
   isRoot: boolean,
-  serviceName: string,
+  isMonorepo: boolean,
+  serviceName?: string,
   configSchemaScaffold: DmnoConfigScaffold,
-) {
-  const schemaConfigAsCode = generateDmnoSchemaCode(configSchemaScaffold);
+}) {
+  const schemaConfigAsCode = generateDmnoSchemaCode(opts.configSchemaScaffold);
   const usesSwitchByNodeEnv = schemaConfigAsCode.includes('value: switchByNodeEnv({');
   const dmnoImports = [
     'DmnoBaseTypes',
@@ -162,9 +165,11 @@ export function generateDmnoConfigInitialCode(
     `import { ${joinAndCompact(dmnoImports, ', ')} } from 'dmno';`,
     '',
     'export default defineDmnoService({',
-    isRoot && '  isRoot: true,',
-    serviceName ? `  name: '${serviceName}',` : '  // no name specified - inherit from package.json',
-    !isRoot && '  pick: [],',
+    opts.isRoot && '  isRoot: true,',
+    opts.serviceName
+      ? `  name: '${opts.serviceName}',`
+      : (opts.isMonorepo ? '  // no name specified - inherit from package.json' : undefined),
+    !opts.isRoot && '  pick: [],',
     '  schema: {',
     ...schemaConfigAsCode.split('\n').map((line) => `    ${line}`),
     '  },',
