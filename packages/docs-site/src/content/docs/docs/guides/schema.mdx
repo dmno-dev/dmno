@@ -21,8 +21,11 @@ A typical DMNO project structure:
   <TabItem label="Single repo">
     <FileTree>
         - / (root of your project)
-          - .dmno/ (your workspace config)
-            - **config.mts**
+          - .dmno
+            - .typegen/ (generated types)
+            - .env.local (your local overrides and sensitive values)
+            - **config.mts** (your config schema)
+            - tsconfig.json (dmno specific tsconfig)
           - api/
           - some_folder/
           - frontend/
@@ -33,15 +36,12 @@ A typical DMNO project structure:
     <TabItem label="Monorepo">
     <FileTree>
     - / (root of your project)
-      - .dmno
-        - **config.mts** (workspace/root config)
+      - **.dmno/**
       - packages
         - api
-          - .dmno 
-            - **config.mts** (api service config)
+          - **.dmno/** 
         - frontend
-          - .dmno
-            - **config.mts** (frontend service config)
+          - **.dmno/**
         - shared-lib
           - files... (no .dmno folder if no env vars are needed)
     </FileTree>
@@ -89,7 +89,7 @@ export default defineDmnoWorkspace({
 });
 ```
 
-> If you're not in a monorepo, you can skip to [Defining config items](/docs/guides/schema/#defining-config-items/).
+> If you're not in a monorepo, you can skip to [Defining config items](/docs/guides/schema/#defining-config-items).
 
 ### Other services
 

@@ -51,6 +51,7 @@ import TabbedCode from '@/components/TabbedCode.astro';
           description: 'Google Analytics ID',
         },
         DATABASE_URL: {
+          sensitive: true,
           extends: DmnoBaseTypes.url,
           description: 'Database connection string',
         },
