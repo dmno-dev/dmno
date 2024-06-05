@@ -100,6 +100,6 @@ export function checkForConfigErrors(service: DmnoService, opts?: {
       });
     }
 
-    throw new CliExitError('Schema is invalid');
+    throw new CliExitError('Resolved config did not pass validation');
   }
 }

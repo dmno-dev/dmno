@@ -1,6 +1,36 @@
 import kleur from 'kleur';
 import _ from 'lodash-es';
 
+// copied these error types from Astro
+// and we will try to keep it compatible so we can interact with their error overlay
+
+export type ErrorLocation = {
+  file?: string;
+  line?: number;
+  column?: number;
+};
+
+/**
+ * Generic object representing an error with all possible data
+ * Compatible with both Astro's and Vite's errors
+ */
+export type ErrorWithMetadata = {
+  [name: string]: any;
+  name: string;
+  title?: string;
+  // type?: ErrorTypes; // these are astro's error types
+  message: string;
+  stack: string;
+  hint?: string;
+  id?: string;
+  frame?: string;
+  plugin?: string;
+  pluginCode?: string;
+  fullCode?: string;
+  loc?: ErrorLocation;
+  cause?: any;
+};
+
 export class DmnoError extends Error {
   originalError?: Error;
   get isUnexpected() { return !!this.originalError; }

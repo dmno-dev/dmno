@@ -39,6 +39,9 @@ async function reloadDmnoConfig() {
     dmnoConfigValid = serializedService.isValid;
     configItemKeysAccessed = {};
 
+    // shows nicely formatted errors in the terminal
+    ConfigServerClient.checkServiceIsValid(serializedService);
+
     injectionResult = injectDmnoGlobals({
       injectedConfig,
       trackingObject: configItemKeysAccessed,
@@ -84,13 +87,20 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
 
         // this handles the case where astro's vite server reloaded but this file did not get reloaded
         // we need to reload if we just found out we are in dev mode - so it will use the config client
-        if (astroCommand === 'dev' || dmnoHasTriggeredReload) {
+        if (dmnoHasTriggeredReload) {
           await reloadDmnoConfig();
           dmnoHasTriggeredReload = false;
         }
 
-        if (opts.command === 'build' && !dmnoConfigValid) {
-          throw new Error('DMNO config is not valid');
+        if (!dmnoConfigValid) {
+          // if we are runnign a build and config is invalid, we want to just bail
+          if (opts.command === 'build') {
+            // throwing an error results in a long useless stack trace, so we just exit
+            console.log('💥 DMNO config validation failed 💥');
+            process.exit(1);
+          } else {
+            // throw new Error('🚨 DMNO config is invalid');
+          }
         }
 
         if (opts.config.output === 'static') {
@@ -100,6 +110,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
         }
 
 
+        console.log('updating vite config. dmno config valid? ', dmnoConfigValid);
         updateConfig({
           vite: {
             plugins: [{
@@ -114,15 +125,43 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
                 };
               },
 
-              ...astroCommand === 'dev' && !isRestart && !!dmnoConfigClient && {
+              ...astroCommand === 'dev' && {
                 async configureServer(server) {
-                  debug('initializing dmno reload > astro restart trigger');
-                  dmnoConfigClient.eventBus.on('reload', () => {
-                    opts.logger.info('💫 dmno config updated - restarting astro server');
-                    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-                    server.restart();
-                    dmnoHasTriggeredReload = true;
-                  });
+                  if (!isRestart && !!dmnoConfigClient) {
+                    debug('initializing dmno reload > astro restart trigger');
+                    dmnoConfigClient.eventBus.on('reload', () => {
+                      opts.logger.info('💫 dmno config updated - restarting astro server');
+                      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                      server.restart();
+                      dmnoHasTriggeredReload = true;
+                    });
+                  }
+
+                  // we use an HMR message which triggers the astro error overlay
+                  // we use a middleware so that it will show again if the user reloads the page
+                  if (!dmnoConfigValid) {
+                    server.middlewares.use((req, res, next) => {
+                      server.hot.send({
+                        type: 'error',
+                        err: {
+                          name: 'Invalid DMNO config',
+                          message: 'Your config is currently invalid',
+                          hint: 'check your terminal for more details',
+                          stack: 'stack goes here',
+                          // docslink: 'https://dmno.dev/docs',
+                          // cause: 'this is a cause',
+                          // loc: {
+                          //   file: 'file',
+                          //   line: 123,
+                          //   column: 456,
+                          // },
+                          // needs to be formatted a specific way
+                          // highlightedCode: 'highlighted code goes here?',
+                        },
+                      });
+                      return next();
+                    });
+                  }
                 },
               },
 
@@ -145,6 +184,12 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
             }],
           },
         });
+
+        // if (!dmnoConfigValid) {
+        //   injectScript('page', `
+        //     throw new Error('CONFIG IS INVALID!');
+        //   `);
+        // }
 
         // inject script into CLIENT context
         injectScript('page', [

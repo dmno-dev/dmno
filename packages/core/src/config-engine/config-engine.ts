@@ -826,6 +826,7 @@ export class DmnoService {
   get isValid() {
     if (this.configLoadError) return false;
     if (this.schemaErrors?.length) return false;
+    if (!_.every(_.values(this.config), (configItem) => configItem.isValid)) return false;
     return true;
   }
 
