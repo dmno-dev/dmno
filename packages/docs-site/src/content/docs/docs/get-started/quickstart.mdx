@@ -14,42 +14,65 @@ import TabbedCode from '@/components/TabbedCode.astro';
     Run this command in the root of your project:
     <TabbedCode dynamicExec="dmno init" />
 
-    ![dmno init](../../../../assets/tapes/init.gif)
-
-    This will create a `.dmno` folder in the root of your project with a `config.mts` file, including config items in your `schema` that we automatically imported from `.env` files. If in a monorepo, any additional services of your choice will get their own `.dmno` folders, and `config.mts` files. It will produce a file tree that looks something like this:
+    This will create a `.dmno` folder in the root of your project with a `config.mts` file, including config items in your `schema` that we automatically imported from `.env` files. If in a monorepo, any additional services of your choice will get their own `.dmno` folders and associated files. Each `.dmno` folder looks something like this: 
 
     <FileTree>
-    - / (root of your project)
-      - .dmno (your workspace config)
-        - **config.mts**
-      - packages
-        - my-package
-          - .dmno 
-            - **config.mts** (config for my-package service)
-        - another-package
-          - .dmno
-            - **config.mts** (config for another-package service)
-
+    - / 
+      - .dmno
+        - .typegen/ (generated types)
+        - .env.local (your local overrides and sensitive values)
+        - **config.mts** (your config schema)
+        - tsconfig.json (dmno specific tsconfig)
+      - ... the rest of your folders
     </FileTree>
 
-2. ### **Start the development server**
+2. ### **Run `dmno resolve` in watch mode**
 
     This will give you instant feedback while you author your config schema.
-    <TabbedCode command="dmno dev" />
-
-    ![dmno init](../../../../assets/tapes/dev.gif)
+    <TabbedCode command="dmno resolve -w" />
 
 3. ### **Write your schema**
 
-    The config schema and other settings live in the `.dmno/config.mts` files. `dmno init` does its best to scaffold out the initial version of this schema based on your existing `.env` files. Augmented each item with a description, [`required`](/docs/guides/schema/#validations--required-config), and [`sensitive`](/docs/guides/schema/#secrets--security) is a great next step. You can then improve your schema over time, adding validations, and setting values from within the schema itself.
+    The config schema and other settings live in the `.dmno/config.mts` files. `dmno init` does its best to scaffold out the initial version of this schema based on your existing `.env` files. Updating each item with a description, [`required`](/docs/guides/schema/#validations--required-config), and [`sensitive`](/docs/guides/schema/#secrets--security) is a great next step. You can then improve your schema over time, adding validations, and setting values from within the schema itself.
+
+    Your initial should look something like this:
+
+    ```typescript title=".dmno/config.mts"
+    import { DmnoBaseTypes, defineDmnoService } from 'dmno';
+
+    export default defineDmnoService({
+      isRoot: true,
+      schema: {
+        PUBLIC_API_BASE_URL: {
+          extends: DmnoBaseTypes.url,
+          description: 'Base URL for the public API',
+        },
+        PUBLIC_GOOGLE_ANALYTICS_ID: {
+          description: 'Google Analytics ID',
+        },
+        DATABASE_URL: {
+          extends: DmnoBaseTypes.url,
+          description: 'Database connection string',
+        },
+        SECRET_API_KEY: {
+          sensitive: true,
+        },
+        JWT_SECRET: {
+          sensitive: true,
+        },
+      },
+    });
+    ```
 
     Check out the [schema guide](/docs/guides/schema/) for full details.
 
-    {/* And if you would like more information on how we use `.env` files check out [`.env' file guide]() */}
+    And if you would like more information on how we use `.env` files check out [`.env' file guide](/docs/guides/env-files/)
 
 4. ### **Configure framework specific integrations**
 
     We provide [drop-in integrations](/docs/integrations/overview/) for many popular frameworks, and more are in the works. `dmno init` is smart enough to install the relevant integrations for each service. You can also read more about each integration on their respective [pages](/docs/integrations/overview/) and update them as needed.
+
+    In this case of [Astro](/docs/integrations/astro/) or [Vite](/docs/integrations/vite/), the integrations should work out of the box. In other cases, like [Node.js](/docs/integrations/node/#watch-mode-and-dev-commands) or [Next.js](/docs/integrations/nextjs/#adjusting-packagejson-scripts), you will need to update your `package.json` scripts to use [`dmno run`](/docs/reference/cli/run/) so that your resolved config is passed to the script in question. 
 
 5. ### **Use `DMNO_CONFIG` to access your config** 
 

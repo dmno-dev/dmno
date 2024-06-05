@@ -18,7 +18,19 @@ You'll always have a `.dmno/config.mts` file at the root of your project, and if
 A typical DMNO project structure:
 
 <Tabs syncKey='repoType'>
-  <TabItem label="Monorepo">
+  <TabItem label="Single repo">
+    <FileTree>
+        - / (root of your project)
+          - .dmno/ (your workspace config)
+            - **config.mts**
+          - api/
+          - some_folder/
+          - frontend/
+          - scripts/
+          - ...etc
+    </ FileTree>
+  </TabItem>
+    <TabItem label="Monorepo">
     <FileTree>
     - / (root of your project)
       - .dmno
@@ -33,18 +45,6 @@ A typical DMNO project structure:
         - shared-lib
           - files... (no .dmno folder if no env vars are needed)
     </FileTree>
-  </TabItem>
-  <TabItem label="Single repo">
-    <FileTree>
-        - / (root of your project)
-          - .dmno/ (your workspace config)
-            - **config.mts**
-          - api/
-          - some_folder/
-          - frontend/
-          - scripts/
-          - ...etc
-    </ FileTree>
   </TabItem>
 </Tabs>
 
@@ -88,6 +88,8 @@ export default defineDmnoWorkspace({
   },
 });
 ```
+
+> If you're not in a monorepo, you can skip to [Defining config items](/docs/guides/schema/#defining-config-items/).
 
 ### Other services
 
