@@ -10,7 +10,7 @@ import BugReportLink from '@/components/BugReportLink.astro';
 
 At DMNO we _love_ [Netlify](https://netlify.com/). This very site is hosted on it! That's why we're very excited to make it easier and safer to use environment variables in all of your Netlify-hosted projects.
 
-This platform integration exposes a pre-made config schema (and underlying types) to interact with the env vars that Netlify injects while on their platform.
+This platform integration exposes a pre-made config schema and underlying types to interact with the env vars that Netlify injects while on their platform.
 
 It also exposes a Netlify build plugin - which injects your resolved DMNO config into functions and edge functions. You may not need to use this plugin if you already have a build process that injects config values into your functions code before deployment.
 
@@ -28,7 +28,7 @@ If you run into any issues, feel free to <BugReportLink label='integrations/astr
 
 Netlify injects a set of [read-only environment variables](https://docs.netlify.com/configure-builds/environment-variables/#read-only-variables) during its build process that provide information about the current build.
 
-The `@dmno/netlify-platform` module exposes DMNO data types and a pre-made config schema object which you can use in your own schema. You likely don't care about all of the env vars that Netlify injects, so you can use the `pickFromSchemaObject` utility to pick only the keys you care about. For example:
+The `@dmno/netlify-platform` module exposes DMNO data types and a pre-made config schema object which you can use in your own schema. You can use the `pickFromSchemaObject` utility to pick only the env var keys that you need from the full list that Netlify injects. For example:
 
 ```ts title='.dmno/config.mts'
 import { defineDmnoService, switchBy, pickFromSchemaObject } from 'dmno';
@@ -62,10 +62,10 @@ There are also a set of [Netlify Configuration Variables](https://docs.netlify.c
 This package also includes a [Netlify build plugin](https://docs.netlify.com/integrations/build-plugins/) which automatically injects your resolved DMNO config into your [Functions](https://docs.netlify.com/functions/overview/) and [Edge Functions](https://docs.netlify.com/functions/overview/).
 
 :::tip[You may not need this!]
-If you are building a totally static site, you probably do not need to use this build plugin!
+This plugin is potentially only needed if you're using Functions or Edge Functions. If you are deploying a static site then it's not necessary. 
 :::
 
-You may also not need it for functions if you are running your own build process and have already handled bundling your DMNO config as static replacements at build time. In this case, you need to make sure that your config is injected into your build command - either via one of our integrations, or by using `dmno run`. If your build command is working locally, it probably will just work on Netlify.
+You may also not need it for functions if you are running your own build process and have already handled bundling your DMNO config as static replacements at build time. In this case, you need to make sure that your config is injected into your build command - either via one of our integrations, or by using [`dmno run`](/docs/reference/cli/run/). If your build command is working locally, it probably will just work on Netlify.
 
 You may need to use this plugin if:
 - you are authoring functions directly in `netlify/functions` and/or `netlify/edge-functions` folder(s) and you are relying on the netlify cli (`netlify build`) to bundle your code
@@ -107,9 +107,9 @@ Of course you _can_ still set overrides and secrets within the Netlify UI if you
 
 However, we recommend migrating all of your config to DMNO itself by using [switchBy](/docs/reference/helper-methods/#switchby) to create branching logic based on the env vars injected by Netlify.
 
-You can also use plugins - for example our [Encrypted Vault](/docs/plugins/encrypted-vault/) and [1Password](/docs/plugins/1password/) plugins - to handle sensitive config within your schema. Note that you will still set a **single environment variable** in the netlify UI, to allow these plugins to access the rest of your secret.
+You can also use plugins - for example our [Encrypted Vault](/docs/plugins/encrypted-vault/) and [1Password](/docs/plugins/1password/) plugins - to handle sensitive config within your schema. Note that you will still set a **single environment variable** in the Netlify UI, to allow these plugins to access the rest of your secret.
 
-For example
+For example:
 ```ts title='.dmno/config.mts'
 import { defineDmnoService, switchBy, pickFromSchemaObject } from 'dmno';
 import { NetlifyEnvSchema } from '@dmno/netlify-platform/types';
@@ -154,9 +154,9 @@ export default defineDmnoService({
 
 ### Scopes
 
-Note that netlify's built-in environment variable tooling has a concept of ["scopes"](https://docs.netlify.com/environment-variables/overview/#scopes) and certain vars being applied/available at different times, for example during the build versus during function execution. There are also some limitations around env vars being injected into functions due to the nature of how those platforms are set up.
+Note that Netlify's built-in environment variable tooling has a concept of ["scopes"](https://docs.netlify.com/environment-variables/overview/#scopes) and certain vars being applied/available at different times, for example during the build versus during function execution. There are also some limitations around env vars being injected into functions due to the nature of how those platforms are set up.
 
 Using DMNO, we avoid all of that since we inject all of your _resolved_ DMNO config at build time, and standardize access to your config regardless of the situation.
 
-Note that any env vars set in the netlify UI or netlify.toml must include the "build" scope to be noticed by DMNO - since we inject your config at build time.
+Note that any env vars set in the Netlify UI or `netlify.toml` must include the `build` scope to be noticed by DMNO - since we inject your config at build time.
 
