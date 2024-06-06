@@ -77,7 +77,10 @@ export function formatError(err: SerializedDmnoError) {
 }
 
 export function joinAndCompact(strings: Array<string | number | boolean | undefined | null | false>, joinChar = ' ') {
-  return strings.filter((s) => !!s).join(joinChar);
+  return strings.filter((s) => (
+    // we'll not filter out empty strings - because it's useful to just add newlines
+    s !== undefined && s !== null && s !== false
+  )).join(joinChar);
 }
 
 export function getItemSummary(item: SerializedConfigItem) {

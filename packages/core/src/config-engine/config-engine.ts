@@ -159,19 +159,6 @@ type DynamicConfigModes =
   /* default_dynamic */
   'default_dynamic';
 
-/**
- * options for defining a service's config schema
- * @category HelperMethods
- */
-export type DmnoWorkspaceConfig = {
-  /** root service name, if empty will fallback to name from package.json */
-  name?: string,
-  /** settings for the root service - children will be inherit individual settings unless overridden */
-  settings?: DmnoServiceSettings,
-  /** config schema items that live in the workspace root */
-  schema: Record<string, ConfigItemDefinitionOrShorthand>,
-};
-
 
 type DmnoServiceSettings = {
   /** default behaviour for "dynamic" vs "static" behaviour of config items */
@@ -183,22 +170,25 @@ type DmnoServiceSettings = {
  * @category HelperMethods
  */
 export type DmnoServiceConfig = {
+  /** set to true if this is the root service */
+  isRoot?: boolean,
   /** service name - if empty, name from package.json will be used */
   name?: string,
+  /** settings for this service - each item will be inherited from parent(s) if unspecified */
+  settings?: DmnoServiceSettings,
+  /** the config schema itself */
+  schema: Record<string, ConfigItemDefinitionOrShorthand>,
+} & ({
+  isRoot: true
+} | {
+  isRoot?: false,
   /** name of parent service (if applicable) - if empty this service will be a child of the root service */
   parent?: string,
   /** optional array of "tags" for the service */
   tags?: Array<string>,
-  /** settings for this service - each item will be inherited from parent(s) if unspecified */
-  settings?: DmnoServiceSettings,
   /** array of config items to be picked from parent */
   pick?: Array<PickConfigItemDefinition | string>,
-  /** the config schema itself */
-  schema: Record<string, ConfigItemDefinitionOrShorthand>,
-};
-
-
-
+});
 
 export type InjectedDmnoEnvItem = {
   value: any,
@@ -211,15 +201,8 @@ export type InjectedDmnoEnv = Record<string, InjectedDmnoEnvItem>;
 
 export function defineDmnoService(opts: DmnoServiceConfig) {
   debug('LOADING SCHEMA!', opts);
-  // we'll mark the object so we know it was initialized via defineDmnoWorkspace
+  // we'll mark the object so we know it was initialized via defineDmnoService
   (opts as any)._isDmnoServiceConfig = true;
-  return opts;
-}
-
-export function defineDmnoWorkspace(opts: DmnoWorkspaceConfig) {
-  debug('LOADING ROOT SCHEMA!', opts);
-  // we'll mark the object so we know it was initialized via defineDmnoWorkspace
-  (opts as any)._isDmnoWorkspaceConfig = true;
   return opts;
 }
 
@@ -350,7 +333,7 @@ export class DmnoWorkspace {
     // first set up graph edges based on "parent"
     for (const service of this.servicesArray) {
     // check if parent service is valid
-      const parentServiceName = service.rawConfig?.parent;
+      const parentServiceName = !service.rawConfig?.isRoot ? service.rawConfig?.parent : undefined;
       if (parentServiceName) {
         if (!this.services[parentServiceName]) {
           service.schemaErrors.push(new SchemaError(`Unable to find parent service "${parentServiceName}"`));
@@ -370,6 +353,7 @@ export class DmnoWorkspace {
     // add graph edges based on "pick"
     // we will not process individual items yet, but this will give us a DAG of service dependencies
     for (const service of this.servicesArray) {
+      if (service.rawConfig?.isRoot) continue;
       // eslint-disable-next-line @typescript-eslint/no-loop-func
       _.each(service.rawConfig?.pick, (rawPick) => {
       // pick defaults to picking from "root" unless otherwise specified
@@ -409,91 +393,93 @@ export class DmnoWorkspace {
       const ancestorServiceNames = this.servicesDag.predecessors(service.serviceName) || [];
 
       // process "picked" items
-      for (const rawPickItem of service.rawConfig?.pick || []) {
-        const pickFromServiceName = _.isString(rawPickItem)
-          ? this.rootServiceName
-          : (rawPickItem.source || this.rootServiceName);
-        const isPickingFromAncestor = ancestorServiceNames.includes(pickFromServiceName);
-        const rawPickKey = _.isString(rawPickItem) ? rawPickItem : rawPickItem.key;
-        const pickFromService = this.services[pickFromServiceName];
-        if (!pickFromService) {
+      if (!service.rawConfig?.isRoot) {
+        for (const rawPickItem of service.rawConfig?.pick || []) {
+          const pickFromServiceName = _.isString(rawPickItem)
+            ? this.rootServiceName
+            : (rawPickItem.source || this.rootServiceName);
+          const isPickingFromAncestor = ancestorServiceNames.includes(pickFromServiceName);
+          const rawPickKey = _.isString(rawPickItem) ? rawPickItem : rawPickItem.key;
+          const pickFromService = this.services[pickFromServiceName];
+          if (!pickFromService) {
           // NOTE: we've already added a schema error if item is picking from an non-existant service
           // while setting up the services DAG, so we can just bail on the item
-          continue;
-        }
-
-        // first we'll gather a list of the possible keys we can pick from
-        // when picking from an ancestor, we pick from all config items
-        // while non-ancestors expose only items that have `expose: true` set on them
-        const potentialKeysToPickFrom: Array<string> = [];
-
-        if (isPickingFromAncestor) {
-          potentialKeysToPickFrom.push(..._.keys(pickFromService.config));
-        } else {
-          // whereas only "exposed" items can be picked from non-ancestors
-          const exposedItems = _.pickBy(pickFromService.config, (itemConfig) => !!itemConfig.type.expose);
-          potentialKeysToPickFrom.push(..._.keys(exposedItems));
-        }
-
-        const keysToPick: Array<string> = [];
-
-        // if key is a string or array of strings, we'll need to check they are valid
-        if (_.isString(rawPickKey) || _.isArray(rawPickKey)) {
-          for (const keyToCheck of _.castArray(rawPickKey)) {
-            if (!potentialKeysToPickFrom.includes(keyToCheck)) {
-              // TODO: we could include if the key exists but is not marked to "expose"?
-              service.schemaErrors.push(new SchemaError(`Picked item ${pickFromServiceName} > ${keyToCheck} was not found`));
-            } else {
-              keysToPick.push(keyToCheck);
-            }
+            continue;
           }
 
-        // if it's a function, we'll be filtering from the list of potential items
-        } else if (_.isFunction(rawPickKey)) { // fn that filters keys
-          const pickKeysViaFilter = _.filter(potentialKeysToPickFrom, rawPickKey);
+          // first we'll gather a list of the possible keys we can pick from
+          // when picking from an ancestor, we pick from all config items
+          // while non-ancestors expose only items that have `expose: true` set on them
+          const potentialKeysToPickFrom: Array<string> = [];
 
-          // we probably want to warn the user if the filter selected nothing?
-          if (!pickKeysViaFilter.length) {
+          if (isPickingFromAncestor) {
+            potentialKeysToPickFrom.push(..._.keys(pickFromService.config));
+          } else {
+          // whereas only "exposed" items can be picked from non-ancestors
+            const exposedItems = _.pickBy(pickFromService.config, (itemConfig) => !!itemConfig.type.expose);
+            potentialKeysToPickFrom.push(..._.keys(exposedItems));
+          }
+
+          const keysToPick: Array<string> = [];
+
+          // if key is a string or array of strings, we'll need to check they are valid
+          if (_.isString(rawPickKey) || _.isArray(rawPickKey)) {
+            for (const keyToCheck of _.castArray(rawPickKey)) {
+              if (!potentialKeysToPickFrom.includes(keyToCheck)) {
+              // TODO: we could include if the key exists but is not marked to "expose"?
+                service.schemaErrors.push(new SchemaError(`Picked item ${pickFromServiceName} > ${keyToCheck} was not found`));
+              } else {
+                keysToPick.push(keyToCheck);
+              }
+            }
+
+            // if it's a function, we'll be filtering from the list of potential items
+          } else if (_.isFunction(rawPickKey)) { // fn that filters keys
+            const pickKeysViaFilter = _.filter(potentialKeysToPickFrom, rawPickKey);
+
+            // we probably want to warn the user if the filter selected nothing?
+            if (!pickKeysViaFilter.length) {
             // TODO: we may want to mark this error as a "warning" or something?
             // or some other way of configuring / ignoring
-            service.schemaErrors.push(new SchemaError(`Pick from ${pickFromServiceName} using key filter fn had no matches`));
-          } else {
-            keysToPick.push(...pickKeysViaFilter);
-            // console.log('pick keys by filter', pickKeysViaFilter);
-          }
-        }
-
-        for (let i = 0; i < keysToPick.length; i++) {
-          const pickKey = keysToPick[i];
-          // deal with key renaming
-          let newKeyName = pickKey;
-          if (!_.isString(rawPickItem) && rawPickItem.renameKey) {
-            // renameKey can be a static string (if dealing with a single key)
-            if (_.isString(rawPickItem.renameKey)) {
-              // deal with the case of trying to rename multiple keys to a single value
-              // TODO: might be able to discourage this in the TS typing?
-              if (keysToPick.length > 1) {
-                // add an error (once)
-                if (i === 0) {
-                  service.schemaErrors.push(new SchemaError(`Picked multiple keys from ${pickFromServiceName} using static rename`));
-                }
-                // add an index suffix... so the items will at least still appear
-                newKeyName = `${rawPickItem.renameKey}-${i}`;
-              } else {
-                newKeyName = rawPickItem.renameKey;
-              }
-
-            // or a function to transform the existing key
+              service.schemaErrors.push(new SchemaError(`Pick from ${pickFromServiceName} using key filter fn had no matches`));
             } else {
-              newKeyName = rawPickItem.renameKey(pickKey);
+              keysToPick.push(...pickKeysViaFilter);
+            // console.log('pick keys by filter', pickKeysViaFilter);
             }
           }
 
-          service.addConfigItem(new DmnoPickedConfigItem(newKeyName, {
-            sourceItem: pickFromService.config[pickKey],
-            transformValue: _.isString(rawPickItem) ? undefined : rawPickItem.transformValue,
-          }, service));
+          for (let i = 0; i < keysToPick.length; i++) {
+            const pickKey = keysToPick[i];
+            // deal with key renaming
+            let newKeyName = pickKey;
+            if (!_.isString(rawPickItem) && rawPickItem.renameKey) {
+            // renameKey can be a static string (if dealing with a single key)
+              if (_.isString(rawPickItem.renameKey)) {
+              // deal with the case of trying to rename multiple keys to a single value
+              // TODO: might be able to discourage this in the TS typing?
+                if (keysToPick.length > 1) {
+                // add an error (once)
+                  if (i === 0) {
+                    service.schemaErrors.push(new SchemaError(`Picked multiple keys from ${pickFromServiceName} using static rename`));
+                  }
+                  // add an index suffix... so the items will at least still appear
+                  newKeyName = `${rawPickItem.renameKey}-${i}`;
+                } else {
+                  newKeyName = rawPickItem.renameKey;
+                }
+
+                // or a function to transform the existing key
+              } else {
+                newKeyName = rawPickItem.renameKey(pickKey);
+              }
+            }
+
+            service.addConfigItem(new DmnoPickedConfigItem(newKeyName, {
+              sourceItem: pickFromService.config[pickKey],
+              transformValue: _.isString(rawPickItem) ? undefined : rawPickItem.transformValue,
+            }, service));
           // TODO: add to dag node with link to source item
+          }
         }
       }
 
@@ -675,12 +661,9 @@ export class DmnoService {
     packageName: string,
     path: string,
     workspace: DmnoWorkspace,
-  } & (
-    // TODO: this type difference should be applied to rawConfig too
-    // but they are currently close enough that it doesn't matter
-    { isRoot: true, rawConfig: DmnoWorkspaceConfig | ConfigLoadError, } |
-    { isRoot: false, rawConfig: DmnoServiceConfig | ConfigLoadError }
-  )) {
+    isRoot: boolean,
+    rawConfig: DmnoServiceConfig | ConfigLoadError
+  }) {
     this.workspace = opts.workspace;
     this.isRoot = opts.isRoot;
     this.packageName = opts.packageName;
@@ -711,6 +694,7 @@ export class DmnoService {
   }
 
   get parentService(): DmnoService | undefined {
+    if (this.rawConfig?.isRoot) return;
     if (this.rawConfig?.parent) {
       const parent = this.workspace.getService({ serviceName: this.rawConfig?.parent });
       if (parent) return parent;
