@@ -1,5 +1,13 @@
 # dmno
 
+## 0.0.13
+
+### Patch Changes
+
+- [#86](https://github.com/dmno-dev/dmno/pull/86) [`3a435bc`](https://github.com/dmno-dev/dmno/commit/3a435bcc95ec55ff755d6f2023b6aec2af171eab) Thanks [@theoephraim](https://github.com/theoephraim)! - improve error handling and messaging
+
+- [#88](https://github.com/dmno-dev/dmno/pull/88) [`cacad8a`](https://github.com/dmno-dev/dmno/commit/cacad8adbcff3068767f13466c20602941c011f1) Thanks [@theoephraim](https://github.com/theoephraim)! - improvements to dmno init
+
 ## 0.0.12
 
 ### Patch Changes
