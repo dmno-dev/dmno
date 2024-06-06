@@ -25,6 +25,7 @@
     "clean": "rm -rf dist",
     "build": "tsup",
     "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
+    "build:tarball": "turbo build && pnpm pack --pack-destination \"../../../tmp-package-registry\"",
     "dev": "pnpm run build --watch",
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix",
@@ -37,11 +38,17 @@
     ".": {
       "default": "./dist/index.mjs"
     },
+    "./vendor-types": {
+      "default": "./dist/vendor-types/index.mjs"
+    },
     "./cli-lib": {
       "default": "./dist/cli/plugin-cli-lib.mjs"
     },
-    "./load": {
-      "default": "./dist/app-init/auto-load-global.mjs"
+    "./injector": {
+      "default": "./dist/inject/dmno-globals-injector.mjs"
+    },
+    "./inject": {
+      "default": "./dist/inject/inject-dmno-globals.mjs"
     }
   },
   "files": [
@@ -52,8 +59,17 @@
       "index": [
         "./dist/index.d.mts"
       ],
+      "vendor-types": [
+        "./dist/vendor-types/index.d.mts"
+      ],
       "cli-lib": [
         "./dist/cli/plugin-cli-lib.d.mts"
+      ],
+      "injector": [
+        "./dist/inject/dmno-globals-injector.d.mts"
+      ],
+      "inject": [
+        "./dist/inject/inject-dmno-globals.d.mts"
       ]
     }
   },

@@ -36,7 +36,6 @@ export default defineDmnoWorkspace({
       value: (ctx) => ctx.get('NODE_ENV'),
     },
 
-
     OP_TOKEN: {
       extends: OnePasswordTypes.serviceAccountToken,
     },

@@ -1,6 +1,14 @@
 import type { InjectedDmnoEnv, InjectedDmnoEnvItem } from '../config-engine/config-engine';
 
-const originalProcessEnv = structuredClone(process.env);
+const processExists = !!globalThis.process;
+let originalProcessEnv: Record<string, string> = {};
+if (processExists) {
+  try {
+    originalProcessEnv = structuredClone(globalThis.process.env) as any;
+  } catch (err) {
+    // console.log('error cloning process.env', err);
+  }
+}
 
 export function injectDmnoGlobals(
   opts?: {
@@ -10,6 +18,7 @@ export function injectDmnoGlobals(
   },
 ) {
   const sensitiveValueLookup: Record<string, { value: string, masked: string }> = {};
+  const dynamicKeys: Array<string> = [];
   const publicDynamicKeys: Array<string> = [];
   const sensitiveKeys: Array<string> = [];
 
@@ -22,26 +31,40 @@ export function injectDmnoGlobals(
   // either pulling from a passed in config or from process.env.DMNO_INJECTED_ENV
 
   let injectedDmnoEnv = opts?.injectedConfig;
-  if (process.env.DMNO_INJECTED_ENV && !injectedDmnoEnv) {
-    injectedDmnoEnv = JSON.parse(process.env.DMNO_INJECTED_ENV);
+
+  if (!injectedDmnoEnv && (globalThis as any)._DMNO_INJECTED_ENV) {
+    injectedDmnoEnv = (globalThis as any)._DMNO_INJECTED_ENV;
+  } else if (!injectedDmnoEnv && globalThis.process.env.DMNO_INJECTED_ENV) {
+    injectedDmnoEnv = JSON.parse(globalThis.process.env.DMNO_INJECTED_ENV);
   }
   if (!injectedDmnoEnv) {
+    // console.log(globalThis);
+    // console.log(globalThis.process.env);
     throw new Error('Unable to find `process.env.DMNO_INJECTED_ENV` - run this command via `dmno run` - see https://dmno.dev/docs/reference/cli/run for more info');
   }
 
   // feed loaded config values back into process.env (as strings)
-  process.env = { ...originalProcessEnv };
+  if (processExists) {
+    // TODO: maybe we dont want to re-assign the object, but just modify keys instead?
+    globalThis.process.env = { ...originalProcessEnv };
+  }
 
   const rawConfigObj: Record<string, string> = {};
   const rawPublicConfigObj: Record<string, string> = {};
 
+  const staticReplacements: Record<string, string> = {};
+
   for (const itemKey in injectedDmnoEnv) {
     const injectedItem = injectedDmnoEnv[itemKey];
     const val = injectedItem.value;
-    if (val === undefined || val === null) {
-      process.env[itemKey] = '';
-    } else {
-      process.env[itemKey] = val.toString();
+
+    // re-inject into process.env
+    if (processExists) {
+      if (val === undefined || val === null) {
+        globalThis.process.env[itemKey] = '';
+      } else {
+        globalThis.process.env[itemKey] = val.toString();
+      }
     }
 
     if (!injectedItem.sensitive) {
@@ -58,8 +81,25 @@ export function injectDmnoGlobals(
       }
     }
 
-    if (!injectedItem.sensitive && injectedItem.dynamic) {
-      publicDynamicKeys.push(itemKey);
+
+    if (injectedItem.dynamic) {
+      dynamicKeys.push(itemKey);
+      if (!injectedItem.sensitive) publicDynamicKeys.push(itemKey);
+    }
+
+
+    if (injectedItem.sensitive) {
+      // if it's sensitive and static, we'll inject only into DMNO_CONFIG
+      if (!injectedItem.dynamic) {
+        staticReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(injectedItem.value);
+      }
+    } else {
+      // if public and static, we'll inject into vite's rewrites
+      if (!injectedItem.dynamic) {
+        // add rollup rewrite/define for non-sensitive items
+        staticReplacements[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(injectedItem.value);
+        staticReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(injectedItem.value);
+      }
     }
   }
 
@@ -97,5 +137,11 @@ export function injectDmnoGlobals(
 
   (globalThis as any)._DMNO_PUBLIC_DYNAMIC_KEYS = publicDynamicKeys;
   (globalThis as any)._DMNO_SENSITIVE_KEYS = sensitiveKeys;
-  return { injectedDmnoEnv };
+  return {
+    injectedDmnoEnv,
+    staticReplacements,
+    dynamicKeys,
+    publicDynamicKeys,
+    sensitiveKeys,
+  };
 }

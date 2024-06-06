@@ -192,6 +192,9 @@ importers:
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
+      '@dmno/netlify-platform':
+        specifier: workspace:*
+        version: link:../platforms/netlify
       '@dmno/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -322,6 +325,10 @@ importers:
         version: 7.7.1(eslint@8.57.0)(typescript@5.4.5)
 
   packages/integrations/astro:
+    dependencies:
+      debug:
+        specifier: ^4.3.4
+        version: 4.3.4(supports-color@9.4.0)
     devDependencies:
       '@dmno/eslint-config':
         specifier: workspace:*
@@ -335,6 +342,9 @@ importers:
       '@types/async':
         specifier: ^3.2.24
         version: 3.2.24
+      '@types/debug':
+        specifier: ^4.1.12
+        version: 4.1.12
       '@types/lodash-es':
         specifier: ^4.17.12
         version: 4.17.12
@@ -381,6 +391,12 @@ importers:
 
   packages/integrations/vite:
     dependencies:
+      debug:
+        specifier: ^4.3.4
+        version: 4.3.4(supports-color@9.4.0)
+      lodash-es:
+        specifier: ^4.17.21
+        version: 4.17.21
       vite:
         specifier: ^5.0
         version: 5.2.10(@types/node@20.12.7)(less@4.2.0)
@@ -394,6 +410,9 @@ importers:
       '@types/async':
         specifier: ^3.2.24
         version: 3.2.24
+      '@types/debug':
+        specifier: ^4.1.12
+        version: 4.1.12
       '@types/lodash-es':
         specifier: ^4.17.12
         version: 4.17.12
@@ -406,6 +425,43 @@ importers:
       tsup:
         specifier: ^8.0.2
         version: 8.0.2(postcss@8.4.38)(ts-node@10.9.2(@types/node@20.12.7)(typescript@5.4.5))(typescript@5.4.5)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.4.5
+
+  packages/platforms/netlify:
+    dependencies:
+      '@netlify/blobs':
+        specifier: ^7.3.0
+        version: 7.3.0
+      debug:
+        specifier: ^4.3.4
+        version: 4.3.4(supports-color@9.4.0)
+      lodash-es:
+        specifier: ^4.17.21
+        version: 4.17.21
+    devDependencies:
+      '@dmno/eslint-config':
+        specifier: workspace:*
+        version: link:../../eslint-config
+      '@dmno/tsconfig':
+        specifier: workspace:*
+        version: link:../../tsconfig
+      '@types/debug':
+        specifier: ^4.1.12
+        version: 4.1.12
+      '@types/lodash-es':
+        specifier: ^4.17.12
+        version: 4.17.12
+      '@types/node':
+        specifier: ^20.12.7
+        version: 20.12.12
+      dmno:
+        specifier: workspace:*
+        version: link:../../core
+      tsup:
+        specifier: ^8.0.2
+        version: 8.0.2(postcss@8.4.38)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5))(typescript@5.4.5)
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -917,9 +973,6 @@ packages:
 
   '@bugsnag/js@7.23.0':
     resolution: {integrity: sha512-gnCpcv/v6p3CtbwwDuAjVYPPNq4NMVj4hp70MiB3OGJ+LmIS66CwElDiyvRMA8Ar6OzCF4joTeaNG5bD9cM41w==}
-
-  '@bugsnag/node@7.22.7':
-    resolution: {integrity: sha512-Ud8vpX9UkGxoWAk7OigyR7w1eycbsE5uv5KZx0aWiqDPXylvICd42V5ZiWstpkdm9IVFo9AQ4+gmerHPe4Lwrg==}
 
   '@bugsnag/node@7.23.0':
     resolution: {integrity: sha512-eXA8/h+J2booEMlKsuRl1NAszebwm4KZ9zxCSg/xN4sw5boXia7kMifLf8QTqk+UBtIhNKBsyQQKHXbawKyE6Q==}
@@ -2109,17 +2162,9 @@ packages:
   '@netlify/edge-functions@2.7.0':
     resolution: {integrity: sha512-SplDdzmq161OR648P3sGOZ0vW9wo4/GFCQYWGmq3iepDuKl7J1eHaQxLk76cIFuZ3TivK49xFUs7x2DrYkEzAQ==}
 
-  '@netlify/framework-info@9.8.11':
-    resolution: {integrity: sha512-8NuvzQQVeU36PRilWqijiIWmjy6JZcqbKooGQ4bNgH/26YNdS+tN5gOWGWVYnRHgdmBUCycyYrM5h1Srwnq3hQ==}
-    engines: {node: ^14.14.0 || >=16.0.0}
-
   '@netlify/framework-info@9.8.12':
     resolution: {integrity: sha512-tk7sQFEO9CW5+1jcAqObvgzmJdyBsDMnQvNgXOIlVKSlBbEfMIgyyMad+fQ4ddnaLx+MmQuroJN5G80IkqJ7+Q==}
     engines: {node: ^14.14.0 || >=16.0.0}
-
-  '@netlify/functions-utils@5.2.55':
-    resolution: {integrity: sha512-4xTb/zuUT5SFpZH+RGKUV6pwrYyGS3L4emcrVi5u/nbJ/8yU8v8MdUdTGxoUhyeFw1kIp5C6vsru1fpU0ti0XA==}
-    engines: {node: ^14.16.0 || >=16.0.0}
 
   '@netlify/functions-utils@5.2.56':
     resolution: {integrity: sha512-CPYrG3v/1w5GeBEI2t3tCrrLxACm3ecvj0X10PPPFAv++4dy1M7L9PqlTjGz15kektBSOIL9a82/4T74/OBhng==}
@@ -2216,21 +2261,11 @@ packages:
     resolution: {integrity: sha512-SMRzNwaG6/2MTIBe/RThLQRm3kNpiwb90te+iDJgMLLfTdVA33P/oiinTypBMyQU4Cm3IvQm7P5zD2mXZacSsg==}
     engines: {node: '>=14'}
 
-  '@netlify/opentelemetry-utils@1.2.0':
-    resolution: {integrity: sha512-sdeYmvUHXzs7bfoh7f32WVh2wLMOdF3d2Xdcg2FG1lCySXOJ4V6F3n8vPoPXwO7S5iSzJbfO2RPJsTtZCmbIcg==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      '@opentelemetry/api': ~1.8.0
-
   '@netlify/opentelemetry-utils@1.2.1':
     resolution: {integrity: sha512-A6nQBvUn/avHQopLOOjX8rY2eua//jufbx4NZZODACEHtfXAEmOjCoDe2m+cQPRq+jNa98nvCy/sJh2RwuCQog==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@opentelemetry/api': ~1.8.0
-
-  '@netlify/plugins-list@6.77.0':
-    resolution: {integrity: sha512-czL3FH61hFhhVQydRj2xjIwLVYHDNskMhRib7dUfOQrUHifqLlUFKp03NwBD87G9BFKXUYGWZMEUU+JjIpVc9w==}
-    engines: {node: ^14.14.0 || >=16.0.0}
 
   '@netlify/plugins-list@6.78.1':
     resolution: {integrity: sha512-p7VJToThlsaXIXccx7vpQlJdMQqSbaKbxV0ZsivH3KvMeGEGOBARJp/pc7de5enCWLcETvEof1yvCOkPGtTeFA==}
@@ -10336,21 +10371,12 @@ snapshots:
   '@bugsnag/js@7.22.7':
     dependencies:
       '@bugsnag/browser': 7.22.7
-      '@bugsnag/node': 7.22.7
+      '@bugsnag/node': 7.23.0
 
   '@bugsnag/js@7.23.0':
     dependencies:
       '@bugsnag/browser': 7.22.7
       '@bugsnag/node': 7.23.0
-
-  '@bugsnag/node@7.22.7':
-    dependencies:
-      '@bugsnag/core': 7.22.7
-      byline: 5.0.0
-      error-stack-parser: 2.1.4
-      iserror: 0.0.2
-      pump: 3.0.0
-      stack-generator: 2.0.10
 
   '@bugsnag/node@7.23.0':
     dependencies:
@@ -10379,7 +10405,7 @@ snapshots:
       outdent: 0.5.0
       prettier: 2.8.8
       resolve-from: 5.0.0
-      semver: 7.6.0
+      semver: 7.6.2
 
   '@changesets/assemble-release-plan@6.0.0':
     dependencies:
@@ -10388,7 +10414,7 @@ snapshots:
       '@changesets/get-dependents-graph': 2.0.0
       '@changesets/types': 6.0.0
       '@manypkg/get-packages': 1.1.3
-      semver: 7.6.0
+      semver: 7.6.2
 
   '@changesets/changelog-git@0.2.0':
     dependencies:
@@ -10457,7 +10483,7 @@ snapshots:
       '@manypkg/get-packages': 1.1.3
       chalk: 2.4.2
       fs-extra: 7.0.1
-      semver: 7.6.0
+      semver: 7.6.2
 
   '@changesets/get-github-info@0.6.0':
     dependencies:
@@ -11392,16 +11418,16 @@ snapshots:
 
   '@netlify/build@29.41.0(@opentelemetry/api@1.8.0)(@types/node@20.12.12)(picomatch@3.0.1)':
     dependencies:
-      '@bugsnag/js': 7.22.7
+      '@bugsnag/js': 7.23.0
       '@netlify/blobs': 7.3.0
       '@netlify/cache-utils': 5.1.5
-      '@netlify/config': 20.12.2
+      '@netlify/config': 20.12.5
       '@netlify/edge-bundler': 12.0.0(supports-color@9.4.0)
-      '@netlify/framework-info': 9.8.11
-      '@netlify/functions-utils': 5.2.55(@opentelemetry/api@1.8.0)(supports-color@9.4.0)
+      '@netlify/framework-info': 9.8.12
+      '@netlify/functions-utils': 5.2.56(@opentelemetry/api@1.8.0)(supports-color@9.4.0)
       '@netlify/git-utils': 5.1.1
-      '@netlify/opentelemetry-utils': 1.2.0(@opentelemetry/api@1.8.0)
-      '@netlify/plugins-list': 6.77.0
+      '@netlify/opentelemetry-utils': 1.2.1(@opentelemetry/api@1.8.0)
+      '@netlify/plugins-list': 6.78.1
       '@netlify/run-utils': 5.1.1
       '@netlify/zip-it-and-ship-it': 9.31.3(@opentelemetry/api@1.8.0)(supports-color@9.4.0)
       '@opentelemetry/api': 1.8.0
@@ -11442,7 +11468,7 @@ snapshots:
       resolve: 2.0.0-next.5
       rfdc: 1.3.1
       safe-json-stringify: 1.2.0
-      semver: 7.6.0
+      semver: 7.6.2
       string-width: 5.1.2
       strip-ansi: 7.1.0
       supports-color: 9.4.0
@@ -11541,7 +11567,7 @@ snapshots:
     dependencies:
       '@iarna/toml': 2.2.5
       chalk: 5.3.0
-      cron-parser: 4.8.1
+      cron-parser: 4.9.0
       deepmerge: 4.3.1
       dot-prop: 7.2.0
       execa: 6.1.0
@@ -11553,9 +11579,9 @@ snapshots:
       is-plain-obj: 4.1.0
       js-yaml: 4.1.0
       map-obj: 5.0.2
-      netlify: 13.1.14
+      netlify: 13.1.16
       netlify-headers-parser: 7.1.4
-      netlify-redirect-parser: 14.2.2
+      netlify-redirect-parser: 14.3.0
       node-fetch: 3.3.2
       omit.js: 2.0.2
       p-locate: 6.0.0
@@ -11612,7 +11638,7 @@ snapshots:
       p-retry: 5.1.2
       p-wait-for: 4.1.0
       path-key: 4.0.0
-      semver: 7.6.0
+      semver: 7.6.2
       tmp-promise: 3.0.3
       urlpattern-polyfill: 8.0.2
       uuid: 9.0.1
@@ -11653,19 +11679,6 @@ snapshots:
 
   '@netlify/edge-functions@2.7.0': {}
 
-  '@netlify/framework-info@9.8.11':
-    dependencies:
-      ajv: 8.12.0
-      filter-obj: 5.1.0
-      find-up: 6.3.0
-      is-plain-obj: 4.1.0
-      locate-path: 7.2.0
-      p-filter: 3.0.0
-      p-locate: 6.0.0
-      process: 0.11.10
-      read-pkg-up: 9.1.0
-      semver: 7.6.0
-
   '@netlify/framework-info@9.8.12':
     dependencies:
       ajv: 8.12.0
@@ -11678,16 +11691,6 @@ snapshots:
       process: 0.11.10
       read-package-up: 11.0.0
       semver: 7.6.2
-
-  '@netlify/functions-utils@5.2.55(@opentelemetry/api@1.8.0)(supports-color@9.4.0)':
-    dependencies:
-      '@netlify/zip-it-and-ship-it': 9.32.1(@opentelemetry/api@1.8.0)(supports-color@9.4.0)
-      cpy: 9.0.1
-      path-exists: 5.0.0
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - encoding
-      - supports-color
 
   '@netlify/functions-utils@5.2.56(@opentelemetry/api@1.8.0)(supports-color@9.4.0)':
     dependencies:
@@ -11768,15 +11771,9 @@ snapshots:
 
   '@netlify/open-api@2.30.0': {}
 
-  '@netlify/opentelemetry-utils@1.2.0(@opentelemetry/api@1.8.0)':
-    dependencies:
-      '@opentelemetry/api': 1.8.0
-
   '@netlify/opentelemetry-utils@1.2.1(@opentelemetry/api@1.8.0)':
     dependencies:
       '@opentelemetry/api': 1.8.0
-
-  '@netlify/plugins-list@6.77.0': {}
 
   '@netlify/plugins-list@6.78.1': {}
 
@@ -11811,15 +11808,15 @@ snapshots:
 
   '@netlify/zip-it-and-ship-it@9.31.3(@opentelemetry/api@1.8.0)(supports-color@9.4.0)':
     dependencies:
-      '@babel/parser': 7.24.4
+      '@babel/parser': 7.24.5
       '@babel/types': 7.23.6
       '@netlify/binary-info': 1.0.0
-      '@netlify/serverless-functions-api': 1.18.0(@opentelemetry/api@1.8.0)
+      '@netlify/serverless-functions-api': 1.18.1(@opentelemetry/api@1.8.0)
       '@vercel/nft': 0.23.1(supports-color@9.4.0)
       archiver: 6.0.2
       common-path-prefix: 3.0.0
       cp-file: 10.0.0
-      es-module-lexer: 1.5.0
+      es-module-lexer: 1.5.3
       esbuild: 0.19.11
       execa: 6.1.0
       fast-glob: 3.3.2
@@ -11838,7 +11835,7 @@ snapshots:
       precinct: 11.0.5(supports-color@9.4.0)
       require-package-name: 2.0.1
       resolve: 2.0.0-next.5
-      semver: 7.6.0
+      semver: 7.6.2
       tmp-promise: 3.0.3
       toml: 3.0.0
       unixify: 1.0.0
@@ -11849,17 +11846,17 @@ snapshots:
       - encoding
       - supports-color
 
-  '@netlify/zip-it-and-ship-it@9.32.1(@opentelemetry/api@1.8.0)(supports-color@9.4.0)':
+  '@netlify/zip-it-and-ship-it@9.32.1(@opentelemetry/api@1.8.0)':
     dependencies:
-      '@babel/parser': 7.24.4
+      '@babel/parser': 7.24.5
       '@babel/types': 7.23.6
       '@netlify/binary-info': 1.0.0
-      '@netlify/serverless-functions-api': 1.18.0(@opentelemetry/api@1.8.0)
+      '@netlify/serverless-functions-api': 1.18.1(@opentelemetry/api@1.8.0)
       '@vercel/nft': 0.23.1(supports-color@9.4.0)
       archiver: 6.0.2
       common-path-prefix: 3.0.0
       cp-file: 10.0.0
-      es-module-lexer: 1.5.0
+      es-module-lexer: 1.5.3
       esbuild: 0.19.11
       execa: 6.1.0
       fast-glob: 3.3.2
@@ -11878,7 +11875,7 @@ snapshots:
       precinct: 11.0.5(supports-color@9.4.0)
       require-package-name: 2.0.1
       resolve: 2.0.0-next.5
-      semver: 7.6.0
+      semver: 7.6.2
       tmp-promise: 3.0.3
       toml: 3.0.0
       unixify: 1.0.0
@@ -11982,7 +11979,7 @@ snapshots:
       nopt: 7.2.0
       proc-log: 4.2.0
       read-package-json-fast: 3.0.2
-      semver: 7.6.0
+      semver: 7.6.2
       walk-up-path: 3.0.1
 
   '@npmcli/map-workspaces@3.0.6':
@@ -12664,7 +12661,7 @@ snapshots:
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.4
-      semver: 7.6.0
+      semver: 7.6.2
       ts-api-utils: 1.3.0(typescript@5.4.5)
     optionalDependencies:
       typescript: 5.4.5
@@ -12694,7 +12691,7 @@ snapshots:
       '@typescript-eslint/types': 7.7.1
       '@typescript-eslint/typescript-estree': 7.7.1(typescript@5.4.5)
       eslint: 8.57.0
-      semver: 7.6.0
+      semver: 7.6.2
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -15366,7 +15363,7 @@ snapshots:
       proxy-addr: 2.0.7
       rfdc: 1.3.1
       secure-json-parse: 2.7.0
-      semver: 7.6.0
+      semver: 7.6.2
       tiny-lru: 11.2.6
     transitivePeerDependencies:
       - supports-color
@@ -16901,7 +16898,7 @@ snapshots:
       jest-validate: 27.5.1
       map-obj: 5.0.2
       moize: 6.1.6
-      semver: 7.6.0
+      semver: 7.6.2
 
   log-symbols@5.1.0:
     dependencies:
@@ -17755,7 +17752,7 @@ snapshots:
       '@netlify/edge-bundler': 12.0.0(supports-color@9.4.0)
       '@netlify/edge-functions': 2.5.1
       '@netlify/local-functions-proxy': 1.1.1
-      '@netlify/zip-it-and-ship-it': 9.32.1(@opentelemetry/api@1.8.0)(supports-color@9.4.0)
+      '@netlify/zip-it-and-ship-it': 9.32.1(@opentelemetry/api@1.8.0)
       '@octokit/rest': 19.0.13
       '@opentelemetry/api': 1.8.0
       ansi-escapes: 6.2.1

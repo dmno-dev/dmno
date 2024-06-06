@@ -90,7 +90,7 @@ export function getItemSummary(item: SerializedConfigItem) {
     icon,
     kleur[item.isValid ? 'cyan' : 'red'](item.key) + (isRequired ? kleur.magenta('*') : ''),
 
-    // kleur.gray(`[type = ${item.type.getDefItem('typeLabel')}]`),
+    // kleur.gray(`[type = ${item.type.typeLabel}]`),
     isSensitive && ` 🔐${kleur.italic().gray('sensitive')}`,
   ]));
 

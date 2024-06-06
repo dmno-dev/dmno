@@ -98,7 +98,7 @@ export async function generateTypescriptTypes(service: DmnoService) {
   const publicKeys: Array<string> = [];
   for (const itemKey in service.config) {
     const configItem = service.config[itemKey];
-    if (!configItem.type.getDefItem('sensitive')) publicKeys.push(itemKey);
+    if (!configItem.isSensitive) publicKeys.push(itemKey);
     tsSrc.push(...await getTsDefinitionForItem(configItem, 1));
   }
   tsSrc.push('}');
@@ -111,7 +111,7 @@ export async function generateTypescriptTypes(service: DmnoService) {
 }
 export async function getPublicConfigKeys(service: DmnoService) {
   const nonSecretItems = _.pickBy(service.config, (item, itemKey) => {
-    return !item.type.getDefItem('sensitive');
+    return !item.isSensitive;
   });
   return _.keys(nonSecretItems);
 }
@@ -132,13 +132,12 @@ async function getTsDefinitionForItem(item: DmnoConfigItemBase, indentLevel = 0)
   // since we might need something like `key: string | null` rather than `key?: string`
 
   const jsDocLines = [];
-  const itemType = item.type;
   let iconMd = '';
 
   const iconCachePath = `${item.parentService?.workspace.rootService.path}/.dmno/.icon-cache`;
 
-  if (itemType.getDefItem('ui')?.icon) {
-    const iconSvg = await fetchIconSvg(itemType.getDefItem('ui')?.icon!, itemType.getDefItem('ui')?.color, iconCachePath);
+  if (item.type.ui?.icon) {
+    const iconSvg = await fetchIconSvg(item.type.ui?.icon!, item.type.ui?.color, iconCachePath);
 
     if (iconSvg) {
       iconMd = `![icon](data:image/svg+xml;utf-8,${encodeURIComponent(iconSvg)}) `;
@@ -147,16 +146,16 @@ async function getTsDefinitionForItem(item: DmnoConfigItemBase, indentLevel = 0)
 
 
 
-  const label = itemType.getDefItem('summary') || item.key;
+  const label = item.type.summary || item.key;
 
 
-  jsDocLines.push(`**${label}**${itemType.getDefItem('sensitive') ? ' 🔐 _sensitive_' : ''}`);
+  jsDocLines.push(`**${label}**${item.isSensitive ? ' 🔐 _sensitive_' : ''}`);
 
-  if (itemType.getDefItem('description')) {
-    jsDocLines.push(itemType.getDefItem('description'));
+  if (item.type.description) {
+    jsDocLines.push(item.type.description);
   }
-  if (itemType.getDefItem('typeDescription')) {
-    jsDocLines.push(`_${itemType.getDefItem('typeDescription')}_`);
+  if (item.type.typeDescription) {
+    jsDocLines.push(`_${item.type.typeDescription}_`);
   }
 
 
@@ -164,13 +163,18 @@ async function getTsDefinitionForItem(item: DmnoConfigItemBase, indentLevel = 0)
     jsDocLines.push(iconMd);
   }
 
-  if (itemType.getDefItem('externalDocs')) {
-    const externalDocs = itemType.getDefItem('externalDocs')!;
-    // see https://jsdoc.app/tags-see for format info
-    const docsLink = _.compact([externalDocs.url, externalDocs.description]).join(' | ');
-    jsDocLines.push(`📚 {@link ${docsLink}}`);
+  if (item.type.externalDocs) {
+    jsDocLines.push('');
+    item.type.externalDocs.forEach((docsEntry) => {
+      // see https://jsdoc.app/tags-see for format info
+      const docsLink = _.compact([docsEntry.url, docsEntry.description]).join(' | ');
+      jsDocLines.push(`📚 {@link ${docsLink}}`);
+    });
   }
 
+  if (item.type.fromVendor) {
+    jsDocLines.push(`\n_injected by ${item.type.fromVendor}_`);
+  }
 
 
   // experimenting with a dmno branded stamp w/ link? probably too much, but it's fun!
@@ -198,13 +202,15 @@ async function getTsDefinitionForItem(item: DmnoConfigItemBase, indentLevel = 0)
   } else if (jsDocLines.length > 1) {
     itemSrc.push(...[
       '/**',
-      ..._.flatMap(jsDocLines, (line) => [` * ${line}`, ' *']),
+      ..._.flatMap(jsDocLines, (line) => [
+        ` * ${line}  `,
+      ]),
       ' */',
     ]);
   }
 
   // TODO: logic should probably be within the Item class(es) and we still need to figure out how to identify these types...
-  const baseType = itemType.primitiveTypeFactory;
+  const baseType = item.type.primitiveTypeFactory;
   let itemTsType = 'string';
   if (baseType === DmnoBaseTypes.string) {
     itemTsType = 'string';
@@ -214,7 +220,7 @@ async function getTsDefinitionForItem(item: DmnoConfigItemBase, indentLevel = 0)
     itemTsType = 'boolean';
   } else if (baseType === DmnoBaseTypes.enum) {
     // enums have several different formats we need to handle
-    const rawEnumOptions = itemType.primitiveType.typeInstanceOptions;
+    const rawEnumOptions = item.type.primitiveType.typeInstanceOptions;
     let enumOptions = [] as Array<any>;
     if (_.isArray(rawEnumOptions)) {
       // extended definition case
@@ -240,7 +246,7 @@ async function getTsDefinitionForItem(item: DmnoConfigItemBase, indentLevel = 0)
   }
 
 
-  itemSrc.push(`readonly ${item.key}${itemType.getDefItem('required') ? '' : '?'}: ${itemTsType};`);
+  itemSrc.push(`readonly ${item.key}${item.type.required ? '' : '?'}: ${itemTsType};`);
   itemSrc.push('');
   return _.map(itemSrc, (line) => `${i}${line}`);
 }

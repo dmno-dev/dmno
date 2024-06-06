@@ -1,4 +1,4 @@
-import('dmno/load');
+import('dmno/inject');
 const express = require('express')
 const app = express()
 const port = 3000

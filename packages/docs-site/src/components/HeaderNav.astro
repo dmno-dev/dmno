@@ -4,22 +4,22 @@ import DIcon from "./DIcon.astro";
 
 <nav class="header-nav">
   <a
-    href="/docs/get-started/what-is-dmno"
+    href="/docs/get-started/what-is-dmno/"
     title="cd ./.docs"
-    aria-current={Astro.url.pathname.startsWith("/docs") ? "page" : undefined}
+    aria-current={Astro.url.pathname.startsWith("/docs/") ? "page" : undefined}
   >
     <DIcon
-      name={Astro.url.pathname.startsWith("/docs") ? "folder-open" : "folder"}
+      name={Astro.url.pathname.startsWith("/docs/") ? "folder-open" : "folder"}
     />
     .docs
   </a>
   <a
-    href="/blog"
+    href="/blog/"
     title="cd ./.blog"
-    aria-current={Astro.url.pathname.startsWith("/blog") ? "page" : undefined}
+    aria-current={Astro.url.pathname.startsWith("/blog/") ? "page" : undefined}
   >
     <DIcon
-      name={Astro.url.pathname.startsWith("/blog") ? "folder-open" : "folder"}
+      name={Astro.url.pathname.startsWith("/blog/") ? "folder-open" : "folder"}
     />
     .blog
   </a>

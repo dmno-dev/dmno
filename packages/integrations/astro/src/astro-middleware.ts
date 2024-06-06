@@ -1,18 +1,17 @@
-import { injectDmnoGlobals } from 'dmno';
+import { injectDmnoGlobals } from 'dmno/injector';
 import { MiddlewareHandler } from 'astro';
 
-// we'll inject the globals again for the case we're running in a built SSR env
-injectDmnoGlobals();
-
-const sensitiveItemKeys = (globalThis as any)._DMNO_SENSITIVE_KEYS as Array<string>;
-const sensitiveValueLookup: Record<string, string> = {};
-for (const itemKey of sensitiveItemKeys) {
-  const val = (globalThis as any).DMNO_CONFIG[itemKey];
-  if (val) sensitiveValueLookup[itemKey] = val.toString();
-}
-
-
+let sensitiveValueLookup: Record<string, string> | undefined;
 export const onRequest: MiddlewareHandler = async (context, next) => {
+  if (!sensitiveValueLookup) {
+    injectDmnoGlobals();
+    sensitiveValueLookup = {};
+    for (const itemKey of (globalThis as any)._DMNO_SENSITIVE_KEYS as Array<string>) {
+      const val = (globalThis as any).DMNO_CONFIG[itemKey];
+      if (val) sensitiveValueLookup[itemKey] = val.toString();
+    }
+  }
+
   // console.log(`custom astro middleware executed - ${context.url}`);
 
   const response = await next();

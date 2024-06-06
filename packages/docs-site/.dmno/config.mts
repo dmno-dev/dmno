@@ -1,4 +1,5 @@
-import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv, configPath, switchBy } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv, configPath, switchBy, pickFromSchemaObject } from 'dmno';
+import { NetlifyEnvSchema } from '@dmno/netlify-platform/types';
 
 export default defineDmnoService({
   name: 'docs-site',
@@ -16,15 +17,8 @@ export default defineDmnoService({
       value: 'family=Days+One&family=Fira+Code:wght@300&family=Inter:wght@100..900'
     },
 
-    // TODO: move to netlify plugin/preset
-    CONTEXT: {
-      extends: DmnoBaseTypes.enum(['dev', 'branch-deploy', 'deploy-preview', 'production']),
-      description: 'netlify build context',
-      externalDocs: {
-        url: 'https://docs.netlify.com/configure-builds/environment-variables/#build-metadata',
-        description: 'Netlify docs',
-      },
-    },
+    ...pickFromSchemaObject(NetlifyEnvSchema, 'CONTEXT', 'BUILD_ID'),
+
     DMNO_ENV: {
       value: switchBy('CONTEXT', {
         _default: 'local',
@@ -35,6 +29,6 @@ export default defineDmnoService({
     },
     SIGNUP_API_URL: {
       value: 'https://signup-api.dmno.dev',
-    }
+    },
   }
 });

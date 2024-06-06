@@ -1,6 +1,7 @@
 import { DmnoBaseTypes, createDmnoDataType } from "dmno";
 
 export const GA4MeasurementId = createDmnoDataType({
+  typeLabel: 'ga/measurementId',
   extends: DmnoBaseTypes.string({ startsWith: 'G-', }),
   typeDescription: 'unique ID for a site registered in Google Analytics 4',
   externalDocs: {

@@ -4,7 +4,7 @@ import { createDeferredPromise } from '@dmno/ts-lib';
 import Debug from 'debug';
 import kleur from 'kleur';
 
-import { SerializedDmnoPlugin, SerializedWorkspace } from '../config-loader/serialization-types';
+import type { SerializedDmnoPlugin, SerializedWorkspace } from '../config-loader/serialization-types';
 
 // re-export kleur so the child cli does not have to declare dependency
 export { default as kleur } from 'kleur';

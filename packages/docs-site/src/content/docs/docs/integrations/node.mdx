@@ -17,10 +17,10 @@ To get started, install `dmno` and then set up your config schema according to t
 ### Loading your config
 
 You must trigger the loading of the `DMNO_CONFIG` global, ideally as the _first thing_ you do in your application code.
-To do this, simply `import 'dmno/load'` at the top of any entrypoint into your code, typically something like `app.ts`/`main.ts`. Do the same in any other script files you may need to run.
+To do this, simply `import 'dmno/inject'` at the top of any entrypoint into your code, typically something like `app.ts`/`main.ts`. Do the same in any other script files you may need to run.
 
 ```diff lang="ts" title="main.ts"
-+import 'dmno/load'; // should be imported first!
++import 'dmno/inject'; // should be imported first!
 
 // rest of your imports and code...
 ```
@@ -29,7 +29,7 @@ To do this, simply `import 'dmno/load'` at the top of any entrypoint into your c
 
 We recommend you adjust the command(s) you use to run your code by using `dmno run`.
 
-While the `dmno/load` import will internally call the `dmno` cli and load config if necessary, by calling your code via `dmno run` you'll get the best experience on the command line.
+While the `dmno/inject` import will internally call the `dmno` cli and load config if necessary, by calling your code via `dmno run` you'll get the best experience on the command line.
 
 ```diff lang="json" title="package.json" ins="dmno run -- "
 {
@@ -52,7 +52,7 @@ Use `DMNO_CONFIG.SOME_ITEM` within your code and you are good to go!
 ### External tools
 Other tools likely need access to some of your config as well - for example a database migration tool might need the full connection string/url for your database.
 
-In some cases you may have a custom wrapper script, in which case, `import 'dmno/load'` will do the trick. In other cases, you may want to call those tools directly via their executables - whether directly on the command line or via package.json scripts.
+In some cases you may have a custom wrapper script, in which case, `import 'dmno/inject'` will do the trick. In other cases, you may want to call those tools directly via their executables - whether directly on the command line or via package.json scripts.
 
 In this case, run the command via `dmno run` and your config will be loaded and passed back into `process.env` which is usually where those external tools will be looking. It's important to note that when we pass the config back into `process.env`, **we convert everything back into strings**, because this matches how normal env vars passed into process.env work. This should not be a problem since those tools were likely expecting regular environment variables (i.e., strings) in the first place, but it is important to remember.
 

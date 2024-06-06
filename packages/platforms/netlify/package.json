@@ -1,72 +1,71 @@
 {
-  "name": "@dmno/astro-integration",
-  "version": "0.0.7",
-  "description": "tools for integrating dmno into astro",
+  "name": "@dmno/netlify-platform",
+  "version": "0.0.0",
+  "description": "tools to use dmno with netlify",
   "author": "dmno-dev",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dmno-dev/dmno.git",
-    "directory": "packages/integrations/astro"
+    "directory": "packages/platforms/netlify"
   },
   "bugs": "https://github.com/dmno-dev/dmno/issues",
-  "homepage": "https://dmno.dev/docs/integrations/astro",
+  "homepage": "https://dmno.dev/docs/platforms/netlify",
   "keywords": [
     "dmno",
-    "astro",
+    "netlify",
     "config",
     "env vars",
     "environment variables",
     "secrets",
-    "integration",
-    "astro-integration",
-    "dmno-integration"
+    "dmno-plugin"
   ],
+  "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/index.mjs"
+      "default": "./dist/build-plugin/index.js"
     },
-    "./meta": {
-      "default": "./dmno.meta.json"
+    "./types": {
+      "default": "./dist/index.js"
     }
   },
   "typesVersions": {
     "*": {
       "index": [
-        "./dist/index.d.mts"
+        "./dist/build-plugin/index.d.ts"
+      ],
+      "types": [
+        "./dist/index.d.ts"
       ]
     }
   },
   "files": [
-    "/dist",
-    "/dmno.meta.json"
+    "/dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup --config tsup-injector.config.ts && tsup",
     "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
     "build:tarball": "turbo build && pnpm pack --pack-destination \"../../../../tmp-package-registry\"",
     "dev": "pnpm run build --watch",
-    "lint": "eslint src --ext .ts,.cjs",
+    "lint": "eslint src --ext .ts,.cjs,.mjs",
     "lint:fix": "pnpm run lint --fix"
   },
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",
-    "@dmno/ts-lib": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
-    "@types/async": "^3.2.24",
     "@types/debug": "^4.1.12",
     "@types/lodash-es": "^4.17.12",
-    "@types/node": "^20.12.12",
-    "astro": "^4.9.1",
+    "@types/node": "^20.12.7",
     "dmno": "workspace:*",
     "tsup": "^8.0.2",
     "typescript": "^5.4.5"
   },
-  "peerDependencies": {
-    "astro": "^4",
-    "dmno": "^0"
-  },
   "dependencies": {
-    "debug": "^4.3.4"
+    "@netlify/blobs": "^7.3.0",
+    "debug": "^4.3.4",
+    "lodash-es": "^4.17.21"
+  },
+  "peerDependencies": {
+    "dmno": "^0"
   }
 }

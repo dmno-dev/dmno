@@ -248,15 +248,3 @@ export class ConfigServerClient {
   }
 }
 
-export function serializedServiceToInjectedConfig(service: SerializedService): InjectedDmnoEnv {
-  const injectedEnv: InjectedDmnoEnv = {};
-  for (const itemKey in service.config) {
-    const configItem = service.config[itemKey];
-    injectedEnv[itemKey] = {
-      sensitive: !!configItem.dataType.sensitive,
-      dynamic: !!configItem.isDynamic,
-      value: configItem.resolvedValue,
-    };
-  }
-  return injectedEnv;
-}

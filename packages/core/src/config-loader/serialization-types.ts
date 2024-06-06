@@ -9,7 +9,9 @@
 */
 
 import { DmnoDataType } from '../config-engine/base-types';
-import { ConfigItemDefinition, DmnoConfigItemBase, DmnoService } from '../config-engine/config-engine';
+import {
+  ConfigItemDefinition, DmnoConfigItemBase, DmnoService, InjectedDmnoEnv,
+} from '../config-engine/config-engine';
 import { DmnoPlugin, DmnoPluginInputItem } from '../config-engine/plugins';
 import { ConfigValueOverride, ConfigValueResolver } from '../config-engine/resolvers/resolvers';
 
@@ -30,6 +32,7 @@ export type SerializedService =
     ownedPluginNames: Array<string>,
     injectedPluginNames: Array<string>,
     config: Record<string, SerializedConfigItem>,
+    injectedEnv: InjectedDmnoEnv,
   };
 
 export type SerializedDmnoPlugin = Pick<DmnoPlugin, 'pluginType' | 'instanceName' | 'isValid'>

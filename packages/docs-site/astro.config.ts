@@ -201,8 +201,20 @@ export default defineConfig({
           //   link: "/docs/deployment/render/"
           // }
           ],
-        },
-        {
+        }, {
+          label: 'Platforms',
+          badge: 'New',
+          items: [
+            {
+              label: 'Overview',
+              link: '/docs/platforms/overview/',
+            },
+            {
+              label: 'Netlify',
+              link: '/docs/platforms/netlify/',
+            },
+          ],
+        }, {
           label: 'Reference',
           items: [
             {

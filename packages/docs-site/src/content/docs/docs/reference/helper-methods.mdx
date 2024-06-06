@@ -74,8 +74,8 @@ type ConfigItemDefinition = {
   exampleValue?: any,
   exportEnvKey?: string,
   expose?: boolean,
-  extends?: DmnobaseTypes | string | function,
-  externalDocs?: { description, url },
+  extends?: DmnoDataType | string | () => DmnoDataType,
+  externalDocs?: { description?, url } | Array<{ description?, url }>,
   importEnvKey?: string,
   required?: boolean,
   sensitive?: boolean,
@@ -126,16 +126,16 @@ type ConfigItemDefinition = {
         {
           name: 'expose',
           type: 'boolean',
-          description: 'Whether the item should be exposed to other services. i.e., is it "pickable"'
+          description: 'Whether the item should be exposed to other services. i.e., is it "pickable" by siblings'
         },
         {
           name: 'extends',
-          type: 'DmnobaseTypes | string | function',
-          description: 'A string (the name of the type), a reference to a type, or a function that returns a type'
+          type: 'DmnoDataType | string | () => DmnoDataType',
+          description: 'A string (the name of the type), an initialized dmno data type, or a function that returns a DmnoDataType'
         },
         {
           name: 'externalDocs',
-          type: '{ description, url }',
+          type: '{ description?, url } | Array<{ description?, url }>',
           description: 'External documentation for the item.'
         },
         {

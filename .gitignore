@@ -12,6 +12,9 @@ config.local.ts
 .env.local.*
 
 .turbo
+
+tmp-package-registry
+
 # DMNO files ###
 # local cache for resolved values
 **/.dmno/cache.json
@@ -23,3 +26,4 @@ config.local.ts
 **/.dmno/.icon-cache
 # local config overrides
 **/.dmno/.env.local
+

@@ -1,6 +1,6 @@
 import { defineConfig } from 'tsup';
 
-// TODO: move some of this (to `dmno/load`?) so we can fetch replacements ready to use
+// TODO: move some of this (to `dmno/inject`?) so we can fetch replacements ready to use
 
 // @ts-ignore
 if (!process.env.DMNO_INJECTED_ENV) {
