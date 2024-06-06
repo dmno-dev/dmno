@@ -96,10 +96,10 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
           // if we are runnign a build and config is invalid, we want to just bail
           if (opts.command === 'build') {
             // throwing an error results in a long useless stack trace, so we just exit
-            console.log('💥 DMNO config validation failed 💥');
+            console.error('💥 DMNO config validation failed 💥');
             process.exit(1);
           } else {
-            // throw new Error('🚨 DMNO config is invalid');
+            // we'll let the server proceed and trigger the error overlay via HMR
           }
         }
 
@@ -109,8 +109,6 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
           enableDynamicPublicClientLoading = publicDynamicItemKeys.length > 0;
         }
 
-
-        console.log('updating vite config. dmno config valid? ', dmnoConfigValid);
         updateConfig({
           vite: {
             plugins: [{
@@ -146,8 +144,8 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
                         err: {
                           name: 'Invalid DMNO config',
                           message: 'Your config is currently invalid',
-                          hint: 'check your terminal for more details',
-                          stack: 'stack goes here',
+                          // hint: 'check your terminal for more details',
+                          stack: 'check your terminal for more details',
                           // docslink: 'https://dmno.dev/docs',
                           // cause: 'this is a cause',
                           // loc: {
@@ -184,12 +182,6 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
             }],
           },
         });
-
-        // if (!dmnoConfigValid) {
-        //   injectScript('page', `
-        //     throw new Error('CONFIG IS INVALID!');
-        //   `);
-        // }
 
         // inject script into CLIENT context
         injectScript('page', [

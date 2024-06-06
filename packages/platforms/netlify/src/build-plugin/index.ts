@@ -14,6 +14,9 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path, { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Debug from 'debug';
+
+const debug = Debug('dmno:netlify-build-plugin');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -44,14 +47,13 @@ export async function onBuild(args: any) {
 
   // handle regular "functions" (lambdas)
   const allFunctions = await args.utils.functions.list();
-  console.log(allFunctions);
   for (const fn of allFunctions) {
     
 
     const originalSrc = await fs.promises.readFile(fn.mainFile, 'utf8');
     
     if (originalSrc.match(IMPORT_INJECTOR_REGEX)) {
-      console.log('function @ '+fn.mainFile+' already imports dmno config injector');
+      debug('function @ '+fn.mainFile+' already imports dmno config injector');
       continue;
     }
     // TODO: we could show a better error here if the user is directly authoring their functions and has not imported the config injector
@@ -62,11 +64,10 @@ export async function onBuild(args: any) {
     // NOTE - if we inject the config directly, other imports get hoisted above it
     // so we have to inject an import that includes the config instead
     const relativeImportPath = path.relative(dirname(fn.mainFile), injectorImportPath);
-    console.log(fn.mainFile, injectorImportPath, relativeImportPath);
 
     const updatedSrc = `import '${relativeImportPath}';\n` + originalSrc;
     await fs.promises.writeFile(fn.mainFile, updatedSrc, 'utf8');
-    console.log('updated function @ '+fn.mainFile, originalSrc.substr(0,100));
+    debug('updated function @ '+fn.mainFile, originalSrc.substr(0,100));
   }
 
   // handle "edge functions"
@@ -81,14 +82,14 @@ export async function onBuild(args: any) {
       const originalSrc = await fs.promises.readFile(fullFilePath, 'utf8');
       // TODO: resolve correct path
       if (originalSrc.match(IMPORT_INJECTOR_REGEX)) {
-        console.log('edge function @ '+fullFilePath+' already imports dmno config injector');
+        debug('edge function @ '+fullFilePath+' already imports dmno config injector');
         continue;
       }
 
       // see same note above about import vs directly injecting
       const updatedSrc = `import '../../inject-dmno-config.js';\n` + originalSrc;
       await fs.promises.writeFile(fullFilePath, updatedSrc, 'utf8');
-      console.log('updated EDGE function @ '+fullFilePath, originalSrc.substr(0,100));    
+      debug('updated EDGE function @ '+fullFilePath, originalSrc.substr(0,100));    
     }
   }
 }

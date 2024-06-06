@@ -57,6 +57,11 @@ export type TypeValidationResult = boolean | undefined | void | Error | Array<Er
  * @category HelperMethods
  */
 
+export type ExternalDocsEntry = {
+  description?: string,
+  url: string,
+};
+
 export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
   /** short description of what this config item is for */
   summary?: string;
@@ -72,10 +77,7 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
   exampleValue?: any;
 
   /** link to external documentation */
-  externalDocs?: {
-    description?: string,
-    url: string,
-  };
+  externalDocs?: ExternalDocsEntry | Array<ExternalDocsEntry>;
 
   /** dmno config ui specific options */
   ui?: {
@@ -89,6 +91,9 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
     */
     color?: string;
   };
+
+  /** set if the item will be injected by a platform/framework */
+  fromVendor?: string,
 
   /** whether this config is sensitive and must be kept secret */
   sensitive?: boolean; // TODO: can this be a (ctx) => fn?
@@ -139,7 +144,7 @@ type PickConfigItemDefinition = {
   // value?: use same value type as above
 };
 
-type ConfigItemDefinitionOrShorthand = ConfigItemDefinition | TypeExtendsDefinition;
+export type ConfigItemDefinitionOrShorthand = ConfigItemDefinition | TypeExtendsDefinition;
 
 
 type DynamicConfigModes =
@@ -426,7 +431,7 @@ export class DmnoWorkspace {
           potentialKeysToPickFrom.push(..._.keys(pickFromService.config));
         } else {
           // whereas only "exposed" items can be picked from non-ancestors
-          const exposedItems = _.pickBy(pickFromService.config, (itemConfig) => !!itemConfig.type.getDefItem('expose'));
+          const exposedItems = _.pickBy(pickFromService.config, (itemConfig) => !!itemConfig.type.expose);
           potentialKeysToPickFrom.push(..._.keys(exposedItems));
         }
 
@@ -994,7 +999,7 @@ export abstract class DmnoConfigItemBase {
   }
 
   getPath(respectImportOverride = false): string {
-    const itemKey = (respectImportOverride && this.type.getDefItem('importEnvKey')) || this.key;
+    const itemKey = (respectImportOverride && this.type.importEnvKey) || this.key;
     if (this.parent instanceof DmnoConfigItemBase) {
       const parentPath = this.parent.getPath(respectImportOverride);
       return `${parentPath}.${itemKey}`;
@@ -1006,6 +1011,10 @@ export abstract class DmnoConfigItemBase {
       throw new Error('unable to get full path - this item is not attached to a service');
     }
     return `${this.parentService.serviceName}!${this.getPath(respectImportOverride)}`;
+  }
+  get isSensitive() {
+    // will likely add some more service-level defaults/settings
+    return this.type.sensitive;
   }
 
   get isDynamic() {
@@ -1021,7 +1030,7 @@ export abstract class DmnoConfigItemBase {
     if (serviceDynamicConfigMode === 'only_dynamic') return true;
     if (serviceDynamicConfigMode === 'only_static') return false;
 
-    const explicitSetting = this.type.getDefItem('dynamic');
+    const explicitSetting = this.type.dynamic;
     if (explicitSetting !== undefined) return explicitSetting;
 
     if (serviceDynamicConfigMode === 'default_dynamic') return true;
@@ -1029,7 +1038,7 @@ export abstract class DmnoConfigItemBase {
 
     // 'public_static' mode is default behaviour
     // sensitive = dynamic, non-sensitive = static
-    return !!this.type.getDefItem('sensitive');
+    return !!this.isSensitive;
   }
 
 
@@ -1091,7 +1100,7 @@ export abstract class DmnoConfigItemBase {
   /** this is the shape that gets injected into an serialized json env var by `dmno run` */
   toInjectedJSON(): InjectedDmnoEnvItem {
     return {
-      ...this.type.getDefItem('sensitive') && { sensitive: 1 },
+      ...this.isSensitive && { sensitive: 1 },
       ...this.isDynamic && { dynamic: 1 },
       value: this.resolvedValue,
     };

@@ -434,6 +434,9 @@ importers:
       '@netlify/blobs':
         specifier: ^7.3.0
         version: 7.3.0
+      debug:
+        specifier: ^4.3.4
+        version: 4.3.4(supports-color@9.4.0)
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -444,6 +447,9 @@ importers:
       '@dmno/tsconfig':
         specifier: workspace:*
         version: link:../../tsconfig
+      '@types/debug':
+        specifier: ^4.1.12
+        version: 4.1.12
       '@types/lodash-es':
         specifier: ^4.17.12
         version: 4.17.12

@@ -53,6 +53,7 @@
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
+    "@types/debug": "^4.1.12",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^20.12.7",
     "dmno": "workspace:*",
@@ -61,6 +62,7 @@
   },
   "dependencies": {
     "@netlify/blobs": "^7.3.0",
+    "debug": "^4.3.4",
     "lodash-es": "^4.17.21"
   },
   "peerDependencies": {

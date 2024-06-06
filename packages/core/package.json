@@ -38,6 +38,9 @@
     ".": {
       "default": "./dist/index.mjs"
     },
+    "./vendor-types": {
+      "default": "./dist/vendor-types/index.mjs"
+    },
     "./cli-lib": {
       "default": "./dist/cli/plugin-cli-lib.mjs"
     },
@@ -55,6 +58,9 @@
     "*": {
       "index": [
         "./dist/index.d.mts"
+      ],
+      "vendor-types": [
+        "./dist/vendor-types/index.d.mts"
       ],
       "cli-lib": [
         "./dist/cli/plugin-cli-lib.d.mts"

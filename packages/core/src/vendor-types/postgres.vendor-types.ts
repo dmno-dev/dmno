@@ -1,8 +1,8 @@
-import { DmnoBaseTypes, createDmnoDataType } from './base-types';
-import { ValidationError } from './errors';
+import { createDmnoDataType, ValidationError } from 'dmno';
 
 const PG_REGEX = /(postgres(?:ql)?):\/\/(?:([^@\s]+)@)?([^/\s]+)(?:\/(\w+))?(?:\?(.+))?/;
-const postgresConnectionString = createDmnoDataType({
+const ConnectionString = createDmnoDataType({
+  typeLabel: 'postgres/connectionString',
   extends: 'string',
   sensitive: true,
   typeDescription: 'Postgres connection url',
@@ -24,6 +24,6 @@ const postgresConnectionString = createDmnoDataType({
  * Placeholder for a few vendor specific data types...
  * these will be extracted into separate modules!
  */
-export const CommonDataTypes = {
-  postgresConnectionString,
+export const PostgresDataTypes = {
+  ConnectionString,
 };

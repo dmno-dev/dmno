@@ -3,6 +3,8 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: [ // Entry point(s)
     'src/index.ts', // main lib, users will import from here
+    
+    'src/vendor-types/index.ts', // reusable types for very common things
 
     'src/inject/dmno-globals-injector.ts', // function used to inject dmno globals
     'src/inject/inject-dmno-globals.ts', // exports inject function and automatically calls it once
@@ -18,6 +20,11 @@ export default defineConfig({
     // yarn was having issues with finding the strong-type package for some reason
     // so we'll just bundle them in as a short term solution
     'node-ipc', '@achrinza/node-ipc', '@achrinza/event-pubsub', '@achrinza/strong-type'
+  ],
+  external: [
+     // mark self-imports as external so it will leave them as-is
+     // this is needed so that our separate imports (ex: /vendor-types) will use the same existing 'dmno` instance
+    'dmno'
   ],
 
   dts: true, // Generate .d.ts files

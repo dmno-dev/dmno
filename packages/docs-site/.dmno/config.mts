@@ -16,7 +16,7 @@ export default defineDmnoService({
     GOOGLE_FONT_FAMILIES: {
       value: 'family=Days+One&family=Fira+Code:wght@300&family=Inter:wght@100..900'
     },
-    
+
     ...pickFromSchemaObject(NetlifyEnvSchema, 'CONTEXT', 'BUILD_ID'),
 
     DMNO_ENV: {

@@ -6,7 +6,13 @@
     "outDir": "./dist",
     // this is needed for vite unfortunately...
     // see https://github.com/vitejs/vite/issues/9813
-    "lib": [ "ES2023", "dom", "dom.iterable" ]
+    "lib": [ "ES2023", "dom", "dom.iterable" ],
+
+
+    "paths": {
+      // make our self-imports work in our separate exports / entry points
+      "dmno": [ "./src/index.ts" ],
+    }
   },
   "include": [
     "src/**/*.ts",

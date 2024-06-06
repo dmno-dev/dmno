@@ -59,7 +59,7 @@ program.action(async (opts: {
   if (opts.format === 'json') {
     let exposedConfig = service.config;
     if (opts.public) {
-      exposedConfig = _.pickBy(exposedConfig, (c) => !c.type.getDefItem('sensitive'));
+      exposedConfig = _.pickBy(exposedConfig, (c) => !c.type.sensitive);
     }
     const valuesOnly = _.mapValues(exposedConfig, (val) => val.resolvedValue);
 

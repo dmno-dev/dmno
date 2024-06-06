@@ -1,6 +1,6 @@
 import _ from 'lodash-es';
 import {
-  ConfigItemDefinition, ResolverContext, TypeValidationResult,
+  ConfigItemDefinition, ExternalDocsEntry, ResolverContext, TypeValidationResult,
 } from './config-engine';
 import { ConfigValueResolver, processInlineResolverDef } from './resolvers/resolvers';
 import { CoercionError, EmptyRequiredValueError, ValidationError } from './errors';
@@ -92,7 +92,6 @@ export class DmnoDataType<InstanceOptions = any> {
         if (initializedDataType instanceof DmnoDataType) {
           this.parentType = initializedDataType;
         } else {
-          console.log(initializedDataType);
           throw new Error('found invalid parent (as result of fn) in extends chain');
         }
       // normal case - `extends: DmnoBaseTypes.number({ ... })`
@@ -148,7 +147,7 @@ export class DmnoDataType<InstanceOptions = any> {
     // first we'll deal with empty values, and we'll check al
     // we'll check all the way up the chain for required setting and deal with that first
     if (val === undefined || val === null) {
-      if (this.getDefItem('required')) {
+      if (this.required) {
         // we pass through the value so we know which "empty" it is
         return [new EmptyRequiredValueError(val)];
       } else {
@@ -336,15 +335,48 @@ export class DmnoDataType<InstanceOptions = any> {
 
 
   /** helper to unroll config schema using the type chain of parent "extends"  */
-  getDefItem<T extends keyof DmnoDataTypeOptions>(key: T): DmnoDataTypeOptions[T] {
+  private getDefItem<T extends keyof DmnoDataTypeOptions>(
+    key: T,
+    opts?: {
+      mergeArray?: boolean,
+    },
+  ): DmnoDataTypeOptions[T] {
+    // in mergeArray mode, we'll merge all values found in the ancestor chain into a single array
+    if (opts?.mergeArray) {
+      if (this.typeDef[key] === undefined) {
+        return this.parentType?.getDefItem(key, opts);
+      } else {
+        const parentItemVal = this.parentType?.getDefItem(key, opts);
+        return [..._.castArray(this.typeDef[key]), ...(parentItemVal ? _.castArray(parentItemVal) : [])];
+      }
+    }
+
     // first check if the item definition itself has a value
     if (this.typeDef[key] !== undefined) {
       return this.typeDef[key];
     // otherwise run up the ancestor heirarchy
     } else {
-      return this.parentType?.getDefItem(key);
+      return this.parentType?.getDefItem(key, opts);
     }
   }
+
+  get summary() { return this.getDefItem('summary'); }
+  get description() { return this.getDefItem('description'); }
+  get expose() { return this.getDefItem('expose'); }
+  get typeLabel() { return this.getDefItem('typeLabel'); } // little special since it only exists on reusable types
+  get typeDescription() { return this.getDefItem('typeDescription'); }
+  get exampleValue() { return this.getDefItem('exampleValue'); }
+  get externalDocs() {
+    return this.getDefItem('externalDocs', { mergeArray: true }) as Array<ExternalDocsEntry> | undefined;
+  }
+  get ui() { return this.getDefItem('ui'); }
+  get fromVendor() { return this.getDefItem('fromVendor'); }
+  get sensitive() { return this.getDefItem('sensitive'); }
+  get required() { return this.getDefItem('required'); }
+  get useAt() { return this.getDefItem('useAt'); }
+  get dynamic() { return this.getDefItem('dynamic'); }
+  get importEnvKey() { return this.getDefItem('importEnvKey'); }
+  get exportEnvKey() { return this.getDefItem('exportEnvKey'); }
 
   /** checks if this data type is directly an instance of the data type (not via inheritance) */
   isType(factoryFn: DmnoDataTypeFactoryFn<any>): boolean {
@@ -389,16 +421,16 @@ export class DmnoDataType<InstanceOptions = any> {
 
   toJSON(): SerializedDmnoDataType {
     return {
-      summary: this.getDefItem('summary'),
-      description: this.getDefItem('description'),
-      typeDescription: this.getDefItem('typeDescription'),
-      expose: this.getDefItem('expose'),
-      sensitive: this.getDefItem('sensitive'),
-      externalDocs: this.getDefItem('externalDocs'),
-      ui: this.getDefItem('ui'),
-      required: this.getDefItem('required'),
-      useAt: this.getDefItem('useAt'),
-      dynamic: this.getDefItem('dynamic'),
+      summary: this.summary,
+      description: this.description,
+      typeDescription: this.typeDescription,
+      expose: this.expose,
+      sensitive: this.sensitive,
+      externalDocs: this.externalDocs,
+      ui: this.ui,
+      required: this.required,
+      useAt: this.useAt,
+      dynamic: this.dynamic,
     };
   }
 }
@@ -410,7 +442,9 @@ export class DmnoDataType<InstanceOptions = any> {
 // note that we have allowed the bare (non-function call, ie `extends: DmnoBaseTypes.string`) which
 // is also unaware if the settings schema is able to be undefined or not
 // (we're talking about allowing `DmnoBaseTypes.string()` vs only `DmnoBaseTypes.string({})`)
-export function createDmnoDataType<T>(opts: DmnoDataTypeOptions<T>): DmnoDataTypeFactoryFn<T> {
+export function createDmnoDataType<T>(
+  opts: DmnoDataTypeOptions<T> & Required<Pick<DmnoDataTypeOptions, 'typeLabel'>>,
+): DmnoDataTypeFactoryFn<T> {
   // we are going to return a function which takes an _instance_ of the type settings schema for example `{ minLength: 2 }`
   // and returns something which is able to use the DmnoDataType which knows how to combine the data type defintition and that isntance
   // of the options together
@@ -423,7 +457,7 @@ export function createDmnoDataType<T>(opts: DmnoDataTypeOptions<T>): DmnoDataTyp
 
 
 // we'll use this to mark our primitive types in a way that end users can't do by accident
-const PrimitiveBaseType = createDmnoDataType({});
+const PrimitiveBaseType = createDmnoDataType({ typeLabel: 'dmno/primitive' });
 
 /**
  * String base type settings
