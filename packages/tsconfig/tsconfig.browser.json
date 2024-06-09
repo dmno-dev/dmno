@@ -18,6 +18,7 @@
       "dom.iterable"
     ],
     "skipLibCheck": true,
+    "customConditions": [ "ts-src" ]
   },
   "references": [
     { "path": "./tsconfig.node.json" }

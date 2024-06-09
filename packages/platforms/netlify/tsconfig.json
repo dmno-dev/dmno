@@ -5,7 +5,8 @@
     "outDir": "dist",
     "lib": [
       "ESNext"
-    ]
+    ],
+    "rootDir": "src",
   },
   "include": [
     "src/**/*.ts",

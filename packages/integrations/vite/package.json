@@ -22,19 +22,15 @@
     "vite plugin",
     "dmno-integration"
   ],
+  "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/index.mjs"
+      "ts-src": "./src/index.ts",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./meta": {
       "default": "./dmno.meta.json"
-    }
-  },
-  "typesVersions": {
-    "*": {
-      "index": [
-        "./dist/index.d.mts"
-      ]
     }
   },
   "files": [

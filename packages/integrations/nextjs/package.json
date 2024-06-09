@@ -22,22 +22,21 @@
     "integration",
     "dmno-integration"
   ],
+
+  "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/index.mjs"
+      "ts-src": "./src/index.ts",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./meta": {
       "default": "./dmno.meta.json"
     },
     "./inject": {
-      "default": "./dist/inject-dmno-server.mjs"
-    }
-  },
-  "typesVersions": {
-    "*": {
-      "index": [
-        "./dist/index.d.mts"
-      ]
+      "ts-src": "./src/inject-dmno-server.ts",
+      "import": "./dist/inject-dmno-server.js",
+      "types": "./dist/inject-dmno-server.d.ts"
     }
   },
   "files": [

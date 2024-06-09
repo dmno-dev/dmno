@@ -1,4 +1,5 @@
 {
+  "extends": "dmno/tsconfigs/dmno-folder",
   "include": [
     "src/**/*.ts",
   ],

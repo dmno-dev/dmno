@@ -12,7 +12,8 @@
     },
     "types": [
       "unplugin-icons/types/raw"
-    ]
+    ],
+    "customConditions": [ "ts-src" ]
   },
   "exclude": [ "dist", "~partytown" ]
 }

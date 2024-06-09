@@ -25,7 +25,7 @@ export async function setupViteServer(
         return {
           // pointing at dist/index is hard-coded...
           // we could extract the main entry point from the resolution instead?
-          id: '/node_modules/dmno/dist/index.mjs',
+          id: '/node_modules/dmno/dist/index.js',
           // I believe this path is appended to our "root" which is our workpace root
         };
       }

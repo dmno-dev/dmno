@@ -38,7 +38,7 @@ export function dmnoNextConfigPlugin() {
           // it doesnt get run while next is doing a build and analyzing all the routes :(
           // so for now, we'll force users to import manually
           // if (isServer) {
-          //   const injectDmnoServerFilePath = `${import.meta.dirname}/inject-dmno-server.mjs`;
+          //   const injectDmnoServerFilePath = `${import.meta.dirname}/inject-dmno-server.js`;
           //   injectEntry('pages/_app', injectDmnoServerFilePath);
           //   injectEntry('pages/_document', injectDmnoServerFilePath);
           // }
@@ -46,7 +46,7 @@ export function dmnoNextConfigPlugin() {
           // injects our DMNO_CONFIG shims into the client
           // which gives us nicer errors and also support for dynamic public config
           if (!isServer) {
-            const injectDmnoClientFilePath = `${import.meta.dirname}/inject-dmno-client.mjs`;
+            const injectDmnoClientFilePath = `${import.meta.dirname}/inject-dmno-client.js`;
             injectEntry('main-app', injectDmnoClientFilePath);
           }
 
