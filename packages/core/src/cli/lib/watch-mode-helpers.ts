@@ -1,12 +1,13 @@
 import { Command } from 'commander';
 import kleur from 'kleur';
+import logUpdate from 'log-update';
 import { CliRunCtx, getCliRunCtx } from './cli-ctx';
 import { CliExitError } from './cli-error';
 
 
 export const WATCHING_FILES_MESSAGE = [
   '',
-  kleur.gray('👀 watching your config files for changes... (CTRL+C to exit)'),
+  kleur.bgMagenta(' 👀 watching your config files for changes... (CTRL+C to exit) '),
 ].join('\n');
 
 let isRerunInProgress = false;
@@ -14,8 +15,6 @@ let enqueueRerun = false;
 
 
 async function rerunCliAction(ctx: CliRunCtx, thisCommand: Command) {
-  console.log(kleur.blue().italic('reloading due to config change'));
-
   ctx.workspace = await ctx.configLoader.getWorkspace();
 
   // going to try to re-execute the command's action handler
@@ -64,6 +63,7 @@ export function addWatchMode(program: Command) {
       // enable dev-mode and attach reload handler that re-runs the command's action
       ctx.configLoader.devMode = true;
       ctx.configLoader.onReload = async () => {
+        logUpdate(kleur.bgMagenta(' 💫 reloading due to config change '));
         try {
           await rerunCliAction(ctx, thisCommand);
         } catch (err) {
@@ -78,7 +78,7 @@ export function addWatchMode(program: Command) {
           }
         } finally {
           // print "watching your files..."
-          console.log(WATCHING_FILES_MESSAGE);
+          logUpdate(WATCHING_FILES_MESSAGE);
         }
       };
     })
@@ -94,7 +94,7 @@ export function addWatchMode(program: Command) {
 
       // otherwise we let the user know we are now waiting for changes to restart
       } else {
-        console.log(WATCHING_FILES_MESSAGE);
+        logUpdate(WATCHING_FILES_MESSAGE);
       }
     });
 }

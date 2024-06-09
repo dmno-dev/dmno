@@ -10,6 +10,7 @@ import './lib/init-process';
 import _ from 'lodash-es';
 import kleur from 'kleur';
 import Debug from 'debug';
+import logUpdate from 'log-update';
 import { DmnoCommand } from './lib/dmno-command';
 
 import { addDocsCommand } from './lib/cli-schema-generation';
@@ -63,7 +64,7 @@ try {
 
     const ctx = getCliRunCtx();
     if (ctx.watchEnabled && !err.forceExit) {
-      console.log(WATCHING_FILES_MESSAGE);
+      logUpdate(WATCHING_FILES_MESSAGE);
     } else {
       process.exit(1);
     }
