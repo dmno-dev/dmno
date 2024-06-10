@@ -21,6 +21,16 @@ export default defineDmnoService({
       value: 'non sensitive',
     },
 
+    SECRET_FOO: {
+      value: 'secret-foo-value',
+      sensitive: true,
+    },
+
+    ANOTHER_SECRET: {
+      value: 'xxyyyzz',
+      sensitive: true,
+    },
+
     SECRET_EXAMPLE: {
       extends: DmnoBaseTypes.string,
       required: true,

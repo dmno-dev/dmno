@@ -1,7 +1,9 @@
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'url';
 import Debug from 'debug';
-import { ConfigServerClient, injectDmnoGlobals } from 'dmno';
+import {
+  ConfigServerClient, injectDmnoGlobals, patchGlobalConsoleToRedactSecrets, unpatchGlobalConsoleSecretRedaction,
+} from 'dmno';
 import type { AstroIntegration } from 'astro';
 
 const debug = Debug('dmno:astro-integration');
@@ -19,11 +21,13 @@ let dmnoConfigValid = true;
 let dynamicItemKeys: Array<string> = [];
 let publicDynamicItemKeys: Array<string> = [];
 let sensitiveItemKeys: Array<string> = [];
-let sensitiveValueLookup: Record<string, string> = {};
+let sensitiveValueLookup: Record<string, { masked: string, value: string }> = {};
 let viteDefineReplacements = {} as Record<string, string>;
 let dmnoConfigClient: ConfigServerClient;
 
-async function reloadDmnoConfig() {
+let redactSecrets = false;
+
+export async function reloadDmnoConfig() {
   let injectionResult: ReturnType<typeof injectDmnoGlobals>;
   const injectedEnvExists = (globalThis as any)._DMNO_INJECTED_ENV || globalThis.process?.env.DMNO_INJECTED_ENV;
 
@@ -57,10 +61,12 @@ async function reloadDmnoConfig() {
   dynamicItemKeys = injectionResult.dynamicKeys || [];
   publicDynamicItemKeys = injectionResult.publicDynamicKeys || [];
   sensitiveItemKeys = injectionResult.sensitiveKeys || [];
-  sensitiveValueLookup = {};
-  for (const itemKey of sensitiveItemKeys) {
-    const val = (globalThis as any).DMNO_CONFIG[itemKey];
-    if (val) sensitiveValueLookup[itemKey] = val.toString();
+  sensitiveValueLookup = injectionResult.sensitiveValueLookup || {};
+
+  if (redactSecrets) {
+    patchGlobalConsoleToRedactSecrets(sensitiveValueLookup);
+  } else {
+    unpatchGlobalConsoleSecretRedaction();
   }
 }
 
@@ -72,9 +78,12 @@ debug(`Initial dmno env load completed in ${loadingTime}ms`);
 
 type DmnoAstroIntegrationOptions = {
   // TODO: figure out options - loading dynamic public config?
+  redactSecrets?: boolean
 };
 
 function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions): AstroIntegration {
+  redactSecrets = !!dmnoIntegrationOpts?.redactSecrets;
+
   return {
     name: 'dmno-astro-integration',
     hooks: {
@@ -87,7 +96,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
 
         // this handles the case where astro's vite server reloaded but this file did not get reloaded
         // we need to reload if we just found out we are in dev mode - so it will use the config client
-        if (dmnoHasTriggeredReload) {
+        if (dmnoHasTriggeredReload || dmnoIntegrationOpts?.redactSecrets) {
           await reloadDmnoConfig();
           dmnoHasTriggeredReload = false;
         }
@@ -120,6 +129,8 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
                 config.define = {
                   ...config.define,
                   ...viteDefineReplacements,
+                  // enables/disables redaction in injected middleware
+                  __DMNO_REDACT_CONSOLE__: JSON.stringify(!!dmnoIntegrationOpts?.redactSecrets),
                 };
               },
 
@@ -171,7 +182,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
                 if (id === 'astro:scripts/page-ssr.js') return src;
 
                 for (const itemKey in sensitiveValueLookup) {
-                  if (src.includes(sensitiveValueLookup[itemKey])) {
+                  if (src.includes(sensitiveValueLookup[itemKey].value)) {
                     // TODO: better error details to help user find the problem
                     throw new Error(`🚨 DETECTED LEAKED CONFIG ITEM "${itemKey}" in file - ${id}`);
                   }
@@ -290,6 +301,5 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
     },
   };
 }
-
 
 export default dmnoAstroIntegration;

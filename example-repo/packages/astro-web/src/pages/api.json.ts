@@ -4,7 +4,6 @@ export async function GET() {
   
   console.log(DMNO_CONFIG.SECRET_STATIC);
   console.log(DMNO_CONFIG.SECRET_FOO);
-  
 
   return new Response(
     JSON.stringify({

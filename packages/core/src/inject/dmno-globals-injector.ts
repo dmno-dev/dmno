@@ -19,8 +19,8 @@ export function injectDmnoGlobals(
 ) {
   const sensitiveValueLookup: Record<string, { value: string, masked: string }> = {};
   const dynamicKeys: Array<string> = [];
-  const publicDynamicKeys: Array<string> = [];
   const sensitiveKeys: Array<string> = [];
+  const publicDynamicKeys: Array<string> = [];
 
   // if we've already injected the globals and we didnt have any options passed in, we can bail
   if (!opts && (globalThis as any).DMNO_CONFIG) {
@@ -74,9 +74,10 @@ export function injectDmnoGlobals(
       sensitiveKeys.push(itemKey);
       rawConfigObj[itemKey] = '*';
       if (val) {
+        const valStr = injectedItem.value.toString();
         sensitiveValueLookup[itemKey] = {
-          value: injectedItem.value.toString(),
-          masked: '****', // TODO:
+          value: valStr,
+          masked: `${valStr.substring(0, 2)}${'▒'.repeat(valStr.length - 2)}`,
         };
       }
     }
@@ -137,11 +138,14 @@ export function injectDmnoGlobals(
 
   (globalThis as any)._DMNO_PUBLIC_DYNAMIC_KEYS = publicDynamicKeys;
   (globalThis as any)._DMNO_SENSITIVE_KEYS = sensitiveKeys;
+  (globalThis as any)._DMNO_SENSITIVE_LOOKUP = sensitiveValueLookup;
+
   return {
     injectedDmnoEnv,
     staticReplacements,
     dynamicKeys,
     publicDynamicKeys,
     sensitiveKeys,
+    sensitiveValueLookup,
   };
 }

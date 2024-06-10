@@ -17,7 +17,7 @@ let dmnoConfigValid = true;
 let dynamicItemKeys: Array<string> = [];
 let publicDynamicItemKeys: Array<string> = [];
 let sensitiveItemKeys: Array<string> = [];
-let sensitiveValueLookup: Record<string, string> = {};
+let sensitiveValueLookup: Record<string, { masked: string, value: string }> = {};
 let viteDefineReplacements = {} as Record<string, string>;
 let dmnoConfigClient: ConfigServerClient;
 
@@ -55,11 +55,7 @@ async function reloadDmnoConfig() {
   dynamicItemKeys = injectionResult.dynamicKeys || [];
   publicDynamicItemKeys = injectionResult.publicDynamicKeys || [];
   sensitiveItemKeys = injectionResult.sensitiveKeys || [];
-  sensitiveValueLookup = {};
-  for (const itemKey of sensitiveItemKeys) {
-    const val = (globalThis as any).DMNO_CONFIG[itemKey];
-    if (val) sensitiveValueLookup[itemKey] = val.toString();
-  }
+  sensitiveValueLookup = injectionResult.sensitiveValueLookup || {};
 }
 
 // we run this right away so the globals get injected into the vite.config file

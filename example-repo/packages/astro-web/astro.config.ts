@@ -1,13 +1,25 @@
-import dmnoAstroIntegration from '@dmno/astro-integration';
+import dmnoAstroIntegration, { reloadDmnoConfig } from '@dmno/astro-integration';
+import { unmaskSecret } from 'dmno';
 import { defineConfig } from 'astro/config';
 import vue from "@astrojs/vue";
 import node from "@astrojs/node";
 import mdx from "@astrojs/mdx";
 
+
+// Example showing how to enable secret redaction right away
+// const dmno = dmnoAstroIntegration({ redactSecrets: true });
+// await reloadDmnoConfig();
+
+// console.log('\nthe secret on the next line should be redacted');
+// console.log('> secret value =', DMNO_CONFIG.SECRET_FOO);
+
+// console.log('\nthe secret on the next line should not');
+// console.log('> secret value =', unmaskSecret(DMNO_CONFIG.SECRET_FOO));
+
 // https://astro.build/config
 export default defineConfig({
   integrations: [
-    dmnoAstroIntegration(),
+    dmnoAstroIntegration({ redactSecrets: true }),
     vue(),
     mdx(),
     {

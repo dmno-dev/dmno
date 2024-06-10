@@ -49,6 +49,9 @@
     },
     "./inject": {
       "default": "./dist/inject/inject-dmno-globals.mjs"
+    },
+    "./scrub-console": {
+      "default": "./dist/inject/scrub-console.mjs"
     }
   },
   "files": [

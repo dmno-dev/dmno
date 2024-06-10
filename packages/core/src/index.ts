@@ -12,6 +12,7 @@ export {
 
 export * from './config-loader/config-server-client';
 export * from './inject/dmno-globals-injector';
+export * from './lib/redaction-helpers';
 
 // used by 1pass plugin - will likely extract eventually
 export * from './lib/dotenv-utils';
