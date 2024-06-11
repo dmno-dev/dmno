@@ -1,10 +1,14 @@
 import { injectDmnoGlobals } from 'dmno';
 import { NextConfig } from 'next';
 
-const { injectedDmnoEnv } = injectDmnoGlobals();
+const { staticReplacements } = injectDmnoGlobals();
+
+type DmnoPluginOptions = {
+  redactSensitiveLogs?: boolean
+};
 
 // we make this a function becuase we'll likely end up adding some options
-export function dmnoNextConfigPlugin() {
+export function dmnoNextConfigPlugin(dmnoOptions?: DmnoPluginOptions) {
   // nextjs doesnt have a proper plugin system, so we write a function which takes in a config object and returns an augmented one
   return (nextConfig: NextConfig): NextConfig => {
     return {
@@ -34,7 +38,7 @@ export function dmnoNextConfigPlugin() {
             }
           }
 
-          // injects into server - but unfortunately this doesn't work full
+          // injects into server - but unfortunately this doesn't work fully
           // it doesnt get run while next is doing a build and analyzing all the routes :(
           // so for now, we'll force users to import manually
           // if (isServer) {
@@ -53,23 +57,12 @@ export function dmnoNextConfigPlugin() {
           return entries;
         };
 
-
-
         // Set up replacements / rewrites (using webpack DefinePlugin)
-        const staticConfigReplacements: Record<string, string> = {};
-        for (const key in injectedDmnoEnv) {
-          // TODO: deal with nested objects
-
-          if (!injectedDmnoEnv[key].dynamic) {
-            if (!injectedDmnoEnv[key].sensitive) {
-              staticConfigReplacements[`DMNO_PUBLIC_CONFIG.${key}`] = JSON.stringify(injectedDmnoEnv[key].value);
-            }
-            if (!injectedDmnoEnv[key].sensitive || isServer) {
-              staticConfigReplacements[`DMNO_CONFIG.${key}`] = JSON.stringify(injectedDmnoEnv[key].value);
-            }
-          }
-        }
-        webpackConfig.plugins.push(new webpack.DefinePlugin(staticConfigReplacements));
+        webpackConfig.plugins.push(new webpack.DefinePlugin({
+          ...staticReplacements,
+          // enables/disables redaction in server inject script
+          __DMNO_REDACT_CONSOLE__: JSON.stringify(!!dmnoOptions?.redactSensitiveLogs),
+        }));
 
         return webpackConfig; // must return the modified config
       },

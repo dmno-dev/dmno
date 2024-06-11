@@ -17,7 +17,7 @@ let dmnoConfigValid = true;
 let dynamicItemKeys: Array<string> = [];
 let publicDynamicItemKeys: Array<string> = [];
 let sensitiveItemKeys: Array<string> = [];
-let sensitiveValueLookup: Record<string, { masked: string, value: string }> = {};
+let sensitiveValueLookup: Record<string, { redacted: string, value: string }> = {};
 let viteDefineReplacements = {} as Record<string, string>;
 let dmnoConfigClient: ConfigServerClient;
 

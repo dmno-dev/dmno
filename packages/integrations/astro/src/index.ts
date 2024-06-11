@@ -2,7 +2,9 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'url';
 import Debug from 'debug';
 import {
-  ConfigServerClient, injectDmnoGlobals, patchGlobalConsoleToRedactSecrets, unpatchGlobalConsoleSecretRedaction,
+  ConfigServerClient, injectDmnoGlobals,
+  patchGlobalConsoleToRedactSensitiveLogs,
+  unpatchGlobalConsoleSensitiveLogRedaction,
 } from 'dmno';
 import type { AstroIntegration } from 'astro';
 
@@ -21,11 +23,10 @@ let dmnoConfigValid = true;
 let dynamicItemKeys: Array<string> = [];
 let publicDynamicItemKeys: Array<string> = [];
 let sensitiveItemKeys: Array<string> = [];
-let sensitiveValueLookup: Record<string, { masked: string, value: string }> = {};
+let sensitiveValueLookup: Record<string, { redacted: string, value: string }> = {};
 let viteDefineReplacements = {} as Record<string, string>;
 let dmnoConfigClient: ConfigServerClient;
-
-let redactSecrets = false;
+let redactSensitiveLogs = false;
 
 export async function reloadDmnoConfig() {
   let injectionResult: ReturnType<typeof injectDmnoGlobals>;
@@ -63,10 +64,10 @@ export async function reloadDmnoConfig() {
   sensitiveItemKeys = injectionResult.sensitiveKeys || [];
   sensitiveValueLookup = injectionResult.sensitiveValueLookup || {};
 
-  if (redactSecrets) {
-    patchGlobalConsoleToRedactSecrets(sensitiveValueLookup);
+  if (redactSensitiveLogs) {
+    patchGlobalConsoleToRedactSensitiveLogs();
   } else {
-    unpatchGlobalConsoleSecretRedaction();
+    unpatchGlobalConsoleSensitiveLogRedaction();
   }
 }
 
@@ -77,12 +78,11 @@ const loadingTime = +new Date() - +startLoadAt;
 debug(`Initial dmno env load completed in ${loadingTime}ms`);
 
 type DmnoAstroIntegrationOptions = {
-  // TODO: figure out options - loading dynamic public config?
-  redactSecrets?: boolean
+  redactSensitiveLogs?: boolean
 };
 
 function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions): AstroIntegration {
-  redactSecrets = !!dmnoIntegrationOpts?.redactSecrets;
+  redactSensitiveLogs = !!dmnoIntegrationOpts?.redactSensitiveLogs;
 
   return {
     name: 'dmno-astro-integration',
@@ -94,9 +94,9 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
         } = opts;
         astroCommand = opts.command;
 
-        // this handles the case where astro's vite server reloaded but this file did not get reloaded
-        // we need to reload if we just found out we are in dev mode - so it will use the config client
-        if (dmnoHasTriggeredReload || dmnoIntegrationOpts?.redactSecrets) {
+        // // this handles the case where astro's vite server reloaded but this file did not get reloaded
+        // // we need to reload if we just found out we are in dev mode - so it will use the config client
+        if (dmnoHasTriggeredReload || dmnoIntegrationOpts?.redactSensitiveLogs !== undefined) {
           await reloadDmnoConfig();
           dmnoHasTriggeredReload = false;
         }
@@ -130,7 +130,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
                   ...config.define,
                   ...viteDefineReplacements,
                   // enables/disables redaction in injected middleware
-                  __DMNO_REDACT_CONSOLE__: JSON.stringify(!!dmnoIntegrationOpts?.redactSecrets),
+                  __DMNO_REDACT_CONSOLE__: JSON.stringify(!!dmnoIntegrationOpts?.redactSensitiveLogs),
                 };
               },
 
@@ -193,6 +193,10 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
             }],
           },
         });
+
+        // injectScript('page-ssr', [
+        //   'console.log(\'PAGE-SSR-INJECTED SCRIPT\');',
+        // ].join('\n'));
 
         // inject script into CLIENT context
         injectScript('page', [

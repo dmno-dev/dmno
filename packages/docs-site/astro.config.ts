@@ -23,7 +23,7 @@ export default defineConfig({
   },
   trailingSlash: 'always',
   integrations: [
-    dmnoAstroIntegration(),
+    dmnoAstroIntegration({ redactSensitiveLogs: true }),
     starlight({
       title: 'DMNO',
       logo: {

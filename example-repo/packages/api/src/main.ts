@@ -1,14 +1,10 @@
 /* eslint-disable import/first */
 /* eslint-disable no-console */
 
-// import 'dmno/inject'; // import first to load global DMNO_CONFIG
-// import 'dmno/scrub-console';
-// import 'dmno/intercept-http';
+import { injectDmnoGlobals, patchGlobalConsoleToRedactSensitiveLogs } from 'dmno/injector';
 
-import { injectDmnoGlobals, patchGlobalConsoleToRedactSecrets } from 'dmno';
-
-const injectResult = injectDmnoGlobals();
-patchGlobalConsoleToRedactSecrets(injectResult.sensitiveValueLookup);
+injectDmnoGlobals();
+patchGlobalConsoleToRedactSensitiveLogs();
 
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
@@ -29,7 +25,7 @@ class TestObj {
 const obj = new TestObj();
 
 console.log('secret foo = ', { o: [1, 2, DMNO_CONFIG.SECRET_FOO] });
-// console.log('unmasked secret foo = ', unmaskSecret(DMNO_CONFIG.SECRET_FOO));
+// console.log('unmasked secret foo = ', unredact(DMNO_CONFIG.SECRET_FOO));
 console.log('another secret = ', DMNO_CONFIG.ANOTHER_SECRET);
 console.log(`secret value = ${DMNO_CONFIG.SECRET_FOO}`);
 

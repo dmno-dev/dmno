@@ -27,8 +27,10 @@ export default defineDmnoService({
     },
 
     ANOTHER_SECRET: {
-      value: 'xxyyyzz',
-      sensitive: true,
+      value: 'xxxyyyyzzz',
+      sensitive: {
+        redactMode: 'show_first_last'
+      },
     },
 
     SECRET_EXAMPLE: {

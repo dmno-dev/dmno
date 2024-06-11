@@ -1,19 +1,15 @@
-import { injectDmnoGlobals } from 'dmno/injector';
+import { injectDmnoGlobals, patchGlobalConsoleToRedactSensitiveLogs } from 'dmno/injector';
 import { MiddlewareHandler } from 'astro';
-import { patchGlobalConsoleToRedactSecrets } from 'dmno';
 
-let sensitiveValueLookup: Record<string, { masked: string, value: string }> | undefined;
+
+const injectionResult = injectDmnoGlobals();
+const sensitiveValueLookup = injectionResult.sensitiveValueLookup;
+// @ts-ignore -- replaced via vite `define` config
+if (__DMNO_REDACT_CONSOLE__) {
+  patchGlobalConsoleToRedactSensitiveLogs();
+}
+
 export const onRequest: MiddlewareHandler = async (context, next) => {
-  if (!sensitiveValueLookup) {
-    const injectionResult = injectDmnoGlobals();
-    sensitiveValueLookup = injectionResult.sensitiveValueLookup;
-    // @ts-ignore
-    if (__DMNO_REDACT_CONSOLE__) {
-      patchGlobalConsoleToRedactSecrets(sensitiveValueLookup!);
-    }
-  }
-
-  // console.log(`custom astro middleware executed - ${context.url}`);
   const response = await next();
 
   // TODO: binary file types / images / etc dont need to be checked

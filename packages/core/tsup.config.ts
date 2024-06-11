@@ -9,8 +9,6 @@ export default defineConfig({
     'src/inject/dmno-globals-injector.ts', // function used to inject dmno globals
     'src/inject/inject-dmno-globals.ts', // exports inject function and automatically calls it once
 
-    'src/inject/scrub-console.ts',
-
     'src/cli/cli-executable.ts', // cli that gets run via `dmno` command
     'src/cli/plugin-cli-lib.ts', // helpers used to create clis for dmno plugins
   ], 
