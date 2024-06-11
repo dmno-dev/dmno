@@ -97,7 +97,10 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
 
   /** whether this config is sensitive and must be kept secret */
   sensitive?: boolean | {
+    /** customize redact/masking behaviour rules (defaults to `show_first_2`) */
     redactMode?: RedactMode,
+    /** list of allowed domains this sensitive item is allowed be sent to */
+    allowedDomains?: Array<string>
   }
 
   /** is this config item required, an error will be shown if empty */
@@ -194,9 +197,10 @@ export type DmnoServiceConfig = {
 
 export type InjectedDmnoEnvItem = {
   value: any,
+  dynamic?: boolean | 1 | '1',
   sensitive?: boolean | 1 | '1',
   redactMode?: RedactMode,
-  dynamic?: boolean | 1 | '1',
+  allowedDomains?: Array<string>,
 };
 export type InjectedDmnoEnv = Record<string, InjectedDmnoEnvItem>;
 
@@ -1001,7 +1005,7 @@ export abstract class DmnoConfigItemBase {
   }
   get isSensitive() {
     // will likely add some more service-level defaults/settings
-    return this.type.sensitive;
+    return !!this.type.sensitive;
   }
 
   get isDynamic() {
@@ -1088,7 +1092,8 @@ export abstract class DmnoConfigItemBase {
   toInjectedJSON(): InjectedDmnoEnvItem {
     return {
       ...this.isSensitive && { sensitive: 1 },
-      ...(this.type.sensitive as any)?.redactMode && { redactMode: (this.type.sensitive as any).redactMode },
+      // adds `redactMode` and `allowedDomains`
+      ..._.isObject(this.type.sensitive) && this.type.sensitive,
       ...this.isDynamic && { dynamic: 1 },
       value: this.resolvedValue,
     };
