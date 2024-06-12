@@ -1,5 +1,6 @@
 <template>
   <ul>
+    <p>{{ DMNO_PUBLIC_CONFIG.FOO }}</p>
     <li v-for="val, key in configs">
       {{key}} = {{ val }}
     </li>
