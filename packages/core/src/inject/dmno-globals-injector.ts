@@ -1,4 +1,7 @@
+import { redactString, resetSensitiveConfigRedactor } from '../lib/redaction-helpers';
 import type { InjectedDmnoEnv, InjectedDmnoEnvItem } from '../config-engine/config-engine';
+
+export { patchGlobalConsoleToRedactSensitiveLogs, unredact } from '../lib/redaction-helpers';
 
 const processExists = !!globalThis.process;
 let originalProcessEnv: Record<string, string> = {};
@@ -10,6 +13,14 @@ if (processExists) {
   }
 }
 
+type DmnoInjectionResult = {
+  staticReplacements: Record<string, string>
+  dynamicKeys: Array<string>,
+  publicDynamicKeys: Array<string>,
+  sensitiveKeys: Array<string>,
+  sensitiveValueLookup: Record<string, { value: any, redacted: string }>,
+};
+
 export function injectDmnoGlobals(
   opts?: {
     injectedConfig?: InjectedDmnoEnv,
@@ -17,14 +28,14 @@ export function injectDmnoGlobals(
     onItemAccess?: (item: InjectedDmnoEnvItem) => void;
   },
 ) {
-  const sensitiveValueLookup: Record<string, { value: string, masked: string }> = {};
+  const sensitiveValueLookup: Record<string, { value: string, redacted: string }> = {};
   const dynamicKeys: Array<string> = [];
-  const publicDynamicKeys: Array<string> = [];
   const sensitiveKeys: Array<string> = [];
+  const publicDynamicKeys: Array<string> = [];
 
   // if we've already injected the globals and we didnt have any options passed in, we can bail
-  if (!opts && (globalThis as any).DMNO_CONFIG) {
-    return {};
+  if (!opts && (globalThis as any)._DMNO_CACHED_INJECTION_RESULT) {
+    return (globalThis as any)._DMNO_CACHED_INJECTION_RESULT as DmnoInjectionResult;
   }
 
   // otherwise we'll inject the DMNO_CONFIG globals
@@ -34,8 +45,8 @@ export function injectDmnoGlobals(
 
   if (!injectedDmnoEnv && (globalThis as any)._DMNO_INJECTED_ENV) {
     injectedDmnoEnv = (globalThis as any)._DMNO_INJECTED_ENV;
-  } else if (!injectedDmnoEnv && globalThis.process.env.DMNO_INJECTED_ENV) {
-    injectedDmnoEnv = JSON.parse(globalThis.process.env.DMNO_INJECTED_ENV);
+  } else if (!injectedDmnoEnv && globalThis.process?.env.DMNO_INJECTED_ENV) {
+    injectedDmnoEnv = JSON.parse(globalThis.process?.env.DMNO_INJECTED_ENV);
   }
   if (!injectedDmnoEnv) {
     // console.log(globalThis);
@@ -74,9 +85,10 @@ export function injectDmnoGlobals(
       sensitiveKeys.push(itemKey);
       rawConfigObj[itemKey] = '*';
       if (val) {
+        const valStr = injectedItem.value.toString();
         sensitiveValueLookup[itemKey] = {
-          value: injectedItem.value.toString(),
-          masked: '****', // TODO:
+          value: valStr,
+          redacted: redactString(valStr, injectedItem.redactMode),
         };
       }
     }
@@ -136,12 +148,19 @@ export function injectDmnoGlobals(
   });
 
   (globalThis as any)._DMNO_PUBLIC_DYNAMIC_KEYS = publicDynamicKeys;
-  (globalThis as any)._DMNO_SENSITIVE_KEYS = sensitiveKeys;
-  return {
-    injectedDmnoEnv,
+  (globalThis as any)._DMNO_SENSITIVE_LOOKUP = sensitiveValueLookup;
+
+  // builds the redaction find/replace but does not apply it in any way
+  resetSensitiveConfigRedactor();
+
+  const injectionResult: DmnoInjectionResult = {
     staticReplacements,
     dynamicKeys,
     publicDynamicKeys,
     sensitiveKeys,
+    sensitiveValueLookup,
   };
+  (globalThis as any)._DMNO_CACHED_INJECTION_RESULT = injectionResult;
+
+  return injectionResult;
 }

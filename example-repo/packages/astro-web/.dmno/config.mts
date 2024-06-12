@@ -21,8 +21,8 @@ export default defineDmnoService({
     OP_TOKEN: { extends: OnePasswordTypes.serviceAccountToken },
 
     FOO: {
-      extends: DmnoBaseTypes.string({ startsWith: 'abc_' }),
-      value: 'abc_foo-config-value',
+      extends: DmnoBaseTypes.string({ startsWith: 'foo-' }),
+      value: 'foo-config-value',
       description: 'test of non-sensitive env var WITHOUT "PUBLIC_" prefix',
     },
     PUBLIC_FOO: {

@@ -4,7 +4,6 @@ export async function GET() {
   
   console.log(DMNO_CONFIG.SECRET_STATIC);
   console.log(DMNO_CONFIG.SECRET_FOO);
-  
 
   return new Response(
     JSON.stringify({
@@ -31,7 +30,7 @@ export async function GET() {
       'secret-foo': '------------------------------------------',
       // throws with a leak detection error!
       // 'process.env.SECRET_FOO': process.env.SECRET_FOO || '_unset_',
-      // 'import.meta.env.SECRET_FOO': import.meta.env.SECRET_FOO || '_unset_',
+      'import.meta.env.SECRET_FOO': import.meta.env.SECRET_FOO || '_unset_',
       // 'DMNO_CONFIG.SECRET_FOO': DMNO_CONFIG.SECRET_FOO || '_unset_',
       
       // ts error, throws with an error about not being public

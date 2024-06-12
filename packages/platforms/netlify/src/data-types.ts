@@ -86,7 +86,7 @@ export const NetlifyEnvSchema = createVendorSchema({
   },
   BUILD_ID: NetlifyDataTypes.NetlifyBuildId,
 
-  // // https://docs.netlify.com/configure-builds/environment-variables/#git-metadata
+  // https://docs.netlify.com/configure-builds/environment-variables/#git-metadata
   REPOSITORY_URL: {
     extends: GitDataTypes.RemoteUrl,
     description: 'URL for the git repo linked to this Netlify project',

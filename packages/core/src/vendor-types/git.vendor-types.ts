@@ -21,7 +21,7 @@ export const GitDataTypes = {
     typeLabel: 'git/repoName',
     typeDescription: '',
     externalDocs: {
-      description: 'Remote repoisitories (Github docs)',
+      description: 'Remote repositories (Github docs)',
       url: 'https://docs.github.com/en/get-started/getting-started-with-git/about-remote-repositories#about-remote-repositories',
     },
     ...commonTypeInfo,
@@ -31,7 +31,7 @@ export const GitDataTypes = {
     typeDescription: 'Public web address of the git repository',
     exampleValue: 'https://github.com/dmno-dev/dmno',
     externalDocs: {
-      description: 'Remote repoisitories (Github docs)',
+      description: 'Remote repositories (Github docs)',
       url: 'https://docs.github.com/en/get-started/getting-started-with-git/about-remote-repositories#about-remote-repositories',
     },
     ...commonTypeInfo,
@@ -41,7 +41,7 @@ export const GitDataTypes = {
     typeDescription: 'Remote URL of a git repository',
     exampleValue: 'https://github.com/dmno-dev/dmno.git',
     externalDocs: {
-      description: 'Remote repoisitories (Github docs)',
+      description: 'Remote repositories (Github docs)',
       url: 'https://docs.github.com/en/get-started/getting-started-with-git/about-remote-repositories#about-remote-repositories',
     },
     ...commonTypeInfo,

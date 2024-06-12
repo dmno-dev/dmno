@@ -3,13 +3,13 @@
     "swc": true,
   },
   "compilerOptions": {
-    "module": "ESNext",
+    "module": "Preserve",
     "target": "ESNext",
     "lib": [
       "ESNext"
     ],
     "strict": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,
     "outDir": "dist",
     "rootDir": "./",

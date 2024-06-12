@@ -1,6 +1,10 @@
+/* eslint-disable import/first */
 /* eslint-disable no-console */
 
-import 'dmno/inject'; // import first to load global DMNO_CONFIG
+import { injectDmnoGlobals, patchGlobalConsoleToRedactSensitiveLogs } from 'dmno/injector';
+
+injectDmnoGlobals();
+patchGlobalConsoleToRedactSensitiveLogs();
 
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
@@ -13,6 +17,27 @@ import { httpRequestLoggingMiddleware } from './lib/request-logger';
 // import { loadAuthMiddleware } from "./services/auth.service";
 import { detectClientIp } from './lib/client-ip';
 import { CustomAppContext, CustomAppState } from './custom-state';
+
+
+class TestObj {
+  prop1 = DMNO_CONFIG.SECRET_FOO;
+}
+const obj = new TestObj();
+
+console.log('secret foo = ', { o: [1, 2, DMNO_CONFIG.SECRET_FOO] });
+// console.log('unmasked secret foo = ', unredact(DMNO_CONFIG.SECRET_FOO));
+console.log('another secret = ', DMNO_CONFIG.ANOTHER_SECRET);
+console.log(`secret value = ${DMNO_CONFIG.SECRET_FOO}`);
+
+console.log({ method: 'console.log', 'secret value': DMNO_CONFIG.SECRET_FOO });
+console.dir({ method: 'console.dir', 'secret value': DMNO_CONFIG.SECRET_FOO });
+console.warn({ method: 'console.warn', 'secret value': DMNO_CONFIG.SECRET_FOO });
+console.error({ method: 'console.error', 'secret value': DMNO_CONFIG.SECRET_FOO });
+
+console.dir({ 'secret value': DMNO_CONFIG.SECRET_FOO });
+console.log(['secret value', DMNO_CONFIG.SECRET_FOO, `secret = ${DMNO_CONFIG.SECRET_FOO}`]);
+console.log(obj);
+console.log({ obj });
 
 export const app = new Koa<CustomAppState, CustomAppContext>();
 

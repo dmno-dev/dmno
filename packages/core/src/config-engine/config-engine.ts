@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import path from 'node:path';
 import crypto from 'node:crypto';
 import { execSync } from 'node:child_process';
 import _ from 'lodash-es';
@@ -27,6 +26,7 @@ import { DmnoPlugin } from './plugins';
 import { stringifyJsonWithCommentBanner } from '../lib/json-utils';
 import { loadDotEnvIntoObject, loadServiceDotEnvFiles } from '../lib/dotenv-utils';
 import { asyncMapValues } from '../lib/async-utils';
+import { RedactMode } from '../lib/redaction-helpers';
 
 const debug = Debug('dmno');
 
@@ -96,7 +96,9 @@ export type ConfigItemDefinition<ExtendsTypeSettings = any> = {
   fromVendor?: string,
 
   /** whether this config is sensitive and must be kept secret */
-  sensitive?: boolean; // TODO: can this be a (ctx) => fn?
+  sensitive?: boolean | {
+    redactMode?: RedactMode,
+  }
 
   /** is this config item required, an error will be shown if empty */
   required?: boolean; // TODO: can this be a (ctx) => fn?
@@ -193,6 +195,7 @@ export type DmnoServiceConfig = {
 export type InjectedDmnoEnvItem = {
   value: any,
   sensitive?: boolean | 1 | '1',
+  redactMode?: RedactMode,
   dynamic?: boolean | 1 | '1',
 };
 export type InjectedDmnoEnv = Record<string, InjectedDmnoEnvItem>;
@@ -1085,6 +1088,7 @@ export abstract class DmnoConfigItemBase {
   toInjectedJSON(): InjectedDmnoEnvItem {
     return {
       ...this.isSensitive && { sensitive: 1 },
+      ...(this.type.sensitive as any)?.redactMode && { redactMode: (this.type.sensitive as any).redactMode },
       ...this.isDynamic && { dynamic: 1 },
       value: this.resolvedValue,
     };
