@@ -39,7 +39,8 @@ program.action(async (opts: {
   let cliPath = ctx.selectedPlugin.cliPath;
 
   if (!cliPath) throw new Error('no cli for this plugin!');
-  if (!cliPath.endsWith('.mjs')) cliPath += '.mjs';
+  // TODO: might want to look for .js and .mjs?
+  if (!cliPath.endsWith('.js')) cliPath += '.js';
 
   // console.log(more.args);
 

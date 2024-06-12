@@ -268,18 +268,18 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
           injectRoute({
             pattern: 'public-dynamic-config.json',
             // Use relative path syntax for a local route.
-            entrypoint: `${__dirname}/fetch-public-dynamic-config.json.mjs`,
+            entrypoint: `${__dirname}/fetch-public-dynamic-config.json.js`,
           });
         }
 
         // add leak detection middleware!
         addMiddleware({
-          entrypoint: `${__dirname}/astro-middleware.mjs`,
+          entrypoint: `${__dirname}/astro-middleware.js`,
           order: 'post', // not positive on this?
         });
 
         // enable the toolbar (currently does nothing...)
-        addDevToolbarApp(`${__dirname}/dev-toolbar-app.mjs`);
+        addDevToolbarApp(`${__dirname}/dev-toolbar-app.js`);
       },
       'astro:build:done': async (opts) => {
         // if we didn't actually pre-render any pages, we can move one

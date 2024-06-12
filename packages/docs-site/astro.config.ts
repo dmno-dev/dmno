@@ -20,6 +20,9 @@ export default defineConfig({
         compiler: 'raw',
       }),
     ],
+    // resolve: {
+    //   conditions: ['ts-src'],
+    // },
   },
   trailingSlash: 'always',
   integrations: [

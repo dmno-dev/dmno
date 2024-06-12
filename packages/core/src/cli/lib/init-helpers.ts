@@ -24,9 +24,7 @@ const STEP_DELAY = 300;
 
 const DMNO_FOLDER_TSCONFIG = outdent`
   {
-    "compilerOptions": {
-      "strict": true
-    },
+    "extends": "dmno/tsconfigs/dmno-folder",
     "include": [
       "./**/*.mts",
       "./.typegen/global.d.ts"

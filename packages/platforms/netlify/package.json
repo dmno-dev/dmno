@@ -23,20 +23,13 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/build-plugin/index.js"
+      "default": "./dist/build-plugin/index.js",
+      "types": "./dist/build-plugin/index.d.ts"
     },
     "./types": {
-      "default": "./dist/index.js"
-    }
-  },
-  "typesVersions": {
-    "*": {
-      "index": [
-        "./dist/build-plugin/index.d.ts"
-      ],
-      "types": [
-        "./dist/index.d.ts"
-      ]
+      "ts-src": "./src/index.js",
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "files": [

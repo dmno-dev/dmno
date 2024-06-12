@@ -34,47 +34,42 @@
   "engines": {
     "node": ">=16"
   },
+  "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/index.mjs"
+      "ts-src": "./src/index.ts",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./vendor-types": {
-      "default": "./dist/vendor-types/index.mjs"
+      "ts-src": "./src/vendor-types/index.ts",
+      "import": "./dist/vendor-types/index.js",
+      "types": "./dist/vendor-types/index.d.ts"
     },
     "./cli-lib": {
-      "default": "./dist/cli/plugin-cli-lib.mjs"
+      "ts-src": "./src/cli/plugin-cli-lib.ts",
+      "import": "./dist/cli/plugin-cli-lib.js",
+      "types": "./dist/cli/plugin-cli-lib.d.ts"
     },
     "./injector": {
-      "default": "./dist/inject/dmno-globals-injector.mjs"
+      "ts-src": "./src/inject/dmno-globals-injector.ts",
+      "import": "./dist/inject/dmno-globals-injector.js",
+      "types": "./dist/inject/dmno-globals-injector.d.ts"
     },
     "./inject": {
-      "default": "./dist/inject/inject-dmno-globals.mjs"
-    }
+      "ts-src": "./src/inject/inject-dmno-globals.ts",
+      "import": "./dist/inject/inject-dmno-globals.js",
+      "types": "./dist/inject/inject-dmno-globals.d.ts"
+    },
+    "./tsconfigs/*.json": "./tsconfigs/*",
+    "./tsconfigs/*": "./tsconfigs/*.json"
   },
   "files": [
-    "/dist"
+    "/dist",
+    "/tsconfigs"
   ],
-  "typesVersions": {
-    "*": {
-      "index": [
-        "./dist/index.d.mts"
-      ],
-      "vendor-types": [
-        "./dist/vendor-types/index.d.mts"
-      ],
-      "cli-lib": [
-        "./dist/cli/plugin-cli-lib.d.mts"
-      ],
-      "injector": [
-        "./dist/inject/dmno-globals-injector.d.mts"
-      ],
-      "inject": [
-        "./dist/inject/inject-dmno-globals.d.mts"
-      ]
-    }
-  },
   "bin": {
-    "dmno": "./dist/cli/cli-executable.mjs"
+    "dmno": "./dist/cli/cli-executable.js"
   },
   "devDependencies": {
     "@dmno/encryption-lib": "workspace:*",
