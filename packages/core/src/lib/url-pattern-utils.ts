@@ -6,6 +6,8 @@
  *
  * It's not perfect but should work well enough for now
  */
+
+// TODO: probably can make this regex slightly more strict, so patterns that dont make sense are not valid
 const splitPatternRegex = /(?:(.*):\/\/)?([^/]+)(\/.*)?/;
 
 const patternRegexCache: Record<string, RegExp> = {};
@@ -30,6 +32,11 @@ function buildRegexFromDomainPattern(pattern: string) {
   const regexString = `${protocol}://${domain}${path}`;
 
   return new RegExp(regexString, 'i');
+}
+
+export function validateUrlPattern(pattern: string) {
+  const patternParts = pattern.match(splitPatternRegex);
+  return !!patternParts;
 }
 
 export function checkUrlMatchesPattern(url: string, allowPattern: string) {

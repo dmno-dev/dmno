@@ -3,8 +3,11 @@ import {
   ConfigItemDefinition, ExternalDocsEntry, ResolverContext, TypeValidationResult,
 } from './config-engine';
 import { ConfigValueResolver, processInlineResolverDef } from './resolvers/resolvers';
-import { CoercionError, EmptyRequiredValueError, ValidationError } from './errors';
+import {
+  CoercionError, EmptyRequiredValueError, SchemaError, ValidationError,
+} from './errors';
 import { SerializedDmnoDataType } from '../config-loader/serialization-types';
+import { validateUrlPattern } from '../lib/url-pattern-utils';
 
 // data types expose all the same options, except they additionally have a "settings schema"
 // and their validations/normalize functions get passed in the _instance_ of those settings when invoked
@@ -63,6 +66,8 @@ export class DmnoDataType<InstanceOptions = any> {
 
   parentType?: DmnoDataType;
   private _valueResolver?: ConfigValueResolver;
+
+  readonly schemaErrors: Array<SchemaError> = [];
 
   constructor(
     readonly typeDef: DmnoDataTypeOptions<InstanceOptions>,
@@ -135,6 +140,14 @@ export class DmnoDataType<InstanceOptions = any> {
         const originalCoerce = this.typeDef.coerce;
         this.typeDef.coerce = (val, _settings, ctx) => (originalCoerce as any)(val, ctx as any);
       }
+    }
+
+    if (_.isObject(this.typeDef.sensitive) && this.typeDef.sensitive.allowedDomains) {
+      this.typeDef.sensitive.allowedDomains.forEach((urlPattern) => {
+        if (!validateUrlPattern(urlPattern)) {
+          this.schemaErrors.push(new SchemaError(`Invalid allowedDomain pattern "${urlPattern}"`));
+        }
+      });
     }
   }
 

@@ -819,9 +819,15 @@ export class DmnoService {
     return currentItem;
   }
 
-  get isValid() {
+  get isSchemaValid() {
     if (this.configLoadError) return false;
     if (this.schemaErrors?.length) return false;
+    if (!_.every(_.values(this.config), (configItem) => configItem.isSchemaValid)) return false;
+    return true;
+  }
+
+  get isValid() {
+    if (!this.isSchemaValid) return false;
     if (!_.every(_.values(this.config), (configItem) => configItem.isValid)) return false;
     return true;
   }
@@ -841,6 +847,7 @@ export class DmnoService {
 
   toJSON(): SerializedService {
     return {
+      isSchemaValid: this.isSchemaValid,
       isValid: this.isValid,
       isResolved: true,
       packageName: this.packageName,
@@ -965,16 +972,26 @@ export abstract class DmnoConfigItemBase {
   /** error encountered during coercion step */
   coercionError?: CoercionError;
 
-
   /** more details about the validation failure if applicable */
   validationErrors?: Array<ValidationError>;
+
+  get schemaErrors() {
+    return this.type.schemaErrors;
+  }
+
+  /** whether the schema itself is valid or not */
+  get isSchemaValid(): boolean | undefined {
+    if (this.schemaErrors?.length) return false;
+    return true;
+  }
+
   /** whether the final resolved value is valid or not */
   get isValid(): boolean | undefined {
+    if (!this.isSchemaValid) return false;
     if (this.coercionError) return false;
     if (this.validationErrors && this.validationErrors?.length > 0) return false;
     if (this.resolutionError) return false;
     return true;
-    // return this.validationErrors.length === 0;
   }
 
   abstract get type(): DmnoDataType;
@@ -1102,6 +1119,7 @@ export abstract class DmnoConfigItemBase {
   toJSON(): SerializedConfigItem {
     return {
       key: this.key,
+      isSchemaValid: this.isSchemaValid,
       isValid: this.isValid,
       dataType: this.type.toJSON(),
       isDynamic: this.isDynamic,
@@ -1114,7 +1132,9 @@ export abstract class DmnoConfigItemBase {
       resolver: this.valueResolver?.toJSON(),
       overrides: this.overrides,
 
-      // schemaErrors
+      schemaErrors: this.schemaErrors?.length
+        ? _.map(this.schemaErrors, (err) => err.toJSON())
+        : undefined,
       coercionError: this.coercionError?.toJSON(),
 
       validationErrors:
