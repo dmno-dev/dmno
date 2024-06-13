@@ -23,7 +23,7 @@ export type SerializedWorkspace = {
 };
 
 export type SerializedService =
-  Pick<DmnoService, 'packageName' | 'serviceName' | 'path'>
+  Pick<DmnoService, 'packageName' | 'serviceName' | 'path' | 'settings'>
   & {
     isSchemaValid: boolean,
     isValid: boolean,

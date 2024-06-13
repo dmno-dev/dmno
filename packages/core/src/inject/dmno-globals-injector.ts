@@ -1,12 +1,20 @@
-import { redactString, resetSensitiveConfigRedactor } from '../lib/redaction-helpers';
-import type { InjectedDmnoEnv, InjectedDmnoEnvItem } from '../config-engine/config-engine';
-
-export {
+import {
+  redactString, resetSensitiveConfigRedactor,
   patchGlobalConsoleToRedactSensitiveLogs,
   unpatchGlobalConsoleSensitiveLogRedaction,
+} from '../lib/redaction-helpers';
+import { enableHttpInterceptor, disableHttpInterceptor } from '../lib/http-interceptor-utils';
+import type { InjectedDmnoEnv, InjectedDmnoEnvItem } from '../config-engine/config-engine';
+
+
+// not sure about exporting these fns now that we control the behaviour via the schema
+export {
+  // patchGlobalConsoleToRedactSensitiveLogs,
+  // unpatchGlobalConsoleSensitiveLogRedaction,
   unredact,
 } from '../lib/redaction-helpers';
-export { enableHttpInterceptor, disableHttpInterceptor } from '../lib/http-interceptor-utils';
+
+// export { enableHttpInterceptor, disableHttpInterceptor } from '../lib/http-interceptor-utils';
 
 const processExists = !!globalThis.process;
 let originalProcessEnv: Record<string, string> = {};
@@ -24,6 +32,7 @@ type DmnoInjectionResult = {
   publicDynamicKeys: Array<string>,
   sensitiveKeys: Array<string>,
   sensitiveValueLookup: Record<string, { value: any, redacted: string }>,
+  serviceSettings: InjectedDmnoEnv['$SETTINGS'],
 };
 
 export type SensitiveValueLookup = Record<string, {
@@ -52,21 +61,32 @@ export function injectDmnoGlobals(
   const sensitiveKeys: Array<string> = [];
   const publicDynamicKeys: Array<string> = [];
 
-  // if we've already injected the globals and we didnt have any options passed in, we can bail
-  if (!opts && (globalThis as any)._DMNO_CACHED_INJECTION_RESULT) {
-    return (globalThis as any)._DMNO_CACHED_INJECTION_RESULT as DmnoInjectionResult;
-  }
+
+  // // if we've already injected the globals and we didnt have any options passed in, we can bail
+  // if (!opts && (globalThis as any)._DMNO_CACHED_INJECTION_RESULT) {
+  //   console.log('> using cached injection result');
+  //   return (globalThis as any)._DMNO_CACHED_INJECTION_RESULT as DmnoInjectionResult;
+  // }
 
   // otherwise we'll inject the DMNO_CONFIG globals
   // either pulling from a passed in config or from process.env.DMNO_INJECTED_ENV
 
+  // save the manually injected env if there is one - this is currently used in netlify functions where we inject the resolved config into the built code
+  // but then need it in other places where we call injectDmnoGlobals again
+  if (opts?.injectedConfig) {
+    (globalThis as any)._DMNO_INJECTED_ENV = opts?.injectedConfig;
+  }
+
   let injectedDmnoEnv = opts?.injectedConfig;
 
-  if (!injectedDmnoEnv && (globalThis as any)._DMNO_INJECTED_ENV) {
-    injectedDmnoEnv = (globalThis as any)._DMNO_INJECTED_ENV;
-  } else if (!injectedDmnoEnv && globalThis.process?.env.DMNO_INJECTED_ENV) {
-    injectedDmnoEnv = JSON.parse(globalThis.process?.env.DMNO_INJECTED_ENV);
+  if (!injectedDmnoEnv) {
+    if (globalThis.process?.env.DMNO_INJECTED_ENV) {
+      injectedDmnoEnv = JSON.parse(globalThis.process?.env.DMNO_INJECTED_ENV);
+    } else if ((globalThis as any)._DMNO_INJECTED_ENV) {
+      injectedDmnoEnv = (globalThis as any)._DMNO_INJECTED_ENV;
+    }
   }
+
   if (!injectedDmnoEnv) {
     // console.log(globalThis);
     // console.log(globalThis.process.env);
@@ -84,7 +104,10 @@ export function injectDmnoGlobals(
 
   const staticReplacements: Record<string, string> = {};
 
+  const serviceSettings = injectedDmnoEnv.$SETTINGS;
+
   for (const itemKey in injectedDmnoEnv) {
+    if (itemKey === '$SETTINGS') continue;
     const injectedItem = injectedDmnoEnv[itemKey];
     const val = injectedItem.value;
 
@@ -176,8 +199,20 @@ export function injectDmnoGlobals(
   (globalThis as any)._DMNO_PUBLIC_DYNAMIC_KEYS = publicDynamicKeys;
   (globalThis as any)._DMNO_SENSITIVE_LOOKUP = sensitiveValueLookup;
 
-  // builds the redaction find/replace but does not apply it in any way
+  // builds the redaction find/replace but does not apply it globally
+  // it is still used in a helper fn that end users can use manually
   resetSensitiveConfigRedactor();
+  if (serviceSettings.redactSensitiveLogs) {
+    patchGlobalConsoleToRedactSensitiveLogs();
+  } else {
+    unpatchGlobalConsoleSensitiveLogRedaction();
+  }
+
+  if (serviceSettings.interceptSensitiveLeakRequests) {
+    enableHttpInterceptor();
+  } else {
+    disableHttpInterceptor();
+  }
 
   const injectionResult: DmnoInjectionResult = {
     staticReplacements,
@@ -185,8 +220,9 @@ export function injectDmnoGlobals(
     publicDynamicKeys,
     sensitiveKeys,
     sensitiveValueLookup,
+    serviceSettings,
   };
-  (globalThis as any)._DMNO_CACHED_INJECTION_RESULT = injectionResult;
+  // (globalThis as any)._DMNO_CACHED_INJECTION_RESULT = injectionResult;
 
   return injectionResult;
 }

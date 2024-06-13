@@ -39,8 +39,8 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1
       '@mswjs/interceptors':
-        specifier: ^0.30.0
-        version: 0.30.0
+        specifier: link:../../../other-tools/interceptors
+        version: link:../../../other-tools/interceptors
       acorn:
         specifier: ^8.11.3
         version: 8.11.3
@@ -2101,10 +2101,6 @@ packages:
 
   '@mswjs/interceptors@0.27.2':
     resolution: {integrity: sha512-mE6PhwcoW70EX8+h+Y/4dLfHk33GFt/y5PzDJz56ktMyaVGFXMJ5BYLbUjdmGEABfE0x5GgAGyKbrbkYww2s3A==}
-    engines: {node: '>=18'}
-
-  '@mswjs/interceptors@0.30.0':
-    resolution: {integrity: sha512-wOsatc3+3LALw7JuvBZGvx8rg2Qz2nGNJrGvcH0qnBpDNNOCS7wHPPK90UIUwp7fB/eRPLPSawdzMBaxSifU1Q==}
     engines: {node: '>=18'}
 
   '@netlify/binary-info@1.0.0':
@@ -11399,15 +11395,6 @@ snapshots:
       - supports-color
 
   '@mswjs/interceptors@0.27.2':
-    dependencies:
-      '@open-draft/deferred-promise': 2.2.0
-      '@open-draft/logger': 0.3.0
-      '@open-draft/until': 2.1.0
-      is-node-process: 1.2.0
-      outvariant: 1.4.2
-      strict-event-emitter: 0.5.1
-
-  '@mswjs/interceptors@0.30.0':
     dependencies:
       '@open-draft/deferred-promise': 2.2.0
       '@open-draft/logger': 0.3.0

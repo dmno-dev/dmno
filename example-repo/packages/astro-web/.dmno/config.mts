@@ -8,6 +8,8 @@ export default defineDmnoService({
   parent: 'group1',
   settings: {
     dynamicConfig: 'default_static',
+    redactSensitiveLogs: true,
+    interceptSensitiveLeakRequests: true,
   },
   pick: [
     'NODE_ENV',
@@ -32,6 +34,7 @@ export default defineDmnoService({
     SECRET_FOO: {
       value: 'secret-foo-config-value',
       sensitive: true,
+      required: true,
       description: 'test of a sensitive env var',
     },
     EMPTY: {

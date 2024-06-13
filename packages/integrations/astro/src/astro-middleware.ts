@@ -1,15 +1,19 @@
-import { injectDmnoGlobals, patchGlobalConsoleToRedactSensitiveLogs } from 'dmno/injector';
+/* eslint-disable prefer-rest-params */
+import { injectDmnoGlobals } from 'dmno/injector';
 import { MiddlewareHandler } from 'astro';
 
-
 const injectionResult = injectDmnoGlobals();
-const sensitiveValueLookup = injectionResult.sensitiveValueLookup;
-// @ts-ignore -- replaced via vite `define` config
-if (__DMNO_REDACT_CONSOLE__) {
-  patchGlobalConsoleToRedactSensitiveLogs();
-}
+let sensitiveValueLookup = injectionResult.sensitiveValueLookup;
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
+  // when running in netlify functions, which is using lambdas, we need to re-inject the globals
+  // we may need to re-evaluate this if we see other platforms that are also using lambdas but behave differently
+  // although re-injecting should be harmless
+  if (process?.env.LAMBDA_TASK_ROOT) {
+    const reqInjectionResult = injectDmnoGlobals();
+    sensitiveValueLookup = reqInjectionResult.sensitiveValueLookup;
+  }
+
   const response = await next();
 
   // TODO: binary file types / images / etc dont need to be checked

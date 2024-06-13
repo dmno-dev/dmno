@@ -1,6 +1,6 @@
 import _ from 'lodash-es';
 import Debug from 'debug';
-import { ConfigServerClient, DmnoConfigItem, injectDmnoGlobals } from 'dmno';
+import { ConfigServerClient, injectDmnoGlobals } from 'dmno';
 import type { Plugin } from 'vite';
 
 const debug = Debug('dmno:vite-integration');
@@ -11,23 +11,17 @@ debug('dmno vite plugin loaded. first load = ', firstLoad);
 
 let isDevMode: boolean;
 let dmnoHasTriggeredReload = false;
-let enableDynamicPublicClientLoading = false;
 let configItemKeysAccessed: Record<string, boolean> = {};
 let dmnoConfigValid = true;
-let dynamicItemKeys: Array<string> = [];
-let publicDynamicItemKeys: Array<string> = [];
-let sensitiveItemKeys: Array<string> = [];
-let sensitiveValueLookup: Record<string, { redacted: string, value: string }> = {};
-let viteDefineReplacements = {} as Record<string, string>;
 let dmnoConfigClient: ConfigServerClient;
+let dmnoInjectionResult: ReturnType<typeof injectDmnoGlobals>;
 
 async function reloadDmnoConfig() {
-  let injectionResult: ReturnType<typeof injectDmnoGlobals>;
-  const injectedEnvExists = (globalThis as any)._DMNO_INJECTED_ENV || globalThis.process?.env.DMNO_INJECTED_ENV;
+  const injectedEnvExists = globalThis.process?.env.DMNO_INJECTED_ENV;
 
   if (injectedEnvExists && !isDevMode) {
     debug('using injected dmno config');
-    injectionResult = injectDmnoGlobals();
+    dmnoInjectionResult = injectDmnoGlobals();
   } else {
     debug('using injected dmno config server');
     (process as any).dmnoConfigClient ||= new ConfigServerClient();
@@ -40,22 +34,11 @@ async function reloadDmnoConfig() {
     // shows nicely formatted errors in the terminal
     ConfigServerClient.checkServiceIsValid(serializedService);
 
-    injectionResult = injectDmnoGlobals({
+    dmnoInjectionResult = injectDmnoGlobals({
       injectedConfig,
       trackingObject: configItemKeysAccessed,
     });
   }
-
-  // We may want to fetch via the CLI instead - it would be slightly faster during a build
-  // however we dont know if we are in dev/build mode until later and we do need the config injected right away
-  // const injectedDmnoEnv = execSync('npm exec -- dmno resolve -f json-injected').toString();
-  // injectionResult = injectDmnoGlobals({ injectedConfig: JSON.parse(injectedDmnoEnv) });
-
-  viteDefineReplacements = injectionResult.staticReplacements || {};
-  dynamicItemKeys = injectionResult.dynamicKeys || [];
-  publicDynamicItemKeys = injectionResult.publicDynamicKeys || [];
-  sensitiveItemKeys = injectionResult.sensitiveKeys || [];
-  sensitiveValueLookup = injectionResult.sensitiveValueLookup || {};
 }
 
 // we run this right away so the globals get injected into the vite.config file
@@ -90,24 +73,15 @@ export function injectDmnoConfigVitePlugin(
         dmnoHasTriggeredReload = false;
       }
 
-      if (!isDevMode && !dmnoConfigValid) {
-        throw new Error('DMNO config is not valid');
-      }
-
-      const serializedService = await dmnoConfigClient.getServiceConfig();
-      const { staticReplacements } = injectDmnoGlobals({
-        injectedConfig: serializedService.injectedEnv,
-      });
-
       // inject rollup rewrites via config.define
       config.define = {
         ...config.define,
         ...options?.injectSensitiveConfig
-          ? staticReplacements
-          : _.pickBy(staticReplacements, (val, key) => key.startsWith('DMNO_PUBLIC_CONFIG.')),
+          ? dmnoInjectionResult.staticReplacements
+          : _.pickBy(dmnoInjectionResult.staticReplacements, (val, key) => key.startsWith('DMNO_PUBLIC_CONFIG.')),
       };
 
-      if (!serializedService.isValid) {
+      if (!dmnoConfigValid) {
         if (isDevMode) {
           // adjust vite's setting so it doesnt bury the error messages
           config.clearScreen = false;

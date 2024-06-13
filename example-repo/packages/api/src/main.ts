@@ -1,11 +1,9 @@
 /* eslint-disable import/first */
 /* eslint-disable no-console */
 
-import { injectDmnoGlobals, patchGlobalConsoleToRedactSensitiveLogs, enableHttpInterceptor } from 'dmno/injector';
+import { injectDmnoGlobals } from 'dmno/injector';
 
 injectDmnoGlobals();
-patchGlobalConsoleToRedactSensitiveLogs();
-enableHttpInterceptor();
 
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
@@ -20,32 +18,32 @@ import { detectClientIp } from './lib/client-ip';
 import { CustomAppContext, CustomAppState } from './custom-state';
 
 
-// console.log('\n\n');
-// console.log('Just a normal day, console.log-ging some secrets by accident 👀');
-// console.log(`Here's one now! SECRET_FOO = ${DMNO_CONFIG.SECRET_FOO}`);
+console.log('\n\n');
+console.log('Just a normal day, console.log-ging some secrets by accident 👀');
+console.log(`Here's one now! SECRET_FOO = ${DMNO_CONFIG.SECRET_FOO}`);
 
-// console.log('\n\n');
-// console.log('Hmm better send some debugging data to our logging service 📡');
+console.log('\n\n');
+console.log('Hmm better send some debugging data to our logging service 📡');
 
-// const apiResp = await fetch(
-//   'https://api.myloggingtool.com/ingest',
-//   // `http://localhost:4321/api.json?q1=asdf&q2=moo&q3=${DMNO_CONFIG.STRIPE_KEY}`,
-//   {
-//     method: 'POST',
-//     // body: formData,
-//     body: JSON.stringify({
-//       name: 'John Doe',
-//       age: 29,
-//       secret: DMNO_CONFIG.STRIPE_SECRET_KEY,
-//       another: DMNO_CONFIG.SECRET_FOO,
-//     }),
-//     headers: {
-//       'Content-Type': 'application/json',
-//       // 'x-custom-auth': DMNO_CONFIG.STRIPE_KEY,
-//       'x-another': 'bloop',
-//     },
-//   },
-// );
+const apiResp = await fetch(
+  'https://api.myloggingtool.com/ingest',
+  // `http://localhost:4321/api.json?q1=asdf&q2=moo&q3=${DMNO_CONFIG.STRIPE_KEY}`,
+  {
+    method: 'POST',
+    // body: formData,
+    body: JSON.stringify({
+      name: 'John Doe',
+      age: 29,
+      secret: DMNO_CONFIG.STRIPE_SECRET_KEY,
+      another: DMNO_CONFIG.SECRET_FOO,
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+      // 'x-custom-auth': DMNO_CONFIG.STRIPE_KEY,
+      'x-another': 'bloop',
+    },
+  },
+);
 
 // console.log(apiResp);
 

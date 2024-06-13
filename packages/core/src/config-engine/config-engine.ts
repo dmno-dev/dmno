@@ -168,6 +168,10 @@ type DynamicConfigModes =
 type DmnoServiceSettings = {
   /** default behaviour for "dynamic" vs "static" behaviour of config items */
   dynamicConfig?: DynamicConfigModes,
+  /** enable patching global logging methods to redact sensitive config (where possible) */
+  redactSensitiveLogs?: boolean,
+  /** enable patching http to intercept sending sensitive to config to non allowed domains (where possible) */
+  interceptSensitiveLeakRequests?: boolean,
 };
 
 /**
@@ -202,9 +206,9 @@ export type InjectedDmnoEnvItem = {
   redactMode?: RedactMode,
   allowedDomains?: Array<string>,
 };
-export type InjectedDmnoEnv = Record<string, InjectedDmnoEnvItem>;
-
-
+export type InjectedDmnoEnv = Record<string, InjectedDmnoEnvItem> & {
+  $SETTINGS: DmnoServiceSettings,
+};
 
 export function defineDmnoService(opts: DmnoServiceConfig) {
   debug('LOADING SCHEMA!', opts);
@@ -660,8 +664,6 @@ export class DmnoService {
   injectedPlugins: Array<DmnoPlugin> = [];
   ownedPlugins: Array<DmnoPlugin> = [];
 
-  private settings: DmnoServiceSettings = {};
-
   private overrideSources = [] as Array<OverrideSource>;
 
   constructor(opts: {
@@ -685,7 +687,6 @@ export class DmnoService {
       // - disallow renaming the root service?
       // - stop naming a non-root service "root"?
       this.rawConfig = opts.rawConfig;
-      this.settings = opts.rawConfig.settings || {};
 
       if (this.rawConfig.name) {
         const validateNameResult = validatePackageName(this.rawConfig.name);
@@ -709,8 +710,14 @@ export class DmnoService {
     }
   }
 
-  getSettingsItem<K extends keyof DmnoServiceSettings>(key: K): DmnoServiceSettings[K] | undefined {
-    if (key in this.settings) return this.settings[key];
+  /**
+   * helper to get applied value of service setting
+   * this walks up the chain of ancestors until a value is found
+   * */
+  private getSettingsItem<K extends keyof DmnoServiceSettings>(key: K): DmnoServiceSettings[K] | undefined {
+    if (this.rawConfig?.settings && key in this.rawConfig.settings) {
+      return this.rawConfig.settings[key];
+    }
     return this.parentService?.getSettingsItem(key);
   }
 
@@ -839,10 +846,21 @@ export class DmnoService {
     return env;
   }
   getInjectedEnvJSON(): InjectedDmnoEnv {
-    const env: Record<string, any> = _.mapValues(this.config, (item) => {
-      return item.toInjectedJSON();
-    });
-    return env;
+    // some funky ts stuff going on here... doesn't like how I set the values,
+    // but otherwise the type seems to work ok?
+    const env: any = _.mapValues(this.config, (item) => item.toInjectedJSON());
+    // simple way to get settings passed through to injected stuff - we may want
+    env.$SETTINGS = this.settings;
+    return env as any;
+  }
+
+  get settings(): DmnoServiceSettings {
+    // TODO: we could cache this instead of recalculating on each access?
+    return {
+      dynamicConfig: this.getSettingsItem('dynamicConfig'),
+      redactSensitiveLogs: this.getSettingsItem('redactSensitiveLogs'),
+      interceptSensitiveLeakRequests: this.getSettingsItem('interceptSensitiveLeakRequests'),
+    };
   }
 
   toJSON(): SerializedService {
@@ -862,6 +880,7 @@ export class DmnoService {
       ownedPluginNames: _.map(this.ownedPlugins, (p) => p.instanceName),
       injectedPluginNames: _.map(this.injectedPlugins, (p) => p.instanceName),
 
+      settings: this.settings,
       config: _.mapValues(this.config, (item, _key) => item.toJSON()),
       injectedEnv: this.getInjectedEnvJSON(),
     };
@@ -1033,7 +1052,7 @@ export abstract class DmnoConfigItemBase {
     // NOTE - this is the only place this logic exists
 
     // get the config default mode of the service
-    const serviceDynamicConfigMode = this.parentService?.getSettingsItem('dynamicConfig');
+    const serviceDynamicConfigMode = this.parentService?.settings.dynamicConfig;
 
     if (serviceDynamicConfigMode === 'only_dynamic') return true;
     if (serviceDynamicConfigMode === 'only_static') return false;
