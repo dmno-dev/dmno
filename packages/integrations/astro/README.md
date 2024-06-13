@@ -6,7 +6,7 @@ If you have any questions, please reach out to us on [Discord](https://chat.dmno
 
 ----
 
-# @dmno/vite-integration
+# @dmno/astro-integration
 
 Provides tooling to integrate dmno into your astro dev/build workflow
 

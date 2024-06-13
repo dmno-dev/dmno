@@ -1,6 +1,6 @@
 /* eslint-disable prefer-rest-params, func-names */
 
-type SensitiveValueLookup = Record<string, { redacted: string, value: string }>;
+import { SensitiveValueLookup } from '../inject/dmno-globals-injector';
 
 const UNMASK_STR = '👁';
 

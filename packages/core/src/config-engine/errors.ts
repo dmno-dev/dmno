@@ -35,6 +35,8 @@ export class DmnoError extends Error {
   originalError?: Error;
   get isUnexpected() { return !!this.originalError; }
 
+  get type() { return this.name; }
+
   icon = '❌';
 
   constructor(err: string | Error) {
@@ -51,7 +53,7 @@ export class DmnoError extends Error {
   toJSON() {
     return {
       icon: this.icon,
-      type: this.name,
+      type: this.type,
       name: this.name,
       message: this.message,
       isUnexpected: this.isUnexpected,

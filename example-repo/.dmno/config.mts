@@ -2,9 +2,6 @@ import { DmnoBaseTypes, defineDmnoService, configPath, switchByNodeEnv, NodeEnvT
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
-// TODO: figure out how to get rid of mjs extension
-import { GA4MeasurementId } from './custom-types.mjs';
-
 
 
 const OnePassBackend = new OnePasswordDmnoPlugin('1pass', {

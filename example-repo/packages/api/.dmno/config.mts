@@ -23,7 +23,17 @@ export default defineDmnoService({
 
     SECRET_FOO: {
       value: 'secret-foo-value',
-      sensitive: true,
+      sensitive: {
+        allowedDomains: ['*']
+      },
+    },
+
+    STRIPE_SECRET_KEY: {
+      value: 'fake-stripe-secret-key',
+      required: true,
+      sensitive: {
+        allowedDomains: ['api.stripe.com'],
+      },
     },
 
     ANOTHER_SECRET: {

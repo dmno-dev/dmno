@@ -58,17 +58,25 @@ export function checkForSchemaErrors(workspace: DmnoWorkspace) {
   }
 
   // now show schema errors
-  if (_.some(_.values(workspace.allServices), (s) => s.schemaErrors?.length)) {
+  const servicesWithSchemaErrors = _.values(workspace.allServices).filter(
+    (s) => s.schemaErrors?.length || _.some(_.values(s.config), (i) => !i.isSchemaValid),
+  );
+  if (servicesWithSchemaErrors.length) {
     console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your config schema is invalid')}  🚨 🚨 🚨\n`);
     console.log(kleur.gray('The following services have issues:\n'));
 
-    _.each(workspace.allServices, (service) => {
-      if (!service.schemaErrors?.length) return;
-
-      console.log(service.serviceName);
-      console.log(_.map(service.schemaErrors, formatError).join('\n'));
+    // TODO: clean up this formatting!
+    _.each(servicesWithSchemaErrors, (service) => {
+      console.log(`Service: ${kleur.green(service.serviceName)}`);
+      _.each(service.schemaErrors, (err) => {
+        console.log(formatError(err));
+      });
+      const invalidSchemaItems = _.values(service.config).filter((i) => !i.isSchemaValid);
+      _.each(invalidSchemaItems, (item) => {
+        console.log(`> ${item.key}`);
+        console.log(item.schemaErrors.map(formatError).join('\n'));
+      });
     });
-    // console.log(errorsTable.toString());
     throw new CliExitError('Config schema errors');
   }
 }

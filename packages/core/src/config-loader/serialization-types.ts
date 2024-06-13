@@ -25,6 +25,7 @@ export type SerializedWorkspace = {
 export type SerializedService =
   Pick<DmnoService, 'packageName' | 'serviceName' | 'path'>
   & {
+    isSchemaValid: boolean,
     isValid: boolean,
     isResolved: boolean,
     configLoadError?: SerializedDmnoError,
@@ -52,12 +53,13 @@ export type SerializedDmnoPluginInput = Pick<DmnoPluginInputItem, 'key' | 'isVal
 };
 
 export type SerializedConfigItem =
-  Pick<DmnoConfigItemBase, 'key' | 'isValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved' | 'isDynamic'>
+  Pick<DmnoConfigItemBase, 'key' | 'isValid' | 'isSchemaValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved' | 'isDynamic'>
   & {
     dataType: SerializedDmnoDataType,
     children: Record<string, SerializedConfigItem>,
     coercionError?: SerializedDmnoError,
     validationErrors?: Array<SerializedDmnoError>,
+    schemaErrors?: Array<SerializedDmnoError>,
     // TODO: dedupe some items from the resolver
     resolutionError?: SerializedDmnoError,
     resolver?: SerializedResolver,

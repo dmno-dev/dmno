@@ -1,7 +1,12 @@
 import { redactString, resetSensitiveConfigRedactor } from '../lib/redaction-helpers';
 import type { InjectedDmnoEnv, InjectedDmnoEnvItem } from '../config-engine/config-engine';
 
-export { patchGlobalConsoleToRedactSensitiveLogs, unredact } from '../lib/redaction-helpers';
+export {
+  patchGlobalConsoleToRedactSensitiveLogs,
+  unpatchGlobalConsoleSensitiveLogRedaction,
+  unredact,
+} from '../lib/redaction-helpers';
+export { enableHttpInterceptor, disableHttpInterceptor } from '../lib/http-interceptor-utils';
 
 const processExists = !!globalThis.process;
 let originalProcessEnv: Record<string, string> = {};
@@ -21,6 +26,13 @@ type DmnoInjectionResult = {
   sensitiveValueLookup: Record<string, { value: any, redacted: string }>,
 };
 
+export type SensitiveValueLookup = Record<string, {
+  redacted: string,
+  value: string,
+  allowedDomains?: Array<string>,
+}>;
+
+
 export function injectDmnoGlobals(
   opts?: {
     injectedConfig?: InjectedDmnoEnv,
@@ -28,7 +40,7 @@ export function injectDmnoGlobals(
     onItemAccess?: (item: InjectedDmnoEnvItem) => void;
   },
 ) {
-  const sensitiveValueLookup: Record<string, { value: string, redacted: string }> = {};
+  const sensitiveValueLookup: SensitiveValueLookup = {};
   const dynamicKeys: Array<string> = [];
   const sensitiveKeys: Array<string> = [];
   const publicDynamicKeys: Array<string> = [];
@@ -89,6 +101,7 @@ export function injectDmnoGlobals(
         sensitiveValueLookup[itemKey] = {
           value: valStr,
           redacted: redactString(valStr, injectedItem.redactMode),
+          allowedDomains: injectedItem.allowedDomains,
         };
       }
     }
