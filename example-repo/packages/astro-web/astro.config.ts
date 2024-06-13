@@ -20,7 +20,7 @@ import mdx from "@astrojs/mdx";
 export default defineConfig({
   integrations: [
     dmnoAstroIntegration({ redactSensitiveLogs: true }),
-    vue(),
+    vue({ appEntrypoint: '/src/vue-app-config' }),
     mdx(),
     {
       name: 'custom',

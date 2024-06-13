@@ -32,6 +32,13 @@ export type SensitiveValueLookup = Record<string, {
   allowedDomains?: Array<string>,
 }>;
 
+// some object keys are checked by various tools when handling arbitrary data, especially in templates
+// because our proxy objects throw errors when unknown keys are accessed, this causes problems
+// for now we can just filter out a these keys and it should be fairly harmless
+// TODO: ideally this could be customized by the user, and not specific to vue
+const IGNORED_PROXY_KEYS = [
+  '__v_isRef', // vue - see https://github.com/vuejs/core/blob/70773d00985135a50556c61fb9855ed6b930cb82/packages/reactivity/src/ref.ts#L101
+];
 
 export function injectDmnoGlobals(
   opts?: {
@@ -133,6 +140,9 @@ export function injectDmnoGlobals(
   (globalThis as any).DMNO_CONFIG = new Proxy(rawConfigObj, {
     get(o, key) {
       const keyStr = key.toString();
+      // special cases to avoid throwing on invalid keys
+      if (IGNORED_PROXY_KEYS.includes(keyStr)) return;
+
       if (opts?.trackingObject) opts.trackingObject[keyStr] = true;
       // console.log('get DMNO_CONFIG - ', key);
       if (key in injectedDmnoEnv) {
@@ -147,6 +157,9 @@ export function injectDmnoGlobals(
   (globalThis as any).DMNO_PUBLIC_CONFIG = new Proxy(rawPublicConfigObj, {
     get(o, key) {
       const keyStr = key.toString();
+      // special cases to avoid throwing on invalid keys
+      if (IGNORED_PROXY_KEYS.includes(keyStr)) return;
+
       if (opts?.trackingObject) opts.trackingObject[keyStr] = true;
       // console.log('get DMNO_PUBLIC_CONFIG - ', keyStr);
       if (injectedDmnoEnv[keyStr]?.sensitive) {
