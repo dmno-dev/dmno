@@ -26,7 +26,7 @@ Also, note the `configPath` function. This is a helper function that will look u
 import { defineDmnoService, configPath } from 'dmno';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
-const MyProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
+const MyProdVault = new EncryptedVaultDmnoPlugin('vault', {
   key: configPath('DMNO_VAULT_KEY'),
 });
 
