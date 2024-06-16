@@ -4,8 +4,8 @@ import { ClientRequestInterceptor } from '@mswjs/interceptors/ClientRequest';
 import { XMLHttpRequestInterceptor } from '@mswjs/interceptors/XMLHttpRequest';
 import { FetchInterceptor } from '@mswjs/interceptors/fetch';
 
-import { SensitiveValueLookup } from '../inject/dmno-globals-injector';
 import { checkUrlInAllowList } from './url-pattern-utils';
+import { SensitiveValueLookup } from '../config-engine/config-engine';
 
 
 // some funky stuff happening to keep track of the interceptor globally
@@ -29,6 +29,8 @@ function initInterceptor() {
   (globalThis as any)._dmnoHttpInterceptor = interceptor;
 
   interceptor.on('request', async ({ request, requestId }) => {
+    if (!findSensitiveValuesRegex) return;
+
     const url = new URL(request.url);
 
     // we'll construct an object with everything we want to check so we can run a single regex on it (stringified)
@@ -83,9 +85,10 @@ function initInterceptor() {
 
 
 let sensitiveInterceptorLookup: Record<string, { key: string, allowedDomains: Array<string> }>;
-let findSensitiveValuesRegex: RegExp;
+let findSensitiveValuesRegex: RegExp | undefined;
 function buildSensitiveValuesLoookup(lookup?: SensitiveValueLookup) {
   sensitiveInterceptorLookup = {};
+  findSensitiveValuesRegex = undefined;
 
   if (!lookup || !Object.keys(lookup).length) return;
   for (const key in lookup) {
@@ -108,9 +111,8 @@ function buildSensitiveValuesLoookup(lookup?: SensitiveValueLookup) {
 }
 
 export function enableHttpInterceptor() {
-  // console.log('enable http interceptor', globalThis.fetch);
   buildSensitiveValuesLoookup((globalThis as any)._DMNO_SENSITIVE_LOOKUP);
-  initInterceptor();
+  if (findSensitiveValuesRegex) initInterceptor();
 }
 export function disableHttpInterceptor() {
   // console.log('deactivating interceptor');

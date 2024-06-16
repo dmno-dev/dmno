@@ -25,6 +25,10 @@ const ProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
 export default defineDmnoService({
   name: 'root',
   isRoot: true,
+  settings: {
+    interceptSensitiveLeakRequests: true,
+    redactSensitiveLogs: true,
+  },
   schema: {
     NODE_ENV: NodeEnvType,
     DMNO_ENV: {

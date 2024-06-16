@@ -3,6 +3,10 @@ import { NetlifyEnvSchema } from '@dmno/netlify-platform/types';
 
 export default defineDmnoService({
   name: 'docs-site',
+  settings: {
+    interceptSensitiveLeakRequests: true,
+    redactSensitiveLogs: true,
+  },
   pick: [
     'GITHUB_REPO_URL',
     'DISCORD_JOIN_URL',

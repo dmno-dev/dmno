@@ -4,7 +4,7 @@ import {
   unpatchGlobalConsoleSensitiveLogRedaction,
 } from '../lib/redaction-helpers';
 import { enableHttpInterceptor, disableHttpInterceptor } from '../lib/http-interceptor-utils';
-import type { InjectedDmnoEnv, InjectedDmnoEnvItem } from '../config-engine/config-engine';
+import type { InjectedDmnoEnv, InjectedDmnoEnvItem, SensitiveValueLookup } from '../config-engine/config-engine';
 
 
 // not sure about exporting these fns now that we control the behaviour via the schema
@@ -33,13 +33,8 @@ type DmnoInjectionResult = {
   sensitiveKeys: Array<string>,
   sensitiveValueLookup: Record<string, { value: any, redacted: string }>,
   serviceSettings: InjectedDmnoEnv['$SETTINGS'],
+  injectedDmnoEnv: InjectedDmnoEnv,
 };
-
-export type SensitiveValueLookup = Record<string, {
-  redacted: string,
-  value: string,
-  allowedDomains?: Array<string>,
-}>;
 
 // some object keys are checked by various tools when handling arbitrary data, especially in templates
 // because our proxy objects throw errors when unknown keys are accessed, this causes problems
@@ -221,6 +216,7 @@ export function injectDmnoGlobals(
     sensitiveKeys,
     sensitiveValueLookup,
     serviceSettings,
+    injectedDmnoEnv,
   };
   // (globalThis as any)._DMNO_CACHED_INJECTION_RESULT = injectionResult;
 

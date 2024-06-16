@@ -1,6 +1,6 @@
 {
   "name": "@dmno/astro-integration",
-  "version": "0.0.8-dev",
+  "version": "0.0.8",
   "description": "tools for integrating dmno into astro",
   "author": "dmno-dev",
   "license": "MIT",

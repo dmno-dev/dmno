@@ -8,10 +8,6 @@ const VaultPlugin = EncryptedVaultDmnoPlugin.injectInstance('vault/prod');
 export default defineDmnoService({
   name: 'api',
   parent: 'group1',
-  settings: {
-    redactSensitiveLogs: true,
-    interceptSensitiveLeakRequests: true,
-  },
   pick: [
     'NODE_ENV',
     'DMNO_ENV',

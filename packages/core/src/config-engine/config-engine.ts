@@ -48,8 +48,6 @@ export type TypeExtendsDefinition<TypeSettings = any> =
   (() => DmnoDataType) |
   ((opts: TypeSettings) => DmnoDataType);
 
-
-
 export type TypeValidationResult = boolean | undefined | void | Error | Array<Error>;
 
 /**
@@ -209,6 +207,12 @@ export type InjectedDmnoEnvItem = {
 export type InjectedDmnoEnv = Record<string, InjectedDmnoEnvItem> & {
   $SETTINGS: DmnoServiceSettings,
 };
+
+export type SensitiveValueLookup = Record<string, {
+  redacted: string,
+  value: string,
+  allowedDomains?: Array<string>,
+}>;
 
 export function defineDmnoService(opts: DmnoServiceConfig) {
   debug('LOADING SCHEMA!', opts);
@@ -708,6 +712,7 @@ export class DmnoService {
       if (parent) return parent;
       throw new Error(`Unable to find parent service: ${this.rawConfig.parent}`);
     }
+    return this.workspace.rootService;
   }
 
   /**

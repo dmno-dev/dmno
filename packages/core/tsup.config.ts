@@ -6,8 +6,8 @@ export default defineConfig({
     
     'src/vendor-types/index.ts', // reusable types for very common things
 
-    'src/inject/dmno-globals-injector.ts', // function used to inject dmno globals
-    'src/inject/inject-dmno-globals.ts', // exports inject function and automatically calls it once
+    'src/globals-injector/injector.ts', // function used to inject dmno globals
+    'src/globals-injector/auto-inject.ts', // exports inject function and automatically calls it once
 
     'src/cli/cli-executable.ts', // cli that gets run via `dmno` command
     'src/cli/plugin-cli-lib.ts', // helpers used to create clis for dmno plugins
@@ -32,7 +32,7 @@ export default defineConfig({
   sourcemap: true, // Generate sourcemaps
   treeshake: true, // Remove unused code
   
-  clean: true, // Clean output directory before building
+  // clean: true, // Clean output directory before building
   outDir: "dist", // Output directory
   
   format: ['esm'], // Output format(s)

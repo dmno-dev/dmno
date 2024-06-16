@@ -11,7 +11,7 @@ export {
 } from './config-engine/errors';
 
 export * from './config-loader/config-server-client';
-export * from './inject/dmno-globals-injector';
+export * from './globals-injector/injector';
 
 // used by 1pass plugin - will likely extract eventually
 export * from './lib/dotenv-utils';

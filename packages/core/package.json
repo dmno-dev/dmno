@@ -1,6 +1,6 @@
 {
   "name": "dmno",
-  "version": "0.0.13-dev",
+  "version": "0.0.13",
   "description": "dmno is the best way to manage config / env vars in your entire stack",
   "author": "dmno-dev",
   "license": "MIT",
@@ -23,10 +23,11 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "tsup",
+    "build": "pnpm run build:injector && tsup",
+    "build:injector": "tsup --config tsup.inject-standalone.config.ts",
     "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
     "build:tarball": "turbo build && pnpm pack --pack-destination \"../../../tmp-package-registry\"",
-    "dev": "pnpm run build --watch",
+    "dev": "pnpm run build:injector && tsup --watch",
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix",
     "test": "vitest"
@@ -51,15 +52,20 @@
       "import": "./dist/cli/plugin-cli-lib.js",
       "types": "./dist/cli/plugin-cli-lib.d.ts"
     },
-    "./injector": {
-      "ts-src": "./src/inject/dmno-globals-injector.ts",
-      "import": "./dist/inject/dmno-globals-injector.js",
-      "types": "./dist/inject/dmno-globals-injector.d.ts"
+    "./inject-globals": {
+      "ts-src": "./src/globals-injector/injector.ts",
+      "import": "./dist/globals-injector/injector.js",
+      "types": "./dist/globals-injector/injector.d.ts"
     },
-    "./inject": {
-      "ts-src": "./src/inject/inject-dmno-globals.ts",
-      "import": "./dist/inject/inject-dmno-globals.js",
-      "types": "./dist/inject/inject-dmno-globals.d.ts"
+    "./auto-inject-globals": {
+      "ts-src": "./src/globals-injector/auto-inject.ts",
+      "import": "./dist/globals-injector/auto-inject.js",
+      "types": "./dist/globals-injector/auto-inject.d.ts"
+    },
+    "./injector-standalone": {
+      "ts-src": "./src/globals-injector/injector.ts",
+      "import": "./dist/globals-injector-standalone/injector.js",
+      "types": "./dist/globals-injector-standalone/injector.d.ts"
     },
     "./tsconfigs/*.json": "./tsconfigs/*",
     "./tsconfigs/*": "./tsconfigs/*.json"
@@ -92,7 +98,7 @@
     "@dagrejs/graphlib": "^2.2.2",
     "@inquirer/core": "^8.0.1",
     "@inquirer/prompts": "^5.0.1",
-    "@mswjs/interceptors": "link:../../../other-tools/interceptors",
+    "@mswjs/interceptors": "^0.30.0",
     "acorn": "^8.11.3",
     "acorn-typescript": "^1.4.13",
     "base64-arraybuffer": "^1.0.2",

@@ -1,6 +1,6 @@
 /* eslint-disable prefer-rest-params, func-names */
 
-import { SensitiveValueLookup } from '../inject/dmno-globals-injector';
+import { SensitiveValueLookup } from '../config-engine/config-engine';
 
 const UNMASK_STR = '👁';
 

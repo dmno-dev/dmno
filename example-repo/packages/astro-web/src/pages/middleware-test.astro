@@ -2,12 +2,7 @@
 
 
 // this page should be intercepted because a sensitive item is included in the content
-const apiResp = await fetch('https://api.sampleapis.com/coffee/hot', {
-  headers: {
-    'x-custom-auth': DMNO_CONFIG.SECRET_FOO,
-    'x-another': 'bloop',
-  },
-});
+const apiResp = await fetch('https://api.sampleapis.com/coffee/hot');
 
 const drinks = await apiResp.json();
 
