@@ -23,9 +23,10 @@ Initialize the plugin in the root, or service if not shared. Note the `vault/pro
 Also, note the `configPath` function. This is a helper function that will look up the value of the key that contains the key used to encrypt/decrypt the vault. This is useful for keeping the key out of the codebase. It will need to live in your `.env.local` file, or in an environment variable.
 
 ```typescript title="[root]/.dmno/config.mts"
+import { defineDmnoService, configPath } from 'dmno';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
-const MyProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
+const MyProdVault = new EncryptedVaultDmnoPlugin('vault', {
   key: configPath('DMNO_VAULT_KEY'),
 });
 
@@ -90,7 +91,7 @@ This will:
 
 Add encrypted values to the vault: 
 
-<TabbedCode command="dmno plugin -p vault -- set-item" />
+<TabbedCode command="dmno plugin -p vault -- add" />
 
 ## Rotate the vault key
 
