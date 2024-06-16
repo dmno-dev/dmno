@@ -1,11 +1,7 @@
 /* eslint-disable import/first */
 /* eslint-disable no-console */
 
-import { injectDmnoGlobals, patchGlobalConsoleToRedactSensitiveLogs, enableHttpInterceptor } from 'dmno/injector';
-
-injectDmnoGlobals();
-patchGlobalConsoleToRedactSensitiveLogs();
-enableHttpInterceptor();
+import 'dmno/auto-inject-globals';
 
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
@@ -20,55 +16,13 @@ import { detectClientIp } from './lib/client-ip';
 import { CustomAppContext, CustomAppState } from './custom-state';
 
 
-// console.log('\n\n');
-// console.log('Just a normal day, console.log-ging some secrets by accident 👀');
-// console.log(`Here's one now! SECRET_FOO = ${DMNO_CONFIG.SECRET_FOO}`);
-
-// console.log('\n\n');
-// console.log('Hmm better send some debugging data to our logging service 📡');
-
-// const apiResp = await fetch(
-//   'https://api.myloggingtool.com/ingest',
-//   // `http://localhost:4321/api.json?q1=asdf&q2=moo&q3=${DMNO_CONFIG.STRIPE_KEY}`,
-//   {
-//     method: 'POST',
-//     // body: formData,
-//     body: JSON.stringify({
-//       name: 'John Doe',
-//       age: 29,
-//       secret: DMNO_CONFIG.STRIPE_SECRET_KEY,
-//       another: DMNO_CONFIG.SECRET_FOO,
-//     }),
-//     headers: {
-//       'Content-Type': 'application/json',
-//       // 'x-custom-auth': DMNO_CONFIG.STRIPE_KEY,
-//       'x-another': 'bloop',
-//     },
-//   },
-// );
+console.log('\n\n');
+console.log('Just a normal day, console.log-ging some secrets by accident 👀');
+console.log(`Here's one now! SECRET_FOO = ${DMNO_CONFIG.SECRET_FOO}`);
 
 // console.log(apiResp);
 
 
-class TestObj {
-  prop1 = DMNO_CONFIG.SECRET_FOO;
-}
-const obj = new TestObj();
-
-console.log('secret foo = ', { o: [1, 2, DMNO_CONFIG.SECRET_FOO] });
-// console.log('unmasked secret foo = ', unredact(DMNO_CONFIG.SECRET_FOO));
-console.log('another secret = ', DMNO_CONFIG.ANOTHER_SECRET);
-console.log(`secret value = ${DMNO_CONFIG.SECRET_FOO}`);
-
-console.log({ method: 'console.log', 'secret value': DMNO_CONFIG.SECRET_FOO });
-console.dir({ method: 'console.dir', 'secret value': DMNO_CONFIG.SECRET_FOO });
-console.warn({ method: 'console.warn', 'secret value': DMNO_CONFIG.SECRET_FOO });
-console.error({ method: 'console.error', 'secret value': DMNO_CONFIG.SECRET_FOO });
-
-console.dir({ 'secret value': DMNO_CONFIG.SECRET_FOO });
-console.log(['secret value', DMNO_CONFIG.SECRET_FOO, `secret = ${DMNO_CONFIG.SECRET_FOO}`]);
-console.log(obj);
-console.log({ obj });
 
 export const app = new Koa<CustomAppState, CustomAppContext>();
 

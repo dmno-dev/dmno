@@ -36,7 +36,7 @@
     "/dist"
   ],
   "scripts": {
-    "build": "tsup --config tsup-injector.config.ts && tsup",
+    "build": "tsup",
     "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
     "build:tarball": "turbo build && pnpm pack --pack-destination \"../../../../tmp-package-registry\"",
     "dev": "pnpm run build --watch",

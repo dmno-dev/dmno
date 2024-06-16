@@ -1,4 +1,4 @@
-import 'dmno/inject';
+import 'dmno/auto-inject-globals';
 
 console.log('Checking if ENV is loaded...');
 console.log('-- process.env --------------------');

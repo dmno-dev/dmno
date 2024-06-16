@@ -2,7 +2,7 @@
   <div>
     <h1>Vite + DMNO!!</h1>
 
-    <p>{{ DMNO_PUBLIC_CONFIG.PUBLIC_STATIC }}</p>
+    <!-- <p>{{ DMNO_PUBLIC_CONFIG.PUBLIC_STATIC }}</p> -->
 
     <ul>
       <li

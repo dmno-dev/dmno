@@ -19,6 +19,9 @@ const customUrlType = createDmnoDataType({
 export default defineDmnoService({
   name: 'web',
   parent: 'group1',
+  settings: {
+    dynamicConfig: 'only_static',
+  },
   pick: [
     'NODE_ENV',
     'DMNO_ENV',

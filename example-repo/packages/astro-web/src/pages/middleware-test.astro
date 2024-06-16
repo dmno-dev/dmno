@@ -1,0 +1,13 @@
+---
+
+
+// this page should be intercepted because a sensitive item is included in the content
+const apiResp = await fetch('https://api.sampleapis.com/coffee/hot');
+
+const drinks = await apiResp.json();
+
+// export const prerender = true;
+---
+<h2>Testing leak detection middleware!</h2>
+<p>This page should fail - the page content includes a sensitive config item
+<pre>{ JSON.stringify(drinks) }</pre>

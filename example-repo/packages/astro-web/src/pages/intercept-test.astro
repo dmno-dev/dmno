@@ -1,0 +1,18 @@
+---
+
+
+// this request should be intercepted because of the sensitive secret being sent to the wrong domain
+const apiResp = await fetch('https://api.sampleapis.com/beers/ale', {
+  headers: {
+    'x-custom-auth': DMNO_CONFIG.SECRET_FOO,
+    'x-another': 'bloop',
+  },
+});
+
+const beers = await apiResp.json();
+
+// export const prerender = true;
+---
+<h2>Testing http interceptor!</h2>
+<p>This page should fail - the request should be intercepted because a sensitive config item was sent as a header to a domain not in the allow list</p>
+<pre>{ JSON.stringify(beers) }</pre>

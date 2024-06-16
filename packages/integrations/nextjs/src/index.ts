@@ -60,8 +60,6 @@ export function dmnoNextConfigPlugin(dmnoOptions?: DmnoPluginOptions) {
         // Set up replacements / rewrites (using webpack DefinePlugin)
         webpackConfig.plugins.push(new webpack.DefinePlugin({
           ...staticReplacements,
-          // enables/disables redaction in server inject script
-          __DMNO_REDACT_CONSOLE__: JSON.stringify(!!dmnoOptions?.redactSensitiveLogs),
         }));
 
         return webpackConfig; // must return the modified config

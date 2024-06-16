@@ -32,6 +32,7 @@ export default defineDmnoService({
     SECRET_FOO: {
       value: 'secret-foo-config-value',
       sensitive: true,
+      required: true,
       description: 'test of a sensitive env var',
     },
     EMPTY: {
@@ -58,5 +59,11 @@ export default defineDmnoService({
       dynamic: true,
       sensitive: true,
     },
+
+    SECRET_MIDDLEWARE_TEST: {
+      // this is in the output of a page that will be stopped by our secret leak detector
+      value: 'Cappuccino',
+      sensitive: true,
+    }
   },
 })

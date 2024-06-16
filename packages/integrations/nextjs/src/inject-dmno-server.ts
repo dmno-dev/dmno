@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { InjectedDmnoEnvItem, injectDmnoGlobals, patchGlobalConsoleToRedactSensitiveLogs } from 'dmno';
+import { InjectedDmnoEnvItem, injectDmnoGlobals } from 'dmno';
 import { headers } from 'next/headers.js';
 
 injectDmnoGlobals({
@@ -12,12 +12,6 @@ injectDmnoGlobals({
     }
   },
 });
-
-// @ts-ignore
-if (__DMNO_REDACT_CONSOLE__) {
-  patchGlobalConsoleToRedactSensitiveLogs();
-}
-
 
 export const publicDynamicEnvObj: Record<string, any> = {};
 const publicDynamicKeys = (globalThis as any)._DMNO_PUBLIC_DYNAMIC_KEYS as Array<string>;

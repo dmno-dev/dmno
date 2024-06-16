@@ -45,3 +45,41 @@ const routeFilePaths = globSync(`${__dirname}/**/*.routes.{js,ts}`);
   }
   routesLoadedDefer.resolve();
 }());
+
+class TestObj {
+  prop1 = DMNO_CONFIG.SECRET_FOO;
+}
+router.get('/redact-demo', async (ctx) => {
+  const obj = new TestObj();
+
+  console.log('secret foo = ', { o: [1, 2, DMNO_CONFIG.SECRET_FOO] });
+  // console.log('unmasked secret foo = ', unredact(DMNO_CONFIG.SECRET_FOO));
+  console.log('another secret = ', DMNO_CONFIG.ANOTHER_SECRET);
+  console.log(`secret value = ${DMNO_CONFIG.SECRET_FOO}`);
+
+  console.log({ method: 'console.log', 'secret value': DMNO_CONFIG.SECRET_FOO });
+  console.dir({ method: 'console.dir', 'secret value': DMNO_CONFIG.SECRET_FOO });
+  console.warn({ method: 'console.warn', 'secret value': DMNO_CONFIG.SECRET_FOO });
+  console.error({ method: 'console.error', 'secret value': DMNO_CONFIG.SECRET_FOO });
+
+  console.dir({ 'secret value': DMNO_CONFIG.SECRET_FOO });
+  console.log(['secret value', DMNO_CONFIG.SECRET_FOO, `secret = ${DMNO_CONFIG.SECRET_FOO}`]);
+  console.log(obj);
+  console.log({ obj });
+
+  ctx.body = { message: 'check logs to see redacted secrets' };
+});
+
+router.get('/interceptor-demo', async (ctx) => {
+  console.log('Hmm better send some debugging data to our logging service 📡');
+
+  const apiResp = await fetch('https://api.sampleapis.com/beers/ale', {
+    headers: {
+      secret: DMNO_CONFIG.STRIPE_SECRET_KEY,
+      'x-another': 'bloop',
+    },
+  });
+  const results = await apiResp.json();
+
+  ctx.body = results;
+});

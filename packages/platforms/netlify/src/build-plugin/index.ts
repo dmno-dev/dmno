@@ -28,46 +28,53 @@ function getNetlifyFolderPath(eventArgs: any) {
   } return '/opt/build/repo/.netlify';
 }
 
-// this is the source of `dmno/inject` but bundled into a single file
-// TODO: we should probably expose this directly from dmno itself rather than rebundling it within this package
-const INJECTOR_FULL_SRC = fs.readFileSync(`${__dirname}/injector.js`, 'utf8');
+// this is the source of `dmno/inject-globals` but bundled into a single file
+const standaloneInjectorPath = fileURLToPath(import.meta.resolve('dmno/injector-standalone'));
+const standaloneInjectorSrc = await fs.promises.readFile(standaloneInjectorPath, 'utf8');
 
 function updateDmnoInjectFile(netlifyFolderPath: string) {
-  const injectorSrcWithEnv = INJECTOR_FULL_SRC.replace('injectDmnoGlobals();', `injectDmnoGlobals({ injectedConfig: ${dmnoEnv} });`)
+  const injectorSrcWithEnv = standaloneInjectorSrc + `\n\ninjectDmnoGlobals({ injectedConfig: ${dmnoEnv} });`;
   fs.writeFileSync(`${netlifyFolderPath}/inject-dmno-config.js`, injectorSrcWithEnv, 'utf8');
 }
 
 const IMPORT_INJECTOR_REGEX = /^import ["'](\.\.\/)+\.netlify\/inject-dmno-config\.js["']/m;
 
-export async function onBuild(args: any) {
+export async function onPreBuild(args: any) {
   const netlifyFolderPath = getNetlifyFolderPath(args);
   updateDmnoInjectFile(netlifyFolderPath);
+}
+export async function onBuild(args: any) {
+  const netlifyFolderPath = getNetlifyFolderPath(args);
 
   const injectorImportPath = `${netlifyFolderPath}/inject-dmno-config.js`;
 
   // handle regular "functions" (lambdas)
-  const allFunctions = await args.utils.functions.list();
-  for (const fn of allFunctions) {
-    
+  try {
+    const allFunctions = await args.utils.functions.list();
+    for (const fn of allFunctions) {
+      
 
-    const originalSrc = await fs.promises.readFile(fn.mainFile, 'utf8');
-    
-    if (originalSrc.match(IMPORT_INJECTOR_REGEX)) {
-      debug('function @ '+fn.mainFile+' already imports dmno config injector');
-      continue;
+      const originalSrc = await fs.promises.readFile(fn.mainFile, 'utf8');
+      
+      if (originalSrc.match(IMPORT_INJECTOR_REGEX)) {
+        debug('function @ '+fn.mainFile+' already imports dmno config injector');
+        continue;
+      }
+      // TODO: we could show a better error here if the user is directly authoring their functions and has not imported the config injector
+      // the built functions are already in the .netlify folder when being built by in integration
+      // versus in the `netlify/functions` folder when direct authoring
+      // const isDirectAuthoring = fn.mainFile.includes('/netlify/functions/')
+
+      // NOTE - if we inject the config directly, other imports get hoisted above it
+      // so we have to inject an import that includes the config instead
+      const relativeImportPath = path.relative(dirname(fn.mainFile), injectorImportPath);
+
+      const updatedSrc = `import '${relativeImportPath}';\n` + originalSrc;
+      await fs.promises.writeFile(fn.mainFile, updatedSrc, 'utf8');
+      debug('updated function @ '+fn.mainFile, originalSrc.substr(0,100));
     }
-    // TODO: we could show a better error here if the user is directly authoring their functions and has not imported the config injector
-    // the built functions are already in the .netlify folder when being built by in integration
-    // versus in the `netlify/functions` folder when direct authoring
-    // const isDirectAuthoring = fn.mainFile.includes('/netlify/functions/')
-
-    // NOTE - if we inject the config directly, other imports get hoisted above it
-    // so we have to inject an import that includes the config instead
-    const relativeImportPath = path.relative(dirname(fn.mainFile), injectorImportPath);
-
-    const updatedSrc = `import '${relativeImportPath}';\n` + originalSrc;
-    await fs.promises.writeFile(fn.mainFile, updatedSrc, 'utf8');
-    debug('updated function @ '+fn.mainFile, originalSrc.substr(0,100));
+  } catch (err) {
+    console.log('skipping functions');
   }
 
   // handle "edge functions"
