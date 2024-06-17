@@ -25,7 +25,7 @@ That said, if someone has access to your running source code, then they have acc
 
 ### Log redaction
 
-Whenever dmno itself is logging a sensitive value, we will "redact" (hide) the full value. For example `secret123` may be shown as `se▒▒▒▒▒▒▒`. However we take this one step further for Node.js applications by providing functionality to patch the global `console` methods to redact the values any time they would appear in logs. The replacement is based on the value itself, so it does not matter _how_ the value ended up in the log.
+Whenever dmno itself is logging a sensitive value, we will redact (hide) the full value. For example `secret123` may be shown as `se▒▒▒▒▒▒▒`. However, we take this one step further for Node.js applications by providing functionality to patch the global `console` methods to redact the values any time they would appear in logs. The replacement is based on the value itself, so it does not matter _how_ the value ended up in the log.
 
 This feature can be enabled using the `redactSensitiveLogs` service setting. For example:
 

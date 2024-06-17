@@ -315,7 +315,7 @@ Items can be marked as `sensitive: true` and they will be treated accordingly. T
 - If the `interceptSensitiveLeakRequests` service setting is enabled, we will patch global http methods to intercept requests that send it to any domain not on the `allowedDomains` list
 - Depending on the integration, we will help make sure you don't accidentally leak them
 
-To customize behavior, you can set `sesitive` to an object rather than `true`. Note that an empty object will still mark the item as being sensitive.
+To customize behavior, you can set `sensitive` to an object rather than `true`. Note that an empty object will still mark the item as being sensitive.
 
 Note that many vendor-specific resuable data types from plugins will already be marked as sensitive!
 
@@ -333,7 +333,7 @@ export default defineDmnoService({
       },
     },
     ONE_PASS_TOKEN: {
-      // data types may already be marked as sensitive and have customized sttings
+      // data types may already be marked as sensitive and have customized settings
       extends: OnePasswordTypes.serviceAccountToken,
     },
   },
