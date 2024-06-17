@@ -58,18 +58,21 @@ Each `config.mts` file will define settings for that service, including a full s
 
 But as the root service is an ancestor of all other services, it is where any workspace-wide settings and config items will live.
 
-This file must have `export default defineDmnoService({ //...`. Here is an example:
+This file must include `export default defineDmnoService({ //...` and the config must be set as `isRoot: true`. Here is an example:
 
-```typescript title=".dmno/config.mts" "defineDmnoService"
+```typescript title=".dmno/config.mts" "defineDmnoService" "isRoot: true"
 import { DmnoBaseTypes, defineDmnoService, NodeEnvType } from 'dmno';
 
 export default defineDmnoService({
-  // you must mark the root with `isRoot: true`
+  // you must mark the root as being the root service
   isRoot: true,
   // service name (optional, but recommended)
   name: 'root',
   // workspace level settings, inherited by children (optional)
-  settings: { /* ... */ },
+  settings: {
+    redactSensitiveLogs: true,
+    interceptSensitiveLeakRequests: true,
+  },
   schema: {
     // your root config contains shared items used by your other services
     NODE_ENV: NodeEnvType,
@@ -110,6 +113,7 @@ import { StripeDataTypes } from 'stripe-dmno-plugin'; // doesn't exist yet
 export default defineDmnoService({
   name: 'api',
   parent: 'backend',
+  settings: { /* add/override settings, otherwise inherited from root */ },
   pick: [
     'NODE_ENV',
     'DISCORD_JOIN_LINK',
@@ -305,12 +309,16 @@ export default defineDmnoService({
 ### Secrets & security
 Items can be marked as `sensitive: true` and they will be treated accordingly. That means:
 
-- We will mask their values when logging them to the console via the `dmno` CLI
 - They will NOT be exposed via `DMNO_PUBLIC_CONFIG`, only via `DMNO_CONFIG`
+- We will redact their values when logging them to the console via the `dmno` CLI
+- If the `redactSensitiveLogs` service setting is enabled, we will patch global `console` methods redact the value from all logs 
+- If the `interceptSensitiveLeakRequests` service setting is enabled, we will patch global http methods to intercept requests that send it to any domain not on the `allowedDomains` list
 - Depending on the integration, we will help make sure you don't accidentally leak them
-- More amazing security-related features coming soon!
+
+To customize behavior, you can set `sensitive` to an object rather than `true`. Note that an empty object will still mark the item as being sensitive.
 
 Note that many vendor-specific resuable data types from plugins will already be marked as sensitive!
+
 
 ```ts
 export default defineDmnoService({
@@ -318,13 +326,28 @@ export default defineDmnoService({
     MY_SECRET: {
       sensitive: true,
     },
+    SOME_SECRET_TOKEN: {
+      sensitive: {
+        redactMode: 'show_last_2',
+        allowedDomains: ['api.someservice.com'],
+      },
+    },
     ONE_PASS_TOKEN: {
-      // this data type is already marked as sensitive!
+      // data types may already be marked as sensitive and have customized settings
       extends: OnePasswordTypes.serviceAccountToken,
     },
   },
 });
 ```
+
+#### Redact modes
+For config values that have a common prefix, showing the first 2 characters will not be very helpful for identification. We provide several different `redactMode` settings to customize how the sensitive value is displayed when redacted. The following table shows the different modes supported:
+
+| value | description | example |
+|---|---|---|
+| `show_first_2`<br/>⭐ _default_ | show the **first 2** characters only | `ab▒▒▒▒▒▒` |
+| `show_last_2` | show the **last 2** characters only | `▒▒▒▒▒▒yz` |
+| `show_first_last` | show the **first and last** characters only | `a▒▒▒▒▒▒z` |
 
 
 

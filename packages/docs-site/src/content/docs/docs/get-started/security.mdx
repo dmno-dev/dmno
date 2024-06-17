@@ -1,0 +1,70 @@
+---
+title: Security
+description: DMNO is designed to keep your configuration safe and secure while maintaining simplicity and developer experience.
+---
+
+
+:::note[Secrets are special]
+One of the things that sets DMNO apart from other configuration and secrets management solutions, is that it doesn't force you to treat secrets differently from the rest of your config. That doesn't mean they aren't _special_ though. 
+
+Not only does DMNO offer you ways to manage your secrets via [plugins](/docs/plugins/overview/), but it also provides the guardrails in its core libraries to make sure they don't leak and to make sure things are encrypted when they need to be. 
+:::
+
+DMNO provides you with several ways to keep your sensitive config items safe. 
+
+- All caches are encrypted 
+- We prevent secrets from being displayed in the console wherever possible
+- We provide a global `DMNO_PUBLIC_SECRETS` object that only includes _non-sensitive_ items
+- Our integrations have middleware (wherever possible), that detects and alerts you if sensitive items are leaking into a public context (e.g., a webpage, or client side component)
+- We provide [plugins](/docs/plugins/overview/), to securely store and retrieve your sensitive configuration, with minimal effort
+
+:::caution[Secrets are still secrets]
+That said, if someone has access to your running source code, then they have access to your secrets. So, design your systems accordingly.  Zero trust is always the best approach. 
+:::
+
+
+### Log redaction
+
+Whenever dmno itself is logging a sensitive value, we will redact (hide) the full value. For example `secret123` may be shown as `se▒▒▒▒▒▒▒`. However, we take this one step further for Node.js applications by providing functionality to patch the global `console` methods to redact the values any time they would appear in logs. The replacement is based on the value itself, so it does not matter _how_ the value ended up in the log.
+
+This feature can be enabled using the `redactSensitiveLogs` service setting. For example:
+
+```diff lang="ts" title=".dmno/config.mts"
+export default defineDmnoService({
+  settings: {
++    redactSensitiveLogs: true,
+  },
+  //...
+```
+
+:::tip[Service settings are inherited]
+In a monorepo, each service setting value is inherited from parents if no value is found on the service itself. So in a monorepo, you can enable it in your root service to enable it in all of your services.
+:::
+
+See [schema guide > security](/docs/guides/schema/#secrets--security) for more details about customizing redaction behaviour.
+
+
+### External HTTP request scanning
+
+Similarly, we provide functionality to patch node's global http internals so that we can snoop on all outbound requests and make sure your sensitive config is only sent where is supposed to go. This is particularly helpful to make sure you don't accidentally send secrets to a logging or exception tracking service.
+
+This must be enabled using the `interceptSensitiveLeakRequests` service setting, and sensitive config schema items must have have an `allowedDomains` list set.
+
+```diff lang="ts" title=".dmno/config.mts"
+export default defineDmnoService({
+  settings: {
++    interceptSensitiveLeakRequests: true,
+  },
+  schema: {
+    STRIPE_SECRET_KEY: {
+-      sensitive: true
++      sensitive: {
++        allowedDomains: ['api.stripe.com']
++      }
+    }
+  }
+  //...
+```
+
+Note that when using published reusable types, they will often have this set properly already.
+

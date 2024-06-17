@@ -166,6 +166,7 @@ export function generateDmnoConfigInitialCode(opts: {
     '',
     'export default defineDmnoService({',
     opts.isRoot && '  isRoot: true,',
+    opts.isRoot && '  settings: {\n    redactSensitiveLogs: true,\n    interceptSensitiveLeakRequests: true,\n  },',
     opts.serviceName
       ? `  name: '${opts.serviceName}',`
       : (opts.isMonorepo ? '  // no name specified - inherit from package.json' : undefined),
