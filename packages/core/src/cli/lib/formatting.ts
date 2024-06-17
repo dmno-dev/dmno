@@ -116,6 +116,9 @@ export function getItemSummary(item: SerializedConfigItem) {
   const errors = _.compact([item.coercionError, item.resolutionError, ...item.validationErrors || []]);
   errors?.forEach((err) => {
     summary.push(kleur.red(`   - ${err.message}`));
+    if (err.tip) {
+      summary.push(...err.tip.split('\n').map((line) => `     ${line}`));
+    }
   });
   return summary.join('\n');
 }

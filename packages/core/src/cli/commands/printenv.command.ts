@@ -17,8 +17,9 @@ const program = new DmnoCommand('printenv')
   .example('dmno printenv SOME_KEY', 'resolves config and prints the value of the single item');
 
 addWatchMode(program); // must be first
-addServiceSelection(program);
 addCacheFlags(program);
+addServiceSelection(program);
+
 
 program.action(async (itemPath: string, opts: {}, thisCommand) => {
   const ctx = getCliRunCtx();

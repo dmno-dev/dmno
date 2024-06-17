@@ -1,4 +1,7 @@
 import { DmnoBaseTypes, defineDmnoService } from 'dmno';
+import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
+
+const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
 
 export default defineDmnoService({
   name: 'group1',
@@ -15,5 +18,8 @@ export default defineDmnoService({
       extends: DmnoBaseTypes.number,
       description: 'thing related to only group1',
     },
+    OP_TEST: {
+      value: OnePassBackend.item(),
+    }
   },
 });

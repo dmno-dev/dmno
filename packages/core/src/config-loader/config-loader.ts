@@ -38,6 +38,7 @@ export class ConfigLoader {
 
   private cacheMode: CacheMode = true;
   setCacheMode(cacheMode: typeof this.cacheMode) {
+    debug(`Config loader - setting cache mode = ${cacheMode}`);
     if (this.dmnoWorkspace) this.dmnoWorkspace.setCacheMode(cacheMode);
     this.cacheMode = cacheMode;
   }
@@ -75,7 +76,13 @@ export class ConfigLoader {
   onReload?: () => void | Promise<void>;
 
   private async viteHotReloadHandler(ctx: HmrContext) {
+    // changes to the cache file should not trigger a reload, as this would cause a loop
+    // we could maybe set it up to watch manual edits to the file in between resolutions
+    // but probably not worth it
+    if (ctx.file.endsWith('.dmno/cache.json')) return;
+
     if (this.devMode) {
+      debug('vite hot reload triggered by file:', ctx.file);
       await this.reload();
       if (this.onReload) await this.onReload();
     }

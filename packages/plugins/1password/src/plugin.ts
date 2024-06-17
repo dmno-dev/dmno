@@ -2,6 +2,7 @@ import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import _ from 'lodash-es';
+import kleur from 'kleur';
 import {
   ConfigValueResolver, DmnoPlugin, ResolverContext,
   DmnoPluginInputSchema,
@@ -113,10 +114,20 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
         if (!this.envItemsByService) await this.loadEnvItems(ctx);
 
         const itemValue = this.envItemsByService?.[ctx.serviceName!]?.[ctx.itemPath]
-          // the label "_" is used to signal a fallback / default to apply to all services
+          // the label "_default" is used to signal a fallback / default to apply to all services
           || this.envItemsByService?._default?.[ctx.itemPath];
 
-        // TODO: better error handling to tell you what went wrong? no access, non existant, etc
+        if (itemValue === undefined) {
+          throw new ResolutionError('Unable to find config item in 1password', {
+            tip: [
+              'Open the 1password item where your secrets are stored:',
+              kleur.gray(`🔗 ${this.inputValues.envItemLink}`),
+              `Find entry with label ${kleur.bold().cyan(ctx.serviceName!)} (or create it)`,
+              'Add this secret like you would add it to a .env file',
+              `For example: \`${ctx.itemPath}="your-secret-value"\``,
+            ].join('\n'),
+          });
+        }
 
         // TODO: add metadata so you know if it came from a service or * item
         return itemValue;

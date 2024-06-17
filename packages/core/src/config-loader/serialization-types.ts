@@ -103,4 +103,5 @@ export type SerializedDmnoError = {
   message: string,
   isUnexpected: boolean,
   cleanedStack?: Array<string>,
+  tip?: string,
 };
