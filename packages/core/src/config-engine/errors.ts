@@ -39,7 +39,9 @@ export class DmnoError extends Error {
 
   icon = '❌';
 
-  constructor(err: string | Error) {
+  constructor(err: string | Error, readonly more?: {
+    tip?: string,
+  }) {
     if (_.isError(err)) {
       super(err.message);
       this.originalError = err;
@@ -57,6 +59,7 @@ export class DmnoError extends Error {
       name: this.name,
       message: this.message,
       isUnexpected: this.isUnexpected,
+      ...this.more,
     };
   }
 }

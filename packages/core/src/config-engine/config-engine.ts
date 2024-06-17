@@ -619,6 +619,7 @@ export class DmnoWorkspace {
     await fs.promises.writeFile(this.cacheFilePath, serializedCacheStr, 'utf-8');
   }
   async getCacheItem(key: string, usedBy?: string) {
+    debug('get cache item', key);
     if (this.cacheMode === 'skip') return undefined;
     if (key in this.valueCache) {
       if (usedBy) this.valueCache[key].usedByItems.add(usedBy);

@@ -22,8 +22,8 @@ const program = new DmnoCommand('run')
   .example('dmno run —-service service1 -- somecommand --some-option=(printenv SOME_VAR)', 'Runs the somecommand with the resolved config using SOME_VAR via printenv');
 
 addWatchMode(program);
-addServiceSelection(program);
 addCacheFlags(program);
+addServiceSelection(program);
 
 
 let commandProcess: ExecaChildProcess | undefined;

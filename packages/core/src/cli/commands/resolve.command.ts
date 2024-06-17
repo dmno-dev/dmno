@@ -26,8 +26,8 @@ const program = new DmnoCommand('resolve')
   .example('dmno resolve --service service1 --format json', 'Loads the resolved config for service1 in JSON format');
 
 addWatchMode(program); // must be first
-addServiceSelection(program);
 addCacheFlags(program);
+addServiceSelection(program);
 
 
 program.action(async (opts: {
