@@ -1,6 +1,6 @@
 {
   "name": "@dmno/nextjs-integration",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "tools for integrating dmno into nextjs",
   "author": "dmno-dev",
   "license": "MIT",
@@ -22,7 +22,6 @@
     "integration",
     "dmno-integration"
   ],
-
   "type": "module",
   "exports": {
     ".": {
