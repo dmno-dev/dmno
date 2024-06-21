@@ -42,8 +42,8 @@ export class DmnoError extends Error {
   constructor(err: string | Error, readonly more?: {
     tip?: string,
   }) {
+    super(_.isError(err) ? err.message : err);
     if (_.isError(err)) {
-      super(err.message);
       this.originalError = err;
       this.icon = '💥';
     } else {

@@ -56,11 +56,13 @@ export default defineDmnoService({
     SECRET_STATIC: {
       value: 'secret-static-default',
       sensitive: true,
+      required: true,
     },
     SECRET_DYNAMIC: {
       value: 'secret-dynamic-default',
       dynamic: true,
       sensitive: true,
+      required: true,
     },
     
 
