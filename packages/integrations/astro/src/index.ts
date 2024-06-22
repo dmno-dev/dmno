@@ -274,11 +274,15 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
         // currently we only trigger this behaviour for the netlify adapter, but we may also enable it via an explicit option
         ssrInjectConfigAtBuildTime = [
           '@astrojs/netlify',
+          '@astrojs/vercel/serverless',
+          // '@astrojs/vercel/static',
         ].includes(opts.config.adapter?.name || '');
       },
 
       'astro:build:ssr': async (opts) => {
         // console.log('build:ssr', opts);
+
+        debug('build:ssr hook', { ssrInjectConfigAtBuildTime, ssrOutputDirPath });
 
         if (!ssrOutputDirPath) throw new Error('Did not set ssr output path');
 

@@ -3,6 +3,7 @@
 import { SensitiveValueLookup } from '../config-engine/config-engine';
 
 const UNMASK_STR = '👁';
+const gThis = globalThis as any;
 
 function buildRedactionRegex(lookup?: SensitiveValueLookup) {
   if (!lookup || !Object.keys(lookup).length) return;
@@ -39,49 +40,50 @@ function buildRedactionRegex(lookup?: SensitiveValueLookup) {
 
 let redactor: ReturnType<typeof buildRedactionRegex>;
 export function resetSensitiveConfigRedactor() {
-  redactor = buildRedactionRegex((globalThis as any)._DMNO_SENSITIVE_LOOKUP);
+  redactor = buildRedactionRegex(gThis._DMNO_SENSITIVE_LOOKUP);
 }
 
 const LOG_METHODS = ['trace', 'debug', 'info', 'log', 'info', 'warn', 'error'];
+
+const isDmnoPatchedFnSymbol = Symbol('isDmnoPatchedFn');
 
 /** patches the global console.log (an other fns) to redact secrets */
 export function patchGlobalConsoleToRedactSensitiveLogs() {
   if (!redactor) return;
 
+  gThis._dmnoOrigConsoleMethods ||= {};
+
   // our method of patching involves replacing an internal node method which may not be called if console.log itself has also been patched
   // for example AWS lambdas patches this to write the logs to a file which then is pushed to the rest of their system
 
   // so first we'll just patch the internal method do deal with normal stdout/stderr logs -------------------------------------
+  // This method works perfectly on all data shapes, except that in some deployed environments, they may be already redirectly logs without calling it
 
   // we need the internal symbol name to access the internal method
-  const kWriteToConsoleSymbol = Object.getOwnPropertySymbols(globalThis.console).find((s) => s.description === 'kWriteToConsole');
-
-  // @ts-ignore
-  (globalThis as any)._dmnoOrigWriteToConsoleFn ||= globalThis.console[kWriteToConsoleSymbol];
-  // @ts-ignore
-  globalThis.console[kWriteToConsoleSymbol] = function () {
-    (globalThis as any)._dmnoOrigWriteToConsoleFn.apply(this, [
+  const kWriteToConsoleSymbol = Object.getOwnPropertySymbols(gThis.console).find((s) => s.description === 'kWriteToConsole')!;
+  gThis._dmnoOrigConsoleMethods[kWriteToConsoleSymbol] ||= gThis.console[kWriteToConsoleSymbol];
+  gThis.console[kWriteToConsoleSymbol] = function () {
+    return gThis._dmnoOrigConsoleMethods[kWriteToConsoleSymbol].apply(this, [
       arguments[0],
       redactSensitiveConfig(arguments[1]),
       arguments[2],
     ]);
   };
 
-  // and now we'll wrap console.log (and the other methods) if it looks like they have been patched already ------------------
+  // and now we'll wrap console.log (and the other methods) too, in case the platform we are on sidesteps the patched internals ------------------
   // NOTE - this will not fully redact from everything since we can't safely reach deep into objects
-  if (!console.log.toString().includes('[native code]') && !(console.log as any)._dmnoPatchedFn) { // eslint-disable-line no-console
+  if (!(console.log as any)[isDmnoPatchedFnSymbol]) { // eslint-disable-line no-console
     for (const logMethodName of LOG_METHODS) {
-      // @ts-ignore
-      const originalLogMethod = globalThis.console[logMethodName];
+      gThis._dmnoOrigConsoleMethods[logMethodName] ||= gThis.console[logMethodName];
 
+      // eslint-disable-next-line @typescript-eslint/no-loop-func
       const patchedFn = function () {
         // @ts-ignore
-        originalLogMethod.apply(this, Array.from(arguments).map(redactSensitiveConfig));
+        gThis._dmnoOrigConsoleMethods[logMethodName].apply(this, Array.from(arguments).map(redactSensitiveConfig));
       };
-      patchedFn._dmnoPatchedFn = true;
+      patchedFn[isDmnoPatchedFnSymbol] = true;
 
-      // @ts-ignore
-      globalThis.console[logMethodName] = patchedFn;
+      gThis.console[logMethodName] = patchedFn;
     }
   }
 }
@@ -92,29 +94,40 @@ export function patchGlobalConsoleToRedactSensitiveLogs() {
  * this is only really needed during local development when switching settings on/off in a process that does not reload
  * */
 export function unpatchGlobalConsoleSensitiveLogRedaction() {
-  // we'll only care about the normal case where console.log has NOT been patched by something else... (see above)
-  if (!(globalThis as any)._dmnoOrigWriteToConsoleFn) return;
+  if (!gThis._dmnoOrigConsoleMethods) return;
 
-  const kWriteToConsoleSymbol = Object.getOwnPropertySymbols(globalThis.console).find((s) => s.description === 'kWriteToConsole');
-  // @ts-ignore
-  globalThis.console[kWriteToConsoleSymbol] = (globalThis as any)._dmnoOrigWriteToConsoleFn;
-  delete (globalThis as any)._dmnoOrigWriteToConsoleFn;
+  for (const methodName in gThis._dmnoOrigConsoleMethods) {
+    gThis.console[methodName] = gThis._dmnoOrigConsoleMethods[methodName];
+  }
+  delete gThis._dmnoOrigConsoleMethods;
 }
 
 export function redactSensitiveConfig(o: any): any {
   if (!redactor) return o;
   if (!o) return o;
 
-  // TODO: handle more cases?
-  // we can probably redact safely from a few other datatypes - like set,map,etc?
-  // objects are a bit tougher
+  // TODO: maybe wrap all in a try catch so we dont cause crashes?
+  // TODO: handle more cases? like set,map,etc?
+
+  // string case
+  const type = typeof o;
+  if (type === 'string' || (type === 'object' && Object.prototype.toString.call(o) === '[object String]')) {
+    return (o as string).replaceAll(redactor.findRegex, redactor.replaceFn);
+  }
+
+  // array case
   if (Array.isArray(o)) {
     return o.map(redactSensitiveConfig);
   }
 
-  const type = typeof o;
-  if (type === 'string' || (type === 'object' && Object.prototype.toString.call(o) === '[object String]')) {
-    return (o as string).replaceAll(redactor.findRegex, redactor.replaceFn);
+  // objects
+  if (Object.getPrototypeOf(o) === Object.prototype) {
+    // && !(Symbol.toStringTag in value) && !(Symbol.iterator in value);
+    return Object.entries(o)
+      .reduce((a, [key, val]) => {
+        a[key] = redactSensitiveConfig(val);
+        return a;
+      }, {} as any);
   }
 
   return o;
@@ -125,8 +138,8 @@ export function redactSensitiveConfig(o: any): any {
  * currently this only works on a single secret, not objects or aggregated strings
  * */
 export function unredact(secretStr: string) {
-  // if redaction not enabled, we just return the seccret itself
-  if (!(globalThis as any)._dmnoOrigWriteToConsoleFn) return secretStr;
+  // if redaction not enabled, we just return the secret itself
+  if (!gThis._dmnoOrigConsoleMethods) return secretStr;
   // otherwise we add some wrapper characters which will be removed by the patched console behaviour
   return `${UNMASK_STR}${secretStr}${UNMASK_STR}`;
 }
