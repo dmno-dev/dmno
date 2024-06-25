@@ -14,4 +14,5 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
       throw new Error(`🚨 DETECTED LEAKED CONFIG ITEM! ${itemKey}`);
     }
   }
+  return response;
 };
