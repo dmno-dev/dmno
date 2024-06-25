@@ -1,5 +1,11 @@
 # @dmno/astro-integration
 
+## 0.0.10
+
+### Patch Changes
+
+- [#98](https://github.com/dmno-dev/dmno/pull/98) [`116e5ea`](https://github.com/dmno-dev/dmno/commit/116e5eabc852a90737b29947bc2ba7eaf85bd3b9) Thanks [@theoephraim](https://github.com/theoephraim)! - update astro version, fix dmno astro middleware
+
 ## 0.0.9
 
 ### Patch Changes
