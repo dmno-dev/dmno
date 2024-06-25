@@ -26,7 +26,7 @@ export default defineConfig({
   },
   trailingSlash: 'always',
   integrations: [
-    dmnoAstroIntegration({ redactSensitiveLogs: true }),
+    dmnoAstroIntegration(),
     starlight({
       title: 'DMNO',
       logo: {
