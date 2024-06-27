@@ -8,87 +8,53 @@ import ViteLogoSvg from '~icons/devicon/vitejs?raw';
 import NextLogoSvg from '~icons/logos/nextjs?raw';
 import AstroLogoSvg from '~icons/devicon/astro?raw';
 import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
-// import RollupLogoSvg from '~icons/logos/rollup?raw';
+import RollingHeroText from '@/components/RollingHeroText.astro';
+
+const integrations = [
+  'Astro',
+  'Next.js',
+  'Vite',
+  'Node.js',
+]; 
+
+const plugins = [
+  'Encrypted Vault',
+  '1Password'
+];
 
 ---
-<StarlightPage frontmatter={{
-  title: '👋',
-  description: "Batteries included full-stack configuration",
-  tableOfContents: false 
-}}>
+<StarlightPage 
+  frontmatter={{
+    title: '👋',
+    description: "Batteries included full-stack configuration",
+    tableOfContents: false,
+    pagefind: false,
+    draft: true,
+  }} 
+  hasSidebar={false}
+>
   <div class="homepage not-content">
 
     <div class="hero">
-      <div class="hero__logo">
-          <DmnoTileLogo client:load />
-      </div>
+      <!-- <div class="hero__logo">
+          <DmnoTileLogo client:load autoPlay />
+      </div> -->
       <div class="hero__text">
-        <h1>DMNO</h1>
-        <h2>Batteries included full-stack configuration</h2>
+        <RollingHeroText
+          integrations={integrations}
+          plugins={plugins}
+        />
         <div class="cta-wrap">
-          <a href='/docs/get-started/quickstart' class="button">Get started</a>
+          <a href='/docs/get-started/quickstart/' class="button">Get started</a>
           <div class="install-command">
             <DIcon name="console" />
             <div>npx dmno init</div>
             <DIcon name={['copy', 'check']} class="install-command__copy" />
           </div>
         </div>
-        <!-- <div>
-          <a href={DMNO_PUBLIC_CONFIG.GITHUB_REPO_URL} target="_blank">Star us on GitHub</a>
-        </div> -->
       </div>
     </div>
 
-    <!-- <h3>DMNO Config</h3>
-    <p>Helps you define a schema for all of the configuration (environment variables) used throughout your applications.</p> -->
-    <section class="value-prop-section">      
-      <div>
-        <h3>Type-safe env vars</h3>
-        <p>DMNO auto-generates powerful types for your config schema with amazing documentation built right in.</p>
-      </div>
-      <div>
-        <h3>Validate & coerce</h3>
-        <p>Clean and check your config at every step of the way. Our built-in types cover 95% of use cases. Easily add custom validation logic on top.</p>
-      </div>
-      <div>
-        <h3>Monorepo native</h3>
-        <p>DMNO is the only config tool that treats monorepos as a first class concept. Each service can "pick" items from the root or other services.</p>
-      </div>
-      <div>
-        <h3>Live reload</h3>
-        <p>Our <code>dev</code> mode reloads your schema and restarts your code whenever anything changes. And it's FAST because it's powered by Vite.</p>
-      </div>
-      <div>
-        <h3>Keep your secrets safe</h3>
-        <p>DMNO prevents you from accidentally leaking any secrets, and helps you sync with teammates without sending <code>.env</code> files over slack.</p>
-      </div>
-      <div>
-        <h3>Holistic configuration toolkit</h3>
-        <p>Includes everything you need to manage config - no need to wire together 5 different tools or spend weeks integrating an external service</p>
-      </div>
-      <div>
-        <h3></h3>
-        <p></p>
-      </div>
-    </section>
-
-    <section class="integrations-section">
-      <h3>Drop-in integrations for your favorite frameworks & tools</h3>
-      <div class="logo-bar">
-        <a href="/docs/integrations/astro" set:html={AstroLogoSvg} />
-        <a href="/docs/integrations/vite" set:html={ViteLogoSvg} />
-        <a href="/docs/integrations/nextjs" set:html={NextLogoSvg} />
-        <a href="/docs/integrations/node" set:html={NodeLogoSvg} />
-        <!-- <a href="/docs/integrations/rollup" set:html={RollupLogoSvg} /> -->
-      </div>
-      <div class="richtext">
-        <p>Use something else? 💪 <a href={DMNO_PUBLIC_CONFIG.DISCORD_JOIN_URL}>Join us on discord</a> and help us build the next one!</p>
-      </div>
-    </section>
-
-    <!-- <div>
-      <Aside>Hello!</Aside>
-    </div> -->
 
   </div>
 
@@ -137,7 +103,7 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
           padding-top: 4rem;
           padding-bottom: 5rem;
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          // grid-template-columns: 1fr 1fr;
         }
 
         @media (min-width: 72rem) {
