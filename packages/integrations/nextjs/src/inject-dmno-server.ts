@@ -4,6 +4,7 @@ import zlib from 'node:zlib';
 import { ServerResponse } from 'node:http';
 import { injectDmnoGlobals } from 'dmno/injector-standalone';
 import { headers } from 'next/headers.js';
+import { enableLeakDetectionByPatchingServerResponse } from '.';
 
 console.log('INJECT DMNO + NEXT SERVER CODE');
 
@@ -24,6 +25,7 @@ for (const itemKey of publicDynamicKeys) {
   publicDynamicEnvObj[itemKey] = (globalThis as any).DMNO_PUBLIC_CONFIG[itemKey];
 }
 
+enableLeakDetectionByPatchingServerResponse();
 
 // console.log(globalThis);
 // const r: ServerResponse;

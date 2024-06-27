@@ -83,3 +83,9 @@ router.get('/interceptor-demo', async (ctx) => {
 
   ctx.body = results;
 });
+
+router.get('/leak-demo', async (ctx) => {
+  ctx.body = {
+    leaked: DMNO_CONFIG.SECRET_FOO,
+  };
+});

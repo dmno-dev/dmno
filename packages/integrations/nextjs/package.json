@@ -35,6 +35,7 @@
     "./inject": {
       "ts-src": "./src/inject-dmno-server.ts",
       "import": "./dist/inject-dmno-server.js",
+      "require": "./dist/inject-dmno-server.cjs",
       "types": "./dist/inject-dmno-server.d.ts"
     }
   },

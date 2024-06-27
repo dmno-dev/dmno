@@ -65,6 +65,7 @@
     "./injector-standalone": {
       "ts-src": "./src/globals-injector/injector.ts",
       "import": "./dist/globals-injector-standalone/injector.js",
+      "require": "./dist/globals-injector-standalone/injector.cjs",
       "types": "./dist/globals-injector-standalone/injector.d.ts"
     },
     "./tsconfigs/*.json": "./tsconfigs/*",

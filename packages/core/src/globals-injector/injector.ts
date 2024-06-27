@@ -4,6 +4,7 @@ import {
   unpatchGlobalConsoleSensitiveLogRedaction,
 } from '../lib/redaction-helpers';
 import { enableHttpInterceptor, disableHttpInterceptor } from '../lib/http-interceptor-utils';
+import { enableLeakDetectionByPatchingServerResponse } from '../lib/server-response-leak-utils';
 import type { InjectedDmnoEnv, InjectedDmnoEnvItem, SensitiveValueLookup } from '../config-engine/config-engine';
 
 
@@ -208,6 +209,8 @@ export function injectDmnoGlobals(
   } else {
     disableHttpInterceptor();
   }
+
+  enableLeakDetectionByPatchingServerResponse();
 
   const injectionResult: DmnoInjectionResult = {
     staticReplacements,
