@@ -13,6 +13,6 @@ app.get('/', (req, res) => {
   })
 })
 
-app.listen(port, () => {
+app.listen(DMNO_CONFIG.PORT, () => {
   console.log(`Example app listening on port ${port}`)
 })

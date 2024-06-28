@@ -4,7 +4,13 @@ import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-v
 
 
 
-const OnePassBackend = new OnePasswordDmnoPlugin('1pass', {
+const OnePassSecretsProd = new OnePasswordDmnoPlugin('1pass/prod', {
+  token: configPath('OP_TOKEN'),
+  envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=n4wmgfq77mydg5lebtroa3ykvm&h=dmnoinc.1password.com',
+  // token: InjectPluginInputByType,
+  // token: 'asdf',
+});
+const OnePassSecretsDev = new OnePasswordDmnoPlugin('1pass', {
   token: configPath('OP_TOKEN'),
   envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=n4wmgfq77mydg5lebtroa3ykvm&h=dmnoinc.1password.com',
   // token: InjectPluginInputByType,
@@ -16,9 +22,10 @@ const ProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
   key: configPath('DMNO_VAULT_KEY'),
   name: 'prod',
 });
-// const NonProdVault = new EncryptedVaultDmnoPlugin('vault/dev', {
-//   key: configPath('DMNO_VAULT_KEY'),
-// });
+const NonProdVault = new EncryptedVaultDmnoPlugin('vault/dev', {
+  key: configPath('DMNO_VAULT_KEY'),
+  name: 'dev',
+});
 
 
 
@@ -43,15 +50,21 @@ export default defineDmnoService({
       extends: OnePasswordTypes.serviceAccountToken,
     },
 
+    SOME_API_KEY: {
+      value: switchBy('DMNO_ENV', {
+        _default: OnePassSecretsDev.item(),
+        production: OnePassSecretsProd.item(),
+      }),
+    },
+
+
+
     DMNO_VAULT_KEY: {
       extends: EncryptedVaultTypes.encryptionKey,
       // required: true
     },
 
-    OP_ITEM_1: {
-      value: OnePassBackend.item(),
-    },
-
+    
     ROOT_ONLY: {
       value: 'rootonly',
     },
@@ -61,12 +74,12 @@ export default defineDmnoService({
     },
     VAULT_ITEM_WITH_SWITCH: {
       value: switchByNodeEnv({
-        _default: ProdVault.item(),
-        staging: ProdVault.item(),
-        production: switchBy('ROOT_ONLY', {
-          'rootonly': ProdVault.item(),
-          'val2': ProdVault.item(),
-        }) 
+        _default: NonProdVault.item(),
+        staging: switchBy('CONTEXT', {
+          'branch-preview': ProdVault.item(),
+          'pr-preview': ProdVault.item(),
+        }),
+        production: ProdVault.item()
       }),
     },
 

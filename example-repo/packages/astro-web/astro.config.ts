@@ -9,7 +9,7 @@ import mdx from "@astrojs/mdx";
 // this includes the DMNO_CONFIG globals, and global patching behavior
 // like secret redaction and http interception
 
-console.log('\nthe secrets on the following lines should be redacted');
+console.log('\njust doing some console.log debugging...');
 console.log('> secret value =', DMNO_CONFIG.SECRET_FOO);
 console.log('> secret value in obj', { secret: DMNO_CONFIG.SECRET_FOO });
 console.log('> secret value in array', ['secret', DMNO_CONFIG.SECRET_FOO ]);

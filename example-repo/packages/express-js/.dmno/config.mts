@@ -11,6 +11,12 @@ export default defineDmnoService({
     },
     SECRET_EXAMPLE: {
       value: 'private!',
+    },
+    PORT: {
+      extends: 'number',
+      value: 3000,
+      required: true,
+      description: 'The port the app should listen on'
     }
   }
 });

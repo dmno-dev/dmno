@@ -2,9 +2,9 @@
 
 
 // this request should be intercepted because of the sensitive secret being sent to the wrong domain
-const apiResp = await fetch('https://api.sampleapis.com/beers/ale', {
+const apiResp = await fetch('https://api.my-logging-provider.com/ingest', {
   headers: {
-    'x-custom-auth': DMNO_CONFIG.SECRET_FOO,
+    'x-custom-auth': DMNO_CONFIG.STRIPE_SECRET_KEY,
     'x-another': 'bloop',
   },
 });
