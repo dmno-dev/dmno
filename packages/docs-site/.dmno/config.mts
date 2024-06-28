@@ -31,6 +31,7 @@ export default defineDmnoService({
         production: 'production',
       }),
     },
+
     SIGNUP_API_URL: {
       value: 'https://signup-api.dmno.dev',
     },

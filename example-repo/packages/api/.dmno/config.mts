@@ -82,8 +82,9 @@ export default defineDmnoService({
       })
     },
 
-    INTELLISENSE_DEMO: {
+    DB_URL: { // intellisense demo
       summary: 'Primary DB URL',
+      required: true,
       description: 'houses all of our users, products, and orders data',
       typeDescription: 'Postgres connection url',
       externalDocs: {
@@ -95,8 +96,8 @@ export default defineDmnoService({
         icon: 'akar-icons:postgresql-fill',
         color: '336791', // postgres brand color :)
       },
-
       sensitive: true,
+      value: 'postgres://localhost:5432/my-api-db'
     },
   },
 });

@@ -60,7 +60,15 @@ export default defineDmnoService({
       sensitive: true,
     },
 
-    SECRET_MIDDLEWARE_TEST: {
+    STRIPE_SECRET_KEY: {
+      sensitive: {
+        allowedDomains: ['api.stripe.com'],
+      },
+      value: 'my-stripe-secret-key',
+      required: true,
+    },
+
+    SOME_SECRET_API_KEY: {
       // this is in the output of a page that will be stopped by our secret leak detector
       value: 'Cappuccino',
       sensitive: true,

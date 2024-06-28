@@ -162,8 +162,13 @@ starlight-file-tree,
 
 // image borders 
 .sl-markdown-content p>img:first-child,
-.dmno-cli-command img {
+.dmno-cli-command img,
+li>p>img:last-child {
   border: 1px solid var(--brand-blue--t1);
+}
+
+li>p>img:last-child {
+  margin-top: 8px;
 }
 
 
