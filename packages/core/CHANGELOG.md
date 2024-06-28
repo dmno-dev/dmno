@@ -1,5 +1,11 @@
 # dmno
 
+## 0.0.15
+
+### Patch Changes
+
+- [#100](https://github.com/dmno-dev/dmno/pull/100) [`6b2e29f`](https://github.com/dmno-dev/dmno/commit/6b2e29fdc9250fae526d1c36dd33a2db8306d2ab) Thanks [@philmillman](https://github.com/philmillman)! - fix tsconfig in generated dmno folder stuff
+
 ## 0.0.14
 
 ### Patch Changes
