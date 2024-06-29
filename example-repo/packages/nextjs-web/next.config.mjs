@@ -12,4 +12,4 @@ const nextConfig = {
   // rest of user config...
 };
 
-export default dmnoNextConfigPlugin({ redactSensitiveLogs: true })(nextConfig);
+export default dmnoNextConfigPlugin()(nextConfig);

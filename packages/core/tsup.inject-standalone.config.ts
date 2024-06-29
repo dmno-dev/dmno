@@ -50,7 +50,7 @@ export default defineConfig({
   clean: true, // Clean output directory before building
   outDir: 'dist/globals-injector-standalone', // Output directory
 
-  format: ['esm'], // Output format(s)
+  format: ['esm', 'cjs'], // Output format(s)
 
   splitting: false, // split output into chunks - MUST BE ON! or we get issues with multiple copies of classes and instanceof
   keepNames: true, // stops build from prefixing our class names with `_` in some cases
