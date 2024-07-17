@@ -13,7 +13,7 @@ import { SensitiveValueLookup } from '../config-engine/config-engine';
 
 function initInterceptor() {
   if ((globalThis as any)._dmnoHttpInterceptor) {
-    (globalThis as any)._dmnoHttpInterceptor.dispose();
+    return;
   }
 
   // console.log('Initializing http interceptor');

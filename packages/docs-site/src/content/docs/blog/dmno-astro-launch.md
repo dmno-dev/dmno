@@ -33,11 +33,11 @@ DMNO ensures that only non-sensitive config is accessible on the client side, an
 
 - **Log redaction:**
 DMNO redacts sensitive data from all global `console` method output, ensuring that your secrets are never exposed or persisted in your logs.
-![Intellisense demo](@/assets/docs-images/console-redaction-demo.png)
+![Log redaction demo](@/assets/docs-images/console-redaction-demo.png)
 
 - **HTTP interception:**
 DMNO intercepts HTTP requests to prevent sensitive data from being sent to the wrong third-party services. e.g., Only send your Stripe key to `api.stripe.com`. 
-![Intellisense demo](@/assets/docs-images/interceptor-demo.png)
+![HTTP interception demo](@/assets/docs-images/interceptor-demo.png)
 
 - **Share config items in your monorepo:**
 Unified config system for all of your services, with the ability to easy reuse items from the root or other services. Even outside of monorepos, using the same config system for your entire stack simplifies things.

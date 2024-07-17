@@ -434,11 +434,20 @@ li>p>img:last-child {
   --color-one: var(--brand-orange--text);
   --color-two: var(--brand-pink--text);
 
-
   background-color: var(--color-one);
   background: linear-gradient(30deg, var(--color-one) 0%, var(--color-two) 100%);
   background-clip: text;
   color: transparent;
+
+  &.--red {
+    --color-one: var(--brand-red; );
+    --color-two: var(--brand-pink);
+  }
+
+  &.--green {
+    --color-one: var(--brand-green--text; );
+    --color-two: var(--brand-cyan--text);
+  }
 }
 
 // similar to sl-markdown content, need something to get links looking correct
