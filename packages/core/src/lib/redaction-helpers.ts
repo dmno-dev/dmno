@@ -46,6 +46,8 @@ const LOG_METHODS = ['trace', 'debug', 'info', 'log', 'info', 'warn', 'error'];
 
 /** patches the global console.log (an other fns) to redact secrets */
 export function patchGlobalConsoleToRedactSensitiveLogs() {
+  /* eslint-disable no-console */
+
   if (!redactor) return;
 
   // our method of patching involves replacing an internal node method which may not be called if console.log itself has also been patched
@@ -69,7 +71,12 @@ export function patchGlobalConsoleToRedactSensitiveLogs() {
 
   // and now we'll wrap console.log (and the other methods) if it looks like they have been patched already ------------------
   // NOTE - this will not fully redact from everything since we can't safely reach deep into objects
-  if (!console.log.toString().includes('[native code]') && !(console.log as any)._dmnoPatchedFn) { // eslint-disable-line no-console
+  // ideally we would only turn this when the above method does not work, but it's not trivial to detect when it that is the case
+  // so we'll turn it on all the time for now...
+  if (
+    // !console.log.toString().includes('[native code]') &&
+    !(console.log as any)._dmnoPatchedFn
+  ) {
     for (const logMethodName of LOG_METHODS) {
       // @ts-ignore
       const originalLogMethod = globalThis.console[logMethodName];

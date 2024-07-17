@@ -170,6 +170,8 @@ type DmnoServiceSettings = {
   redactSensitiveLogs?: boolean,
   /** enable patching http to intercept sending sensitive to config to non allowed domains (where possible) */
   interceptSensitiveLeakRequests?: boolean,
+  /** enable scanning all code and data for leaks before sending to the client (where possible) */
+  preventClientLeaks?: boolean,
 };
 
 /**
@@ -861,9 +863,10 @@ export class DmnoService {
   }
 
   get settings(): DmnoServiceSettings {
-    // TODO: we could cache this instead of recalculating on each access?
+    // TODO: we should probably cache this instead of recalculating on each access?
     return {
       dynamicConfig: this.getSettingsItem('dynamicConfig'),
+      preventClientLeaks: this.getSettingsItem('preventClientLeaks'),
       redactSensitiveLogs: this.getSettingsItem('redactSensitiveLogs'),
       interceptSensitiveLeakRequests: this.getSettingsItem('interceptSensitiveLeakRequests'),
     };

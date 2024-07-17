@@ -67,10 +67,14 @@ Sounds easy, right? Except in a world of hybrid client/server rendering and rehy
 So, we make it easy for you:
 
 - Within the browser/client, you only have access to `DMNO_PUBLIC_CONFIG` and if you try to access `DMNO_CONFIG`, we'll throw a helpful error 🛑
-- We also inject a middleware that detects any leaked secrets, just in case you leaked a secret into ANYTHING getting sent over the wire.
+- We detect leaked secrets in built JS code and server-rendered responses, just in case you leaked a secret into ANYTHING getting sent over the wire (opt-in via `preventClientLeaks` service setting)
+- We redact sensitive data from logs (opt-in via `redactSensitiveLogs` service setting)
+- We intercept HTTP requests if you send sensitive config somewhere it's not supposed to go (opt-in via `interceptSensitiveLeakRequests` service setting)
 
 ![Leaked secret error](../../../../assets/docs-images/astro/leaked-secret-error.png)
 _an example of our middleware in action_
+
+Check out the [security guide](/docs/get-started/security/) for more details on our opt-in security features.
 
 ### Static vs dynamic config
 

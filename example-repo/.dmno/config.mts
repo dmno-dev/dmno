@@ -35,6 +35,7 @@ export default defineDmnoService({
   settings: {
     interceptSensitiveLeakRequests: true,
     redactSensitiveLogs: true,
+    preventClientLeaks: true,
   },
   schema: {
     NODE_ENV: NodeEnvType,

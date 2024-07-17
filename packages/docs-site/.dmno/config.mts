@@ -6,6 +6,7 @@ export default defineDmnoService({
   settings: {
     interceptSensitiveLeakRequests: true,
     redactSensitiveLogs: true,
+    preventClientLeaks: true,
   },
   pick: [
     'GITHUB_REPO_URL',

@@ -23,11 +23,11 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "pnpm run build:injector && tsup",
+    "build": "pnpm run clean && pnpm run build:injector && tsup",
     "build:injector": "tsup --config tsup.inject-standalone.config.ts",
     "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
     "build:tarball": "turbo build && pnpm pack --pack-destination \"../../../tmp-package-registry\"",
-    "dev": "pnpm run build:injector && tsup --watch",
+    "dev": "pnpm run clean && pnpm run build:injector && tsup --watch",
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix",
     "test": "vitest"
@@ -65,6 +65,7 @@
     "./injector-standalone": {
       "ts-src": "./src/globals-injector/injector.ts",
       "import": "./dist/globals-injector-standalone/injector.js",
+      "default": "./dist/globals-injector-standalone/injector.cjs",
       "types": "./dist/globals-injector-standalone/injector.d.ts"
     },
     "./tsconfigs/*.json": "./tsconfigs/*",

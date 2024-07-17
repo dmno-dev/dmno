@@ -1,5 +1,6 @@
 import {
-  redactString, resetSensitiveConfigRedactor,
+  redactString,
+  resetSensitiveConfigRedactor,
   patchGlobalConsoleToRedactSensitiveLogs,
   unpatchGlobalConsoleSensitiveLogRedaction,
 } from '../lib/redaction-helpers';
@@ -9,12 +10,8 @@ import type { InjectedDmnoEnv, InjectedDmnoEnvItem, SensitiveValueLookup } from 
 
 // not sure about exporting these fns now that we control the behaviour via the schema
 export {
-  // patchGlobalConsoleToRedactSensitiveLogs,
-  // unpatchGlobalConsoleSensitiveLogRedaction,
   unredact,
 } from '../lib/redaction-helpers';
-
-// export { enableHttpInterceptor, disableHttpInterceptor } from '../lib/http-interceptor-utils';
 
 const processExists = !!globalThis.process;
 let originalProcessEnv: Record<string, string> = {};
@@ -55,16 +52,7 @@ export function injectDmnoGlobals(
   const dynamicKeys: Array<string> = [];
   const sensitiveKeys: Array<string> = [];
   const publicDynamicKeys: Array<string> = [];
-
-
-  // // if we've already injected the globals and we didnt have any options passed in, we can bail
-  // if (!opts && (globalThis as any)._DMNO_CACHED_INJECTION_RESULT) {
-  //   console.log('> using cached injection result');
-  //   return (globalThis as any)._DMNO_CACHED_INJECTION_RESULT as DmnoInjectionResult;
-  // }
-
-  // otherwise we'll inject the DMNO_CONFIG globals
-  // either pulling from a passed in config or from process.env.DMNO_INJECTED_ENV
+  const publicDynamicObj: Record<string, any> = {};
 
   // save the manually injected env if there is one - this is currently used in netlify functions where we inject the resolved config into the built code
   // but then need it in other places where we call injectDmnoGlobals again
@@ -75,16 +63,17 @@ export function injectDmnoGlobals(
   let injectedDmnoEnv = opts?.injectedConfig;
 
   if (!injectedDmnoEnv) {
+    // this is what gets injected by `dmno run`
     if (globalThis.process?.env.DMNO_INJECTED_ENV) {
       injectedDmnoEnv = JSON.parse(globalThis.process?.env.DMNO_INJECTED_ENV);
+
+    // see above - this is the saved copy of what was passed into opts
     } else if ((globalThis as any)._DMNO_INJECTED_ENV) {
       injectedDmnoEnv = (globalThis as any)._DMNO_INJECTED_ENV;
     }
   }
 
   if (!injectedDmnoEnv) {
-    // console.log(globalThis);
-    // console.log(globalThis.process.env);
     throw new Error('Unable to find `process.env.DMNO_INJECTED_ENV` - run this command via `dmno run` - see https://dmno.dev/docs/reference/cli/run for more info');
   }
 
@@ -134,27 +123,23 @@ export function injectDmnoGlobals(
 
     if (injectedItem.dynamic) {
       dynamicKeys.push(itemKey);
-      if (!injectedItem.sensitive) publicDynamicKeys.push(itemKey);
+      if (!injectedItem.sensitive) {
+        publicDynamicKeys.push(itemKey);
+        publicDynamicObj[itemKey] = injectedItem.value;
+      }
     }
 
 
-    if (injectedItem.sensitive) {
-      // if it's sensitive and static, we'll inject only into DMNO_CONFIG
-      if (!injectedItem.dynamic) {
-        staticReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(injectedItem.value);
-      }
-    } else {
-      // if public and static, we'll inject into vite's rewrites
-      if (!injectedItem.dynamic) {
-        // add rollup rewrite/define for non-sensitive items
+    // set up static build-time replacements to be injected into vite/webpack/rollup etc config
+    if (!injectedItem.dynamic) {
+      if (!injectedItem.sensitive) {
         staticReplacements[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(injectedItem.value);
-        staticReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(injectedItem.value);
       }
+      staticReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(injectedItem.value);
     }
   }
 
   // We attach some stuff to the locally running process / globalThis
-
   (globalThis as any).DMNO_CONFIG = new Proxy(rawConfigObj, {
     get(o, key) {
       const keyStr = key.toString();
@@ -192,6 +177,7 @@ export function injectDmnoGlobals(
   });
 
   (globalThis as any)._DMNO_PUBLIC_DYNAMIC_KEYS = publicDynamicKeys;
+  (globalThis as any)._DMNO_PUBLIC_DYNAMIC_OBJ = publicDynamicObj;
   (globalThis as any)._DMNO_SENSITIVE_LOOKUP = sensitiveValueLookup;
 
   // builds the redaction find/replace but does not apply it globally
@@ -218,7 +204,71 @@ export function injectDmnoGlobals(
     serviceSettings,
     injectedDmnoEnv,
   };
-  // (globalThis as any)._DMNO_CACHED_INJECTION_RESULT = injectionResult;
 
   return injectionResult;
 }
+
+
+// this does not cover all cases, but serves our needs so far for Next.js
+function isString(s: any) {
+  return Object.prototype.toString.call(s) === '[object String]';
+}
+
+// reusable leak scanning helper function, used by various integrations
+(globalThis as any)._dmnoLeakScan = function _dmnoLeakScan(
+  toScan: string | Response | ReadableStream,
+  // optional additional information about what is being scanned to be used in error messages
+  meta?: {
+    method?: string,
+    file?: string
+  },
+) {
+  function scanStrForLeaks(strToScan: string) {
+    // console.log('[dmno leak scanner] ', strToScan.substr(0, 250));
+
+    // TODO: probably should use a single regex
+    const sensitiveLookup = (globalThis as any)._DMNO_SENSITIVE_LOOKUP;
+    for (const itemKey in sensitiveLookup) {
+      if (strToScan.includes(sensitiveLookup[itemKey].value)) {
+      // error stack can gets awkwardly buried since we're so deep in the internals
+      // so we'll write a nicer error message to help the user debug
+        console.error([ // eslint-disable-line no-console
+          '',
+          '🚨 DETECTED LEAKED SENSITIVE CONFIG 🚨',
+          `> Config item key: ${itemKey}`,
+          ...meta?.method ? [`> Scan method: ${meta.method}`] : [],
+          ...meta?.file ? [`> File: ${meta.file}`] : [],
+          '',
+        ].join('\n'));
+
+        throw new Error(`🚨 DETECTED LEAKED SENSITIVE CONFIG - ${itemKey}`);
+      }
+    }
+  }
+
+  // scan a string
+  if (isString(toScan)) {
+    scanStrForLeaks(toScan as string);
+    return toScan;
+  // scan a ReadableStream by piping it through a scanner
+  } else if (toScan instanceof ReadableStream) {
+    if (toScan.locked) {
+      // console.log('> stream already locked');
+      return toScan;
+    } else {
+      // console.log('> stream will be scanned!');
+    }
+    const chunkDecoder = new TextDecoder();
+    return toScan.pipeThrough(
+      new TransformStream({
+        transform(chunk, controller) {
+          const chunkStr = chunkDecoder.decode(chunk);
+          scanStrForLeaks(chunkStr);
+          controller.enqueue(chunk);
+        },
+      }),
+    );
+  }
+  // other things may be passed in like Buffer... but we'll ignore for now
+  return toScan;
+};

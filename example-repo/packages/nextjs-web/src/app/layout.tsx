@@ -17,15 +17,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+
       <body className={`${inter.className} p-6`}>
         <h1>DMNO + nextjs example</h1>
         <nav>
           <a href="/client-page">client rendered page</a>
-          |||| 
           <a href="/server-page">server rendered page</a>
-          ||||
-
           <a href="/api">json api endpoint</a>
+          <a href="/leak-test">Leak test</a>
+          <a href="/intercept-test">Http interceptor test</a>
         </nav>
         <hr className="my-4" />
 

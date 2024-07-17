@@ -1,19 +1,90 @@
-import { injectDmnoGlobals } from 'dmno';
-import { NextConfig } from 'next';
+/* eslint-disable prefer-rest-params */
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
 
-const { staticReplacements } = injectDmnoGlobals();
+import { injectDmnoGlobals } from 'dmno/injector-standalone';
+
+import { patchServerResponseToPreventClientLeaks } from './patch-server-response';
+import type { NextConfig } from 'next';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const {
+  staticReplacements, dynamicKeys, injectedDmnoEnv, serviceSettings,
+} = injectDmnoGlobals();
 
 type DmnoPluginOptions = {
-  redactSensitiveLogs?: boolean
+  injectResolvedConfigAtBuildTime: boolean,
 };
+
+function patchFsWriteFileToPreventClientLeaks() {
+  const origPromisesWriteFileFn = fs.promises.writeFile;
+  fs.promises.writeFile = function dmnoPatchedWriteFile() {
+    const [filePath, fileContents] = arguments;
+
+    // naively enable/disable detection based on file extension... probably not the best logic but it might be enough?
+    if (
+      filePath.endsWith('.html')
+      || filePath.endsWith('.rsc')
+      || filePath.endsWith('.body')
+      // we also need to scan .js files, but they are already built by webpack so we can't catch it here
+    ) {
+      // TODO: better error details to help user _find_ the problem
+      (globalThis as any)._dmnoLeakScan(fileContents, { method: 'nextjs fs.writeFile', file: filePath });
+    }
+
+    // @ts-ignore
+    return origPromisesWriteFileFn.call(this, ...Array.from(arguments));
+  };
+}
+
+const WEBPACK_PLUGIN_NAME = 'DmnoNextWebpackPlugin';
+
+function getCjsModuleSource(moduleName: string) {
+  const modulePath = fileURLToPath(import.meta.resolve(moduleName)).replace('.js', '.cjs');
+  const moduleSrc = fs.readFileSync(modulePath, 'utf8');
+  return moduleSrc;
+}
 
 // we make this a function becuase we'll likely end up adding some options
 export function dmnoNextConfigPlugin(dmnoOptions?: DmnoPluginOptions) {
+  if (serviceSettings?.preventClientLeaks) {
+    // checks outgoing ServerResponse objects for leaks
+    // taking the place of what really should be a middleware
+    // NOTE - this is patched within the built code as well, but we patch this here or we get api + pages router leakes on first render in dev mode
+    patchServerResponseToPreventClientLeaks();
+
+    // patches fs.writeFile to scan files output by next itself for leaks
+    // (does not include files output during webpack build)
+    patchFsWriteFileToPreventClientLeaks();
+  }
+
+
+  // detect if we need to build the resolved config into the output
+  // which is needed when running on external platforms where we dont have ability to use `dmno run`
+  const injectResolvedConfigAtBuildTime = (
+    process.env.__VERCEL_BUILD_RUNNING // build running via `vercel` cli
+    || process.env.NETLIFY // build running remotely on netlify
+    || (process.env.NETLIFY_LOCAL && !process.env.NETLIFY_DEV) // build running locally via `netlify` cli
+    || dmnoOptions?.injectResolvedConfigAtBuildTime // explicit opt-in
+  );
+
   // nextjs doesnt have a proper plugin system, so we write a function which takes in a config object and returns an augmented one
   return (nextConfig: NextConfig): NextConfig => {
+    if (nextConfig.output === 'export' && dynamicKeys.length) {
+      console.error([
+        'Dynamic config is not supported in static builds (next.config output="export")',
+        'Set `settings.dynamicConfig` to "only_static" in your .dmno/config.mts file',
+        `Dynamic config items: ${dynamicKeys.join(', ')}`,
+      ].join('\n'));
+
+      throw new Error('Dynamic config not compatible with static builds');
+    }
+
     return {
       ...nextConfig,
-      webpack: (webpackConfig, options) => {
+      webpack(webpackConfig, options) {
         const { isServer } = options;
 
         // webpack itself  is passed in so we dont have to import it...
@@ -25,33 +96,34 @@ export function dmnoNextConfigPlugin(dmnoOptions?: DmnoPluginOptions) {
         }
 
         // modify entry points to inject our dmno env shim
-        // (currently it is only used to help with error handling / messages)
+        // currently this strategy only works for injecting into the client
         const originalEntry = webpackConfig.entry;
         webpackConfig.entry = async () => {
           const entries = await originalEntry();
 
           function injectEntry(entryKey: string, injectedPath: string) {
             if (
-              entries[entryKey] && !entries[entryKey].includes(injectedPath)
+              entries[entryKey]
             ) {
-              entries[entryKey].unshift(injectedPath);
+              if (!Array.isArray(entries[entryKey])) {
+                entries[entryKey] = [entries[entryKey]];
+              }
+              if (!entries[entryKey].includes(injectedPath)) {
+                entries[entryKey].unshift(injectedPath);
+              }
             }
           }
 
-          // injects into server - but unfortunately this doesn't work fully
-          // it doesnt get run while next is doing a build and analyzing all the routes :(
-          // so for now, we'll force users to import manually
-          // if (isServer) {
-          //   const injectDmnoServerFilePath = `${import.meta.dirname}/inject-dmno-server.js`;
-          //   injectEntry('pages/_app', injectDmnoServerFilePath);
-          //   injectEntry('pages/_document', injectDmnoServerFilePath);
-          // }
+          // injecting into server entries does not seem to work in all situations :(
+          // if (isServer) console.log('server entries!', entries);
 
           // injects our DMNO_CONFIG shims into the client
           // which gives us nicer errors and also support for dynamic public config
           if (!isServer) {
             const injectDmnoClientFilePath = `${import.meta.dirname}/inject-dmno-client.js`;
             injectEntry('main-app', injectDmnoClientFilePath);
+            injectEntry('main', injectDmnoClientFilePath);
+            injectEntry('amp', injectDmnoClientFilePath);
           }
 
           return entries;
@@ -61,6 +133,138 @@ export function dmnoNextConfigPlugin(dmnoOptions?: DmnoPluginOptions) {
         webpackConfig.plugins.push(new webpack.DefinePlugin({
           ...staticReplacements,
         }));
+
+        // updates the webpack source to inject dmno global logic and call it
+        // we run this on the runtimes for serverless and edge
+        function updateServerRuntimeToInjectDmno(edgeRuntime = false) {
+          return function (origSource: any) {
+            const origSourceStr = origSource.source();
+
+            const injectorSrc = getCjsModuleSource('dmno/injector-standalone');
+            const patchServerResponseSrc = fs.readFileSync(`${__dirname}/patch-server-response.cjs`, 'utf8');
+
+            const updatedSourceStr = [
+              // we use `headers()` to force next into dynamic rendering mode, but on the edge runtime it's always dynamic
+              // (see below for where headers is used)
+              !edgeRuntime ? 'const { headers } = require("next/headers");' : '',
+
+              // code built for edge runtime does not have `exports` but we are inlining some already built common-js code, so this breaks
+              edgeRuntime ? 'const exports = {}' : '',
+
+              // inline the dmno injector code and then call it
+              injectorSrc,
+              'injectDmnoGlobals({',
+              injectResolvedConfigAtBuildTime ? `injectedConfig: ${JSON.stringify(injectedDmnoEnv)},` : '',
+
+              // attempts to force the route into dynamic rendering mode so it wont put our our dynamic value into a pre-rendered page
+              // however we have to wrap in try/catch because you can only call headers() within certain parts of the page... so it's not 100% foolproof
+              !edgeRuntime ? `
+                onItemAccess: async (item) => {
+                  if (item.dynamic) {
+                    try { headers(); }
+                    catch (err) {}
+                  }
+                },` : '',
+              '});',
+
+
+              // here we patch the global Response to pipe the body through the leak scanner
+              // which detects leaks on all edge-rendered pages and all api routes
+
+              // TODO: this just patches ALL `Response` objects, which would include incoming Response bodies of outgoing fetch requests...
+              // ideally we would detect if this is an outgoing Response versus an incoming one (fetch result)
+              // but so far it seems to not be a problem because fetch results return use a Buffer which are not scanned by _dmnoLeakScan
+              serviceSettings?.preventClientLeaks ? `
+                (() => {
+                  if (!globalThis.Response._patchedByDmno) {
+                    const _UnpatchedResponse = globalThis.Response;
+                    globalThis.Response = class DmnoPatchedResponse extends _UnpatchedResponse {
+                      static _patchedByDmno = true;
+                      constructor(body, init) {
+                        super(globalThis._dmnoLeakScan(body, { method: 'patched Response constructor' }), init);
+                      }
+                      static json(data, init) {
+                        globalThis._dmnoLeakScan(JSON.stringify(data), { method: 'patched Response.json' });
+                        const r = _UnpatchedResponse.json(data, init);
+                        Object.setPrototypeOf(r, Response.prototype);
+                        return r;
+                      }
+                    }
+                  } else {
+                    // console.log('\\n>>>> global Response already patched <<<<< \\n');
+                  }
+                })();
+              ` : '',
+
+              // patch ServerResponse if not edge mode to handle pages on nodejs runtime
+              (serviceSettings?.preventClientLeaks && !edgeRuntime) ? `
+                ${patchServerResponseSrc}
+                patchServerResponseToPreventClientLeaks();
+              ` : '',
+
+              origSourceStr,
+            ].join('\n');
+
+            return new webpack.sources.RawSource(updatedSourceStr);
+          };
+        }
+
+
+        // we need to inject the dmno globals injector and call it
+        // and in vercel/netlify etc where we can't run via `dmno run` we need to inject the resolved config into the build
+        // not sure if this is the best way, but injecting into the `webpack-runtime.js` file seems to run everywhere
+        webpackConfig.plugins.push({
+          apply(compiler: any) {
+            compiler.hooks.thisCompilation.tap(WEBPACK_PLUGIN_NAME, (compilation: any) => {
+              compilation.hooks.processAssets.tap(
+                {
+                  name: WEBPACK_PLUGIN_NAME,
+                  stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
+                },
+                () => {
+                  // not sure why, but these paths are different in build vs dev
+                  if (compilation.getAsset('webpack-runtime.js')) {
+                    compilation.updateAsset('webpack-runtime.js', updateServerRuntimeToInjectDmno());
+                  }
+                  if (compilation.getAsset('../webpack-runtime.js')) {
+                    compilation.updateAsset('../webpack-runtime.js', updateServerRuntimeToInjectDmno());
+                  }
+                  if (compilation.getAsset('webpack-api-runtime.js')) {
+                    compilation.updateAsset('webpack-api-runtime.js', updateServerRuntimeToInjectDmno());
+                  }
+                  if (compilation.getAsset('../webpack-api-runtime.js')) {
+                    compilation.updateAsset('../webpack-api-runtime.js', updateServerRuntimeToInjectDmno());
+                  }
+
+                  if (compilation.getAsset('edge-runtime-webpack.js')) {
+                    compilation.updateAsset('edge-runtime-webpack.js', updateServerRuntimeToInjectDmno(true));
+                  }
+                },
+              );
+            });
+
+            // add webpack hook to handle leaks in 'use client' pages
+            // since this ends up in a built js file instead of a server response
+            if (serviceSettings?.preventClientLeaks) {
+              // scan built js files
+              compiler.hooks.assetEmitted.tap(
+                WEBPACK_PLUGIN_NAME,
+                (file: any, assetDetails: any) => {
+                  const { content, targetPath } = assetDetails;
+
+                  if (targetPath.includes('/.next/static/chunks/')) {
+                    // NOTE - in dev mode the request hangs on the error, but the console error should help
+                    // and during a build, it will actually fail the build
+                    (globalThis as any)._dmnoLeakScan(content, {
+                      method: 'nextjs webpack plugin - static chunks',
+                      file: targetPath,
+                    });
+                  }
+                },
+              );
+            }
+          },
+        });
 
         return webpackConfig; // must return the modified config
       },
