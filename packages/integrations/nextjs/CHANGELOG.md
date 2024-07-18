@@ -1,5 +1,11 @@
 # @dmno/nextjs-integration
 
+## 0.0.6
+
+### Patch Changes
+
+- [#99](https://github.com/dmno-dev/dmno/pull/99) [`f15eae3`](https://github.com/dmno-dev/dmno/commit/f15eae366c6ccd20228a1b3b13f954c02d052ae7) Thanks [@theoephraim](https://github.com/theoephraim)! - nextjs integration with working security features, related refactoring to dmno and astro integration
+
 ## 0.0.5
 
 ### Patch Changes
