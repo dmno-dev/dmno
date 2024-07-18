@@ -41,10 +41,10 @@ export default defineDmnoService({
     }
   ],
   schema: {
-    OP_ITEM_1: {
-      sensitive: true,
-      value: OnePassBackend.item(),
-    },
+    // OP_ITEM_1: {
+    //   sensitive: true,
+    //   value: OnePassBackend.item(),
+    // },
 
     // EX1: {
     //   value: (ctx) => DMNO_CONFIG.BOOLEAN_EXAMPLE,
