@@ -5,6 +5,7 @@ description: Use DMNO to manage your Next.js app's environment variables for sta
 
 import { Tabs, TabItem } from '@astrojs/starlight/components'
 import TabbedCode from '@/components/TabbedCode.astro';
+import BugReportLink from '@/components/BugReportLink.astro';
 
 If you have an existing Next.js app, you're probably already familiar with how environment variables work in Next. Check their docs [here](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables) if you need a refresher. 
 
@@ -24,7 +25,7 @@ If you prefer, you can install `dmno` itself and the `nextjs-integration` packag
 
 <TabbedCode packageName="@dmno/nextjs-integration dmno" />
 
-Then, in your `next.config.mjs` file, import and add the `dmno` plugin:
+Then, in your `next.config.mjs` file, import and initialize our `dmnoNextConfigPlugin`:
 
 ```diff lang="js"
 +import { dmnoNextConfigPlugin } from '@dmno/nextjs-integration';
@@ -43,66 +44,6 @@ const nextConfig = {
 
 `dmno init` will scaffold out the `schema` in your `config.mts` files based on your existing `.env` files. See our [Schema Guide](/docs/guides/schema/) for the specifics of how to author additional updates to your DMNO `schema`. 
 
-
-### Injecting config
-
-Unfortunately, NextJS has limited options to reliably inject code into their framework. So, we need to do a little more manual work to get things wired up correctly.
-
-While things may appear to work during development, when you run `next build`, you'll likely see some errors about `DMNO_CONFIG` not existing. To fix this, you need to import a script that will populate it.
-
-```ts
-import '@dmno/nextjs-integration/inject';
-```
-
-
-<Tabs syncKey="nextjs-router-type">
-  <TabItem label="App Router">
-    You should do this in a main file that others use, like your main layout:
-
-    ```diff lang="tsx" title="app/layout.tsx"
-    +import '@dmno/nextjs-integration/inject';
-    export default function RootLayout({ children }) {
-    // ...
-    ```
-
-    You also need to add this import to any API routes:
-
-    ```diff lang="tsx" title="app/some-endpoint/route.ts"
-    +import '@dmno/nextjs-integration/inject';
-    export async function GET() {
-    //...
-    ```
-
-  </TabItem>
-  <TabItem label="Pages Router">
-    You should do this in your custom `_app` file:
-
-    ```diff lang="tsx" title="pages/_app.tsx"
-    +import '@dmno/nextjs-integration/inject';
-    import type { AppProps } from 'next/app'
-
-    export default function MyApp({ Component, pageProps }: AppProps) {
-    // ...
-    ```
-
-    You also need to add this import to any API routes:
-
-    ```diff lang="ts" title="pages/api/some-endpoint.ts"
-    +import '@dmno/nextjs-integration/inject';
-    import type { NextApiRequest, NextApiResponse } from 'next'
-
-    export default function handler(req: NextApiRequest, res: NextApiResponse) {
-    //...
-    ```
-
-
-  </TabItem>
-</Tabs>
-
-
-And sometimes to other helper files that are trying to access config. If you ever see the error when you try to run a build, just add the import and you should be good to go.
-
-_Hopefully this will be fixed soon or we can find a better workaround!_
 
 ### Adjusting package.json scripts
 Unlike some of our other integrations, the next integration requires that you run your next commands via [`dmno run`](/docs/reference/cli/run/), so you must modify your package.json scripts:
@@ -132,44 +73,49 @@ But if you are running a command manually, `dmno` will not usually be in your `P
 
 > Use `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG` instead of `process.env` 🎉
 
-### Security and secrets
+You'll now have fully typed and validated config, fine grained control over static/dynamic behaviour, and some cool security features described below.
 
-While building your site, nextjs does two builds - one for the client and one for the server. During the client build, we only replace references to `DMNO_PUBLIC_CONFIG` which never contains anything sensitive so you can't accidentally leak any secrets into the JS of your site. Any references to `DMNO_CONFIG` in the client code will also throw a helpful error.
+### Security, secrets, and leak detection
 
-However, because NextJS does server-side rendering regardless of if you are doing SSG or SSR or some hybrid, it is still possible to leak secrets in the _content_ of a server-rendered page. In general, try to use `DMNO_PUBLIC_CONFIG` and be careful about when/how you use secrets.
+Only `DMNO_PUBLIC_CONFIG` is available in code running on the client. That said, since Next.js does so much magic under the hood, it can be difficult to reason about whether the code you are writing will run on the server, client, or both. This makes it difficult to be 100% certain that your sensitive config will not be leaked.
 
-While it's not perfect, this should be a bit better than standard env var handling in NextJS - and we are working on some more tooling to help detect and stop leaked secrets - just like we have in our other integrations.
+To protect you from this risk, DMNO does has several security related features:
+- **Leak detection** - built client-side code and server-rendered responses are scanned for any sensitive config items
+- **Log redaction** - sensitive config values are redacted from `console.log` output and other console methods
+- **HTTP request interception** - http requests are intercepted and stopped if sending sensitive config to the disallowed domains
+
+These features are opt-in - check out the [security guide](/docs/get-started/security/) for more details.
+
+:::note
+In general, these features should _just work_ but the matrix of app/pages router, node/edge, pages/api, and hosting platforms means that things are quite complicated. If you notice any issues, please <BugReportLink label='integrations/nextjs'>report them to us on GitHub</BugReportLink>!
+:::
 
 ### Dynamic public config
 
-If you'd like to be able to alter certain configuration values at boot time and load them in the client rather than relying on values bundled into your code, you need to expose an API endpoint which exposes this public+dynamic config. 
+If you'd like to be able to alter certain configuration values at boot time and load them in the client rather than relying on values bundled into your code, you need to expose an API endpoint which exposes this **public+dynamic** config. 
 
 See the [dynamic config guide](/docs/guides/dynamic-config/) for more details.
 
-Unfortunately, NextJS does not let us automatically inject the API route required to expose these config values, so if you want to use this feature, you must manually add an api route:
+Unfortunately, NextJS does not let us automatically inject the API route required to expose these config values, so if you want to use this feature, you must manually add an api route. This will be slightly different depending on if you are using app or pages router. Note the file paths in the examples below, they must match exactly.
 
 <Tabs syncKey="nextjs-router-type">
   <TabItem label="App Router">
-    ```ts title="app/fetch-dynamic-public-config/route.ts"
-    import { publicDynamicEnvObj } from '@dmno/nextjs-integration/inject';
-
+    ```ts title="app/api/fetch-dynamic-public-config/route.ts"
     export const dynamic = 'force-dynamic';
     export async function GET() {
-      return Response.json(publicDynamicEnvObj);
+      return Response.json((globalThis as any)._DMNO_PUBLIC_DYNAMIC_OBJ);
     }
     ```
   </TabItem>
   <TabItem label="Pages Router">
     ```ts title="pages/api/fetch-dynamic-public-config.ts"
-    import { publicDynamicEnvObj } from '@dmno/nextjs-integration/inject';
     import type { NextApiRequest, NextApiResponse } from 'next'
     
-    export const dynamic = 'force-dynamic';
     export default function handler(
       req: NextApiRequest,
-      res: NextApiResponse<ResponseData>
+      res: NextApiResponse
     ) {
-      res.status(200).json(publicDynamicEnvObj)
+      res.status(200).json((globalThis as any)._DMNO_PUBLIC_DYNAMIC_OBJ)
     }
     ```
   </TabItem>

@@ -20,7 +20,7 @@ console.log('> secret value =', unredact(DMNO_CONFIG.SECRET_FOO));
 // https://astro.build/config
 export default defineConfig({
   integrations: [
-    dmnoAstroIntegration(),
+    dmnoAstroIntegration() as any,
     vue({ appEntrypoint: '/src/vue-app-config' }),
     mdx(),
     {

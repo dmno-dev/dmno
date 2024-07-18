@@ -161,19 +161,17 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
 
               // leak detection in _built_ files
               transform(src, id) {
-                // TODO: can probably add some rules to skip leak detection on files coming from external deps
-
-                // skip detection if backend file
-                if (id === 'astro:scripts/page-ssr.js') return src;
-
-                for (const itemKey in dmnoInjectionResult.sensitiveValueLookup) {
-                  const itemValue = dmnoInjectionResult.sensitiveValueLookup[itemKey].value;
-                  if (src.includes(itemValue)) {
-                    // TODO: better error details to help user find the problem
-                    throw new Error(`🚨 DETECTED LEAKED CONFIG ITEM "${itemKey}" in file - ${id}`);
-                  }
+                if (!dmnoInjectionResult.serviceSettings.preventClientLeaks) {
+                  return src;
                 }
 
+                // TODO: can probably add some rules to skip leak detection on files coming from external deps
+
+                // skip detection if injected ssr (backend) script
+                if (id === 'astro:scripts/page-ssr.js') return src;
+
+                // TODO: better error details to help user find the problem
+                (globalThis as any)._dmnoLeakScan(src, { method: 'astro vite plugin', file: id });
                 return src;
               },
             }],
@@ -258,11 +256,13 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
           });
         }
 
-        // add leak detection middleware!
-        addMiddleware({
-          entrypoint: `${__dirname}/astro-middleware.js`,
-          order: 'post', // not positive on this?
-        });
+        if (dmnoInjectionResult.serviceSettings.preventClientLeaks) {
+          // add leak detection middleware!
+          addMiddleware({
+            entrypoint: `${__dirname}/astro-middleware.js`,
+            order: 'post', // not positive on this?
+          });
+        }
 
         // enable the toolbar (currently does nothing...)
         addDevToolbarApp(`${__dirname}/dev-toolbar-app.js`);

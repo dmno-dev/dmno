@@ -31,11 +31,6 @@
     },
     "./meta": {
       "default": "./dmno.meta.json"
-    },
-    "./inject": {
-      "ts-src": "./src/inject-dmno-server.ts",
-      "import": "./dist/inject-dmno-server.js",
-      "types": "./dist/inject-dmno-server.d.ts"
     }
   },
   "files": [
@@ -43,9 +38,11 @@
     "/dmno.meta.json"
   ],
   "scripts": {
-    "build": "tsup",
+    "clean": "rm -rf dist",
+    "build": "pnpm run clean && pnpm run build:patcher && tsup",
     "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
-    "dev": "pnpm run build --watch",
+    "build:patcher": "tsup --config tsup2.config.ts",
+    "dev": "pnpm run clean && pnpm run build:patcher && tsup --watch",
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix"
   },

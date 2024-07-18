@@ -16,7 +16,7 @@ window.DMNO_PUBLIC_CONFIG = new Proxy({}, {
     // TODO: some smarter caching?
     if (!window._DMNO_DYNAMIC_PUBLIC_CONFIG) {
       const request = new XMLHttpRequest();
-      request.open('GET', '/fetch-dynamic-public-config', false); // false means sync/blocking!
+      request.open('GET', '/api/fetch-dynamic-public-config', false); // false means sync/blocking!
       request.send(null);
 
       if (request.status !== 200) {

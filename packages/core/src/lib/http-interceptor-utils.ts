@@ -1,7 +1,7 @@
 import kleur from 'kleur';
 import { BatchInterceptor } from '@mswjs/interceptors';
-import { ClientRequestInterceptor } from '@mswjs/interceptors/ClientRequest';
-import { XMLHttpRequestInterceptor } from '@mswjs/interceptors/XMLHttpRequest';
+// import { ClientRequestInterceptor } from '@mswjs/interceptors/ClientRequest';
+// import { XMLHttpRequestInterceptor } from '@mswjs/interceptors/XMLHttpRequest';
 import { FetchInterceptor } from '@mswjs/interceptors/fetch';
 
 import { checkUrlInAllowList } from './url-pattern-utils';
@@ -21,8 +21,9 @@ function initInterceptor() {
   const interceptor = new BatchInterceptor({
     name: 'dmno-interceptor',
     interceptors: [
-      new ClientRequestInterceptor(),
-      new XMLHttpRequestInterceptor(),
+      // TODO: re-enable these! but we need a separate edge-compatible build that tree-shakes their deps
+      // new ClientRequestInterceptor(),
+      // new XMLHttpRequestInterceptor(),
       new FetchInterceptor(),
     ],
   });
@@ -81,8 +82,6 @@ function initInterceptor() {
 
   interceptor.apply();
 }
-
-
 
 let sensitiveInterceptorLookup: Record<string, { key: string, allowedDomains: Array<string> }>;
 let findSensitiveValuesRegex: RegExp | undefined;

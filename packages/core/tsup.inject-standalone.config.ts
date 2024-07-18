@@ -7,8 +7,6 @@ A few very specific fixes are applied here to make things work with netlify edge
 import { defineConfig } from 'tsup';
 import fs from 'node:fs';
 
-
-
 // TODO: move to published module
 const NODE_BUILTIN_MODULE_REGEX = /^(assert|buffer|child_process|cluster|crypto|dgram|dns|domain|events|fs|http|https|net|os|path|punycode|querystring|readline|stream|string_decoder|timers|tls|tty|url|util|v8|vm|zlib)$/;
 
@@ -25,6 +23,8 @@ function addNodeImportPrefix() {
 	}
 }
 
+const outDir = `dist/globals-injector-standalone`; // Output directory
+
 export default defineConfig({
   entry: [ // Entry point(s)
     'src/globals-injector/injector.ts', // function used to inject dmno globals
@@ -32,7 +32,6 @@ export default defineConfig({
 
   esbuildPlugins: [addNodeImportPrefix()],
 
-// imported as TS directly, so we have to tell tsup to compile it instead of leaving it external
   noExternal: [
     // this should include all dependencies so the built files require no other dependencies
     'kleur',
@@ -47,16 +46,19 @@ export default defineConfig({
   sourcemap: true, // Generate sourcemaps
   treeshake: true, // Remove unused code
 
-  clean: true, // Clean output directory before building
-  outDir: 'dist/globals-injector-standalone', // Output directory
+  // clean: true, // Clean output directory before building
+  outDir,
 
-  format: ['esm'], // Output format(s)
+  format: [ // Output format(s)
+    'esm',
+    'cjs'
+  ], 
 
-  splitting: false, // split output into chunks - MUST BE ON! or we get issues with multiple copies of classes and instanceof
+  splitting: false,
   keepNames: true, // stops build from prefixing our class names with `_` in some cases
 
   onSuccess: async () => {
-    const filePath = `${__dirname}/dist/globals-injector-standalone/injector.js`;
+    const filePath = `${__dirname}/${outDir}/injector.js`;
     const injectorSrc = await fs.promises.readFile(filePath, 'utf8');
 
     // this fixes a weird annoying issue where the current version of deno used by netlify edge functions
