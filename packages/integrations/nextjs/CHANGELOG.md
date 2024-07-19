@@ -1,5 +1,11 @@
 # @dmno/nextjs-integration
 
+## 0.0.8
+
+### Patch Changes
+
+- [`6186a85`](https://github.com/dmno-dev/dmno/commit/6186a8533430b48c92d071a66ad82e93b1e4e8a5) Thanks [@theoephraim](https://github.com/theoephraim)! - add watch mode to package scripts codemods
+
 ## 0.0.7
 
 ### Patch Changes
