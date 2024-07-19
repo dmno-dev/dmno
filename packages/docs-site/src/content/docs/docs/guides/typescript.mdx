@@ -12,13 +12,13 @@ _Example of VSCode's IntelliSense using DMNO's generated types:_
 ![Intellisense demo](../../../../assets/docs-images/intellisense-demo.png)
 
 :::tip[Polyglot types coming soon]
-Decoupling the schema from the consumed types means it will be very easy to generate types to be used in other languages!
+Decoupling the schema from the consumed types means it will be easier to generate types to be used in other languages!
 :::
 
 
 ### Accessing the types in your code
 
-To simplify accesing your config, we inject the `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG` globals. We must let TypeScript know about them in order to allow type-checking when _using_ your config and to get autocompletion/IntelliSense in your IDE.
+To simplify accessing your config, we inject the `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG` globals. We must let TypeScript know about them in order to allow type-checking when _using_ your config and to get autocompletion/IntelliSense in your IDE.
 
 The DMNO Config loader automaticaly generates TS types to be consumed by your code into the `.dmno/.typegen` directory:
 - `.dmno/.typegen/global.d.ts` - injects the `DMNO_CONFIG` global
@@ -69,7 +69,7 @@ import { defineConfig } from 'vite';
 ```
 
 :::caution
-Bottom line is that if TypeScript doesn't somehow know about the `DMNO_CONFIG` globals, then while things may still work, you'll be missing out valuable help from your IDE.
+If TypeScript doesn't somehow know about the `DMNO_CONFIG` globals, then while things may still work, you'll be missing out valuable help from your IDE.
 :::
 
 
@@ -94,5 +94,5 @@ Even if you are not writing TypeScript, these days you are still likely relying 
 To keep things simple, by default we always inject the global types for both `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG`. However, there are cases where you may want to only inject one or the other:
 
 - In a front-end only (i.e., non-SSR) context, you could skip injecting `DMNO_CONFIG` because you'll only want to use non-sensitive config items. That said, injecting the _types_ doesn't actually inject your sensitive secrets, and we inject a placeholder proxy throws a helpful error if you try to use `DMNO_CONFIG`.
-- In a back-end only context, you could skip injecting `DMNO_PUBLIC_CONFIG` and exclusively use `DMNO_CONFIG` - just like we do in your `.dmno/config.mts` file. However there isn't really any harm in using the public version, and it can serve as an extra check that something is definitely not sensitive - which is useful if you were, for example, returning a config item in an API response.
+- In a back-end only context, you could skip injecting `DMNO_PUBLIC_CONFIG` and exclusively use `DMNO_CONFIG` - just like we do in your `.dmno/config.mts` file. However, there isn't really any harm in using the public version, and it can serve as an extra check that something is definitely not sensitive - which is useful if you were, for example, returning a config item in an API response.
 

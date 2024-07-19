@@ -11,9 +11,9 @@ If you haven't already, follow our [Quickstart](/docs/get-started/quickstart/) g
 
 ## Project structure
 
-Using DMNO, we define a "configuration schema" for your entire project. We break that configuration up to live alongside each of the services in your code, and provide ways for them to reference each other as needed. Each service config is defined in a `config.mts` TypeScript file that lives in a `.dmno` directory.
+Using DMNO, we define a configuration schema for your entire project. We break that configuration up to live alongside each of the services in your code, and provide ways for them to reference each other as needed. Each service config is defined in a `config.mts` TypeScript file that lives in a `.dmno` directory.
 
-You'll always have a `.dmno/config.mts` file at the root of your project, and if you are working in a monorepo, you'll have another `.dmno/config.mts` in each of your "services" that require configuration. You may have some workspace packages that are purely shared libraries, and don't have any configuration. These do not need a `.dmno` folder.
+You'll always have a `.dmno/config.mts` file at the root of your project, and if you are working in a monorepo, you'll have another `.dmno/config.mts` in each of your services that require configuration. You may have some workspace packages that are purely shared libraries, and don't have any configuration. These do not need a `.dmno` folder.
 
 A typical DMNO project structure:
 
@@ -135,7 +135,7 @@ export default defineDmnoService({
 ```
 
 ### Service names
-Every service must have a unique "service name" within your workspace. You can set it in the service's config, although if you do not specify a name, we will use the `name` field from that service's `package.json` file.
+Every service must have a unique service name within your workspace. You can set it in the service's config, although if you do not specify a name, we will use the `name` field from that service's `package.json` file.
 
 We recommend you set it to something short - for example `api` instead of `@my-cool-org/api` - because you may be typing it into CLI commands (e.g., `pnpm exec dmno resolve -s api`) and it will be visible in several places in terminal output.
 
@@ -144,7 +144,7 @@ You'll also use it as a reference to the service when services need to reference
 {/* TODO: add custom id for this - plugins not working */}
 ### Sharing config between services
 
-In any service config you can "pick" config items from other services to make them available within the service. The set of items you can pick from follow 2 rules:
+In any service config you can pick config items from other services to make them available within the service. The set of items you can pick from follow 2 rules:
 - **you can pick _any_ config item from an ancestor service**<br/>
   _remember everything is a direct child of the root unless an explicit `parent` is set_
 - **otherwise you can only pick config items that are marked with `expose: true`**
@@ -393,13 +393,13 @@ Items can use `dynamic: true` or `false` to override their behaviour as to wheth
 
 
 ### Expose
-Items marked with `expose: true` will be available to be "picked" by other services in your workspace that are not children of the service. See ["sharing config" section above](#sharing-config-between-services).
+Items marked with `expose: true` will be available to be picked by other services in your workspace that are not children of the service. See [sharing config](#sharing-config-between-services) section above.
 
 
 ### Setting item values
 While some tools may let you set only default values for config items, DMNO lets you set the value from within your schema for all situations.
 
-This is possible because the `dmno` config loading process is broken up into 2 stages: first we load the schema, and then we "resolve" the values. While the resolution process does respect overrides passed in as env vars and from local override files, many of your values may be set _from the schema directly_.
+This is possible because the `dmno` config loading process is broken up into 2 stages: first we load the schema, and then we resolve the values. While the resolution process does respect overrides passed in as env vars and from local override files, many of your values may be set _from the schema directly_.
 
 We can use static values, inline functions, or a resolver - which is basically just a fancy function that will be called during the resolution process and passed some contextual data about the config item and the rest of the resolved config.
 

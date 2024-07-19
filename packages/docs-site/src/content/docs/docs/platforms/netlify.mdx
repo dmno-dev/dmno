@@ -154,7 +154,7 @@ export default defineDmnoService({
 
 ### Scopes
 
-Note that Netlify's built-in environment variable tooling has a concept of ["scopes"](https://docs.netlify.com/environment-variables/overview/#scopes) and certain vars being applied/available at different times, for example during the build versus during function execution. There are also some limitations around env vars being injected into functions due to the nature of how those platforms are set up.
+Note that Netlify's built-in environment variable tooling has a concept of [scopes](https://docs.netlify.com/environment-variables/overview/#scopes) and certain vars being applied/available at different times, for example during the build versus during function execution. There are also some limitations around env vars being injected into functions due to the nature of how those platforms are set up.
 
 Using DMNO, we avoid all of that since we inject all of your _resolved_ DMNO config at build time, and standardize access to your config regardless of the situation.
 

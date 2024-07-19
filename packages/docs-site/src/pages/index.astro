@@ -8,7 +8,6 @@ import ViteLogoSvg from '~icons/devicon/vitejs?raw';
 import NextLogoSvg from '~icons/logos/nextjs?raw';
 import AstroLogoSvg from '~icons/devicon/astro?raw';
 import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
-// import RollupLogoSvg from '~icons/logos/rollup?raw';
 
 ---
 <StarlightPage frontmatter={{
@@ -24,7 +23,7 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
       </div>
       <div class="hero__text">
         <h1>DMNO</h1>
-        <h2>Batteries included full-stack configuration</h2>
+        <h2>Full-stack configuration & secrets. Batteries included. </h2>
         <div class="cta-wrap">
           <a href='/docs/get-started/quickstart' class="button">Get started</a>
           <div class="install-command">
@@ -33,37 +32,31 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
             <DIcon name={['copy', 'check']} class="install-command__copy" />
           </div>
         </div>
-        <!-- <div>
-          <a href={DMNO_PUBLIC_CONFIG.GITHUB_REPO_URL} target="_blank">Star us on GitHub</a>
-        </div> -->
       </div>
     </div>
-
-    <!-- <h3>DMNO Config</h3>
-    <p>Helps you define a schema for all of the configuration (environment variables) used throughout your applications.</p> -->
     <section class="value-prop-section">      
       <div>
         <h3>Type-safe env vars</h3>
-        <p>DMNO auto-generates powerful types for your config schema with amazing documentation built right in.</p>
+        <p>DMNO auto-generates powerful types for your config schema with intuitive documentation built right in.</p>
       </div>
       <div>
-        <h3>Validate & coerce</h3>
+        <h3>Validation & coercion</h3>
         <p>Clean and check your config at every step of the way. Our built-in types cover 95% of use cases. Easily add custom validation logic on top.</p>
       </div>
       <div>
         <h3>Monorepo native</h3>
-        <p>DMNO is the only config tool that treats monorepos as a first class concept. Each service can "pick" items from the root or other services.</p>
+        <p>DMNO is the only config tool that treats monorepos as a first class concept. Each service can pick items from the root or other services.</p>
       </div>
       <div>
         <h3>Live reload</h3>
-        <p>Our <code>dev</code> mode reloads your schema and restarts your code whenever anything changes. And it's FAST because it's powered by Vite.</p>
+        <p>Our <code>resolve -w</code> mode reloads your schema and restarts your code whenever anything changes. And it's FAST because it's powered by Vite.</p>
       </div>
       <div>
         <h3>Keep your secrets safe</h3>
         <p>DMNO prevents you from accidentally leaking any secrets, and helps you sync with teammates without sending <code>.env</code> files over slack.</p>
       </div>
       <div>
-        <h3>Holistic configuration toolkit</h3>
+        <h3>Comprehensive configuration toolkit</h3>
         <p>Includes everything you need to manage config - no need to wire together 5 different tools or spend weeks integrating an external service</p>
       </div>
       <div>
@@ -79,16 +72,11 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
         <a href="/docs/integrations/vite" set:html={ViteLogoSvg} />
         <a href="/docs/integrations/nextjs" set:html={NextLogoSvg} />
         <a href="/docs/integrations/node" set:html={NodeLogoSvg} />
-        <!-- <a href="/docs/integrations/rollup" set:html={RollupLogoSvg} /> -->
       </div>
       <div class="richtext">
         <p>Use something else? 💪 <a href={DMNO_PUBLIC_CONFIG.DISCORD_JOIN_URL}>Join us on discord</a> and help us build the next one!</p>
       </div>
     </section>
-
-    <!-- <div>
-      <Aside>Hello!</Aside>
-    </div> -->
 
   </div>
 
@@ -108,27 +96,16 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
       min-height: 100vh;
       
     }
-    .main-pane {
-
-
-      /* min-height: 100%; */
-    }
   </style>
 
   <style lang="less">
 
     :global(.main-frame) {
-      // background: black;
     }
     .homepage {
       .hero {
         color: var(--color-text-full-shade);
-
-        // padding-top: 1rem;
         padding-bottom: 2rem;
-        // padding-left: 1rem;
-        // padding-right: 1rem;
-        
         display: flex;
         flex-direction: column;
 
@@ -149,8 +126,6 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
         @media (min-width: 100rem) {
           grid-template-columns: 4fr 5fr;
         }
-
-        // display: flex;
         
         .hero__logo {
           display: flex;
@@ -178,7 +153,6 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
           right: 0;
           opacity: .2;
           
-          // background: radial-gradient(var(--brand-cyan) 0%, rgba(0,0,0,0) 100%);
         }
       }
       h1 {
@@ -241,7 +215,6 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
         }
         &:hover {
           transform: translate3d(-2px, -2px, 0);
-          // border-color: var(--brand-pink);
           background: var(--brand-pink);
           box-shadow: 2px 2px 0 var(--tile-drop-shadow);
         }
@@ -280,16 +253,10 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
         border-image-source: linear-gradient(90deg, var(--border-gradient-color-1), var(--border-gradient-color-2));
         border-image-slice: 1;
         
-        :global(> div) {
-          // flex-shrink: 0;
-        }
 
         :global(.d-icon) {
           height: 44px;
           width: 44px;
-
-          // background: red;
-
           flex-shrink: 0;
 
           // console/cli caret
@@ -367,7 +334,6 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
           opacity: .9;
           
           &:hover {
-            // filter: saturate(100%);
             opacity: 1;
             transform: scale(1.1);
           }
