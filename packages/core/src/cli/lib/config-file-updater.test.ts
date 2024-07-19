@@ -163,6 +163,28 @@ describe('update - wrapWithFn', () => {
       `],
     }));
   });
+
+  describe('noop cases', () => {
+    test('noop', updateConfigTest(outdent`
+      export default dmnoPlugin()(someObj)
+    `, {
+      updates: [{ symbol: 'EXPORT', action: { wrapWithFn: 'dmnoPlugin()' } }],
+    }, {
+      contains: [outdent`
+        export default dmnoPlugin()(someObj)
+      `],
+    }));
+
+    test('noop w/ existing options', updateConfigTest(outdent`
+      export default dmnoPlugin({ someOption: true })(someObj)
+    `, {
+      updates: [{ symbol: 'EXPORT', action: { wrapWithFn: 'dmnoPlugin()' } }],
+    }, {
+      contains: [outdent`
+        export default dmnoPlugin({ someOption: true })(someObj)
+      `],
+    }));
+  });
 });
 
 // describe('nextjs', () => {
