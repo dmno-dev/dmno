@@ -6,7 +6,7 @@
       "glob": "next.config.*",
       "imports": [ {
           "moduleName": "@dmno/nextjs-integration",
-          "importDefaultAs": "dmnoNextConfigPlugin",
+          "importVars": [ "dmnoNextConfigPlugin" ],
         } ],
       "updates": [ {
           "symbol": "EXPORT",
@@ -16,4 +16,12 @@
         } ],
     }
   ],
+  "packageScriptsCodemods": {
+    "prependDmnoRun": {
+      "dev": "next dev",
+      "build": "next build",
+      "start": "next start",
+      "lint": "next lint"
+    }
+  },
 }

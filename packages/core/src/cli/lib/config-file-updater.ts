@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import _ from 'lodash-es';
 import * as acorn from 'acorn';
 import tsPlugin from 'acorn-typescript';
@@ -202,15 +201,17 @@ export async function updateConfigFile(
               // TODO: better handling of indents / line breaks too, single line arrays
               (isMultiLine ? '\n    ' : '')
               + singleUpdate.action.arrayContains
-              + (arrayItems.length ? ', ' : ''),
+              + (arrayItems.length ? (isMultiLine ? ',' : ', ') : ''),
           });
         }
 
       // this action will wrap the node with a function call ex: `wrapWithCode(NODE)`
       } else if ('wrapWithFn' in singleUpdate.action) {
+        let wrapFnOnly = singleUpdate.action.wrapWithFn;
+        if (wrapFnOnly.endsWith('()')) wrapFnOnly = wrapFnOnly.replace('()', '');
         // naively just check if the fn is anywhere within the code
         // eventually we'll want to be smarter but we'll potentially need to walk a tree of wrapped fn calls
-        if (originalSrc.substring(nodeToUpdate.start, nodeToUpdate.end).includes(singleUpdate.action.wrapWithFn)) {
+        if (originalSrc.substring(nodeToUpdate.start, nodeToUpdate.end).includes(wrapFnOnly)) {
           break;
         }
         mods.push(

@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import fs from 'node:fs';
 import path from 'path';
 import _ from 'lodash-es';
-import { parse as parseJSONC } from 'jsonc-parser';
+import { parse as parseJSONC, modify as modifyJSONC, applyEdits as applyEditsJSONC } from 'jsonc-parser';
 import buildEsmResolver from 'esm-resolve';
 import kleur from 'kleur';
 import { outdent } from 'outdent';
@@ -264,6 +264,46 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
                 console.log(setupStepMessage(`${configFileName} updated to set up ${suggestedDmnoIntegration.package}`, { path: configFileFullPath }));
               } else {
                 console.log(setupStepMessage(`Skipped ${configFileName} updates to set up ${suggestedDmnoIntegration.package}`, { type: 'skip', path: configFileFullPath }));
+              }
+            }
+          }
+
+
+          // run package.json script codemods
+          const packageScriptsCodemods = integrationMeta.packageScriptsCodemods;
+          if (packageScriptsCodemods?.prependDmnoRun) {
+            const prependScripts = packageScriptsCodemods.prependDmnoRun as Record<string, string>;
+            const packageJsonPath = `${service.path}/package.json`;
+            const packageJsonStr = await fs.promises.readFile(packageJsonPath, 'utf8');
+            const packageJson = parseJSONC(packageJsonStr);
+
+            const packageJsonEdits = [] as Array<any>;
+            for (const command in prependScripts) {
+              const existingScriptCmd = packageJson.scripts[command];
+              if (!existingScriptCmd) continue;
+              if (!existingScriptCmd.includes('dmno run')) {
+                const prependedScript = packageJson.scripts[command].replace(prependScripts[command], `dmno run -- ${prependScripts[command]}`);
+                packageJsonEdits.push(...modifyJSONC(packageJsonStr, ['scripts', command], prependedScript, {}));
+              }
+            }
+
+            if (packageJsonEdits.length) {
+              const updatedPackageJsonStr = applyEditsJSONC(packageJsonStr, packageJsonEdits);
+              const diffText = getDiffColoredText(packageJsonStr, updatedPackageJsonStr);
+              console.log(kleur.italic().bgBlue(' DMNO will make the following changes to your package.json scripts'));
+              // console.log(kleur.italic().gray(`> Filename: ${configFileName}\n`));
+              // boxen wasn't handling indentation and line wrapping well
+              console.log(diffText.trim());
+              console.log(kleur.italic().bgBlue(' -------------------------------------------------------- '));
+
+              const confirmedConfigChanges = await confirm({
+                message: 'Continue?',
+              });
+              if (confirmedConfigChanges) {
+                await fs.promises.writeFile(packageJsonPath, updatedPackageJsonStr);
+                console.log(setupStepMessage('package.json scripts prepended with `dmno run`', { path: packageJsonPath }));
+              } else {
+                console.log(setupStepMessage('Skipped package.json script updates', { type: 'skip', path: configFileFullPath }));
               }
             }
           }
