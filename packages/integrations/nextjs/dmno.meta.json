@@ -13,15 +13,15 @@
           "action": {
             "wrapWithFn": "dmnoNextConfigPlugin()",
           },
-        } ],
+        } ]
     }
   ],
   "packageScriptsCodemods": {
     "prependDmnoRun": {
-      "dev": "next dev",
-      "build": "next build",
-      "start": "next start",
-      "lint": "next lint"
+      "dev": { "command": "next dev", "args": "-w" },
+      "build": { "command": "next build" },
+      "start": { "command": "next start" },
+      "lint": { "command": "next lint" }
     }
   },
 }

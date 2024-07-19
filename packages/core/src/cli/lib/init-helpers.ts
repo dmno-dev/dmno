@@ -272,18 +272,25 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
           // run package.json script codemods
           const packageScriptsCodemods = integrationMeta.packageScriptsCodemods;
           if (packageScriptsCodemods?.prependDmnoRun) {
-            const prependScripts = packageScriptsCodemods.prependDmnoRun as Record<string, string>;
+            const prependScripts: Record<string, {
+              command: string, args?: string
+            }> = packageScriptsCodemods.prependDmnoRun;
             const packageJsonPath = `${service.path}/package.json`;
             const packageJsonStr = await fs.promises.readFile(packageJsonPath, 'utf8');
             const packageJson = parseJSONC(packageJsonStr);
 
             const packageJsonEdits = [] as Array<any>;
-            for (const command in prependScripts) {
-              const existingScriptCmd = packageJson.scripts[command];
+            for (const commandName in prependScripts) {
+              const existingScriptCmd = packageJson.scripts[commandName];
               if (!existingScriptCmd) continue;
               if (!existingScriptCmd.includes('dmno run')) {
-                const prependedScript = packageJson.scripts[command].replace(prependScripts[command], `dmno run -- ${prependScripts[command]}`);
-                packageJsonEdits.push(...modifyJSONC(packageJsonStr, ['scripts', command], prependedScript, {}));
+                let argsStr = prependScripts[commandName].args || '';
+                if (argsStr && !argsStr.endsWith(' ')) argsStr += ' ';
+                const prependedScript = packageJson.scripts[commandName].replace(
+                  prependScripts[commandName].command,
+                  `dmno run ${argsStr}-- ${prependScripts[commandName].command}`,
+                );
+                packageJsonEdits.push(...modifyJSONC(packageJsonStr, ['scripts', commandName], prependedScript, {}));
               }
             }
 
