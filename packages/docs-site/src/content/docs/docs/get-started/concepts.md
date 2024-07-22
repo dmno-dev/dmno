@@ -66,7 +66,7 @@ Note - a service can pick any config item from a parent/ancestor, but only confi
 
 ### Resolution (resolve, resolvers)
 
-DMNO config is loaded in 2 phases - first we load the schema itself, and then we attempt to resolve the values. This resolution process calls special resolver functions and passes in extra contextual information about the item being resolved and the rest of the resolved configuration values. This lets us form a reactive [DAG](https://en.wikipedia.org/wiki/D) to generate our configuration, and to understand much about the shape of that graph without necessarily needing to know the values themselves.
+DMNO config is loaded in 2 phases - first we load the schema itself, and then we attempt to resolve the values. This resolution process calls special resolver functions and passes in extra contextual information about the item being resolved and the rest of the resolved configuration values. This lets us form a reactive [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph) to generate our configuration, and to understand much about the shape of that graph without necessarily needing to know the values themselves.
 
 ### Overrides
 Your config schema may define how to resolve a value for a config item - but this value can always be overridden by a value coming from file-based overrides (`.env` files or similar) or from actual environment variables in your shell. A single item could have multiple overrides present and there is a precendence order that they are applied in. Being able to see all of these values and which one is currently active will save you tons of headaches.
