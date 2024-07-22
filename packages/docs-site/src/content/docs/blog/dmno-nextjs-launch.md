@@ -1,6 +1,6 @@
 ---
-title: Ultimate config tool for Next.js & beyond!
-date: 2024-07-18
+title: Level up your env var tooling in Next.js with DMNO
+date: 2024-07-22
 ---
 
 We're super excited to finally announce that our [Next.js integration](/docs/integrations/nextjs/) is ready - and we believe it is the BEST way to manage configuration in Next.js apps. Dealing with config is Next.js has usually been an afterthought - use `process.env`, maybe a `.env` file, and call it a day. But the whole experience is clunky and leaves you open to some major security risks.
@@ -30,7 +30,7 @@ Here's a quick overview of the main problems and how DMNO solves them:
 
 
 ### 🤐 Leak detection
-<span class="gradient-text --red">**Problem:**</span> With the edges of client and server getting blurrier each day, it has become easier to accientally leak sensitive config. Your secrets can end up in server-rendered pages and data, built javascript code, or be sent to the wrong 3rd party - especially logging and error tracking tools.
+<span class="gradient-text --red">**Problem:**</span> With the edges of client and server getting blurrier each day, it has become easier to accidentally leak sensitive config. Your secrets can end up in server-rendered pages and data, built javascript code, or be sent to the wrong 3rd party - especially logging and error tracking tools.
 
 <span class="gradient-text --green">**Solution:**</span> DMNO does [everything possible](/docs/get-started/security/) to protect you from accidental leaks. These features are opt-in but we think they are invaluable.
 - DMNO patches global `console` methods to **scrub sensitive data from logs**
@@ -72,7 +72,7 @@ Here's a quick overview of the main problems and how DMNO solves them:
 
 
 ## So what's _Next_
-While much of what was described above is not specific to Next.js, a **TON** of specific work went into making sure our Next.js integration _just works_ without additional setup on your part. We want this to become the default way that everyone deals with configuration in their Next apps, and for JS/TS in general. This stuff may seem like it's not a problem, and day to day it may not be - until it bites you. Setting up your schema isn't much harder than writing a `.env.example` file and you get SO much more, so please give it a try, and let us know what you think!
+While much of what was described above is not specific to Next.js, a **TON** of specific work went into making sure our Next.js integration _just works_ without additional setup on your part. We want this to become the default way that everyone deals with configuration in their Next apps, and for JS/TS in general. This stuff may seem like it's not a problem, and day to day it may not be - until it bites you. Setting up your schema isn't much harder than writing a `.env.example` file and you get SO much more, so please [give it a try](/docs/get-started/quickstart/), and let us know what you think!
 
 :::tip[Ready to give it a try?]
 Hopefully the benefits are obvious, and we know once you try out DMNO, you'll love it 🥰.
