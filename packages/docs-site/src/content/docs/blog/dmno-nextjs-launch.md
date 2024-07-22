@@ -49,17 +49,23 @@ Here's a quick overview of the main problems and how DMNO solves them:
 
 <span class="gradient-text --green">**Solution:**</span> DMNO decouples the concepts of "sensitive" and "dynamic", and supports both **sensitive+static** and **public+dynamic** config, and lets you set them explicitly in your config schema. This finer control is easier to reason about and we handle the hard part for you. See our [dynamic config guide](/docs/guides/dynamic-config/) for more details.
 
+![Dynamic schema example](@/assets/docs-images/dynamic-schema-example.png)
+
 
 ### 🌲 Unified config system
 <span class="gradient-text --red">**Problem:**</span> In a larger projects, especially monorepos, each part of your system ends up with its own hacked together config tooling, and there's no way to share config across services. Keeping things in sync is error-prone and awkward, and dealing with many different tools is a pain.
 
 <span class="gradient-text --green">**Solution:**</span> DMNO lets you easily define config once and share it across your entire monorepo. Even outside of monoepos, using the same config system across your entire project will make your life much easier.
 
+![Pick schema example](@/assets/docs-images/pick-schema-example.png)
+
 
 ### ⛓️ Flexible value dependencies
 <span class="gradient-text --red">**Problem:**</span> Ideally we could set config values based on other values. While Next.js does have some built-in handling of multiple environment specific `.env` files (e.g., `.env.production`), this behavior is tied to the value of `NODE_ENV`. Since npm module installation behavior is also affected by this, often you'll end up running your build with `NODE_ENV` as `development` even when doing a non-production build. You can also use [$ expansion](https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables#referencing-other-variables) to do some basic referencing, but it's extremely limited.
 
 <span class="gradient-text --green">**Solution:**</span> DMNO's config resolution logic allows you to reference other values however you like. You can define switching logic based on any value (not just `NODE_ENV`) and reuse values within arbitrary functions. Your configuration schema all forms a reactive DAG, which can also be visualized for simple debugging.
+
+![Config reuse schema example](@/assets/docs-images/reuse-schema-example.png)
 
 
 ---

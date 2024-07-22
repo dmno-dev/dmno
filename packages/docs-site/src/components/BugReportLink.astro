@@ -10,11 +10,14 @@ interface Props {
 }
 
 const { label } = Astro.props;
+const labels = encodeURIComponent(`${label},bug,triage`);
+const titleDefault = encodeURIComponent('[BUG]:')
+
+// https://github.com/dmno-dev/dmno/issues/new?assignees=philmillman&labels=bug%2Ctriage%2Cintegrations%2Fnextjs&projects=&template=bug_report.yml&title=
+
 ---
 
 <a
-  href=`${DMNO_CONFIG.GITHUB_REPO_URL}/issues/new?labels=${label}&template=bug_report.md`
+  href=`${DMNO_CONFIG.GITHUB_REPO_URL}/issues/new?assignees=philmillman&labels=${labels}&template=bug_report.md&template=bug_report.yml&title=${titleDefault}`
   target="_blank"><slot /></a
 >
-<!-- 
-https://github.com/dmno-dev/core/issues/new?assignees=philmillman&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D+ -->

@@ -427,14 +427,14 @@ export default defineDmnoService({
 
 Internally, we even wrap the static values and inline functions into resolvers, so that we can always display some additional metadata about _how_ the value is being set - even without actually resolving it. These resolvers can also return more resolvers, and have a notion of multiple branches built in, leading to some very powerful composition capabilities.
 
-An quick example to illustrate using our built-in [`switchByNodeEnv`](/docs/reference/helper-methods/#switchbynodeenv) resolver which selects a value based on the current value of `NODE_ENV` within your config.
+An quick example to illustrate using our built-in [`switchBy`](/docs/reference/helper-methods/#switchby) resolver which selects a value based on the current value of another within your config.
 
 ```ts
 export default defineDmnoService({
-  pick: ['NODE_ENV'],
+  pick: ['APP_ENV'], // picks the config value from the root service
   schema: {
     SOME_API_KEY: {
-      value: switchByNodeEnv({
+      value: switchBy('APP_ENV', {
         // static values for pre-prod, so not a problem to include here
         _default: 'dev123',
         test: 'test123',
