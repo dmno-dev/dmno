@@ -98,11 +98,13 @@ export default defineDmnoService({
 
 ### Other services
 
-The rest of your services (if you are working in a monorepo) are very similar, however they call a different function (`defineDmnoService()`) and we gain a few new options:
+The rest of your services (if you are working in a monorepo) are extremely similar - we just gain a few new options:
 
 - `parent` - set the service's parent (by name), otherwise will default to the root service
 {/* - `tags` - array of strings, not yet used for anything */}
 - `pick` - pick specific config items from other services to use in this one (see [sharing config](/docs/guides/schema/#sharing-config-between-services) for more info)
+
+Also note that `settings` values are inherited from parents unless set explicitly.
 
 An example service config:
 

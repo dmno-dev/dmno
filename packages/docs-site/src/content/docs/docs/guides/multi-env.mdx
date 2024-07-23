@@ -19,13 +19,14 @@ export default defineDmnoService({
     'NODE_ENV',
   ],
   schema: {
+    OTHER_ITEM: {},
     MY_CONFIG_ITEM: {
       value: switchByNodeEnv({
         _default: 'default value',
         development: 'development value',
         staging: 'staging value',
         production: (ctx) => {
-          return ctx.val ? 'production value' : 'production value 2';
+          return DMNO_CONFIG.OTHER_ITEM ? 'production value' : 'production value 2';
         },
       }),
     },
