@@ -1,12 +1,12 @@
 import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv, NodeEnvType } from 'dmno';
-import { GitDataTypes } from 'dmno/vendor-types';
+import { GitDataTypes, GithubDataTypes } from 'dmno/vendor-types';
 
 export default defineDmnoService({
   name: 'root',
   isRoot: true,
   schema: {
     GITHUB_ORG_NAME: {
-      extends: GitDataTypes.OrgName,
+      extends: GithubDataTypes.OrgName,
       required: true,
       value: 'dmno-dev',
     },

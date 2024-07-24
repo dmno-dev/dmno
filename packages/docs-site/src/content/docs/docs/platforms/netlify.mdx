@@ -107,7 +107,7 @@ Of course you _can_ still set overrides and secrets within the Netlify UI if you
 
 However, we recommend migrating all of your config to DMNO itself by using [switchBy](/docs/reference/helper-methods/#switchby) to create branching logic based on the env vars injected by Netlify.
 
-You can also use plugins - for example our [Encrypted Vault](/docs/plugins/encrypted-vault/) and [1Password](/docs/plugins/1password/) plugins - to handle sensitive config within your schema. Note that you will still set a **single environment variable** in the Netlify UI, to allow these plugins to access the rest of your secret.
+You can also use plugins - for example our [Encrypted Vault](/docs/plugins/encrypted-vault/) and [1Password](/docs/plugins/1password/) plugins - to handle sensitive config within your schema. Note that you will still set a **single environment variable** in the Netlify UI, to allow these plugins to access the rest of your secrets.
 
 For example:
 ```ts title='.dmno/config.mts'

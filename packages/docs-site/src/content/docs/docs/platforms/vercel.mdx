@@ -1,0 +1,105 @@
+--- 
+title: Using DMNO with Vercel
+description: Use DMNO while deploying on Vercel
+---
+
+import VercelLogo from "~icons/logos/vercel";
+
+import TabbedCode from '@/components/TabbedCode.astro';
+import BugReportLink from '@/components/BugReportLink.astro';
+
+This platform integration exposes a pre-made config schema and underlying types to interact with the env vars that Vercel injects while using their platform. You may not need this at all, but it can be useful if you are using their platform extensively and want helpful type info for their system's env vars.
+
+:::tip
+There is a Project Setting in the Vercel ui where you can turn off these env vars, so make sure that "Automatically expose System Environment Variables" is enabled.
+:::
+
+
+## Setup
+
+<TabbedCode packageName="@dmno/vercel-platform" />
+
+:::note
+If you run into any issues, feel free to <BugReportLink label='integrations/vercel'>report them to us on GitHub</BugReportLink> and try the manual installation steps below.
+:::
+
+
+## Vercel Config Schema
+
+Vercel injects a set of [system environment variables](https://vercel.com/docs/projects/environment-variables/system-environment-variables) at build and runtime that provide information about the current build or runtime environment.
+
+The `@dmno/vercel-platform` module exposes DMNO data types and a pre-made config schema object which you can use in your own schema. You can use the `pickFromSchemaObject` utility to pick only the env var keys that you need from the full list that Vercel injects. For example:
+
+```ts title='.dmno/config.mts'
+import { defineDmnoService, switchBy, pickFromSchemaObject } from 'dmno';
+import { VercelEnvSchema } from '@dmno/vercel-platform';
+
+export default defineDmnoService({
+  schema: {
+    ...pickFromSchemaObject(VercelEnvSchema, 'VERCEL_ENV', 'VERCEL_GIT_COMMIT_REF'),
+    // example of adding more specificity/control over env flag using vercel's env vars
+    APP_ENV: {
+      value: (ctx) => {
+        if (DMNO_CONFIG.VERCEL_ENV === 'production') return 'production';
+        if (DMNO_CONFIG.VERCEL_ENV === 'preview') {
+          if (DMNO_CONFIG.VERCEL_GIT_COMMIT_REF === 'staging') return 'staging';
+          else return 'preview';
+        }
+        return 'development';
+      },
+    },
+  },
+});
+```
+
+
+
+:::caution[Netlify configuration variables]
+There are also a set of [Framework specific env vars](https://vercel.com/docs/projects/environment-variables/system-environment-variables#framework-environment-variables) that vercel injects to expose their env vars to the framework. Using DMNO, you can just access those vars and mark them as non-sensitive so there is no need for them.
+:::
+
+
+## Migrating from Vercel managed config
+
+**Should I set env vars in the Vercel UI at all?**
+
+Vercel has the ability to set config vars per environment - dev/preview/prod. Of course you _can_ still set overrides and secrets within the Vercel UI if you like and rely on config values being injected that way.
+
+However, we recommend migrating all of your config to DMNO itself by using [switchBy](/docs/reference/helper-methods/#switchby) to create branching logic based on the `VERCEL_ENV` flag injected and any other logic you like. This is much more flexible and powerful, and will centralize your config management within your codebase.
+
+You can also use plugins - for example our [Encrypted Vault](/docs/plugins/encrypted-vault/) and [1Password](/docs/plugins/1password/) plugins - to handle sensitive config within your schema. Note that you will still set a **single environment variable** in the Vercel UI, to allow these plugins to access the rest of your secrets.
+
+For example:
+```ts title='.dmno/config.mts'
+import { defineDmnoService, switchBy, pickFromSchemaObject } from 'dmno';
+import { VercelEnvSchema } from '@dmno/vercel-platform';
+import {
+  EncryptedVaultDmnoPlugin, EncryptedVaultTypes,
+} from '@dmno/encrypted-vault-plugin';
+
+// you could use a single vault, but it's best practice
+// to split out prod secrets to limit access
+const DevSecretsVault = new EncryptedVaultDmnoPlugin('vault/dev', {
+  key: configPath('DMNO_VAULT_KEY_DEV'),
+  name: 'dev',
+});
+const ProdSecretsVault = new EncryptedVaultDmnoPlugin('vault/prod', {
+  key: configPath('DMNO_VAULT_KEY_PROD'),
+  name: 'prod',
+});
+
+export default defineDmnoService({
+  schema: {
+    DMNO_VAULT_KEY_DEV: { extends: EncryptedVaultTypes.encryptionKey },
+    DMNO_VAULT_KEY_PROD: { extends: EncryptedVaultTypes.encryptionKey },
+    ...pickFromSchemaObject(VercelEnvSchema, 'VERCEL_ENV'),
+    SOME_API_KEY: {
+      value: switchBy('VERCEL_ENV', {
+        _default: 'not-sensitive-dev-key',
+        staging: DevSecretsVault.item(),
+        production: ProdSecretsVault.item(),
+      }),
+    },
+  },
+});
+```

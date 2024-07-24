@@ -172,37 +172,25 @@ export default defineConfig({
         }, {
           label: 'Integrations',
           badge: 'New',
-          items: [{
-            label: 'Overview',
-            link: '/docs/integrations/overview/',
-          },
-          {
-            label: 'Astro',
-            link: '/docs/integrations/astro/',
-          },
-          {
-            label: 'Next.js',
-            link: '/docs/integrations/nextjs/',
-          }, {
-            label: 'Vite',
-            link: '/docs/integrations/vite/',
-          }, {
-            label: 'Node.js',
-            link: '/docs/integrations/node/',
-          },
-          // {
-          //   label: "Vercel",
-          //   link: "/docs/deployment/vercel/"
-          // }, {
-          //   label: "Netlify",
-          //   link: "/docs/deployment/netlify/"
-          // }, {
-          //   label: "Railway",
-          //   link: "/docs/deployment/railway/"
-          // }, {
-          //   label: "Render",
-          //   link: "/docs/deployment/render/"
-          // }
+          items: [
+            {
+              label: 'Overview',
+              link: '/docs/integrations/overview/',
+            },
+            {
+              label: 'Astro',
+              link: '/docs/integrations/astro/',
+            },
+            {
+              label: 'Next.js',
+              link: '/docs/integrations/nextjs/',
+            }, {
+              label: 'Vite',
+              link: '/docs/integrations/vite/',
+            }, {
+              label: 'Node.js',
+              link: '/docs/integrations/node/',
+            },
           ],
         }, {
           label: 'Platforms',
@@ -215,6 +203,10 @@ export default defineConfig({
             {
               label: 'Netlify',
               link: '/docs/platforms/netlify/',
+            },
+            {
+              label: 'Vercel',
+              link: '/docs/platforms/vercel/',
             },
           ],
         }, {
