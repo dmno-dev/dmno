@@ -42,6 +42,7 @@
     "build": "pnpm run clean && pnpm run build:patcher && tsup",
     "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
     "build:patcher": "tsup --config tsup2.config.ts",
+    "build:tarball": "turbo build && pnpm pack --pack-destination \"../../../../tmp-package-registry\"",
     "dev": "pnpm run clean && pnpm run build:patcher && tsup --watch",
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix"

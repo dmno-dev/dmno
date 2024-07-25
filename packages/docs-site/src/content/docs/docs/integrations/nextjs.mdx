@@ -46,7 +46,7 @@ const nextConfig = {
 
 
 ### Adjusting package.json scripts
-Unlike some of our other integrations, the next integration requires that you run your next commands via [`dmno run`](/docs/reference/cli/run/). This means your package.json scripts that run `next` should be prefixed with `dmno run`. Our [`dmno init`](/docs/reference/cli/init/) cli will try to make these changes for you, but they should end up looking like this:
+Unlike some of our other integrations, this integration requires that you run your `next` commands via [`dmno run`](/docs/reference/cli/run/). The `dmno init` setup helper will try to do this for you, but you'll want to make sure your package.json scripts look something like this:
 
 ```diff lang="json" title="package.json" ins=/(dmno run (-w )?-- )/
 {

@@ -10,6 +10,7 @@ import type { NextConfig } from 'next';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+
 const {
   staticReplacements, dynamicKeys, injectedDmnoEnv, serviceSettings,
 } = injectDmnoGlobals();
@@ -120,7 +121,7 @@ export function dmnoNextConfigPlugin(dmnoOptions?: DmnoPluginOptions) {
           // injects our DMNO_CONFIG shims into the client
           // which gives us nicer errors and also support for dynamic public config
           if (!isServer) {
-            const injectDmnoClientFilePath = `${import.meta.dirname}/inject-dmno-client.js`;
+            const injectDmnoClientFilePath = `${__dirname}/inject-dmno-client.js`;
             injectEntry('main-app', injectDmnoClientFilePath);
             injectEntry('main', injectDmnoClientFilePath);
             injectEntry('amp', injectDmnoClientFilePath);
