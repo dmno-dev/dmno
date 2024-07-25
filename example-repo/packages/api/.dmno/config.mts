@@ -62,6 +62,10 @@ export default defineDmnoService({
       // value: VaultPlugin.item(),
     },
 
+    BOOL_NUM_FLAG: {
+      extends: 'boolean',
+    },
+
     A_NEW_ITEM: {
       value: "phil 1"
     }, 

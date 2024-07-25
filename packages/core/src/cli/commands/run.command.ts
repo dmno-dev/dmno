@@ -64,13 +64,21 @@ program.action(async (_command, opts: {
 
   const serviceEnv = service.getEnv();
 
+  const fullInjectedEnv = {
+    ...process.env,
+  };
+  // we need to add any config items that are defined in dmno config, but we dont want to modify existing items
+  for (const key in serviceEnv) {
+    if (!Object.hasOwn(process.env, key)) {
+      const strVal = serviceEnv[key]?.toString();
+      if (strVal !== undefined) fullInjectedEnv[key] = strVal;
+    }
+  }
+  fullInjectedEnv.DMNO_INJECTED_ENV = JSON.stringify(service.getInjectedEnvJSON());
+
   commandProcess = execa(pathAwareCommand || rawCommand, commandArgsOnly, {
     stdio: 'inherit',
-    env: {
-      ...process.env,
-      ...serviceEnv,
-      DMNO_INJECTED_ENV: JSON.stringify(service.getInjectedEnvJSON()),
-    },
+    env: fullInjectedEnv,
   });
   // console.log('PARENT PID = ', process.pid);
   // console.log('CHILD PID = ', commandProcess.pid);

@@ -13,12 +13,13 @@ export const router = new Router<CustomAppState, CustomAppContext>();
 export type CustomRouter = Router<CustomAppState, CustomAppContext>;
 
 router.get('/', async (ctx) => {
-  // TODO: add something which checks redis and postgres connections are working
   ctx.body = {
     systemStatus: 'nope',
     envCheck: DMNO_CONFIG.API_ONLY || 'env-var-not-loaded',
     dmnoTest: DMNO_CONFIG.PORT,
     public: DMNO_PUBLIC_CONFIG.PUBLIC_EXAMPLE,
+    boolFlag_dmno: DMNO_CONFIG.BOOL_NUM_FLAG || '_empty_',
+    boolFlag_processEnv: process.env.BOOL_NUM_FLAG || '_empty_',
   };
 });
 

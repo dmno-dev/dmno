@@ -95,12 +95,14 @@ export function injectDmnoGlobals(
     const injectedItem = injectedDmnoEnv[itemKey];
     const val = injectedItem.value;
 
-    // re-inject into process.env
+    // re-inject into process.env - only for items that dont exist
+    // TODO: this may need more logic here... for example we may want to allow types to specify how they convert to strings for re-injection
+    // TODO: we'll also need to figure out nested object paths
     if (processExists) {
       if (val === undefined || val === null) {
-        globalThis.process.env[itemKey] = '';
+        globalThis.process.env[itemKey] ||= '';
       } else {
-        globalThis.process.env[itemKey] = val.toString();
+        globalThis.process.env[itemKey] ||= val.toString();
       }
     }
 

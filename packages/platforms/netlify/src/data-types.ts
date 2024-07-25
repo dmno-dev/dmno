@@ -10,28 +10,28 @@ function getCommonTypeInfo(anchorLink: string, skipIcon = false) {
     ...!skipIcon && {
       ui: {
         icon: 'simple-icons:netlify',
-        color: '01BDBA' // netlify brand
+        color: '01BDBA', // netlify brand
       },
     },
-  }
+  };
 }
 
 export const NetlifyDataTypes = {
   // https://docs.netlify.com/configure-builds/environment-variables/#build-metadata
-  NetlifyContext: createDmnoDataType({
+  Context: createDmnoDataType({
     typeLabel: 'netlify/context',
     extends: DmnoBaseTypes.enum({
-      'dev': {
-        description: 'local development environments run using Netlify Dev'
+      dev: {
+        description: 'local development environments run using Netlify Dev',
       },
       'branch-deploy': {
-        description: 'deploys from branches that are not the site’s main production branch.'
+        description: 'deploys from branches that are not the site\'s main production branch.',
       },
       'deploy-preview': {
-        description: 'previews built for pull/merge requests'
+        description: 'previews built for pull/merge requests',
       },
-      'production': {
-        description: 'This main site’s deployment, attached to the Git branch you set when the site is created'
+      production: {
+        description: 'This main site\'s deployment, attached to the Git branch you set when the site is created',
       },
     }),
     typeDescription: 'Netlify deploy context - can be used to detect if this is production or what type of staging/preview env it is',
@@ -41,7 +41,7 @@ export const NetlifyDataTypes = {
       url: 'https://docs.netlify.com/site-deploys/overview/#deploy-contexts',
     },
   }),
-  NetlifyBuildId: createDmnoDataType({
+  BuildId: createDmnoDataType({
     typeLabel: 'netlify/build-id',
     typeDescription: 'unique ID for the Netlify build',
     exampleValue: '5d4aeac2ccabf517d2f219b8',
@@ -49,42 +49,37 @@ export const NetlifyDataTypes = {
   }),
 
 
-  NetlifySiteName: createDmnoDataType({
+  SiteName: createDmnoDataType({
     typeLabel: 'netlify/site-name',
     typeDescription: 'name of the site - also the Netlify subdomain',
     extends: DmnoBaseTypes.string(), // TODO: what are the restrictions?
     ...getCommonTypeInfo('deploy-urls-and-metadata'),
   }),
 
-  NetlifySiteId: createDmnoDataType({
+  SiteId: createDmnoDataType({
     typeLabel: 'netlify/site-id',
     typeDescription: 'unique ID for the Netlify site',
     extends: DmnoBaseTypes.uuid(),
     ...getCommonTypeInfo('deploy-urls-and-metadata'),
   }),
-  NetlifyDeployId: createDmnoDataType({
+  DeployId: createDmnoDataType({
     typeLabel: 'netlify/deploy-id',
     typeDescription: 'unique ID for the specific Netlify deploy',
     ...getCommonTypeInfo('deploy-urls-and-metadata'),
   }),
-
-
-
-
-
-}
+};
 
 
 
 export const NetlifyEnvSchema = createVendorSchema({
   // https://docs.netlify.com/configure-builds/environment-variables/#build-metadata
-  CONTEXT: NetlifyDataTypes.NetlifyContext,
+  CONTEXT: NetlifyDataTypes.Context,
   NETLIFY: {
     extends: 'boolean',
     description: 'can be used to check if the build is running on Netlify',
     ...getCommonTypeInfo('build-metadata'),
   },
-  BUILD_ID: NetlifyDataTypes.NetlifyBuildId,
+  BUILD_ID: NetlifyDataTypes.BuildId,
 
   // https://docs.netlify.com/configure-builds/environment-variables/#git-metadata
   REPOSITORY_URL: {
@@ -137,7 +132,7 @@ export const NetlifyEnvSchema = createVendorSchema({
     exampleValue: 'https://feature-branch--petsof.netlify.app',
     ...getCommonTypeInfo('deploy-urls-and-metadata'),
   },
-  DEPLOY_ID: NetlifyDataTypes.NetlifyDeployId,
-  SITE_NAME: NetlifyDataTypes.NetlifySiteName,
-  SITE_ID: NetlifyDataTypes.NetlifySiteId,
+  DEPLOY_ID: NetlifyDataTypes.DeployId,
+  SITE_NAME: NetlifyDataTypes.SiteName,
+  SITE_ID: NetlifyDataTypes.SiteId,
 }, { fromVendor: 'netlify' });
