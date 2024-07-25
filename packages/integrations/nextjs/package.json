@@ -1,6 +1,6 @@
 {
   "name": "@dmno/nextjs-integration",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "tools for integrating dmno into nextjs",
   "author": "dmno-dev",
   "license": "MIT",

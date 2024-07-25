@@ -1,5 +1,11 @@
 # @dmno/nextjs-integration
 
+## 0.0.9
+
+### Patch Changes
+
+- [#103](https://github.com/dmno-dev/dmno/pull/103) [`1822a13`](https://github.com/dmno-dev/dmno/commit/1822a13dbcf314d9fee6896c068de58c5e318e08) Thanks [@theoephraim](https://github.com/theoephraim)! - small change for \_\_dirname during vercel builds
+
 ## 0.0.8
 
 ### Patch Changes
