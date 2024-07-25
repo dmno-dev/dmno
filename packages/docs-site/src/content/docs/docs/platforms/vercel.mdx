@@ -11,7 +11,7 @@ import BugReportLink from '@/components/BugReportLink.astro';
 This platform integration exposes a pre-made config schema and underlying types to interact with the env vars that Vercel injects while using their platform. You may not need this at all, but it can be useful if you are using their platform extensively and want helpful type info for their system's env vars.
 
 :::tip
-There is a Project Setting in the Vercel ui where you can turn off these env vars, so make sure that "Automatically expose System Environment Variables" is enabled.
+There is a Project Setting in the Vercel UI where you can turn off these env vars, so make sure that "Automatically expose System Environment Variables" is enabled.
 :::
 
 
@@ -54,7 +54,7 @@ export default defineDmnoService({
 
 
 
-:::caution[Netlify configuration variables]
+:::caution[Vercel configuration variables]
 There are also a set of [Framework specific env vars](https://vercel.com/docs/projects/environment-variables/system-environment-variables#framework-environment-variables) that vercel injects to expose their env vars to the framework. Using DMNO, you can just access those vars and mark them as non-sensitive so there is no need for them.
 :::
 
