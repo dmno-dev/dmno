@@ -5,6 +5,8 @@ import {
   unpatchGlobalConsoleSensitiveLogRedaction,
 } from '../lib/redaction-helpers';
 import { enableHttpInterceptor, disableHttpInterceptor } from '../lib/http-interceptor-utils';
+import { patchServerResponseToPreventClientLeaks } from '../lib/patch-server-response';
+import { patchResponseToPreventClientLeaks } from '../lib/patch-response';
 import type { InjectedDmnoEnv, InjectedDmnoEnvItem, SensitiveValueLookup } from '../config-engine/config-engine';
 
 
@@ -24,7 +26,7 @@ if (processExists) {
 }
 
 type DmnoInjectionResult = {
-  staticReplacements: Record<string, string>
+  staticReplacements: { dmnoConfig: Record<string, string>, dmnoPublicConfig: Record<string, string> },
   dynamicKeys: Array<string>,
   publicDynamicKeys: Array<string>,
   sensitiveKeys: Array<string>,
@@ -48,6 +50,7 @@ export function injectDmnoGlobals(
     onItemAccess?: (item: InjectedDmnoEnvItem) => void;
   },
 ) {
+  // console.log('inject dmno globals!');
   const sensitiveValueLookup: SensitiveValueLookup = {};
   const dynamicKeys: Array<string> = [];
   const sensitiveKeys: Array<string> = [];
@@ -86,7 +89,10 @@ export function injectDmnoGlobals(
   const rawConfigObj: Record<string, string> = {};
   const rawPublicConfigObj: Record<string, string> = {};
 
-  const staticReplacements: Record<string, string> = {};
+  const staticReplacements = {
+    dmnoConfig: {} as Record<string, string>,
+    dmnoPublicConfig: {} as Record<string, string>,
+  };
 
   const serviceSettings = injectedDmnoEnv.$SETTINGS;
 
@@ -135,26 +141,27 @@ export function injectDmnoGlobals(
     // set up static build-time replacements to be injected into vite/webpack/rollup etc config
     if (!injectedItem.dynamic) {
       if (!injectedItem.sensitive) {
-        staticReplacements[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(injectedItem.value);
+        staticReplacements.dmnoPublicConfig[`DMNO_PUBLIC_CONFIG.${itemKey}`] = JSON.stringify(injectedItem.value);
       }
-      staticReplacements[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(injectedItem.value);
+      staticReplacements.dmnoConfig[`DMNO_CONFIG.${itemKey}`] = JSON.stringify(injectedItem.value);
     }
   }
 
   // We attach some stuff to the locally running process / globalThis
   (globalThis as any).DMNO_CONFIG = new Proxy(rawConfigObj, {
     get(o, key) {
-      const keyStr = key.toString();
+      // ignore symbols, as it likely an external tool checking something
+      if (typeof key === 'symbol') return;
       // special cases to avoid throwing on invalid keys
-      if (IGNORED_PROXY_KEYS.includes(keyStr)) return;
+      if (IGNORED_PROXY_KEYS.includes(key)) return;
 
-      if (opts?.trackingObject) opts.trackingObject[keyStr] = true;
+      if (opts?.trackingObject) opts.trackingObject[key] = true;
       // console.log('get DMNO_CONFIG - ', key);
       if (key in injectedDmnoEnv) {
-        if (opts?.onItemAccess) opts.onItemAccess(injectedDmnoEnv[keyStr]);
-        return injectedDmnoEnv[keyStr].value;
+        if (opts?.onItemAccess) opts.onItemAccess(injectedDmnoEnv[key]);
+        return injectedDmnoEnv[key].value;
       }
-      throw new Error(`❌ ${keyStr} is not a config item (1)`);
+      throw new Error(`❌ ${key} is not a config item (1)`);
     },
   });
 
@@ -196,6 +203,16 @@ export function injectDmnoGlobals(
   } else {
     disableHttpInterceptor();
   }
+
+  if (serviceSettings.preventClientLeaks) {
+    // @ts-ignore
+    if (typeof __DMNO_BUILD_FOR_EDGE__ === 'undefined' || !__DMNO_BUILD_FOR_EDGE__) {
+      patchServerResponseToPreventClientLeaks();
+    } else {
+      patchResponseToPreventClientLeaks();
+    }
+  }
+  // TODO: make un-patchable
 
   const injectionResult: DmnoInjectionResult = {
     staticReplacements,

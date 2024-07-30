@@ -79,6 +79,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
           isRestart, logger, addDevToolbarApp, updateConfig,
           injectScript, addMiddleware, injectRoute,
         } = opts;
+
         astroCommand = opts.command;
 
         // // this handles the case where astro's vite server reloaded but this file did not get reloaded
@@ -112,10 +113,15 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
               async config(config, env) {
                 debug('Injecting static replacements', dmnoInjectionResult.staticReplacements);
 
+                // console.log('vite config hook', config, env);
+
                 // inject rollup rewrites via config.define
                 config.define = {
                   ...config.define,
-                  ...dmnoInjectionResult.staticReplacements,
+                  // always inject public static replacements
+                  ...dmnoInjectionResult.staticReplacements.dmnoPublicConfig,
+                  // only inject sensitive static replacements when building SSR code
+                  ...config.build?.ssr && dmnoInjectionResult.staticReplacements.dmnoConfig,
                 };
               },
 
@@ -271,9 +277,11 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
       'astro:config:done': async (opts) => {
         ssrOutputDirPath = opts.config.build.server.pathname;
 
+
         // currently we only trigger this behaviour for the netlify adapter, but we may also enable it via an explicit option
         ssrInjectConfigAtBuildTime = [
           '@astrojs/netlify',
+          '@astrojs/vercel/serverless',
         ].includes(opts.config.adapter?.name || '');
       },
 
@@ -298,12 +306,16 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
             [
               injectorSrc,
               '// INJECTED BY @dmno/astro-integration -----',
-              'globalThis._injectDmnoGlobals = injectDmnoGlobals;',
-              `injectDmnoGlobals({ injectedConfig: ${JSON.stringify(dmnoInjectionResult.injectedDmnoEnv)} });`,
+              'if (!globalThis._injectDmnoGlobals) {',
+              '  globalThis._injectDmnoGlobals = injectDmnoGlobals;',
+              `  injectDmnoGlobals({ injectedConfig: ${JSON.stringify(dmnoInjectionResult.injectedDmnoEnv)} });`,
+              '}',
             ].join('\n'),
           );
 
           for (const entryModuleKey in opts.manifest.entryModules) {
+            // console.log('entry module - ', entryModuleKey);
+
             const entryPath = opts.manifest.entryModules[entryModuleKey];
             if (!entryPath) continue;
             const fullEntryPath = `${ssrOutputDirPath}${entryPath}`;
@@ -312,14 +324,23 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
               await prependFile(fullEntryPath, [
                 // main entry needs the dmno config import
                 [
-                  '\x00@astrojs-ssr-virtual-entry',
+                  '\0@astrojs-ssr-virtual-entry',
+                  '\0astro-internal:middleware',
                 ].includes(entryModuleKey) ? "import './inject-dmno-config.mjs';" : '',
                 '',
-                // every other file needs to re-call the injector
+
+                // every other entry file needs to re-call the injector
                 // ideally we wouldnt need this, but it is needed with the way the lambdas are set up
-                'try { globalThis._injectDmnoGlobals(); }',
-                'catch (err) {}',
-                // "catch (err) { console.log('error injecting globals', err); }",
+                // (we also skip a few internal files)
+                [
+                  '\0@astro-renderers',
+                  '\0@astrojs-manifest',
+                ].includes(entryModuleKey) ? '' : `
+                  try { globalThis._injectDmnoGlobals(); }
+                  catch (err) { console.log('error injecting globals', err); }
+                `,
+
+
               ].join('\n'));
             } catch (err) {
               // manifest file is in the list but does not exist

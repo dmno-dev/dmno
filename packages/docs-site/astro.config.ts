@@ -178,13 +178,18 @@ export default defineConfig({
               link: '/docs/integrations/overview/',
             },
             {
-              label: 'Astro',
-              link: '/docs/integrations/astro/',
+              label: 'Remix',
+              link: '/docs/integrations/remix/',
             },
             {
               label: 'Next.js',
               link: '/docs/integrations/nextjs/',
-            }, {
+            },
+            {
+              label: 'Astro',
+              link: '/docs/integrations/astro/',
+            },
+            {
               label: 'Vite',
               link: '/docs/integrations/vite/',
             }, {

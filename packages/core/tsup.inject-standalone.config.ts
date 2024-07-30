@@ -23,14 +23,21 @@ function addNodeImportPrefix() {
 	}
 }
 
-const outDir = `dist/globals-injector-standalone`; // Output directory
+const outDir = `dist/globals-injector-standalone${process.env.DMNO_EDGE_COMPAT ? '/edge' : ''}`; // Output directory
 
 export default defineConfig({
   entry: [ // Entry point(s)
     'src/globals-injector/injector.ts', // function used to inject dmno globals
   ],
 
-  esbuildPlugins: [addNodeImportPrefix()],
+  esbuildPlugins: [
+    addNodeImportPrefix(),
+    // shakeMswInterceptorsPlugin(),
+  ],
+
+  platform: 'node',
+  target: 'node20',
+  // external: ['node:*'],
 
   noExternal: [
     // this should include all dependencies so the built files require no other dependencies
@@ -41,36 +48,83 @@ export default defineConfig({
     '@mswjs/interceptors/fetch',
   ],
 
-  dts: true, // Generate .d.ts files
+  // dts: true, // Generate .d.ts files
   // minify: true, // Minify output
-  sourcemap: true, // Generate sourcemaps
-  treeshake: true, // Remove unused code
+  // sourcemap: true, // Generate sourcemaps
+  // treeshake: true, // Remove unused code
 
   // clean: true, // Clean output directory before building
   outDir,
 
   format: [ // Output format(s)
+    'cjs',
     'esm',
-    'cjs'
   ], 
 
   splitting: false,
   keepNames: true, // stops build from prefixing our class names with `_` in some cases
 
   onSuccess: async () => {
-    const filePath = `${__dirname}/${outDir}/injector.js`;
-    const injectorSrc = await fs.promises.readFile(filePath, 'utf8');
+    // for the edge CJS build
+    // the node imports of zlib and http dont get fully tree-shaken away, so we'll just remove the lingering dead code
+    if (process.env.DMNO_EDGE_COMPAT) {
+      const cjsFilePath = `${__dirname}/${outDir}/injector.cjs`;
+      let cjsInjectorSrc = await fs.promises.readFile(cjsFilePath, 'utf8');
+      cjsInjectorSrc = cjsInjectorSrc.replace(
+        `// src/lib/patch-server-response.ts\nvar import_node_zlib = __toESM(require("zlib"), 1);\nvar import_node_http = require("http");`,
+        ''
+      );
+      await fs.promises.writeFile(cjsFilePath, cjsInjectorSrc);
+    
+    
+    // when running netlify edge functions, it uses deno and we need a small adjustment
+    } else {
+    
+      const filePath = `${__dirname}/${outDir}/injector.js`;
+      let injectorSrc = await fs.promises.readFile(filePath, 'utf8');
 
-    // this fixes a weird annoying issue where the current version of deno used by netlify edge functions
-    // does not have `globalAgent` exported directly from node http/https, while it is part of the default export
-    // so we just swap how it is imported and everything seems to work fine
+      // this fixes a weird annoying issue where the current version of deno used by netlify edge functions
+      // does not have `globalAgent` exported directly from node http/https, while it is part of the default export
+      // so we just swap how it is imported and everything seems to work fine
 
-    const fixedSrc = injectorSrc.replace(`import http, { ClientRequest, IncomingMessage, STATUS_CODES, Agent, globalAgent as globalAgent$1 } from 'node:http';
-import https, { Agent as Agent$1, globalAgent } from 'node:https';`,
-      `import http, { ClientRequest, IncomingMessage, STATUS_CODES, Agent } from 'node:http';
-const globalAgent$1 = http.globalAgent;
-import https, { Agent as Agent$1 } from 'node:https';
-const globalAgent = https.globalAgent;`);
-    await fs.promises.writeFile(filePath, fixedSrc);
-  }
+      injectorSrc = injectorSrc
+        // this is the code to replace when using `treeshake: true` 
+  //       .replace(
+  // `import http, { ClientRequest, IncomingMessage, STATUS_CODES, Agent, globalAgent as globalAgent$1 } from 'node:http';
+  // import https, { Agent as Agent$1, globalAgent } from 'node:https';`,
+  // `import http, { ClientRequest, IncomingMessage, STATUS_CODES, Agent } from 'node:http';
+  // const globalAgent$1 = http.globalAgent;
+  // import https, { Agent as Agent$1 } from 'node:https';
+  // const globalAgent = https.globalAgent;`
+  //       )
+        // this is the code to replace without `treeshake: true` 
+        .replace(
+  `import {
+    Agent as HttpAgent,
+    globalAgent as httpGlobalAgent
+  } from "node:http";
+  import {
+    Agent as HttpsAgent,
+    globalAgent as httpsGlobalAgent
+  } from "node:https";`,
+  `import httpFullObj, {
+    Agent as HttpAgent,
+  } from "node:http";
+  import httpsFullObj, {
+    Agent as HttpsAgent,
+  } from "node:https";
+  const httpGlobalAgent = httpFullObj.globalAgent;
+  const httpsGlobalAgent = httpsFullObj.globalAgent;
+  `);
+      await fs.promises.writeFile(filePath, injectorSrc);
+    }
+
+
+  },
+
+  esbuildOptions(options, context) {
+    options.define ||= {};
+    options.define.__DMNO_BUILD_FOR_EDGE__ = process.env.DMNO_EDGE_COMPAT ? 'true' : 'false';
+  },
+
 });

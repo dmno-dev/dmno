@@ -116,6 +116,22 @@ describe('update - arrayContains', () => {
     }, {
       contains: ['export default { a: 1, p: [foo()] }'],
     }));
+    test('non-empty object, path non-existant - multi-line', updateConfigTest(
+      outdent`
+        export default {
+          a: 1,
+        }`,
+      {
+        updates: [{ symbol: 'EXPORT', path: ['p'], action: { arrayContains: 'foo()' } }],
+      },
+      {
+        contains: [outdent`
+          export default {
+            a: 1,
+            p: [foo()],
+          }`],
+      },
+    ));
     test('array empty', updateConfigTest('export default { p: [] }', {
       updates: [{ symbol: 'EXPORT', path: ['p'], action: { arrayContains: 'foo()' } }],
     }, {
@@ -186,157 +202,3 @@ describe('update - wrapWithFn', () => {
     }));
   });
 });
-
-// describe('nextjs', () => {
-//   // TODO: maybe import from the next integration directly?
-//   const NEXT_CONFIG_CODEMODS = {
-//     imports: [{
-//       moduleName: '@dmno/nextjs-integration',
-//       importVars: ['dmnoNextConfigPlugin'],
-//     }],
-//     updates: [{
-//       symbol: 'EXPORT' as const,
-//       action: {
-//         wrapWithFn: 'dmnoNextConfigPlugin()',
-//       },
-//     }],
-//   };
-//   const INTEGRATION_MODULE_IMPORT = "import { dmnoNextConfigPlugin } from '@dmno/nextjs-integration'";
-
-//   test('module.exports', updateConfigTest(
-//     outdent`
-//       // @ts-check
-
-//       /** @type {import('next').NextConfig} */
-//       const nextConfig = { /* config options here */ }
-
-//       module.exports = nextConfig
-//     `,
-//     NEXT_CONFIG_CODEMODS,
-//     {
-//       contains: [
-//         INTEGRATION_MODULE_IMPORT,
-//         'module.exports = dmnoNextConfigPlugin()(nextConfig)',
-//       ],
-//       notContains: [';'],
-//     },
-//   ));
-//   test('export default', updateConfigTest(
-//     outdent`
-//       // @ts-check
-
-//       /** @type {import('next').NextConfig} */
-//       const nextConfig = {
-//         /* config options here */
-//       }
-
-//       export default nextConfig
-//     `,
-//     NEXT_CONFIG_CODEMODS,
-//     {
-//       contains: [
-//         "import { dmnoNextConfigPlugin } from '@dmno/nextjs-integration'",
-//         'export default dmnoNextConfigPlugin()(nextConfig)',
-//       ],
-//     },
-//   ));
-
-//   // test('simple js with export default', async () => {
-
-//   // });
-// });
-
-// describe('vite', () => {
-//   const VITE_CONFIG_CODEMODS = {
-//     imports: [{
-//       moduleName: '@dmno/vite-integration',
-//       importVars: ['injectDmnoConfigVitePlugin'],
-//     }],
-//     updates: [{
-//       symbol: 'EXPORT' as const,
-//       path: ['plugins'],
-//       action: {
-//         arrayContains: 'injectDmnoConfigVitePlugin()',
-//       },
-//     }],
-//   };
-//   const INTEGRATION_MODULE_IMPORT = "import { injectDmnoConfigVitePlugin } from '@dmno/vite-integration'";
-
-//   test('normal case - defineConfig w/ existing plugins on new lines', updateConfigTest(
-
-//     outdent`
-//       import { defineConfig } from 'vite'
-//       import { somePlugin } from 'some-plugin'
-
-//       export default defineConfig({
-//         plugins: [
-//           somePlugin()
-//         ]
-//       })
-//     `,
-//     VITE_CONFIG_CODEMODS,
-//     {
-//       contains: [
-//         `${INTEGRATION_MODULE_IMPORT}\n`,
-//         `
-//   plugins: [
-//     injectDmnoConfigVitePlugin(),
-//     somePlugin()
-//   ]`,
-//       ],
-//     },
-//   ));
-
-//   test('empty config object', updateConfigTest(
-//     'export default {}',
-//     VITE_CONFIG_CODEMODS,
-//     {
-//       contains: [
-//         'plugins: [injectDmnoConfigVitePlugin()]',
-//       ],
-//     },
-//   ));
-
-//   test('empty plugins array', updateConfigTest(
-
-//     'export default { plugins: [] }',
-//     VITE_CONFIG_CODEMODS,
-//     {
-//       contains: [
-//         'plugins: [injectDmnoConfigVitePlugin()]',
-//       ],
-//     },
-//   ));
-
-
-//   test('double quotes + semi', updateConfigTest(
-
-//     outdent`
-//       import { defineConfig } from "vite";
-//       export default defineConfig({ plugins: [] })
-//     `,
-//     VITE_CONFIG_CODEMODS,
-//     {
-//       contains: [
-//         `${INTEGRATION_MODULE_IMPORT.replaceAll("'", '"')};`,
-//       ],
-//     },
-//   ));
-//   test('double quotes + no-semi', updateConfigTest(
-//     outdent`
-//       import { defineConfig } from "vite"
-//       export default defineConfig({ plugins: [] })
-//     `,
-//     VITE_CONFIG_CODEMODS,
-//     {
-//       contains: [
-//         `${INTEGRATION_MODULE_IMPORT.replaceAll("'", '"')}\n`,
-//       ],
-//     },
-//   ));
-// });
-
-// // astro has the exact same mechanics as vite
-
-
-
