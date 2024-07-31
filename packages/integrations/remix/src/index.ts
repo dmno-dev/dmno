@@ -220,8 +220,9 @@ export function dmnoRemixVitePlugin(dmnoOptions?: DmnoPluginOptions) {
 
     // leak detection in _built_ files
     transform(src, id) {
+      console.log(`transform - ${id}`);
       // inject server-side code here - either into the user-provided `entry.server.tsx` or a default file like `entry.server.node.tsx`
-      if (id.match(/\/entry\.server(\.[a-z]+)?\.tsx/)) {
+      if (id.match(/\/entry\.server(\.[a-z]+)?\.[jt]sx/)) {
         // note - can also patch '\0virtual:remix/server-build'
         return [
           // 'console.log(\'>>> injected server dmno code <<<\');',

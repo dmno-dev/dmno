@@ -42,10 +42,6 @@ export default defineConfig({
   noExternal: [
     // this should include all dependencies so the built files require no other dependencies
     'kleur',
-    '@mswjs/interceptors',
-    '@mswjs/interceptors/ClientRequest',
-    '@mswjs/interceptors/XMLHttpRequest',
-    '@mswjs/interceptors/fetch',
   ],
 
   // dts: true, // Generate .d.ts files

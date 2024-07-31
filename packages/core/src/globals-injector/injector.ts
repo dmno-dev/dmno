@@ -94,8 +94,6 @@ export function injectDmnoGlobals(
     dmnoPublicConfig: {} as Record<string, string>,
   };
 
-  const serviceSettings = injectedDmnoEnv.$SETTINGS;
-
   for (const itemKey in injectedDmnoEnv) {
     if (itemKey === '$SETTINGS') continue;
     const injectedItem = injectedDmnoEnv[itemKey];
@@ -184,11 +182,35 @@ export function injectDmnoGlobals(
       throw new Error(`❌ ${keyStr} is not a config item (2)`);
     },
   });
+  const serviceSettings = injectedDmnoEnv.$SETTINGS;
 
+  (globalThis as any)._DMNO_SERVICE_SETTINGS = serviceSettings;
   (globalThis as any)._DMNO_PUBLIC_DYNAMIC_KEYS = publicDynamicKeys;
   (globalThis as any)._DMNO_PUBLIC_DYNAMIC_OBJ = publicDynamicObj;
   (globalThis as any)._DMNO_SENSITIVE_LOOKUP = sensitiveValueLookup;
 
+
+  (globalThis as any)._dmnoRepatchGlobals = repatchGlobals;
+  repatchGlobals();
+
+
+  // TODO: make un-patchable
+
+  const injectionResult: DmnoInjectionResult = {
+    staticReplacements,
+    dynamicKeys,
+    publicDynamicKeys,
+    sensitiveKeys,
+    sensitiveValueLookup,
+    serviceSettings,
+    injectedDmnoEnv,
+  };
+
+  return injectionResult;
+}
+
+function repatchGlobals() {
+  const serviceSettings = (globalThis as any)._DMNO_SERVICE_SETTINGS;
   // builds the redaction find/replace but does not apply it globally
   // it is still used in a helper fn that end users can use manually
   resetSensitiveConfigRedactor();
@@ -212,19 +234,6 @@ export function injectDmnoGlobals(
       patchResponseToPreventClientLeaks();
     }
   }
-  // TODO: make un-patchable
-
-  const injectionResult: DmnoInjectionResult = {
-    staticReplacements,
-    dynamicKeys,
-    publicDynamicKeys,
-    sensitiveKeys,
-    sensitiveValueLookup,
-    serviceSettings,
-    injectedDmnoEnv,
-  };
-
-  return injectionResult;
 }
 
 

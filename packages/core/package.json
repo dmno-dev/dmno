@@ -104,7 +104,6 @@
     "@dagrejs/graphlib": "^2.2.2",
     "@inquirer/core": "^8.0.1",
     "@inquirer/prompts": "^5.0.1",
-    "@mswjs/interceptors": "^0.30.0",
     "acorn": "^8.11.3",
     "acorn-typescript": "^1.4.13",
     "acorn-walk": "^8.3.3",
