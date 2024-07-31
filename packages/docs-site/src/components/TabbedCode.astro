@@ -2,9 +2,16 @@
 import { Tabs, TabItem, Code } from "@astrojs/starlight/components";
 // import DmnoTabs from "./DmnoTabs.astro";
 
+interface Props {
+  packageName: string
+  command: string
+  dynamicExec: string
+}
+
 const { packageName, command, dynamicExec } = Astro.props;
 
-let variant;
+let variant: string;
+
 switch (true) {
   case Boolean(packageName):
     variant = "packageName";
@@ -15,9 +22,13 @@ switch (true) {
   default:
     variant = "dynamicExec";
     break;
-}; 
+};
 
-const platforms = [
+interface Platform extends Props {
+  name: string
+}
+
+const platforms: Platform[] = [
   {
     name: "npm",
     packageName: `npm add ${packageName}`,
@@ -37,6 +48,12 @@ const platforms = [
     command: `yarn exec -- ${command}`,
     dynamicExec: `yarn dlx ${dynamicExec}`,
   },
+  {
+    name: "Bun",
+    packageName: `bun add ${packageName}`,
+    command: `bun run ${command}`,
+    dynamicExec: `bunx ${dynamicExec}`,
+  }
 ];
 ---
 
