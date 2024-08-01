@@ -2,6 +2,7 @@
   "name": "root",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/dmno-dev/core.git"
@@ -26,8 +27,8 @@
     "typescript": "^5.4.5"
   },
   "engines": {
-    "node": "^18.17.1 || ^20.3.0 || >=21.0.0",
-    "pnpm": ">=9.1.1"
+    "node": "^20.3.0 || >=21.0.0",
+    "pnpm": ">=9.6.0"
   },
-  "packageManager": "pnpm@9.1.1"
+  "packageManager": "pnpm@9.6.0"
 }
