@@ -1,13 +1,14 @@
 import _ from 'lodash-es';
 import * as acorn from 'acorn';
+import * as acornWalk from 'acorn-walk';
 import tsPlugin from 'acorn-typescript';
 import { fdir } from 'fdir';
 import { stringInsert } from './string-utils';
 
-
 type ConfigFileUpdateActions =
   { arrayContains: string }
-  | { wrapWithFn: string };
+  | { wrapWithFn: string }
+  | { addComment: string };
 
 
 export async function findOrCreateConfigFile(
@@ -48,7 +49,7 @@ export async function updateConfigFile(
     }>,
     updates?: Array<{
       // so far, we only need to modify the default export, but we may need other options
-      symbol: 'EXPORT',
+      symbol: string,
       path?: Array<string>,
       action: ConfigFileUpdateActions,
     }>
@@ -109,9 +110,11 @@ export async function updateConfigFile(
   for (const singleUpdate of opts.updates || []) {
     // currently we're always updating the default export
     // as we encounter more use cases, we can expand all our options here
+    let nodeToUpdate: acorn.AnyNode | undefined;
+    let pathNodeToUpdate: acorn.AnyNode | undefined;
+
+    // this handles the default export, whether its `export default X` or `module.exports = X`
     if (singleUpdate.symbol === 'EXPORT') {
-      let nodeToUpdate: acorn.AnyNode | undefined;
-      let pathNodeToUpdate: acorn.AnyNode | undefined;
       for (const n of ast.body) {
         // matches `export default ...`
         if (n.type === 'ExportDefaultDeclaration') {
@@ -128,32 +131,59 @@ export async function updateConfigFile(
       }
       if (!nodeToUpdate) throw new Error('Unable to find `export default` or `module.exports = `');
 
-      // if a path was passed in, we'll try to find it in an object
-      if (singleUpdate.path) {
-        // if the node is a function call we'll dive into it and assume we want the first arg
-        // (this matches the `export default defineConfig({...})` pattern that many config files use)
-        if (nodeToUpdate.type === 'CallExpression' && nodeToUpdate.arguments.length) {
-          nodeToUpdate = nodeToUpdate.arguments[0];
-        }
-        if (nodeToUpdate.type !== 'ObjectExpression') {
-          throw new Error('Expected to find an object node to use apply the path selector');
-        }
-        // currently only supports path of depth 1, but should support going deeper
-        pathNodeToUpdate = nodeToUpdate.properties.find((n) => n.type === 'Property' && (n.key as any).name === singleUpdate.path![0]);
-        if (pathNodeToUpdate && pathNodeToUpdate.type !== 'Property') {
-          throw new Error('Node is not a property');
-        }
-      }
+    // this looks for a function call by name
+    } else if (singleUpdate.symbol.endsWith('()')) {
+      const indexOfFn = originalSrc.indexOf(singleUpdate.symbol.substring(0, singleUpdate.symbol.length - 1));
+      nodeToUpdate = acornWalk.findNodeAfter(ast, indexOfFn)?.node as acorn.AnyNode;
+      if (!nodeToUpdate) throw new Error(`Unable to find fn call \`${singleUpdate.symbol}\``);
+    } else {
+      throw new Error('invalid symbol to update');
+    }
 
-      if (!nodeToUpdate) {
-        throw new Error('unable to find AST node to update');
+    // if a path was passed in, we'll try to find it in an object
+    if (singleUpdate.path) {
+      // if the node is a function call we'll dive into it and assume we want the first arg
+      // (this matches the `export default defineConfig({...})` pattern that many config files use)
+      if (nodeToUpdate.type === 'CallExpression' && nodeToUpdate.arguments.length) {
+        nodeToUpdate = nodeToUpdate.arguments[0];
       }
+      if (nodeToUpdate.type !== 'ObjectExpression') {
+        throw new Error('Expected to find an object node to use apply the path selector');
+      }
+      // currently only supports path of depth 1, but should support going deeper
+      pathNodeToUpdate = nodeToUpdate.properties.find((n) => n.type === 'Property' && (n.key as any).name === singleUpdate.path![0]);
+      if (pathNodeToUpdate && pathNodeToUpdate.type !== 'Property') {
+        throw new Error('Node is not a property');
+      }
+    }
 
-      // this action will ensure an array contains an item matching some code
-      if ('arrayContains' in singleUpdate.action) {
-        // handle the case where the path doesn't exist in the object yet
-        if (!pathNodeToUpdate) {
-          if (nodeToUpdate.type === 'ObjectExpression') {
+    if (!nodeToUpdate) {
+      throw new Error('unable to find AST node to update');
+    }
+
+    // this action will ensure an array contains an item matching some code
+    if ('arrayContains' in singleUpdate.action) {
+      // handle the case where the path doesn't exist in the object yet
+      if (!pathNodeToUpdate) {
+        if (nodeToUpdate.type === 'ObjectExpression') {
+          const objectSrc = originalSrc.substring(nodeToUpdate.start, nodeToUpdate.end);
+          const isMultiLine = objectSrc.includes('\n');
+          // handle multi-line objects
+          if (isMultiLine) {
+            const lastProperty = nodeToUpdate.properties[nodeToUpdate.properties.length - 1];
+            const trailingComma = originalSrc.substring(lastProperty.end, lastProperty.end + 1) === ',';
+            const numSpaces = lastProperty.start - originalSrc.lastIndexOf('\n', lastProperty.start) - 1;
+
+            mods.push({
+              insertAt: lastProperty.end + (trailingComma ? 1 : 0),
+              text: [
+                '\n',
+                ' '.repeat(numSpaces),
+                `${singleUpdate.path}: [${singleUpdate.action.arrayContains}]`,
+                trailingComma ? ',' : '',
+              ].join(''),
+            });
+          } else {
             const trailingSpace = originalSrc.charAt(nodeToUpdate.end - 2) === ' ';
             mods.push({
               insertAt: nodeToUpdate.end - (trailingSpace ? 2 : 1),
@@ -163,67 +193,77 @@ export async function updateConfigFile(
                 !trailingSpace ? ' ' : '',
               ].join(''),
             });
-            break;
-          } else {
-            throw new Error(`Unable to insert new array at path ${singleUpdate.path}`);
           }
-        }
-
-        if (pathNodeToUpdate.type !== 'Property') {
-          throw new Error('node to update is not an object property');
-        } else if (pathNodeToUpdate.value.type !== 'ArrayExpression') {
-          throw new Error('node property value is not an array');
-        }
-
-        const arrayItems = pathNodeToUpdate.value.elements;
-        let itemFound = false;
-        for (const arrayItem of pathNodeToUpdate.value.elements) {
-          if (!arrayItem) continue;
-          const itemStr = originalSrc.substring(arrayItem.start, arrayItem.end);
-
-          // we use startWith instead of === so that it handles things like `somePlugin() as AstroPlugin`
-          // not at all perfect, but an edge case we are seeing internally... will make it more robust eventually
-          if (itemStr.startsWith(singleUpdate.action.arrayContains)) {
-            itemFound = true;
-            break;
-          }
-        }
-
-        if (itemFound) {
           break;
         } else {
-          const isMultiLine = originalSrc.substring(pathNodeToUpdate.value.start, pathNodeToUpdate.value.end).includes('\n');
-
-          mods.push({
-            insertAt: pathNodeToUpdate.value.start + 1,
-            text:
-              // TODO: handle empty array
-              // TODO: better handling of indents / line breaks too, single line arrays
-              (isMultiLine ? '\n    ' : '')
-              + singleUpdate.action.arrayContains
-              + (arrayItems.length ? (isMultiLine ? ',' : ', ') : ''),
-          });
+          throw new Error(`Unable to insert new array at path ${singleUpdate.path}`);
         }
+      }
 
-      // this action will wrap the node with a function call ex: `wrapWithCode(NODE)`
-      } else if ('wrapWithFn' in singleUpdate.action) {
-        let wrapFnOnly = singleUpdate.action.wrapWithFn;
-        if (wrapFnOnly.endsWith('()')) wrapFnOnly = wrapFnOnly.replace('()', '');
-        // naively just check if the fn is anywhere within the code
-        // eventually we'll want to be smarter but we'll potentially need to walk a tree of wrapped fn calls
-        if (originalSrc.substring(nodeToUpdate.start, nodeToUpdate.end).includes(wrapFnOnly)) {
+      if (pathNodeToUpdate.type !== 'Property') {
+        throw new Error('node to update is not an object property');
+      } else if (pathNodeToUpdate.value.type !== 'ArrayExpression') {
+        throw new Error('node property value is not an array');
+      }
+
+      const arrayItems = pathNodeToUpdate.value.elements;
+      let itemFound = false;
+      for (const arrayItem of pathNodeToUpdate.value.elements) {
+        if (!arrayItem) continue;
+        const itemStr = originalSrc.substring(arrayItem.start, arrayItem.end);
+
+        // we use startWith instead of === so that it handles things like `somePlugin() as AstroPlugin`
+        // not at all perfect, but an edge case we are seeing internally... will make it more robust eventually
+        if (itemStr.startsWith(singleUpdate.action.arrayContains)) {
+          itemFound = true;
           break;
         }
-        mods.push(
-          {
-            insertAt: nodeToUpdate.start,
-            text: `${singleUpdate.action.wrapWithFn}(`,
-          },
-          {
-            insertAt: nodeToUpdate.end,
-            text: ')',
-          },
-        );
+      }
+
+      if (itemFound) {
+        break;
+      } else {
+        const isMultiLine = originalSrc.substring(pathNodeToUpdate.value.start, pathNodeToUpdate.value.end).includes('\n');
+
+        mods.push({
+          insertAt: pathNodeToUpdate.value.start + 1,
+          text:
+            // TODO: handle empty array
+            // TODO: better handling of indents / line breaks too, single line arrays
+            (isMultiLine ? '\n    ' : '')
+            + singleUpdate.action.arrayContains
+            + (arrayItems.length ? (isMultiLine ? ',' : ', ') : ''),
+        });
+      }
+
+    // this action will wrap the node with a function call ex: `wrapWithCode(NODE)`
+    } else if ('wrapWithFn' in singleUpdate.action) {
+      let wrapFnOnly = singleUpdate.action.wrapWithFn;
+      if (wrapFnOnly.endsWith('()')) wrapFnOnly = wrapFnOnly.replace('()', '');
+      // naively just check if the fn is anywhere within the code
+      // eventually we'll want to be smarter but we'll potentially need to walk a tree of wrapped fn calls
+      if (originalSrc.substring(nodeToUpdate.start, nodeToUpdate.end).includes(wrapFnOnly)) {
+        break;
+      }
+      mods.push(
+        {
+          insertAt: nodeToUpdate.start,
+          text: `${singleUpdate.action.wrapWithFn}(`,
+        },
+        {
+          insertAt: nodeToUpdate.end,
+          text: ')',
+        },
+      );
+    } else if ('addComment' in singleUpdate.action) {
+      let commentText = singleUpdate.action.addComment;
+      commentText = '\n' + commentText.split('\n').map((c) => `// ${c}`).join('\n') + '\n\n';
+      if (!originalSrc.includes(commentText)) {
+        const insertCommentAt = originalSrc.lastIndexOf('\n', nodeToUpdate.start - 1);
+        mods.push({
+          insertAt: insertCommentAt,
+          text: commentText,
+        });
       }
     }
   }

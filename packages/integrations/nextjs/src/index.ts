@@ -5,7 +5,6 @@ import { dirname } from 'node:path';
 
 import { injectDmnoGlobals } from 'dmno/injector-standalone';
 
-import { patchServerResponseToPreventClientLeaks } from './patch-server-response';
 import type { NextConfig } from 'next';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -51,11 +50,6 @@ function getCjsModuleSource(moduleName: string) {
 // we make this a function becuase we'll likely end up adding some options
 export function dmnoNextConfigPlugin(dmnoOptions?: DmnoPluginOptions) {
   if (serviceSettings?.preventClientLeaks) {
-    // checks outgoing ServerResponse objects for leaks
-    // taking the place of what really should be a middleware
-    // NOTE - this is patched within the built code as well, but we patch this here or we get api + pages router leakes on first render in dev mode
-    patchServerResponseToPreventClientLeaks();
-
     // patches fs.writeFile to scan files output by next itself for leaks
     // (does not include files output during webpack build)
     patchFsWriteFileToPreventClientLeaks();
@@ -132,7 +126,8 @@ export function dmnoNextConfigPlugin(dmnoOptions?: DmnoPluginOptions) {
 
         // Set up replacements / rewrites (using webpack DefinePlugin)
         webpackConfig.plugins.push(new webpack.DefinePlugin({
-          ...staticReplacements,
+          ...staticReplacements.dmnoPublicConfig,
+          ...isServer && staticReplacements.dmnoConfig,
         }));
 
         // updates the webpack source to inject dmno global logic and call it
@@ -141,16 +136,17 @@ export function dmnoNextConfigPlugin(dmnoOptions?: DmnoPluginOptions) {
           return function (origSource: any) {
             const origSourceStr = origSource.source();
 
-            const injectorSrc = getCjsModuleSource('dmno/injector-standalone');
-            const patchServerResponseSrc = fs.readFileSync(`${__dirname}/patch-server-response.cjs`, 'utf8');
+            // we will inline the injector code, but need a different version if we are running in the edge runtime
+            const injectorSrc = getCjsModuleSource(`dmno/injector-standalone${edgeRuntime ? '/edge' : ''}`);
 
             const updatedSourceStr = [
               // we use `headers()` to force next into dynamic rendering mode, but on the edge runtime it's always dynamic
               // (see below for where headers is used)
               !edgeRuntime ? 'const { headers } = require("next/headers");' : '',
 
-              // code built for edge runtime does not have `exports` but we are inlining some already built common-js code, so this breaks
-              edgeRuntime ? 'const exports = {}' : '',
+              // code built for edge runtime does not have `module.exports` or `exports` but we are inlining some already built common-js code
+              // so we just create them. It's not needed since it is inlined and we call the function right away
+              edgeRuntime ? 'const module = { exports: {} }; const exports = {}' : '',
 
               // inline the dmno injector code and then call it
               injectorSrc,
@@ -167,41 +163,6 @@ export function dmnoNextConfigPlugin(dmnoOptions?: DmnoPluginOptions) {
                   }
                 },` : '',
               '});',
-
-
-              // here we patch the global Response to pipe the body through the leak scanner
-              // which detects leaks on all edge-rendered pages and all api routes
-
-              // TODO: this just patches ALL `Response` objects, which would include incoming Response bodies of outgoing fetch requests...
-              // ideally we would detect if this is an outgoing Response versus an incoming one (fetch result)
-              // but so far it seems to not be a problem because fetch results return use a Buffer which are not scanned by _dmnoLeakScan
-              serviceSettings?.preventClientLeaks ? `
-                (() => {
-                  if (!globalThis.Response._patchedByDmno) {
-                    const _UnpatchedResponse = globalThis.Response;
-                    globalThis.Response = class DmnoPatchedResponse extends _UnpatchedResponse {
-                      static _patchedByDmno = true;
-                      constructor(body, init) {
-                        super(globalThis._dmnoLeakScan(body, { method: 'patched Response constructor' }), init);
-                      }
-                      static json(data, init) {
-                        globalThis._dmnoLeakScan(JSON.stringify(data), { method: 'patched Response.json' });
-                        const r = _UnpatchedResponse.json(data, init);
-                        Object.setPrototypeOf(r, Response.prototype);
-                        return r;
-                      }
-                    }
-                  } else {
-                    // console.log('\\n>>>> global Response already patched <<<<< \\n');
-                  }
-                })();
-              ` : '',
-
-              // patch ServerResponse if not edge mode to handle pages on nodejs runtime
-              (serviceSettings?.preventClientLeaks && !edgeRuntime) ? `
-                ${patchServerResponseSrc}
-                patchServerResponseToPreventClientLeaks();
-              ` : '',
 
               origSourceStr,
             ].join('\n');

@@ -1,0 +1,29 @@
+{
+  "integrationForPackage": "@remix-run/react",
+  "publicPrefix": "VITE_",
+  "installationCodemods": [
+    {
+      "glob": "vite.config.*",
+      "imports": [ {
+          "moduleName": "@dmno/remix-integration",
+          "importVars": [ "dmnoRemixVitePlugin", "dmnoRemixPreset" ],
+        } ],
+      "updates": [
+        {
+          "symbol": "EXPORT",
+          "path": [ "plugins" ],
+          "action": {
+            "arrayContains": "dmnoRemixVitePlugin()"
+          },
+        },
+        {
+          "symbol": "remix()",
+          "path": [ "presets" ],
+          "action": {
+            "arrayContains": "dmnoRemixPreset()"
+          },
+        }
+      ],
+    }
+  ],
+}

@@ -1,0 +1,87 @@
+---
+title: Remix
+description: Use DMNO to manage your Remix app's environment variables for static, hybrid, and server-side rendering.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components'
+import TabbedCode from '@/components/TabbedCode.astro';
+import BugReportLink from '@/components/BugReportLink.astro';
+
+Remix doesn't provide any env var tooling itself, but their [docs do mention a few tips](https://remix.run/docs/en/main/guides/envvars). Using DMNO, we make managing your configuration in Remix apps even simpler, and provide a ton of additional features including:
+- type safety + validation
+- leak detection and prevention
+- full control over server/client bundling behaviour
+- built-in support for fetching dynamic config items on the client
+
+### Initialize your Remix integration
+
+Using `dmno init` we will automatically detect that you are using Remix and install the necessary packages and configuration for you.
+
+<TabbedCode dynamicExec="dmno init" />
+
+>Skip to [Configure...](#configure-your-environment-variables) once this is complete.
+
+## Manual Setup
+
+If you prefer, you can install `dmno` itself and the `@dmno/remix-integration` package manually:
+
+<TabbedCode packageName="@dmno/remix-integration dmno" />
+
+Then, in your `vite.config.ts` file, import and initialize our `dmnoRemixVitePlugin` and `dmnoRemixPreset`:
+
+```diff lang="js"
++import { dmnoRemixVitePlugin, dmnoRemixPreset } from "@dmno/remix-integration";
+import { vitePlugin as remix } from "@remix-run/dev";
+import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
+
+export default defineConfig({
+  plugins: [
++    dmnoRemixVitePlugin(),
+    remix({
+      future: {
+        v3_fetcherPersist: true,
+        v3_relativeSplatPath: true,
+        v3_throwAbortReason: true,
+      },
++      presets: [dmnoRemixPreset()],
+    }),
+    tsconfigPaths(),
+  ],
+});
+```
+
+
+### Configure your environment variables
+
+`dmno init` will scaffold out the `schema` in your `config.mts` files based on your existing `.env` files. See our [Schema Guide](/docs/guides/schema/) for the specifics of how to author additional updates to your DMNO `schema`. 
+
+
+## Accessing config
+
+> Use `DMNO_CONFIG` and `DMNO_PUBLIC_CONFIG` instead of `process.env` 🎉
+
+You'll now have fully typed and validated config, fine grained control over static/dynamic behaviour, and some cool security features described below.
+
+### Security, secrets, and leak detection
+
+Only `DMNO_PUBLIC_CONFIG` is available in code running on the client. That said, since Remix does so much magic under the hood, it can be difficult to reason about whether the code you are writing will run on the server, client, or both. This makes it difficult to be 100% certain that your sensitive config will not be leaked.
+
+To protect you from this risk, DMNO does has several security related features:
+- **Leak detection** - built client-side code and server-rendered responses are scanned for any sensitive config items
+- **Log redaction** - sensitive config values are redacted from `console.log` output and other console methods
+- **HTTP request interception** - http requests are intercepted and stopped if sending sensitive config to the disallowed domains
+
+These features are opt-in - check out the [security guide](/docs/get-started/security/) for more details.
+
+:::note
+In general, these features should _just work_ but if you notice any issues, please <BugReportLink label='integrations/remix'>report them to us on GitHub</BugReportLink>!
+:::
+
+### Dynamic public config
+
+If you'd like to be able to alter certain configuration values at boot time and load them in the client rather than relying on values bundled into your code, you need to expose an API endpoint which exposes this **public+dynamic** config. 
+
+See the [dynamic config guide](/docs/guides/dynamic-config/) for more details.
+
+NOTE - fetching this config makes a **blocking** http request, so you should think carefully about if and how you use this feature, especially if performance is important your site. See the [dynamic config guide](/docs/guides/dynamic-config/) for more details.

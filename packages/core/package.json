@@ -23,8 +23,9 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "pnpm run clean && pnpm run build:injector && tsup",
+    "build": "pnpm run clean && pnpm run build:injector && pnpm run build:injector:edge && tsup",
     "build:injector": "tsup --config tsup.inject-standalone.config.ts",
+    "build:injector:edge": "DMNO_EDGE_COMPAT=1 tsup --config tsup.inject-standalone.config.ts",
     "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
     "build:tarball": "turbo build && pnpm pack --pack-destination \"../../../tmp-package-registry\"",
     "dev": "pnpm run clean && pnpm run build:injector && tsup --watch",
@@ -65,8 +66,12 @@
     "./injector-standalone": {
       "ts-src": "./src/globals-injector/injector.ts",
       "import": "./dist/globals-injector-standalone/injector.js",
-      "default": "./dist/globals-injector-standalone/injector.cjs",
-      "types": "./dist/globals-injector-standalone/injector.d.ts"
+      "default": "./dist/globals-injector-standalone/injector.cjs"
+    },
+    "./injector-standalone/edge": {
+      "ts-src": "./src/globals-injector/injector.ts",
+      "import": "./dist/globals-injector-standalone/edge/injector.js",
+      "default": "./dist/globals-injector-standalone/edge/injector.cjs"
     },
     "./tsconfigs/*.json": "./tsconfigs/*",
     "./tsconfigs/*": "./tsconfigs/*.json"
@@ -99,9 +104,9 @@
     "@dagrejs/graphlib": "^2.2.2",
     "@inquirer/core": "^8.0.1",
     "@inquirer/prompts": "^5.0.1",
-    "@mswjs/interceptors": "^0.30.0",
     "acorn": "^8.11.3",
     "acorn-typescript": "^1.4.13",
+    "acorn-walk": "^8.3.3",
     "base64-arraybuffer": "^1.0.2",
     "boxen": "^7.1.1",
     "commander": "^12.0.0",

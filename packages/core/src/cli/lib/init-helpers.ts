@@ -94,6 +94,10 @@ const KNOWN_INTEGRATIONS_MAP: Record<string, { package: string, docs?: string }>
     package: '@dmno/nextjs-integration',
     docs: '/integrations/nextjs',
   },
+  '@remix-run/dev': {
+    package: '@dmno/remix-integration',
+    docs: '/integrations/remix',
+  },
   vite: {
     package: '@dmno/vite-integration',
     docs: '/integrations/vite',
@@ -318,6 +322,9 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
           console.log(err);
         }
       }
+      // once we deal with one known integration, we break
+      // since some other frameworks user other tools under the hood (like vite)
+      break;
     }
   }
 

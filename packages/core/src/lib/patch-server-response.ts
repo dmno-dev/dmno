@@ -1,6 +1,5 @@
 /*
-  This patches the global ServerResponse object to scan for secret leaks
-  currently this is only needed for next.js so it lives here, but we can move into core if needed elsewhere
+  This patches the global ServerResponse object to scan for secret leaks - currently used for next.js and remix
 */
 
 /* eslint-disable prefer-rest-params */
@@ -27,10 +26,12 @@ export function patchServerResponseToPreventClientLeaks() {
     // for now, we only scan rendered html... may need to change this though for server components?
     // so we bail if it looks like this response does not contain html
     const contentType = this.getHeader('content-type')?.toString() || '';
-    const runScan = contentType.startsWith('text/');
-    // || contentType.startsWith('application/javascript');
-
-
+    // console.log('patched ServerResponse.write', contentType);
+    const runScan = (
+      contentType.startsWith('text/')
+      || contentType.startsWith('application/json')
+      // || contentType.startsWith('application/javascript')
+    );
 
     // we want to run the scanner on text/html and text/x-component (server actions)
     // TODO: anything else?
@@ -42,7 +43,9 @@ export function patchServerResponseToPreventClientLeaks() {
     // have to deal with compressed data, which is awkward but possible
     const compressionType = this.getHeader('Content-Encoding');
     let chunkStr;
-    if (!compressionType) {
+    if (typeof rawChunk === 'string') {
+      chunkStr = rawChunk;
+    } else if (!compressionType) {
       const decoder = new TextDecoder();
       chunkStr = decoder.decode(rawChunk);
     } else if (compressionType === 'gzip') {
@@ -80,6 +83,7 @@ export function patchServerResponseToPreventClientLeaks() {
   // @ts-ignore
   ServerResponse.prototype.end = function patchedServerResponseEnd(...args) {
     const endChunk = args[0];
+    // console.log('patched ServerResponse.end', endChunk);
     // this just needs to work (so far) for nextjs sending json bodies, so does not need to handle all cases...
     if (endChunk && typeof endChunk === 'string') {
       // TODO: currently this throws the error and then things just hang... do we want to try to return an error type response instead?
