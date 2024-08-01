@@ -1,50 +1,24 @@
 # DMNO
 
-Welcome to the `dmno` monorepo 👋
+>Full-stack configuration & secrets.
+>Batteries included.
 
-Check out the [docs](https://dmno.dev/docs) for more information on how to use DMNO.
+![DMNO](packages/docs-site/src/assets/blog/screenshot-with-comments.png)
 
-Read on if you want to contribute to DMNO.
+DMNO is a full-stack configuration tool that provides validation, leak detection/prevention, and type-safety for your environment variables and secrets. There are some features that will benefit you if you're in a monorepo, but DMNO is designed to work in any project.
 
-## Installation
+To get started with DMNO, run: 
+  
+```bash
+npx dmno init
+```
 
-First, install `nvm`: 
-- [nvm](https://github.com/nvm-sh/nvm)
+Check out the [docs](https://dmno.dev/docs) for more information on [plugins](https://dmno.dev/docs/plugins/overview/), [integrations](https://dmno.dev/docs/integrations/overview/), and [platforms](https://dmno.dev/docs/platforms/overview/) we support.
 
-Then use `nvm` to install the latest Node LTS: 
-`nvm install --lts`
-
-Then install `pnpm`
-- [pnpm](https://pnpm.io/installation)
-
-Then install deps via `pnpm`: 
-`pnpm i`
-
-## Packages
-
-- `packages/core` - Core package for DMNO (includes CLI) 
-- `packages/docs-site` - Docs site for DMNO (dmno.dev)
-
-## Plugins
-
-- `plugins/1password` - DMNO plugin for 1Password - 
-- `plugins/encrypted-vault` - DMNO plugin for encrypted values
-
-## Integrations
-- `integrations/astro` - DMNO integration for Astro
-- `integrations/vite` - DMNO integration for Vite
-- `integrations/nextjs` - DMNO integration for Next.js
-
-## libs
-
-- `packages/encryption-lib` - Encryption library for DMNO
-- `packages/ts-lib` - TypeScript utilities
-- `packages/ui-lib` - UI library for DMNO
-
-## Configs
-- `packages/tsconfig` - shared TypeScript config for DMNO
-- `packages/eslint-config` - shared ESLint config for DMNO
+🚧 We're currently in beta, so if you notice anything weird or there's a feature you would like to see, definitely let us know here on GitHub or on [Discord](https://chat.dmno.dev). 🚧
 
 
+## Contributing
 
+If you're interested in contributing, see [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
 
