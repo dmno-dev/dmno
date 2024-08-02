@@ -1,0 +1,25 @@
+name: Release preview packages
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: 'pnpm'
+      - name: Install node deps
+        run: pnpm i
+
+      - name: Build
+        run: pnpm build:libs
+
+      # we use a custom script to run `npx pkg-pr-new publish`
+      # so that we can determine which packages to release
+      - run: node scripts/release-preview.js
