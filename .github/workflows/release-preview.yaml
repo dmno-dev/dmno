@@ -1,4 +1,4 @@
-name: Release preview packages
+name: Release _preview_ packages
 on: [push, pull_request]
 
 jobs:
@@ -7,6 +7,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - run: git fetch origin main
+        with:
+          # by default only the current commit is fetched
+          # but we need more history to be able to compare to main
+          # TODO: ideally we would just fetch the history between origin/main and the current commit
+          fetch-depth: 0
       - name: Enable Corepack
         run: corepack enable
       - name: Use Node.js 20.x

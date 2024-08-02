@@ -6,7 +6,7 @@ try {
   // pnpm m ls --json --depth=-1 | node -e "const path = require('path'); console.log(JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf-8')).map((m) => path.relative(__dirname, m.path)).filter(Boolean))"
   const workspacePackagesInfoRaw = execSync('pnpm m ls --json --depth=-1');
   const workspacePackagesInfo = JSON.parse(workspacePackagesInfoRaw);
-  console.log(workspacePackagesInfo);
+  // console.log(workspacePackagesInfo);
 
   // generate sumamry of changed (publishable) modules according to changesets
   // only has option to output to a file
@@ -14,20 +14,22 @@ try {
 
   const changeSetsSummaryRaw = fs.readFileSync('./changesets-summary.json', 'utf8');
   const changeSetsSummary = JSON.parse(changeSetsSummaryRaw);
-  console.log(changeSetsSummary);
+  // console.log(changeSetsSummary);
 
   const releasePackagePaths = changeSetsSummary.releases
     .filter((r) => r.newVersion !== r.oldVersion)
     .map((r) => workspacePackagesInfo.find((p) => p.name === r.name))
     .map((p) => p.path);
-  console.log(releasePackagePaths);
+  // console.log(releasePackagePaths);
 
-  execSync(`pnpm dlx pkg-pr-new publish --compact ${releasePackagePaths.join(' ')}`);
+  const publishResult = execSync(`pnpm dlx pkg-pr-new publish --compact ${releasePackagePaths.join(' ')}`);
+  console.log('published preview packages!')
+  console.log(publishResult);
+
 } catch (_err) {
   err = _err;
   console.error('preview release failed');
   console.error(_err);
 }
-console.log(`CWD = ${process.cwd()}`);
 fs.unlinkSync('./changesets-summary.json');
 process.exit(err ? 1 : 0);

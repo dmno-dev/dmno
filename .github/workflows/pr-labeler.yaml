@@ -16,17 +16,18 @@ jobs:
       issues: write
       pull-requests: write
     env:
-      DMNO_STAFF: "theoephraim philmillman"
+      # pre-approved maintainers list (dmno staff)
+      MAINTAINERS_LIST: "theoephraim philmillman"
     steps:
       - name: Check PR author
         id: check_author
         run: |
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
-          if ! [[ "${DMNO_STAFF}" =~ "$PR_AUTHOR" ]]; then
-            echo "Authored by DMNO community member!"
-            echo "requires-community-tag=true" >> $GITHUB_OUTPUT
+          if [[ "${MAINTAINERS_LIST}" =~ "$PR_AUTHOR" ]]; then
+            echo "Authored by pre-approved maintainer"
+            echo "official-maintainer=true" >> $GITHUB_OUTPUT
           else
-            echo "Authored by DMNO staff"
+            echo "Authored by DMNO community member!"
           fi
       - name: Label PR 
         uses: actions/github-script@v5
@@ -36,5 +37,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: ${{ github.event.pull_request.number }},
-              labels: [ steps.check_author.outputs.requires-community-tag && 'community' && 'staff' ]
+              labels: [ {{ steps.check_author.outputs.official-maintainer && 'maintainer' || 'community' }} ]
             });
