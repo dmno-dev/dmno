@@ -1,5 +1,10 @@
 name: Release _preview_ packages
-on: [push, pull_request]
+on:
+  pull_request:
+  push:
+    branches-ignore:
+      - main
+
 
 jobs:
   build:
@@ -7,7 +12,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - run: git fetch origin main
         with:
           # by default only the current commit is fetched
           # but we need more history to be able to compare to main
@@ -28,5 +32,5 @@ jobs:
 
       # we use a custom script to run `npx pkg-pr-new publish`
       # so that we can determine which packages to release
-      - name: Release preview pacakges
+      - name: Release preview packages
         run: node scripts/release-preview.js
