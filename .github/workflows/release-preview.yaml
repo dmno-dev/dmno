@@ -17,9 +17,10 @@ jobs:
       - name: Install node deps
         run: pnpm i
 
-      - name: Build
+      - name: Build publishable DMNO modules 
         run: pnpm build:libs
 
       # we use a custom script to run `npx pkg-pr-new publish`
       # so that we can determine which packages to release
-      - run: node scripts/release-preview.js
+      - name: Release preview pacakges
+        run: node scripts/release-preview.js
