@@ -1,5 +1,11 @@
 # @dmno/1password-plugin
 
+## 0.0.3
+
+### Patch Changes
+
+- [#115](https://github.com/dmno-dev/dmno/pull/115) [`d3eaa3f`](https://github.com/dmno-dev/dmno/commit/d3eaa3f6770947af831b14f6f5f1560dd99b3717) Thanks [@theoephraim](https://github.com/theoephraim)! - republish latest esm/cjs setup for plugins
+
 ## 0.0.2
 
 ### Patch Changes
