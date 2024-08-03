@@ -9,7 +9,7 @@ import { ConfigLoaderRequestMap } from './ipc-requests';
 import { SerializedService } from './serialization-types';
 import { formatError, getItemSummary } from '../cli/lib/formatting';
 import { InjectedDmnoEnv } from '../config-engine/config-engine';
-import { detectPackageManagerSync } from '../lib/detect-package-manager';
+import { detectPackageManagerSync, PACKAGE_MANAGERS_META } from '../lib/detect-package-manager';
 
 const debug = Debug('dmno');
 const debugTimer = createDebugTimer('dmno:loader-client');
@@ -52,9 +52,13 @@ export class ConfigServerClient {
   private ownedDmnoConfigServerProcess?: ChildProcess;
   private initOwnedConfigServer() {
     const { packageManager } = detectPackageManagerSync();
+    const execCommand = PACKAGE_MANAGERS_META[packageManager].exec;
+    const execCommandParts = execCommand.split(' ');
+    const execCommandBaseCommand = execCommandParts.shift()!;
+    const execCommandRest = execCommandParts.join(' ');
 
     // use `pnpm exec` or `npm exec` etc...
-    this.ownedDmnoConfigServerProcess = spawn(packageManager, 'exec -- dmno dev --silent'.split(' '), {
+    this.ownedDmnoConfigServerProcess = spawn(execCommandBaseCommand, `${execCommandRest} -- dmno dev --silent`.split(' '), {
       stdio: 'inherit',
       env: {
         ...process.env,
