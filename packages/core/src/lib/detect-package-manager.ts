@@ -3,7 +3,33 @@ import path from 'path';
 import kleur from 'kleur';
 import { asyncMapValues } from './async-utils';
 
-export type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun' | 'moon';
+
+// TODO: move PACKAGE_MANAGER_RELEVANT_FILES into this
+export const PACKAGE_MANAGERS_META = {
+  npm: {
+    exec: 'npm exec',
+    dlx: 'npx',
+  },
+  yarn: {
+    exec: 'yarn exec',
+    dlx: 'yarn dlx',
+  },
+  pnpm: {
+    exec: 'pnpm exec',
+    dlx: 'pnpm dlx',
+  },
+  bun: {
+    exec: 'bun run',
+    dlx: 'bunx',
+  },
+  moon: {
+    // TODO: fix this... we'll need to track the fact that the user is using moon and a package manager
+    exec: 'npm exec',
+    dlx: 'npx',
+  },
+} as const;
+export type PackageManager = keyof typeof PACKAGE_MANAGERS_META;
+
 
 
 export async function pathExists(p: string) {
@@ -38,7 +64,6 @@ const PACKAGE_MANAGER_RELEVANT_FILES = {
 // SEE SYNC VERSION BELOW - UPDATE BOTH IF ANY CHANGES ARE MADE!
 export async function detectPackageManager() {
   let cwd = process.cwd();
-
   const cwdParts = cwd.split('/');
 
   let packageManager: PackageManager | undefined;
@@ -77,6 +102,7 @@ export async function detectPackageManager() {
       process.exit(1);
     }
   }
+
 
   return {
     packageManager,
@@ -133,6 +159,7 @@ export function detectPackageManagerSync() {
     rootWorkspacePath: cwd,
   };
 }
+
 
 
 
