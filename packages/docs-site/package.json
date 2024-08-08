@@ -17,10 +17,10 @@
     "lint:fix": "pnpm run lint --fix"
   },
   "dependencies": {
-    "@astrojs/check": "^0.7.0",
+    "@astrojs/check": "^0.9.1",
     "@astrojs/partytown": "^2.1.1",
     "@astrojs/sitemap": "^3.1.6",
-    "@astrojs/starlight": "^0.24.4",
+    "@astrojs/starlight": "^0.25.3",
     "@astrojs/vue": "^4.5.0",
     "@dmno/astro-integration": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
@@ -28,7 +28,7 @@
     "@dmno/tsconfig": "workspace:*",
     "@dmno/ui-lib": "workspace: *",
     "@iconify/vue": "^4.1.2",
-    "astro": "^4.11.1",
+    "astro": "^4.13.0",
     "astro-expressive-code": "^0.35.3",
     "astro-google-fonts-optimizer": "^0.2.2",
     "astro-iconify": "^1.2.0",

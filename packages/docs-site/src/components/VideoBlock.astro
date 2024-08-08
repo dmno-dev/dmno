@@ -1,0 +1,25 @@
+---
+const { url } = Astro.props;
+---
+
+<div class="video-container">
+  <iframe src={ url } width="640" height="480" allow="autoplay"></iframe>
+</div>
+
+
+
+<style>
+  /* center, 80% width */
+  .video-container {
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+  }
+  @media (min-width: 640px) {
+    iframe {
+      border: none;
+      margin: 0 auto;
+      width: 90%;
+    }
+  }
+</style>
