@@ -17,7 +17,7 @@ tmp-package-registry
 
 changesets-summary.json
 
-# DMNO files ###
+# dmno files ###
 # local cache for resolved values
 **/.dmno/cache.json
 # encryption key used for cache
@@ -28,4 +28,5 @@ changesets-summary.json
 **/.dmno/.icon-cache
 # local config overrides
 **/.dmno/.env.local
-
+# built/flattened config
+**/.dmno-built

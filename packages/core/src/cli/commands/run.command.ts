@@ -1,12 +1,9 @@
-import kleur from 'kleur';
 import _ from 'lodash-es';
 import { ExecaChildProcess, execa } from 'execa';
 import which from 'which';
 
-import { tryCatch } from '@dmno/ts-lib';
 import { DmnoCommand } from '../lib/dmno-command';
-import { formatError, formattedValue, getItemSummary } from '../lib/formatting';
-import { addServiceSelection } from '../lib/selection-helpers';
+import { addBuiltModeFlag, addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 import { addCacheFlags } from '../lib/cache-helpers';
 import { addWatchMode } from '../lib/watch-mode-helpers';
@@ -22,6 +19,7 @@ const program = new DmnoCommand('run')
   .example('dmno run —-service service1 -- somecommand --some-option=(printenv SOME_VAR)', 'Runs the somecommand with the resolved config using SOME_VAR via printenv');
 
 addWatchMode(program);
+addBuiltModeFlag(program);
 addCacheFlags(program);
 addServiceSelection(program);
 

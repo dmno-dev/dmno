@@ -79,8 +79,11 @@ export class ConfigServer {
         throw new Error(`No handler for request type: ${message.requestType}`);
       }
 
-      // we may receive a request before the config loader is ready
-      await this.configLoader.isReady;
+      // TODO: this is whats making sure things are fully initialized - may want to restructure this
+      // it used to wait for an `isReady` promise which was kicked off in the constructor
+      // but that didnt make sense in the CLI where we need to set other options before fully initializing
+      await this.configLoader.getWorkspace();
+
       await this.ipcReady; // probably not necessary
       const result = await handler(message.payload);
       ipc.server.emit(socket, 'request-response', {

@@ -7,7 +7,6 @@ import buildEsmResolver from 'esm-resolve';
 import kleur from 'kleur';
 import { outdent } from 'outdent';
 import { input, confirm } from '@inquirer/prompts';
-import validatePackageName from 'validate-npm-package-name';
 import boxen from 'boxen';
 import { tryCatch, promiseDelay } from '@dmno/ts-lib';
 import { PackageManager, ScannedWorkspaceInfo, pathExists } from '../../config-loader/find-services';
@@ -494,6 +493,8 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
         **/.dmno/.icon-cache
         # local config overrides
         **/.dmno/.env.local
+        # built/flattened config
+        **/.dmno-built
       `;
       await fs.promises.writeFile(gitIgnorePath, gitIgnore);
       console.log(setupStepMessage(`.gitignore ${createdGitIgnore ? 'created' : 'updated'} with dmno files!`, { path: gitIgnorePath }));

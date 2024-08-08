@@ -11,8 +11,8 @@ import { PackageManager, detectPackageManager } from '../lib/detect-package-mana
 
 const debug = Debug('dmno:find-services');
 
-export async function readJsonFile(path: string) {
-  return JSON.parse(await fs.promises.readFile(path, 'utf8'));
+export async function readJsonFile<T = any>(path: string) {
+  return JSON.parse(await fs.promises.readFile(path, 'utf8')) as T;
 }
 
 
@@ -29,6 +29,11 @@ export type ScannedWorkspaceInfo = {
   packageManager: PackageManager,
   workspacePackages: Array<WorkspacePackagesListing>,
   autoSelectedPackage?: WorkspacePackagesListing;
+};
+export type DmnoBuildInfo = {
+  isMonorepo: boolean,
+  rootService: string,
+  selectedService: string,
 };
 
 export async function pathExists(p: string) {
@@ -151,5 +156,52 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
     packageManager,
     workspacePackages: includeUnitialized ? workspacePackages : _.filter(workspacePackages, (p) => p.dmnoFolder),
     autoSelectedPackage: packageFromPwd || packageFromCurrentPackageName,
+  };
+}
+
+export async function findDmnoServicesInBuiltMode(): Promise<ScannedWorkspaceInfo> {
+  const { packageManager, rootWorkspacePath: rootServicePath } = await detectPackageManager();
+
+  // TODO: probably do something smarter than using PWD? but we still need to get to the built folder
+  const pwd = process.env.PWD;
+  const dmnoBuildDirPath = `${pwd}/.dmno-built`;
+  if (!fs.existsSync(dmnoBuildDirPath)) {
+    throw new Error(`DMNO build dir "${dmnoBuildDirPath}" not found. Run \`dmno build\` first.`);
+  }
+
+  const dmnoBuildMetadata = await readJsonFile<DmnoBuildInfo>(`${dmnoBuildDirPath}/dmno-build-info.json`);
+
+  const workspacePackages = [] as ScannedWorkspaceInfo['workspacePackages'];
+
+  const dirItems = await fs.promises.readdir(dmnoBuildDirPath, { withFileTypes: true });
+  for (const dirItem of dirItems) {
+    if (!dirItem.isDirectory()) continue;
+    const builtPackagePath = `${dirItem.path}/${dirItem.name}`;
+    const packageJson = await tryCatch(
+      async () => await readJsonFile(`${builtPackagePath}/package.json`),
+      (err) => {
+        if ((err as any).code === 'ENOENT') return undefined;
+        throw err;
+      },
+    );
+
+
+    const serviceName = dirItem.name.replaceAll('__', '/');
+    const packageInfo = {
+      isRoot: serviceName === dmnoBuildMetadata.rootService,
+      dmnoFolder: true,
+      path: builtPackagePath,
+      // TODO: not sure this is used for anything
+      // if we want this relative to the execution context, this is wrong
+      relativePath: builtPackagePath.substring(dmnoBuildDirPath.length + 1),
+      name: packageJson.name,
+    };
+    workspacePackages[packageInfo.isRoot ? 'unshift' : 'push'](packageInfo);
+  }
+
+  return {
+    isMonorepo: true, // built mode currently can only be run in monorepo mode
+    packageManager,
+    workspacePackages,
   };
 }

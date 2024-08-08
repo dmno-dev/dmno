@@ -1,7 +1,7 @@
 import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheFunctionResult, createDmnoDataType, defineDmnoService, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from 'dmno';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
-const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
+const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass/prod');
 
 const customUrlType = createDmnoDataType({
   typeLabel: 'my-custom-url',
@@ -41,10 +41,10 @@ export default defineDmnoService({
     }
   ],
   schema: {
-    // OP_ITEM_1: {
-    //   sensitive: true,
-    //   value: OnePassBackend.item(),
-    // },
+    OP_ITEM_1: {
+      sensitive: true,
+      value: OnePassBackend.item(),
+    },
 
     // EX1: {
     //   value: (ctx) => DMNO_CONFIG.BOOLEAN_EXAMPLE,

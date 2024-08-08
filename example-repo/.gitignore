@@ -6,3 +6,7 @@
 **/.dmno/.typegen
 # iconify cache used in generated types
 **/.dmno/.icon-cache
+# built/flattened config
+**/.dmno-built
+# local config overrides
+**/.dmno/.env.local

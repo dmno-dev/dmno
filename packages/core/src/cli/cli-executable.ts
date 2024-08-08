@@ -26,6 +26,7 @@ import { PluginCommand } from './commands/plugin.command';
 import { InitCommand } from './commands/init.command';
 import { ClearCacheCommand } from './commands/clear-cache.command';
 import { PrintEnvCommand } from './commands/printenv.command';
+import { BuildCommand } from './commands/build.command';
 
 
 
@@ -43,6 +44,7 @@ program.addCommand(InitCommand);
 program.addCommand(ClearCacheCommand);
 program.addCommand(PluginCommand);
 program.addCommand(PrintEnvCommand);
+program.addCommand(BuildCommand);
 
 
 

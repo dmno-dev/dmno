@@ -104,6 +104,9 @@
     "@dagrejs/graphlib": "^2.2.2",
     "@inquirer/core": "^8.0.1",
     "@inquirer/prompts": "^5.0.1",
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-sucrase": "^5.0.2",
     "acorn": "^8.11.3",
     "acorn-typescript": "^1.4.13",
     "acorn-walk": "^8.3.3",
@@ -127,11 +130,13 @@
     "outdent": "^0.8.0",
     "picomatch": "^3.0.1",
     "read-yaml-file": "^2.1.0",
+    "rollup": "^4.20.0",
     "svgo": "^3.2.0",
+    "tslib": "^2.6.3",
     "typescript": "^5.4.5",
-    "validate-npm-package-name": "^5.0.0",
-    "vite": "^5.2.10",
-    "vite-node": "^1.5.0",
+    "validate-npm-package-name": "^5.0.1",
+    "vite": "^5.3.5",
+    "vite-node": "^2.0.5",
     "which": "^4.0.0"
   }
 }

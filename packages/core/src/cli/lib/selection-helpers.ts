@@ -33,6 +33,16 @@ export function addServiceSelection(program: Command, opts?: {
       const workspace = await ctx.configLoader.getWorkspace();
       ctx.workspace = workspace;
 
+      // TODO: should add some errors here if the user is selecting a different package
+      if (thisCommand.opts().built) {
+        const packageNameFromPackageManager = process.env.npm_package_name || process.env.PNPM_PACKAGE_NAME;
+        // TODO: probably should make this work with current directory as well
+        const autoSelectedService = workspace.allServices.find((s) => s.packageName === packageNameFromPackageManager);
+        ctx.selectedService = autoSelectedService;
+        ctx.autoSelectedService = true;
+        return;
+      }
+
       const namesMaxLen = getMaxLength(_.map(workspace.allServices, (s) => s.serviceName));
 
       // // first display loading errors (which would likely cascade into schema errors)
@@ -63,7 +73,6 @@ export function addServiceSelection(program: Command, opts?: {
         if (ctx.selectedService) return;
       }
 
-
       // handle explicit selection via the flag
       // if the user types just -s with no arg, we'll treat that as saying they want the menu
       const explicitMenuOptIn = thisCommand.opts().service === true;
@@ -83,6 +92,7 @@ export function addServiceSelection(program: Command, opts?: {
           ],
         });
       }
+
 
       // handle auto-selection based on what package manager has passed in as the current package when running scripts via the package manager
       if (!explicitMenuOptIn && !opts?.disableAutoSelect) {
@@ -188,3 +198,16 @@ export function addPluginSelection(program: Command) {
       ctx.selectedPlugin = workspace.plugins[menuSelection];
     });
 }
+
+
+export function addBuiltModeFlag(program: Command) {
+  return program
+    .option('-b, --built', 'use built JS dmno config files instead of TS source')
+    .hook('preAction', async (thisCommand, _actionCommand) => {
+      const ctx = getCliRunCtx();
+      if (thisCommand.opts().built) {
+        ctx.configLoader.setBuiltConfigMode(true);
+      }
+    });
+}
+
