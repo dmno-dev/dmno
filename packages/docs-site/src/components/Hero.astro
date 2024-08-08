@@ -1,0 +1,87 @@
+---
+
+interface Props{
+  heading: string;
+  subheading: string;
+  image?: string;
+}
+
+const { heading, subheading, image } = Astro.props as Props;
+---
+
+<div class="hero">
+  <h1>{heading}</h1>
+  <h2>{subheading}</h2>
+</div>
+
+<style lang="less">
+  .hero {
+    color: var(--color-text-full-shade);
+    padding-bottom: 2rem;
+    display: flex;
+    // flex-direction: column;
+
+    @media (min-width: 50rem) {
+      gap: 2rem;
+      padding-top: 4rem;
+      padding-bottom: 5rem;
+      display: grid;
+      // grid-template-columns: 1fr 1fr;
+    }
+
+    @media (min-width: 72rem) {
+      padding-left: 4rem;
+      padding-right: 4rem;          
+      gap: 4rem;
+    }
+
+    @media (min-width: 100rem) {
+      // grid-template-columns: 4fr 5fr;
+    }
+    
+    .hero__logo {
+      display: flex;
+      position: relative;
+      align-items: center;
+      
+      :global(.dmno-tile-logo) {
+        max-width: 50vw;
+        
+      }
+    }
+    .hero__text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    &:before {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      top: 0;
+      bottom: 50%;
+      left: 0%;
+      right: 0;
+      opacity: .2;
+      
+    }
+  }
+  h1 {
+    display: none;  
+    @media (min-width: 50rem) {
+      font-size: 4rem;
+      display: block;
+    }
+    line-height: .8em;
+  }
+  h2 {
+    @media (min-width: 50rem) {
+      font-size: 1.5rem;
+    }
+    
+    line-height: 1.4em;
+    margin: 1.5rem 0;
+    font-weight: 500;
+  }
+</style>

@@ -7,18 +7,21 @@ import Hero from '@/components/Hero.astro';
 ---
 <LandingPage
   title="DMNO"
-  description="DMNO makes your configuration safer and smarter. It integrates with the tools you already use and it's powered by TypeScript."
+  description=""
   showToC={false}
   showSidebar={false}
   showIntegrations={true}
 >
     <Hero
-      heading="Environment Variables. \n Evolved."
-      subheading="DMNO makes your configuration safer and smarter. It integrates with the tools you already use and it's powered by TypeScript."
+      heading="Keep your env vars close to your code and deploy with ease."
+      subheading="No more fiddling with multiple .env files or manually pasting values in 5 different places. DMNO's knows how to deal with your frameworks and the platforms you deploy them on."    
     />
     <VideoBlock url="https://drive.google.com/file/d/1NP3jE0UVeEbBvVczVnevvcDtAZOFo9tJ/preview"/>
     <InitCTA 
-      command="npx dmno init"
+      command="npm add @dmno/vercel-platform"
+    />
+    <InitCTA 
+      command="npm add @dmno/netlify-platform"
     />
 
 </LandingPage>
