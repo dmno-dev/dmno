@@ -1,23 +1,18 @@
-import { execSync } from 'node:child_process';
-import fs from 'node:fs';
 import kleur from 'kleur';
 import _ from 'lodash-es';
 import boxen from 'boxen';
-import outdent from 'outdent';
 import {
-  select, input, checkbox, confirm,
+  input, checkbox, confirm,
 } from '@inquirer/prompts';
 
 import { tryCatch } from '@dmno/ts-lib';
 
-import gradient from 'gradient-string';
-import { PackageManager, findDmnoServices, pathExists } from '../../config-loader/find-services';
+import { findDmnoServices, pathExists } from '../../config-loader/find-services';
 import { DmnoCommand } from '../lib/dmno-command';
 
-import { formatError, formattedValue, joinAndCompact } from '../lib/formatting';
-import { getCliRunCtx } from '../lib/cli-ctx';
+import { joinAndCompact } from '../lib/formatting';
 import {
-  DMNO_DEV_BANNER, fallingDmnoLoader, fallingDmnosAnimation,
+  DMNO_DEV_BANNER, fallingDmnosAnimation,
   getDmnoMascot,
 } from '../lib/loaders';
 import { initDmnoForService } from '../lib/init-helpers';

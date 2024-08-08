@@ -42,8 +42,6 @@ export const cliRunContext = new AsyncLocalStorage<CliRunCtx>();
 
 export function initCliRunCtx() {
   cliRunContext.enterWith({
-    // not sure about this...
-    // configLoader: new ConfigLoaderProcess(),
     configLoader: new ConfigLoader(),
     ...ctxHelpers,
   });

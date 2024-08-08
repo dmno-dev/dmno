@@ -2,7 +2,7 @@ import { defineDmnoService, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula,
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 import { EncryptedVaultDmnoPlugin } from '@dmno/encrypted-vault-plugin';
 
-const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
+const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass/prod');
 const VaultPlugin = EncryptedVaultDmnoPlugin.injectInstance('vault/prod');
 
 export default defineDmnoService({
@@ -11,6 +11,7 @@ export default defineDmnoService({
   pick: [
     'NODE_ENV',
     'DMNO_ENV',
+    'ROOT_ONLY',
   ],
   schema: {
     OP_ITEM_1: {
@@ -27,6 +28,9 @@ export default defineDmnoService({
         allowedDomains: ['*']
       },
     },
+    // REQUIRED_ITEM: {
+    //   required: true,
+    // },
 
     STRIPE_SECRET_KEY: {
       value: 'fake-stripe-secret-key',

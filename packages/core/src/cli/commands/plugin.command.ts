@@ -1,18 +1,11 @@
-import { execSync, fork } from 'child_process';
-import { inherits } from 'util';
+import { fork } from 'child_process';
 import kleur from 'kleur';
 import _ from 'lodash-es';
-import { select } from '@inquirer/prompts';
-import { ExecaChildProcess, execa } from 'execa';
-import which from 'which';
 import Debug from 'debug';
 import { tryCatch } from '@dmno/ts-lib';
 import { DmnoCommand } from '../lib/dmno-command';
-import { formatError, formattedValue } from '../lib/formatting';
-import { fallingDmnoLoader } from '../lib/loaders';
 import { getCliRunCtx } from '../lib/cli-ctx';
 import { addServiceSelection, addPluginSelection } from '../lib/selection-helpers';
-import { SerializedDmnoPlugin } from '../../config-loader/serialization-types';
 import { CliExitError } from '../lib/cli-error';
 
 const debug = Debug('dmno:plugin-cli');

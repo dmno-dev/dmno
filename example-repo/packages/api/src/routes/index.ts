@@ -15,6 +15,7 @@ export type CustomRouter = Router<CustomAppState, CustomAppContext>;
 router.get('/', async (ctx) => {
   ctx.body = {
     systemStatus: 'nope',
+    pickedFromRoot: DMNO_CONFIG.ROOT_ONLY,
     envCheck: DMNO_CONFIG.API_ONLY || 'env-var-not-loaded',
     dmnoTest: DMNO_CONFIG.PORT,
     public: DMNO_PUBLIC_CONFIG.PUBLIC_EXAMPLE,
