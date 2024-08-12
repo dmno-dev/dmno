@@ -3,6 +3,7 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 
 import ViteLogoSvg from '~icons/devicon/vitejs?raw';
 import NextLogoSvg from '~icons/logos/nextjs?raw';
+import RemixLogoSvg from '~icons/logos/remix-icon?raw';
 import AstroLogoSvg from '~icons/devicon/astro?raw';
 import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
 
@@ -38,10 +39,11 @@ const {
       <section class="integrations-section">
         <h3>Drop-in integrations for your favorite frameworks & tools</h3>
         <div class="logo-bar">
-          <a href="/docs/integrations/astro" set:html={AstroLogoSvg} />
-          <a href="/docs/integrations/vite" set:html={ViteLogoSvg} />
-          <a href="/docs/integrations/nextjs" set:html={NextLogoSvg} />
-          <a href="/docs/integrations/node" set:html={NodeLogoSvg} />
+          <a href="/docs/integrations/remix/" set:html={RemixLogoSvg} />
+          <a href="/docs/integrations/nextjs/" set:html={NextLogoSvg} />
+          <a href="/docs/integrations/astro/" set:html={AstroLogoSvg} />
+          <a href="/docs/integrations/vite/" set:html={ViteLogoSvg} />
+          <a href="/docs/integrations/node/" set:html={NodeLogoSvg} />
         </div>
         
         <div class="richtext">
@@ -171,7 +173,10 @@ const {
 
   .integrations-section {
     background: var(--brand-purple--t2);
-    padding: 2rem;
+    padding: 1rem;
+    @media (min-width: 50rem) {
+      padding: 2rem;
+    }
     margin: 2rem 0;
     border-radius: 12px;
     display: flex;
@@ -185,7 +190,8 @@ const {
   }
   .logo-bar {
     display: flex;
-    gap: 2rem;
+    flex-wrap: wrap;
+    gap: 5%;
 
     > div, > a {
       flex-grow: 1;
@@ -194,7 +200,8 @@ const {
         width: 100%;
         height: auto;
         max-height: 80px;
-        opacity: .9;
+        min-width: 30px;
+        opacity: .8;
         
         &:hover {
           opacity: 1;
