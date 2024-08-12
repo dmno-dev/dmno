@@ -143,7 +143,7 @@ Another case where Astro may not process the code you write and inject DMNO_CONF
 
 <script
   type="text/partytown"
-+  gtmid={DMNO_PUBLIC_CONFIG.GOOGLE_TAG_MANAGER_ID}
++  define:vars={{ gtmid: DMNO_PUBLIC_CONFIG.GOOGLE_TAG_MANAGER_ID }}
 >
   window.dataLayer = window.dataLayer || [];
   function gtag() {
@@ -152,7 +152,7 @@ Another case where Astro may not process the code you write and inject DMNO_CONF
   gtag("js", new Date());
   // we can reference the attributes of the current script tag
 -  gtag("config", "G-12345");
-+  gtag("config", document.currentScript.getAttribute("gtmid"));
++  gtag("config", gtmid);
 </script>
 ```
 
