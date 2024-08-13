@@ -1,0 +1,56 @@
+---
+const { navItems } = Astro.props;
+---
+
+<nav class="header-nav">
+  {navItems.map((item:any) => (
+    <a
+      href={`/${item}/`}
+      title={item}
+      aria-current={Astro.url.pathname === `/${item}/` ? "page" : undefined}
+    > 
+      {item} 
+    </a>
+  ))
+  }
+</nav>
+
+<style lang="less">
+  nav {
+    display: flex;
+    > a {
+      flex-shrink: 0;
+      text-decoration: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      color: currentColor;
+      &:hover {
+        color: var(--dmno-header-highlight-color);
+      }
+
+      &[aria-current="page"] {
+        // this style matches the left sidebar
+        background: var(--sl-color-text-accent);
+        color: var(--sl-color-text-invert);
+        border-radius: 4px;
+      }
+
+      gap: 4px;
+      padding: 0 0.25em;
+      margin-left: var(--sl-nav-gap);
+      &:first-child {
+        margin-left: 0;
+      }
+      @media (min-width: 50rem) {
+        gap: 8px;
+      }
+    }
+    :global(.d-icon) {
+      width: 16px;
+      @media (min-width: 50rem) {
+        width: 20px;
+      }
+    }
+  }
+</style>
