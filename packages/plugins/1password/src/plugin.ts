@@ -85,13 +85,14 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
 
     const loadedEnvByService: typeof this.envItemsByService = {};
     _.each(envItemsObj.fields, (field) => {
+      if (field.purpose === 'NOTES') return;
       // the "default" items on a secure note get added to an invisible "add more" section
       // we could force users to only add in there? but it might get confusing...?
       const serviceName = field.label;
 
       // make sure we dont have a duplicate
       if (loadedEnvByService[serviceName]) {
-        throw new ResolutionError(`Duplicate env item found - ${serviceName} `);
+        throw new ResolutionError(`Duplicate service entries found in 1pass item - ${serviceName} `);
       }
       const dotEnvObj = loadDotEnvIntoObject(field.value);
       loadedEnvByService[serviceName] = dotEnvObj;

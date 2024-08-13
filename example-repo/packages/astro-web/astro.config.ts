@@ -14,8 +14,8 @@ console.log('> secret value =', DMNO_CONFIG.SECRET_FOO);
 console.log('> secret value in obj', { secret: DMNO_CONFIG.SECRET_FOO });
 console.log('> secret value in array', ['secret', DMNO_CONFIG.SECRET_FOO ]);
 
-console.log('\nthe secret on the next line should not');
-console.log('> secret value =', unredact(DMNO_CONFIG.SECRET_FOO));
+// console.log('\nthe secret on the next line should not');
+// console.log('> secret value =', unredact(DMNO_CONFIG.SECRET_FOO));
 
 // https://astro.build/config
 export default defineConfig({

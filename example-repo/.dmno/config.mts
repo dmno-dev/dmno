@@ -12,7 +12,7 @@ const OnePassSecretsProd = new OnePasswordDmnoPlugin('1pass/prod', {
 });
 const OnePassSecretsDev = new OnePasswordDmnoPlugin('1pass', {
   token: configPath('OP_TOKEN'),
-  envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=n4wmgfq77mydg5lebtroa3ykvm&h=dmnoinc.1password.com',
+  envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=4u4klfhpldobgdxrcjwb2bqsta&h=dmnoinc.1password.com',
   // token: InjectPluginInputByType,
   // token: 'asdf',
 });
