@@ -94,11 +94,11 @@ export async function detectPackageManager() {
     }
     // show some hopefully useful error messaging if we hit the root folder without finding anything
     if (cwd === '') {
-      console.log(kleur.red('Unable to find detect your package manager and workspace root!'));
+      console.log(kleur.red('Unable to detect your package manager and workspace root!'));
       if (possibleRootPackage) {
         console.log(`But it looks like your workspace root might be ${kleur.green().italic(possibleRootPackage)}`);
       }
-      console.log('We look for lock files (ex: package-lock.json) so you may just need to run a dependency install (ie `npm install`)');
+      console.log('We look for lock files (ex: package-lock.json) so you may just need to run a dependency install, for example `npm install`');
       process.exit(1);
     }
   }
