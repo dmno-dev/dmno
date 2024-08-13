@@ -24,11 +24,10 @@ let topLevelPageNames = Object.keys(topLevelPages).map((path) => {
   }
   return match ? match[1] : false;
 });
-topLevelPageNames = topLevelPageNames.concat(["docs", "blog"]);
-
 const isTopLevel = topLevelPageNames.includes(Astro.props.slug);
 
-console.log(Astro.url.pathname)
+// add docs and blog to top level pages after check so it doesn't affect the conditional header rendering
+topLevelPageNames = topLevelPageNames.concat(["docs", "blog"]);
 
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
