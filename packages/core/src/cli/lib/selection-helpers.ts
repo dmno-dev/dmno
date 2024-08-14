@@ -107,7 +107,7 @@ export function addServiceSelection(program: Command, opts?: {
       // handle picking from a menu, default selection will be based on CWD
       // this pre-selects the menu, but does not continue automatically
       // NOTE - `pnpm --filter=child-package exec dmno` changes the cwd correctly
-      if (explicitMenuOptIn || !opts?.disableMenuSelect) {
+      if (!thisCommand.opts().silent && (explicitMenuOptIn || !opts?.disableMenuSelect)) {
         // order our services by folder depth (descending)
         // so we can look for whiuch folder the user is in
         const servicesOrderedByDirDepth = _.orderBy(workspace.allServices, (s) => s.path.split('/').length, ['desc']);

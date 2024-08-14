@@ -19,6 +19,7 @@ import {
   findEnvVarsInCode, generateDmnoConfigInitialCode, inferDmnoSchema,
 } from './schema-scaffold';
 import { checkIsFileGitIgnored } from '../../lib/git-utils';
+import { detectJsPackageManager, JsPackageManager } from '../../lib/detect-package-manager';
 
 const STEP_DELAY = 300;
 
@@ -76,11 +77,12 @@ function setupStepMessage(message: string, opts?: {
 
 function installPackage(
   packagePath: string,
-  packageManager: PackageManager,
+  packageManager: JsPackageManager,
   packageName: string,
   isMonoRepoRoot?: boolean,
 ) {
-  // `add` works in all 3, `install` does not
+  // TODO: use JS_PACKAGE_MANAGERS meta info?
+  // `add` works in all of them
   execSync(`cd ${packagePath} && ${packageManager} add ${packageName} ${isMonoRepoRoot && packageManager === 'pnpm' ? '-w' : ''}`);
 }
 
@@ -115,7 +117,6 @@ const KNOWN_INTEGRATIONS_MAP: Record<string, { package: string, docs?: string }>
 export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, servicePath: string, silent?: boolean) {
   const rootPath = workspaceInfo.workspacePackages[0].path;
   const nonRootPaths = workspaceInfo.workspacePackages.slice(1).map((s) => s.path);
-  const { packageManager } = workspaceInfo;
 
   const service = workspaceInfo.workspacePackages.find((s) => s.path === servicePath);
   if (!service) throw new Error('service not found');
@@ -158,12 +159,16 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
   const dmnoVersionRange = packageJsonDeps.dmno;
   // TODO: here we could prompt you to _upgrade_ your version of dmno
 
+  const packageManager = detectJsPackageManager({
+    workspaceRootPath: workspaceInfo.workspacePackages[0].path,
+  });
+
   // INSTALL DMNO
   if (!overwriteMode && isDmnoInstalled) {
     console.log(setupStepMessage('dmno already installed', { type: 'noop', package: 'dmno', packageVersion: dmnoVersionRange }));
   } else {
     try {
-      installPackage(service.path, packageManager, 'dmno', workspaceInfo.isMonorepo && service.isRoot);
+      installPackage(service.path, packageManager.name, 'dmno', workspaceInfo.isMonorepo && service.isRoot);
       await reloadPackageJson();
 
       console.log(setupStepMessage('dmno installed', { package: 'dmno', packageVersion: packageJsonDeps.dmno }));
@@ -203,7 +208,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
         if (!confirmIntegrationInstall) {
           console.log('No worries - you can always install it later!');
         } else {
-          installPackage(service.path, workspaceInfo.packageManager, suggestedDmnoIntegration.package, false);
+          installPackage(service.path, packageManager.name, suggestedDmnoIntegration.package, false);
           await reloadPackageJson();
 
           console.log(setupStepMessage(`DMNO + ${knownIntegrationDep} integration installed!`, { package: suggestedDmnoIntegration.package, packageVersion: packageJsonDeps[suggestedDmnoIntegration.package] }));

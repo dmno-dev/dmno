@@ -8,8 +8,7 @@ import { createDebugTimer } from '../cli/lib/debug-timer';
 import { ConfigLoaderRequestMap } from './ipc-requests';
 import { SerializedService } from './serialization-types';
 import { formatError, getItemSummary } from '../cli/lib/formatting';
-import { InjectedDmnoEnv } from '../config-engine/config-engine';
-import { detectPackageManagerSync, PACKAGE_MANAGERS_META } from '../lib/detect-package-manager';
+import { detectJsPackageManager } from '../lib/detect-package-manager';
 
 const debug = Debug('dmno');
 const debugTimer = createDebugTimer('dmno:loader-client');
@@ -51,14 +50,15 @@ export class ConfigServerClient {
 
   private ownedDmnoConfigServerProcess?: ChildProcess;
   private initOwnedConfigServer() {
-    const { packageManager } = detectPackageManagerSync();
-    const execCommand = PACKAGE_MANAGERS_META[packageManager].exec;
+    const packageManager = detectJsPackageManager();
+    const execCommand = packageManager.exec;
     const execCommandParts = execCommand.split(' ');
     const execCommandBaseCommand = execCommandParts.shift()!;
-    const execCommandRest = execCommandParts.join(' ');
+    let execCommandRest = execCommandParts.join(' ');
+    if (!execCommandRest.endsWith('--')) execCommandRest += ' --';
 
     // use `pnpm exec` or `npm exec` etc...
-    this.ownedDmnoConfigServerProcess = spawn(execCommandBaseCommand, `${execCommandRest} -- dmno dev --silent`.split(' '), {
+    this.ownedDmnoConfigServerProcess = spawn(execCommandBaseCommand, `${execCommandRest} dmno dev --silent`.split(' '), {
       stdio: 'inherit',
       env: {
         ...process.env,

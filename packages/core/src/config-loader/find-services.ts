@@ -1,13 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import kleur from 'kleur';
+import { fileURLToPath } from 'node:url';
 import _ from 'lodash-es';
 import readYamlFile from 'read-yaml-file';
 import { fdir } from 'fdir';
 import { tryCatch } from '@dmno/ts-lib';
 import Debug from 'debug';
-import { asyncMapValues } from '../lib/async-utils';
-import { PackageManager, detectPackageManager } from '../lib/detect-package-manager';
 
 const debug = Debug('dmno:find-services');
 
@@ -25,8 +23,8 @@ export type WorkspacePackagesListing = {
   dmnoFolder: boolean,
 };
 export type ScannedWorkspaceInfo = {
+  gitRootPath?: string,
   isMonorepo: boolean,
-  packageManager: PackageManager,
   workspacePackages: Array<WorkspacePackagesListing>,
   autoSelectedPackage?: WorkspacePackagesListing;
 };
@@ -40,50 +38,92 @@ export async function pathExists(p: string) {
   }
 }
 
+// list of locations to look for workspace project globs
+// TODO: we could add extra conditions so we dont waste time looking for all the files?
+const PACKAGE_GLOB_LOCATIONS = [
+  // explicit dmno workspace config - this overrides everything else
+  { file: '.dmno/dmno-workspace.yaml', path: 'projects', final: true },
+  // pnpm config file
+  { file: 'pnpm-workspace.yaml', path: 'packages' },
+  // moonrepo config file
+  { file: '.moon/workspace.yml', path: 'projects' },
+  // npm, yarn, bun, deno (supported)
+  { file: 'package.json', path: 'workspaces', optional: true },
+  // deno also has a deno-specific config file to look in
+  // { file: 'deno.json', path: 'workspace', optional: true },
+  // { file: 'deno.jsonc', path: 'workspace', optional: true },
+];
 
 export async function findDmnoServices(includeUnitialized = true): Promise<ScannedWorkspaceInfo> {
   const startAt = new Date();
 
-  const { packageManager, rootWorkspacePath: rootServicePath } = await detectPackageManager();
-
-  let packagePatterns: Array<string> | undefined;
+  let gitRootPath: string | undefined;
+  let dmnoWorkspaceRootPath: string | undefined;
+  let dmnoWorkspaceFinal = false;
   let isMonorepo = false;
+  let packagePatterns: Array<string> | undefined;
 
-  debug('looking for workspace globs');
-  if (packageManager === 'pnpm') {
-    // if no pnpm-workspace.yaml exists, it's not a monorepo
-    const pnpmWorkspaceYamlPath = `${rootServicePath}/pnpm-workspace.yaml`;
-    if (await pathExists(pnpmWorkspaceYamlPath)) {
-      const pnpmWorkspacesYaml = await readYamlFile(`${rootServicePath}/pnpm-workspace.yaml`);
-      isMonorepo = true;
-      packagePatterns = (pnpmWorkspacesYaml as any).packages;
-      debug('looked in pnpm-workspace.yaml for "packages" field');
-    } else {
-      debug('no pnpm-workspace.yaml found');
+
+  // we'll scan upwards from cwd until the git root (or we hit `/`)
+  let cwd = process.cwd();
+  const cwdParts = cwd.split('/');
+  while (cwd) {
+    debug('scanning CWD = ', cwdParts, cwd);
+    // look for workspace package globs in a few locations (see above)
+    // and we'll keep scanning upwards, unless we found a `.dmno/dmno-workspace.yaml`
+    if (!dmnoWorkspaceFinal) {
+      for (const globLocation of PACKAGE_GLOB_LOCATIONS) {
+        const filePath = path.join(cwd, globLocation.file);
+        if (!await pathExists(filePath)) continue;
+
+        debug(`looking for workspace globs in ${filePath} > ${globLocation.path}`);
+        const fileType = path.extname(filePath);
+        let fileContents: any;
+        if (fileType === '.yaml' || fileType === '.yml') {
+          fileContents = await readYamlFile(filePath);
+        } else if (fileType === '.json') {
+          fileContents = await readJsonFile(filePath);
+        }
+        const possiblePackagePatterns = _.get(fileContents, globLocation.path);
+        if (possiblePackagePatterns) {
+          packagePatterns = possiblePackagePatterns;
+          dmnoWorkspaceRootPath = cwd;
+          isMonorepo = true;
+        } else if (!globLocation.optional) {
+          throw new Error(`Expected to find monorepo project glob patterns in file ${fileURLToPath} > ${globLocation.path}`);
+        }
+        if (globLocation.final) {
+          dmnoWorkspaceFinal = true;
+          break; // breaks from for loop - will still continue looking for git root
+        }
+      }
     }
-  } else if (packageManager === 'yarn' || packageManager === 'npm' || packageManager === 'bun') {
-    const rootPackageJson = await readJsonFile(`${rootServicePath}/package.json`);
-    if (rootPackageJson.workspaces) {
-      isMonorepo = true;
-      packagePatterns = rootPackageJson.workspaces;
+
+    // check for .git folder to detect git root
+    if (await pathExists(path.join(cwd, '.git'))) {
+      gitRootPath = cwd;
+      // if we hadn't found a dmno workspace root yet, we'll fall back to the git root
+      if (!dmnoWorkspaceRootPath) dmnoWorkspaceRootPath = gitRootPath;
+      // we stop scanning when we find the git root!
+      break;
     }
-    debug('looked in package.json for "workspaces" field');
-  } else if (packageManager === 'moon') {
-    const moonWorkspacesYaml = await readYamlFile(`${rootServicePath}/.moon/workspace.yml`);
-    isMonorepo = true;
-    packagePatterns = (moonWorkspacesYaml as any).projects;
-    debug('looked in .moon/workspace.yml for "projects" field');
+
+    // go up one level and continue
+    cwdParts.pop();
+    cwd = cwdParts.join('/');
   }
 
-  // console.log('Package manager = ', packageManager);
-  // console.log('workspace root = ', rootServicePath);
-  // console.log('is monorepo?', isMonorepo);
-  // console.log('packages globs', packagesGlobs);
+  if (!dmnoWorkspaceRootPath) {
+    // TODO: add link to docs with more info
+    throw new Error('Unable to detect dmno workspace root');
+  }
 
 
-  let packagePaths = [rootServicePath];
+  // const { packageManager, rootWorkspacePath: rootServicePath } = await detectPackageManager();
+
+  let packagePaths = [dmnoWorkspaceRootPath];
   if (isMonorepo && packagePatterns?.length) {
-    const fullPackagePatterns = packagePatterns.map((gi) => path.resolve(`${rootServicePath}/${gi}`));
+    const fullPackagePatterns = packagePatterns.map((gi) => path.join(dmnoWorkspaceRootPath, gi));
     const packageGlobs = fullPackagePatterns.filter((s) => s.includes('*'));
     const packageDirs = fullPackagePatterns.filter((s) => !s.includes('*'));
     const expandedPathsFromGlobs = await (
@@ -103,7 +143,7 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
             // || dirName === '.next'
           );
         })
-        .crawl(rootServicePath)
+        .crawl(dmnoWorkspaceRootPath)
         .withPromise()
     );
     packagePaths.push(...packageDirs);
@@ -114,41 +154,38 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
 
   const workspacePackages = _.compact(await Promise.all(packagePaths.map(async (packagePath) => {
     const packageJson = await tryCatch(
-      async () => await readJsonFile(`${packagePath}/package.json`),
+      async () => await readJsonFile(path.join(packagePath, 'package.json')),
       (err) => {
-        // missing package.json, so we'll skip this one
-        // currently this is true for a folder containing other packages
-        // but eventually for polyglot support we may need some other logic here
-        if ((err as any).code === 'ENOENT') {
-          return undefined;
-        }
+        if ((err as any).code === 'ENOENT') return undefined;
         throw err;
       },
     );
-    if (!packageJson) return;
 
-    const dmnoFolderExists = await pathExists(`${packagePath}/.dmno`);
+    const dmnoFolderExists = await pathExists(path.join(packagePath, '.dmno'));
+
+    // TODO: are there other places we can look for package name?
+    const packageName = packageJson?.name || packagePath.split('/').pop();
 
     return {
-      isRoot: packagePath === rootServicePath,
+      isRoot: packagePath === dmnoWorkspaceRootPath,
       path: packagePath,
-      relativePath: packagePath.substring(rootServicePath.length + 1),
-      name: packageJson?.name || packagePath.split('/').pop(),
+      relativePath: packagePath.substring(dmnoWorkspaceRootPath.length + 1),
+      name: packageName,
       dmnoFolder: dmnoFolderExists,
     };
   })));
 
   const packageFromPwd = workspacePackages.find((p) => p.path === process.env.PWD);
   // note - this doesn't play nice if you have duplicate package names in your monorepo...
-  // this shouldnt really be an issue, but it's noteable
+  // this shouldnt really be an issue, but it's notable
   const packageManagerCurrentPackageName = process.env.npm_package_name || process.env.PNPM_PACKAGE_NAME;
   const packageFromCurrentPackageName = workspacePackages.find((p) => p.name === packageManagerCurrentPackageName);
 
   debug(`completed scanning in ${+new Date() - +startAt}ms`);
 
   return {
+    gitRootPath,
     isMonorepo,
-    packageManager,
     workspacePackages: includeUnitialized ? workspacePackages : _.filter(workspacePackages, (p) => p.dmnoFolder),
     autoSelectedPackage: packageFromPwd || packageFromCurrentPackageName,
   };
