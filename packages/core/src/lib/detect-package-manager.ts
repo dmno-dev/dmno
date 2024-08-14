@@ -53,7 +53,9 @@ export const JS_PACKAGE_MANAGERS: Record<JsPackageManager, JsPackageManagerMeta>
 
 /**
  * detect js package manager
- * currently only looks for lockfiles (ex: package-lock.json)
+ *
+ * currently go up the folder tree looking for lockfiles (ex: package-lock.json, pnpm-lock.yaml)
+ * if nothing found, we'll look at process.env.npm_config_user_agent
  * */
 export function detectJsPackageManager(opts?: {
   cwd?: string,
@@ -63,6 +65,7 @@ export function detectJsPackageManager(opts?: {
   const cwdParts = cwd.split('/');
   do {
     let pm: JsPackageManager;
+    let detectedPm: JsPackageManager | undefined;
     for (pm in JS_PACKAGE_MANAGERS) {
       const lockFilePath = path.join(
         cwd,
@@ -70,9 +73,12 @@ export function detectJsPackageManager(opts?: {
       );
 
       if (pathExistsSync(lockFilePath)) {
-        return JS_PACKAGE_MANAGERS[pm];
+        // if we find 2 lockfiles at the same level, we throw an error
+        if (detectedPm) throw new Error(`Found multiple js package manager lockfiles - ${JS_PACKAGE_MANAGERS[pm].lockfile} and ${JS_PACKAGE_MANAGERS[detectedPm].lockfile}`);
+        detectedPm = pm;
       }
     }
+    if (detectedPm) return JS_PACKAGE_MANAGERS[detectedPm];
 
     cwdParts.pop();
     cwd = cwdParts.join('/');
