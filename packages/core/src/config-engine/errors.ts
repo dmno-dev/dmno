@@ -39,17 +39,26 @@ export class DmnoError extends Error {
 
   icon = '❌';
 
-  constructor(err: string | Error, readonly more?: {
-    tip?: string,
+  constructor(errOrMessage: string | Error, readonly more?: {
+    tip?: string | Array<string>,
+    err?: Error,
   }) {
-    if (_.isError(err)) {
-      super(err.message);
-      this.originalError = err;
+    if (_.isError(errOrMessage)) {
+      super(errOrMessage.message);
+      this.originalError = errOrMessage;
       this.icon = '💥';
-    } else {
-      super(err);
+    } else { // string
+      super(errOrMessage);
+      this.originalError = more?.err;
     }
+    if (Array.isArray(more?.tip)) more.tip = more.tip.join('\n');
     this.name = this.constructor.name;
+  }
+
+  get tip() {
+    if (!this.more?.tip) return undefined;
+    if (Array.isArray(this.more.tip)) return this.more.tip.join('\n');
+    return this.more.tip;
   }
 
   toJSON() {
@@ -59,7 +68,7 @@ export class DmnoError extends Error {
       name: this.name,
       message: this.message,
       isUnexpected: this.isUnexpected,
-      ...this.more,
+      ...this.tip && { tip: this.tip },
     };
   }
 }

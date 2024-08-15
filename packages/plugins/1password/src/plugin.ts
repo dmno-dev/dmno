@@ -1,20 +1,18 @@
-import { execSync } from 'child_process';
-import { fileURLToPath } from 'url';
-import path from 'path';
+import { spawnSync } from 'child_process';
 import _ from 'lodash-es';
 import kleur from 'kleur';
 import {
-  ConfigValueResolver, DmnoPlugin, ResolverContext,
+  DmnoPlugin, ResolverContext,
   DmnoPluginInputSchema,
   DmnoPluginInputMap,
   ResolutionError,
   SchemaError,
-  GetPluginInputTypes,
-  createResolver,
   _PluginInputTypesSymbol,
   loadDotEnvIntoObject,
 } from 'dmno';
+import { Client, createClient } from '@1password/sdk';
 
+import { name as thisPackageName, version as thisPackageVersion } from '../package.json';
 import { OnePasswordTypes } from './data-types';
 
 type ItemId = string;
@@ -23,7 +21,63 @@ type VaultName = string;
 type ReferenceUrl = string;
 type ServiceAccountToken = string;
 
-const CLI_PATH = path.resolve(fileURLToPath(import.meta.url), '../../op-cli');
+
+async function execOpCliCommand(cmdArgs: Array<string>) {
+  // using system-installed copy of `op`
+  const cmd = spawnSync('op', cmdArgs);
+  if (cmd.status === 0) {
+    return cmd.stdout.toString();
+  } else if (cmd.error) {
+    if ((cmd.error as any).code === 'ENOENT') {
+      throw new ResolutionError('1password cli `op` not found', {
+        tip: [
+          'By not using a service account token, you are relying on your local 1password cli installation for ambient auth.',
+          'But your local 1password cli (`op`) was not found. Install it here - https://developer.1password.com/docs/cli/get-started/',
+        ],
+      });
+    } else {
+      throw new ResolutionError(`Problem invoking 1password cli: ${cmd.error.message}`);
+    }
+  } else {
+    let errMessage = cmd.stderr.toString();
+    // get rid of "[ERROR] 2024/01/23 12:34:56 " before actual message
+    if (errMessage.startsWith('[ERROR]')) errMessage = errMessage.substring(28);
+    if (errMessage.includes('authorization prompt dismissed')) {
+      throw new ResolutionError('1password app authorization prompt dismissed by user', {
+        tip: [
+          'By not using a service account token, you are relying on your local 1password installation',
+          'When the authorization prompt appears, you must authorize/unlock 1password to allow access',
+        ],
+      });
+    } else if (errMessage.includes("isn't a vault in this account")) {
+      throw new ResolutionError('1password vault not found in account connected to op cli', {
+        tip: [
+          'By not using a service account token, you are relying on your local 1password cli installation and authentication.',
+          'The account currently connected to the cli does not contain (or have access) to the selected vault',
+          'This must be resolved in your terminal - try running `op whoami` to see which account is connected to your `op` cli.',
+          'You may need to call `op signout` and `op signin` to select the correct account.',
+        ],
+      });
+    }
+    // when the desktop app integration is not connected, some interactive CLI help is displayed
+    // however if it dismissed, we get an error with no message
+    // TODO: figure out the right workflow here?
+    if (!errMessage) {
+      throw new ResolutionError('1password cli not configured', {
+        tip: [
+          'By not using a service account token, you are relying on your local 1password cli installation and authentication.',
+          'You many need to enable the 1password Desktop app integration, see https://developer.1password.com/docs/cli/get-started/#step-2-turn-on-the-1password-desktop-app-integration',
+          'Try running `op whoami` to make sure the cli is connected to the correct account',
+          'You may need to call `op signout` and `op signin` to select the correct account.',
+        ],
+      });
+    }
+
+    throw new Error(`op cli call failed: ${errMessage || 'unknown'}`);
+  }
+}
+
+// const CLI_PATH = path.resolve(fileURLToPath(import.meta.url), '../../op-cli');
 
 // Typescript has some limitations around generics and how things work across parent/child classes
 // so unfortunately, we have to add some extra type annotations, but it's not too bad
@@ -37,11 +91,16 @@ const CLI_PATH = path.resolve(fileURLToPath(import.meta.url), '../../op-cli');
 export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   icon = 'simple-icons:1password';
 
+  // would be great to do this automatically as part of `DmnoPlugin` but I don't think it's possible
+  // so instead we add some runtime checks in DmnoPlugin
+  static pluginPackageName = thisPackageName;
+  static pluginPackageVersion = thisPackageVersion;
+
   static readonly inputSchema = {
     token: {
       description: 'this service account token will be used via the CLI to communicate with 1password',
       extends: OnePasswordTypes.serviceAccountToken,
-      required: true,
+      // required: true,
     },
     envItemLink: {
       description: 'link to secure note item containing dotenv style values',
@@ -63,6 +122,56 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     this.setInputMap(inputs);
   }
 
+  private opClient: Client | undefined;
+  private async initOpClientIfNeeded() {
+    if (!this.inputValues.token) return
+    if (!this.opClient) {
+      this.opClient = await createClient({
+        auth: this.inputValues.token,
+        integrationName: this.pluginPackageName.replaceAll('@', '').replaceAll('/', ' '),
+        integrationVersion: this.pluginPackageVersion,
+      });
+    }
+  }
+  private async getOpItemById(ctx: ResolverContext, vaultId: VaultId, itemId: ItemId) {
+    await this.initOpClientIfNeeded();
+    // using sdk
+    if (this.opClient) {
+      return await ctx.getOrSetCacheItem(`1pass-sdk:V|${vaultId}/I|${itemId}`, async () => {
+        const opItem = await this.opClient!.items.get(vaultId, itemId);
+        return JSON.parse(JSON.stringify(opItem)); // convert to plain object
+      });
+    }
+    // using cli
+    return await ctx.getOrSetCacheItem(`1pass-cli:V|${vaultId}/I|${itemId}`, async () => {
+      const itemJson = await execOpCliCommand([
+        'item', 'get', itemId,
+        `--vault=${vaultId}`,
+        '--format=json',
+      ]);
+      return JSON.parse(itemJson);
+    });
+  }
+  private async getOpItemByReference(ctx: ResolverContext, referenceUrl: ReferenceUrl) {
+    await this.initOpClientIfNeeded();
+    // using sdk
+    if (this.opClient) {
+      return await ctx.getOrSetCacheItem(`1pass-sdk:R|${referenceUrl}`, async () => {
+        return await this.opClient!.secrets.resolve(referenceUrl);
+      });
+    }
+    // using op CLI
+    return await ctx.getOrSetCacheItem(`1pass-cli:R|${referenceUrl}`, async () => {
+      return await execOpCliCommand([
+        'read', referenceUrl,
+        '--force',
+        '--no-newline',
+      ]);
+    });
+  }
+
+
+  
 
 
   private envItemsByService: Record<string, Record<string, string>> | undefined;
@@ -72,23 +181,15 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     const vaultId = url.searchParams.get('v')!;
     const itemId = url.searchParams.get('i')!;
 
-    const envItemJsonStr = await ctx.getOrSetCacheItem(`1pass:V|${vaultId}/I|${itemId}`, async () => {
-      return await execSync([
-        `OP_SERVICE_ACCOUNT_TOKEN=${this.inputValues.token}`,
-        CLI_PATH,
-        `item get ${itemId}`,
-        `--vault=${vaultId}`,
-        '--format json',
-      ].join(' ')).toString();
-    });
-    const envItemsObj = JSON.parse(envItemJsonStr);
+
+    const envItemsObj = await this.getOpItemById(ctx, vaultId, itemId);
 
     const loadedEnvByService: typeof this.envItemsByService = {};
     _.each(envItemsObj.fields, (field) => {
       if (field.purpose === 'NOTES') return;
       // the "default" items on a secure note get added to an invisible "add more" section
       // we could force users to only add in there? but it might get confusing...?
-      const serviceName = field.label;
+      const serviceName = field.label || field.title; // cli uses "label", sdk uses "title"
 
       // make sure we dont have a duplicate
       if (loadedEnvByService[serviceName]) {
@@ -126,7 +227,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
               `Find entry with label ${kleur.bold().cyan(ctx.serviceName!)} (or create it)`,
               'Add this secret like you would add it to a .env file',
               `For example: \`${ctx.itemPath}="your-secret-value"\``,
-            ].join('\n'),
+            ],
           });
         }
 
@@ -174,37 +275,32 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
         // we've already checked that the defaultVaultId is set above if it's needed
         // and the plugin will have a schema error if the resolution failed
 
-        const valueJsonStr = await ctx.getOrSetCacheItem(`1pass:V|${vaultId}/I|${itemId}`, async () => {
-          return await execSync([
-            `OP_SERVICE_ACCOUNT_TOKEN=${this.inputValues.token}`,
-            CLI_PATH,
-            `item get ${itemId}`,
-            `--vault=${vaultId}`,
-            '--format json',
-          ].join(' ')).toString();
-        });
+        const itemObj = await this.getOpItemById(ctx, vaultId, itemId);
 
-        const valueObj = JSON.parse(valueJsonStr);
-        if (!valueObj) {
-          throw new Error('Unable to resolve item');
-        }
-
+        // TODO: path is necessary... maybe we could return the first item or something if none is specified?
         if (path) {
-          // TOOD: this logic is not right...
-          const valueAtPath = _.find(valueObj.fields, (i) => {
-            return i.reference.endsWith(path);
+          const sectionsById = _.keyBy(itemObj.sections, (s) => s.id);
+          const valueAtPath = _.find(itemObj.fields, (i) => {
+            // using the cli, each item has the reference included
+            if (i.reference) {
+              // TODO: checking the reference ending is naive...
+              return i.reference.endsWith(path);
+            // using the sdk, we have to awkwardly reconstruct it
+            } else {
+              if (i.sectionId) return `${sectionsById[i.sectionId].title}/${i.title}` === path;
+              else return i.title === path;
+            }
           });
 
           if (!valueAtPath) {
-            throw new Error(`Unable to resolve value from path ${path}`);
+            throw new Error(`Unable to resolve value at path ${path}`);
           }
           return valueAtPath.value;
         }
 
         // TODO: better error handling to tell you what went wrong? no access, non existant, etc
 
-
-        return valueObj;
+        return itemObj; 
       },
     });
   }
@@ -219,14 +315,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     return this.createResolver({
       label: referenceUrl,
       resolve: async (ctx) => {
-        const value = await ctx.getOrSetCacheItem(`1pass:R|${referenceUrl}`, async () => {
-          return await execSync([
-            `OP_SERVICE_ACCOUNT_TOKEN=${this.inputValues.token}`,
-            CLI_PATH,
-            `read "${referenceUrl}"`,
-            '--force --no-newline',
-          ].join(' ')).toString();
-        });
+        const value = await this.getOpItemByReference(ctx, referenceUrl);
 
         // TODO: better error handling to tell you what went wrong? no access, non existant, etc
 
@@ -243,10 +332,12 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
 // TODO: this should be autogenerated from the inputSchema and live in .dmno/.typegen folder
 export interface OnePasswordDmnoPlugin {
   [_PluginInputTypesSymbol]: {
-    /** token to be used... more jsdoc info... */
+    /** 1password service account token used to fetch secrets */
     token: string,
-    /** private link to item containing dotenv style values */
+    /** private link to item containing dotenv style values (optional) */
     envItemLink?: string;
+    /** rely on auth from system installed `op` cli instead of a service account */
+    useSystemCli?: boolean,
   }
 }
 
