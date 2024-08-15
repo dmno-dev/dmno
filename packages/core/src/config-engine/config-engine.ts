@@ -540,6 +540,13 @@ export class DmnoWorkspace {
     }
     throw new Error(`unable to find service - ${descriptor}`);
   }
+  getServiceMetaForBuild(serviceName: string) {
+    const service = this.services[serviceName];
+    if (!service) throw new Error(`Unable to fine service - ${serviceName}`);
+    return {
+      requiredServices: this.servicesDag.predecessors(service.serviceName) || [],
+    };
+  }
 
   get cacheFilePath() { return `${this.rootPath}/.dmno/cache.json`; }
   get cacheKeyFilePath() { return `${this.rootPath}/.dmno/cache-key.json`; }

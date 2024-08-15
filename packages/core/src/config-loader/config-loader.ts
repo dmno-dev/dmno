@@ -11,7 +11,9 @@ import { ViteNodeRunner } from 'vite-node/client';
 import { ConfigLoaderRequestMap } from './ipc-requests';
 import { createDebugTimer } from '../cli/lib/debug-timer';
 import { setupViteServer } from './vite-server';
-import { ScannedWorkspaceInfo, WorkspacePackagesListing, findDmnoServices } from './find-services';
+import {
+  ScannedWorkspaceInfo, WorkspacePackagesListing, findDmnoServices, findDmnoServicesInBuiltMode,
+} from './find-services';
 import {
   DmnoService, DmnoWorkspace, DmnoServiceConfig, CacheMode,
 } from '../config-engine/config-engine';
@@ -29,10 +31,8 @@ export class ConfigLoader {
 
   // private isReadyDeferred: DeferredPromise = createDeferredPromise();
   // get isReady() { return this.isReadyDeferred.promise; }
-  isReady: Promise<void>;
 
   constructor() {
-    this.isReady = this.finishInit();
     this.startAt = new Date();
   }
 
@@ -43,8 +43,13 @@ export class ConfigLoader {
     this.cacheMode = cacheMode;
   }
 
+  private builtConfigMode: boolean = false;
+  setBuiltConfigMode(enabled: typeof this.builtConfigMode) {
+    debug(`Config loader - use built config mode = ${enabled}`);
+    this.builtConfigMode = enabled;
+  }
 
-  viteRunner?: ViteNodeRunner;
+  viteNodeRunner?: ViteNodeRunner;
 
   workspaceInfo!: ScannedWorkspaceInfo;
   get workspacePackagesData() {
@@ -57,20 +62,15 @@ export class ConfigLoader {
     return this.workspaceInfo.workspacePackages[0].path; // first should always be root (and is also marked)
   }
 
-  private async finishInit() {
+  async finishInit() {
     // console.time('find-services');
-    this.workspaceInfo = await findDmnoServices();
+    this.workspaceInfo = this.builtConfigMode ? await findDmnoServicesInBuiltMode() : await findDmnoServices();
     const dmnoServicePackages = this.workspaceInfo.workspacePackages.filter((p) => p.dmnoFolder);
 
     // during init there may be no services at all
     if (!dmnoServicePackages.length) return;
 
     // console.timeEnd('find-services');
-
-    // TODO: we may want to do this on demand
-    // so it does not slow down `dmno init` or other commands that don't need it
-    const { viteRunner } = await setupViteServer(this.workspaceRootPath, (ctx) => this.viteHotReloadHandler(ctx));
-    this.viteRunner = viteRunner;
   }
 
   onReload?: () => void | Promise<void>;
@@ -99,10 +99,18 @@ export class ConfigLoader {
   }
 
   async reload() {
-    // make sure everything is initialized
-    await this.isReady;
+    if (!this.workspaceInfo) await this.finishInit();
 
-    if (!this.viteRunner) throw new Error('vite server not ready yet');
+    // make sure everything is initialized
+    // await this.isReady;
+
+    if (!this.viteNodeRunner) {
+      // not 100% sure we want to make the vite server root the workspace root
+      // TODO: need to add a new executionContextRoot or something instead of process.env.PWD
+      const viteServerRootPath = this.builtConfigMode ? process.env.PWD! : this.workspaceRootPath;
+      const { viteNodeRunner } = await setupViteServer(viteServerRootPath, (ctx) => this.viteHotReloadHandler(ctx));
+      this.viteNodeRunner = viteNodeRunner;
+    }
 
     // TODO: if not first load, clean up previous workspace? or reuse it somehow?
     this.dmnoWorkspace = new DmnoWorkspace();
@@ -115,8 +123,7 @@ export class ConfigLoader {
       // not sure yet about naming the root file differently?
       // especially in the 1 service context, it may feel odd
       // const configFilePath = `${w.path}/.dmno/${isRoot ? 'workspace-' : ''}config.mts`;
-      const configFilePath = `${w.path}/.dmno/config.mts`;
-
+      const configFilePath = `${w.path}/.dmno/config${this.builtConfigMode ? '.js' : '.mts'}`;
 
       const serviceInitOpts = {
         isRoot: w.isRoot,
@@ -139,9 +146,9 @@ export class ConfigLoader {
         // we probably want to clear all user authored files (in the .dmno folder) rather than just the config files
 
         // CLEAR EACH CONFIG FILE FROM THE CACHE SO WE RELOAD THEM ALL
-        this.viteRunner.moduleCache.deleteByModuleId(configFilePath);
+        this.viteNodeRunner.moduleCache.deleteByModuleId(configFilePath);
 
-        const importedConfig = await this.viteRunner.executeFile(configFilePath);
+        const importedConfig = await this.viteNodeRunner.executeFile(configFilePath);
 
         if (w.isRoot && !importedConfig.default.isRoot) {
           throw new Error('Root service .dmno/config.mts must set `isRoot: true`');

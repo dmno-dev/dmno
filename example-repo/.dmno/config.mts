@@ -3,20 +3,16 @@ import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin'
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
 
-
 const OnePassSecretsProd = new OnePasswordDmnoPlugin('1pass/prod', {
   token: configPath('OP_TOKEN'),
   envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=n4wmgfq77mydg5lebtroa3ykvm&h=dmnoinc.1password.com',
   // token: InjectPluginInputByType,
   // token: 'asdf',
 });
-const OnePassSecretsDev = new OnePasswordDmnoPlugin('1pass', {
+const OnePassSecretsDev = new OnePasswordDmnoPlugin('1pass/dev', {
   token: configPath('OP_TOKEN'),
-  envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=n4wmgfq77mydg5lebtroa3ykvm&h=dmnoinc.1password.com',
-  // token: InjectPluginInputByType,
-  // token: 'asdf',
+  envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=4u4klfhpldobgdxrcjwb2bqsta&h=dmnoinc.1password.com',
 });
-
 
 const ProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
   key: configPath('DMNO_VAULT_KEY'),
@@ -57,8 +53,6 @@ export default defineDmnoService({
         production: OnePassSecretsProd.item(),
       }),
     },
-
-
 
     DMNO_VAULT_KEY: {
       extends: EncryptedVaultTypes.encryptionKey,

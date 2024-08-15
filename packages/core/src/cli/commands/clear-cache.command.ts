@@ -3,12 +3,7 @@ import kleur from 'kleur';
 import _ from 'lodash-es';
 import { outdent } from 'outdent';
 import { DmnoCommand } from '../lib/dmno-command';
-import { formatError, formattedValue, getItemSummary } from '../lib/formatting';
 import { getCliRunCtx } from '../lib/cli-ctx';
-import { ConfigServer } from '../../config-loader/config-server';
-import { addCacheFlags } from '../lib/cache-helpers';
-import { addServiceSelection } from '../lib/selection-helpers';
-import { fallingDmnoLoader, fallingDmnosAnimation } from '../lib/loaders';
 import { pathExists } from '../../config-loader/find-services';
 
 const program = new DmnoCommand('clear-cache')

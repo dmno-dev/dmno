@@ -4,7 +4,7 @@ import { ViteNodeServer } from 'vite-node/server';
 import { installSourcemapsSupport } from 'vite-node/source-map';
 
 export async function setupViteServer(
-  workspaceRootPath: string,
+  viteServerRootPath: string,
   hotReloadHandler: (ctx: HmrContext) => Promise<void>,
 ) {
   const customPlugin: Plugin = {
@@ -15,7 +15,9 @@ export async function setupViteServer(
     // meaning we have 2 copies of classes and `instanceof` stops working
     enforce: 'pre', // Run before the builtin 'vite:resolve' of Vite
     async resolveId(source, importer, options) {
-      // console.log(kleur.bgCyan('PLUGIN RESOLVE!'), source, importer, options);
+      // if (source === 'mitt') {
+      //   console.log('>  PLUGIN RESOLVE!', source, importer, options);
+      // }
 
       if (source === 'dmno') {
         // const resolution = await this.resolve(source, importer, options);
@@ -29,6 +31,16 @@ export async function setupViteServer(
           // I believe this path is appended to our "root" which is our workpace root
         };
       }
+      // if (importer === 'node_modules/dmno/dist/index.js') {
+      //   const resolution = await this.resolve(`./node_modules/dmno/node_modules/${source}`, importer, options);
+      //   console.log(resolution);
+
+      //   // return {
+      //   //   // pointing at dist/index is hard-coded...
+      //   //   // we could extract the main entry point from the resolution instead?
+      //   //   id: `./node_modules/dmno/node_modules/${source}`,
+      //   // };
+      // }
     },
 
     transform(code, id, options) {
@@ -37,6 +49,9 @@ export async function setupViteServer(
       // TODO: this also assumes the user is only calling this within a resolver that has a `(ctx) => ` call signature...
       return code.replaceAll(/DMNO_CONFIG\.([\w\d.]+)/g, 'ctx.get(\'$1\')');
     },
+    // load(id, options) {
+    //   console.log('> load hook', id);
+    // },
 
     async handleHotUpdate(ctx) {
       // ignore updates to the generated type files
@@ -50,7 +65,7 @@ export async function setupViteServer(
 
       // clear updated modules out of the cache
       ctx.modules.forEach((m) => {
-        if (m.id) viteRunner.moduleCache.deleteByModuleId(m.id);
+        if (m.id) viteNodeRunner.moduleCache.deleteByModuleId(m.id);
       });
 
       await hotReloadHandler(ctx);
@@ -60,7 +75,7 @@ export async function setupViteServer(
 
   // create vite server
   const server = await createServer({
-    root: workspaceRootPath,
+    root: viteServerRootPath,
     appType: 'custom',
     clearScreen: false,
     logLevel: 'warn',
@@ -88,7 +103,7 @@ export async function setupViteServer(
   await server.pluginContainer.buildStart({});
 
   // create vite-node server
-  const node = new ViteNodeServer(server, {
+  const viteNodeServer = new ViteNodeServer(server, {
   // debug: {
   //   dumpModules: true,
   // },
@@ -97,11 +112,11 @@ export async function setupViteServer(
 
   // fixes stacktraces in Errors
   installSourcemapsSupport({
-    getSourceMap: (source) => node.getSourceMap(source),
+    getSourceMap: (source) => viteNodeServer.getSourceMap(source),
   });
 
   // create vite-node runner
-  const viteRunner = new ViteNodeRunner({
+  const viteNodeRunner = new ViteNodeRunner({
     debug: true,
     root: server.config.root,
     base: server.config.base,
@@ -110,13 +125,13 @@ export async function setupViteServer(
     // and pass to this function
     async fetchModule(id) {
     // console.log('fetch module', id);
-      return node.fetchModule(id);
+      return viteNodeServer.fetchModule(id);
     },
     async resolveId(id, importer) {
     // console.log('resolve id', id, importer);
-      return node.resolveId(id, importer);
+      return viteNodeServer.resolveId(id, importer);
     },
   });
 
-  return { viteRunner };
+  return { viteNodeRunner };
 }
