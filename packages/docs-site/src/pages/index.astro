@@ -1,24 +1,108 @@
 ---
+import { Code } from '@astrojs/starlight/components';
 import LandingPage from '@/components/layouts/LandingPage.astro';
 import VideoBlock from '@/components/VideoBlock.astro';
 import InitCTA from '@/components/InitCTA.astro';
 import Hero from '@/components/Hero.astro';
+import FeatureBlock from '@/components/FeatureBlock.astro';
 
+import importedCode from '/.dmno/config.mts?raw';
+import intellisenseImg from '@/assets/docs-images/platform-intellisense-example.png';
+import leakImg from '@/assets/docs-images/security-demo.png';
+import screenshotImg from '@/assets/blog/screenshot-with-comments.png';
 ---
 <LandingPage
   title="DMNO"
-  description="DMNO makes your configuration safer and smarter. It integrates with the tools you already use and it's powered by TypeScript."
+  description="DMNO makes your configuration safer and smarter. It integrates with the tools you already use and it's powered by TypeScript and Vite."
   showToC={false}
   showSidebar={false}
   showIntegrations={true}
 >
     <Hero
       heading="Environment Variables. \n Evolved."
-      subheading="DMNO makes your configuration safer and smarter. It integrates with the tools you already use and it's powered by TypeScript."
+      subheading="DMNO makes your configuration safer and smarter. It integrates with the tools you already use and it's powered by TypeScript and Vite."
     />
-    <VideoBlock url="https://drive.google.com/file/d/1NP3jE0UVeEbBvVczVnevvcDtAZOFo9tJ/preview"/>
+    <InitCTA 
+      command="npx dmno init"
+    />
+    <img src={screenshotImg.src} alt="an annotated screenshot showing DMNO's various features">
+    <!-- <VideoBlock url="https://drive.google.com/file/d/1NP3jE0UVeEbBvVczVnevvcDtAZOFo9tJ/preview"/> -->
+    <h2>Configuration as Code</h2>
+    <Code
+      code={`
+import { DmnoBaseTypes, defineDmnoService, switchBy } from 'dmno';
+import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
+
+// optionally encrypt production secrets in a vault you commit to your repo
+const MyProdVault = new EncryptedVaultDmnoPlugin('vault', {
+  key: configPath('DMNO_VAULT_KEY'),
+});
+
+export default defineDmnoService({
+  name: 'my-service',
+  settings: {
+    // automatically detect and prevent leaks
+    interceptSensitiveLeakRequests: true,
+    redactSensitiveLogs: true,
+    preventClientLeaks: true,
+  }, 
+  // re-use shared items
+  pick: [
+    'API_KEY',
+    'DB_URL', 
+    'DMNO_ENV',
+  ], 
+  // define service specific items
+  schema: {
+    DMNO_VAULT_KEY: {
+      extends: EncryptedVaultTypes.encryptionKey,
+    },
+
+    SAAS_KEY: {
+      required: true,
+      // load different values based on another value
+      value: switchBy('DMNO_ENV', {
+        _default: 'my-dev-key', 
+        production: MyProdVault.item(),
+      }),
+      
+    },
+
+  }
+});
+      `}
+      lang="ts"
+      title=".dmno/config.mts - sample config file"
+      class="landing-page-code"
+    />
+    <FeatureBlock
+      title="Leak prevention and detection"
+      imagePath={leakImg.src}
+      imageAlt="DMNO Warning of a potential leak"
+      description=""
+    />
+    <InitCTA 
+      command="npx dmno init"
+    />
+    <FeatureBlock
+      title="Feature-rich IntelliSense"
+      imagePath={intellisenseImg.src}
+      imageAlt="VS Code screenshot showing DMNO's IntelliSense"
+      description=""
+    />
     <InitCTA 
       command="npx dmno init"
     />
 
 </LandingPage>
+
+<style>
+  .landing-page-code {
+    width: 90%;
+    margin: 0 auto;
+    margin-top: 2rem;
+  }
+  h2 {
+    margin: 3rem;
+  }
+</style>
