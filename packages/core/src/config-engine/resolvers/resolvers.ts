@@ -263,7 +263,7 @@ export class ConfigValueResolverBranch {
     readonly def: ResolverBranchDefinition,
     readonly parentResolver: ConfigValueResolver,
   ) {
-    // link the branch definitioin resolver to this object
+    // link the branch definition resolver to this object
     this.def.resolver.linkedBranch = this;
   }
 
