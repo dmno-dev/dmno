@@ -187,7 +187,6 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     const vaultId = url.searchParams.get('v')!;
     const itemId = url.searchParams.get('i')!;
 
-
     const envItemsObj = await this.getOpItemById(ctx, vaultId, itemId);
 
     const loadedEnvByService: typeof this.envItemsByService = {};

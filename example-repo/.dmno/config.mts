@@ -59,7 +59,7 @@ export default defineDmnoService({
       value: OnePassSecretsDev.itemById("ut2dftalm3ugmxc6klavms6tfq", "bphvvrqjegfmd5yoz4buw2aequ", "username"),
     },
     OP_ITEM_BY_LINK: {
-      value: OnePassSecretsDev.itemByLink("https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequ&h=dmnoinc.1password.com", ""),
+      value: OnePassSecretsDev.itemByLink("https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequXXX&h=dmnoinc.1password.com", "helturjryuy73yjbnaovlce5fu"),
     },
     OP_ITEM_BY_REFERENCE: {
       value: OnePassSecretsDev.itemByReference("op://dev test/example/username"),
