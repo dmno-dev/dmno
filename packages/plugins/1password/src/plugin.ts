@@ -15,6 +15,7 @@ import { Client, createClient } from '@1password/sdk';
 import { name as thisPackageName, version as thisPackageVersion } from '../package.json';
 import { OnePasswordTypes } from './data-types';
 
+type FieldId = string;
 type ItemId = string;
 type VaultId = string;
 type VaultName = string;
@@ -100,13 +101,16 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     token: {
       description: 'this service account token will be used via the CLI to communicate with 1password',
       extends: OnePasswordTypes.serviceAccountToken,
+      // TODO: add validation, token must be set unless `fallbackToCliBasedAuth` is true
       // required: true,
     },
     envItemLink: {
       description: 'link to secure note item containing dotenv style values',
       extends: OnePasswordTypes.itemLink,
     },
-
+    fallbackToCliBasedAuth: {
+      description: "if token is empty, use system's `op` CLI to communicate with 1password",
+    },
   } satisfies DmnoPluginInputSchema;
   // ^^ note this explicit `satisfies` is needed to give us better typing on our inputSchema
 
@@ -138,6 +142,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     // using sdk
     if (this.opClient) {
       return await ctx.getOrSetCacheItem(`1pass-sdk:V|${vaultId}/I|${itemId}`, async () => {
+        // TODO: better error handling to tell you what went wrong? no access, non existant, etc
         const opItem = await this.opClient!.items.get(vaultId, itemId);
         return JSON.parse(JSON.stringify(opItem)); // convert to plain object
       });
@@ -157,6 +162,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     // using sdk
     if (this.opClient) {
       return await ctx.getOrSetCacheItem(`1pass-sdk:R|${referenceUrl}`, async () => {
+        // TODO: better error handling to tell you what went wrong? no access, non existant, etc
         return await this.opClient!.secrets.resolve(referenceUrl);
       });
     }
@@ -243,7 +249,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
    *
    * To get an item's link, right click on the item and select "Copy Private Link" (or select the item and click the ellipses / more options menu)
    * */
-  itemByLink(privateLink: string, path?: string) {
+  itemByLink(privateLink: string, fieldIdOrPath?: FieldId | { path: string }) {
     const linkValidationResult = OnePasswordTypes.itemLink().validate(privateLink);
 
     if (linkValidationResult !== true) {
@@ -255,19 +261,22 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     const vaultId = url.searchParams.get('v')!;
     const itemId = url.searchParams.get('i')!;
 
-    return this.itemById(vaultId, itemId, path);
+    return this.itemById(vaultId, itemId, fieldIdOrPath);
   }
 
 
   // can read items by id - need a vault id, item id
   // and then need to grab the specific data from a big json blob
   // cli command `op item get bphvvrqjegfmd5yoz4buw2aequ --vault=ut2dftalm3ugmxc6klavms6tfq --format json`
-  itemById(vaultId: VaultId, itemId: ItemId, path?: string) {
+  itemById(vaultId: VaultId, itemId: ItemId, fieldIdOrPath?: FieldId | { path: string }) {
+    const fieldId = _.isString(fieldIdOrPath) ? fieldIdOrPath : undefined;
+    const path = _.isObject(fieldIdOrPath) ? fieldIdOrPath.path : undefined;
     return this.createResolver({
       label: (ctx) => {
         return _.compact([
           `Vault: ${vaultId}`,
           `Item: ${itemId}`,
+          fieldId && `Field: ${fieldId}`,
           path && `Path: ${path}`,
         ]).join(', ');
       },
@@ -277,9 +286,35 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
 
         const itemObj = await this.getOpItemById(ctx, vaultId, itemId);
 
-        // TODO: path is necessary... maybe we could return the first item or something if none is specified?
+        const sectionsById = _.keyBy(itemObj.sections, (s) => s.id);
+
+        // field selection by id
+        if (fieldId !== undefined) {
+          const field = _.find(itemObj.fields, (f) => f.id === fieldId);
+          if (field) {
+            // do we want to throw an error if we found the value but its empty?
+            return field.value;
+          }
+          // console.log(itemObj);
+          const possibleFieldIds = _.compact(_.map(itemObj.fields, (f) => {
+            if (f.value === undefined || f.value === '' || f.purpose === 'NOTES') return undefined;
+            const section = sectionsById[f.sectionId || f.section?.id];
+            return { id: f.id, label: f.label || f.title, sectionLabel: section?.label || section?.title };
+          }));
+          throw new ResolutionError(`Unable to find field ID "${fieldId}" in item`, {
+            tip: [
+              'Perhaps you meant one of',
+              ...possibleFieldIds.map((f) => [
+                '- ',
+                f.sectionLabel ? `${f.sectionLabel} > ` : '',
+                f.label,
+                ` - ID = ${f.id}`
+              ].join('')),
+            ]
+          });
+        }
+        // field selection by path
         if (path) {
-          const sectionsById = _.keyBy(itemObj.sections, (s) => s.id);
           const valueAtPath = _.find(itemObj.fields, (i) => {
             // using the cli, each item has the reference included
             if (i.reference) {
@@ -297,10 +332,10 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
           }
           return valueAtPath.value;
         }
+        // should we fallback to first item or?
 
-        // TODO: better error handling to tell you what went wrong? no access, non existant, etc
 
-        return itemObj; 
+        
       },
     });
   }
@@ -337,7 +372,7 @@ export interface OnePasswordDmnoPlugin {
     /** private link to item containing dotenv style values (optional) */
     envItemLink?: string;
     /** rely on auth from system installed `op` cli instead of a service account */
-    useSystemCli?: boolean,
+    fallbackToCliBasedAuth?: boolean,
   }
 }
 

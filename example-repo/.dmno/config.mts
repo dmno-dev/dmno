@@ -48,11 +48,6 @@ export default defineDmnoService({
     OP_TOKEN: {
       extends: OnePasswordTypes.serviceAccountToken,
     },
-    
-    TEST_PROD_AUTH: {
-      extends: 'boolean',
-    },
-
     // OP_TOKEN_PROD: {
     //   extends: OnePasswordTypes.serviceAccountToken,
     // },
@@ -64,7 +59,7 @@ export default defineDmnoService({
       value: OnePassSecretsDev.itemById("ut2dftalm3ugmxc6klavms6tfq", "bphvvrqjegfmd5yoz4buw2aequ", "username"),
     },
     OP_ITEM_BY_LINK: {
-      value: OnePassSecretsDev.itemByLink("https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequ&h=dmnoinc.1password.com", "sectiontest/section-child"),
+      value: OnePassSecretsDev.itemByLink("https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequ&h=dmnoinc.1password.com", ""),
     },
     OP_ITEM_BY_REFERENCE: {
       value: OnePassSecretsDev.itemByReference("op://dev test/example/username"),
@@ -89,78 +84,78 @@ export default defineDmnoService({
       value: 'rootonly',
     },
 
-    // VAULT_ITEM_1: {
-    //   value: ProdVault.item(),
-    // },
-    // VAULT_ITEM_WITH_SWITCH: {
-    //   value: switchByNodeEnv({
-    //     _default: NonProdVault.item(),
-    //     staging: switchBy('CONTEXT', {
-    //       'branch-preview': ProdVault.item(),
-    //       'pr-preview': ProdVault.item(),
-    //     }),
-    //     production: ProdVault.item()
-    //   }),
-    // },
+    VAULT_ITEM_1: {
+      value: ProdVault.item(),
+    },
+    VAULT_ITEM_WITH_SWITCH: {
+      value: switchByNodeEnv({
+        _default: NonProdVault.item(),
+        staging: switchBy('CONTEXT', {
+          'branch-preview': ProdVault.item(),
+          'pr-preview': ProdVault.item(),
+        }),
+        production: ProdVault.item()
+      }),
+    },
 
     PICK_TEST: {
       value: (ctx) => `pick-test--${DMNO_CONFIG.ROOT_ONLY}`,
     },
 
-    // CONTACT_EMAIL: {
-    //   extends: DmnoBaseTypes.email({
-    //     normalize: true,
-    //   }),
-    //   // required: true,
-    //   value: 'Test@test.com'
-    // },
+    CONTACT_EMAIL: {
+      extends: DmnoBaseTypes.email({
+        normalize: true,
+      }),
+      // required: true,
+      value: 'Test@test.com'
+    },
 
-    // SOME_IPV4: {
-    //   extends: DmnoBaseTypes.ipAddress,
-    //   required: true,
-    //   value: '100.200.1.1'
-    // },
+    SOME_IPV4: {
+      extends: DmnoBaseTypes.ipAddress,
+      required: true,
+      value: '100.200.1.1'
+    },
 
-    // SOME_IPV6: {
-    //   extends: DmnoBaseTypes.ipAddress({
-    //     version: 6,
-    //     normalize: true,
-    //   }),
-    //   required: true,
-    //   value: '2001:0DB8:85a3:0000:0000:8a2e:0370:7334'
-    // },
+    SOME_IPV6: {
+      extends: DmnoBaseTypes.ipAddress({
+        version: 6,
+        normalize: true,
+      }),
+      required: true,
+      value: '2001:0DB8:85a3:0000:0000:8a2e:0370:7334'
+    },
 
-    // SOME_PORT: {
-    //   extends: DmnoBaseTypes.port,
-    //   required: true,
-    //   value: '8080'
-    // },
+    SOME_PORT: {
+      extends: DmnoBaseTypes.port,
+      required: true,
+      value: '8080'
+    },
 
-    // SOME_SEMVER: {
-    //   extends: DmnoBaseTypes.semver({
-    //     normalize: true,
-    //   }),
-    //   required: true,
-    //   value: '1.2.3-ALPHA.1'
-    // },
+    SOME_SEMVER: {
+      extends: DmnoBaseTypes.semver({
+        normalize: true,
+      }),
+      required: true,
+      value: '1.2.3-ALPHA.1'
+    },
 
-    // SOME_DATE: {
-    //   extends: DmnoBaseTypes.isoDate,
-    //   required: true,
-    //   value: new Date().toISOString()
-    // },
+    SOME_DATE: {
+      extends: DmnoBaseTypes.isoDate,
+      required: true,
+      value: new Date().toISOString()
+    },
 
-    // SOME_UUID: {
-    //   extends: DmnoBaseTypes.uuid,
-    //   required: true,
-    //   value: '550e8400-e29b-41d4-a716-446655440000'
-    // },
+    SOME_UUID: {
+      extends: DmnoBaseTypes.uuid,
+      required: true,
+      value: '550e8400-e29b-41d4-a716-446655440000'
+    },
 
-    // SOME_MD5: {
-    //   extends: DmnoBaseTypes.md5,
-    //   required: true,
-    //   value: 'd41d8cd98f00b204e9800998ecf8427e'
-    // },
+    SOME_MD5: {
+      extends: DmnoBaseTypes.md5,
+      required: true,
+      value: 'd41d8cd98f00b204e9800998ecf8427e'
+    },
   }
 });
 
