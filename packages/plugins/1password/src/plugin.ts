@@ -77,8 +77,6 @@ async function execOpCliCommand(cmdArgs: Array<string>) {
   }
 }
 
-// const CLI_PATH = path.resolve(fileURLToPath(import.meta.url), '../../op-cli');
-
 // Typescript has some limitations around generics and how things work across parent/child classes
 // so unfortunately, we have to add some extra type annotations, but it's not too bad
 // see issues:
@@ -88,6 +86,12 @@ async function execOpCliCommand(cmdArgs: Array<string>) {
 // export class OnePasswordDmnoPlugin extends DmnoPlugin<
 // typeof OnePasswordDmnoPlugin.inputSchema, typeof OnePasswordDmnoPlugin.INPUT_TYPES
 // > {
+
+/**
+ * DMNO plugin to retrieve secrets from 1Password
+ *
+ * @see https://dmno.dev/docs/plugins/1password/
+ */
 export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   icon = 'simple-icons:1password';
 
@@ -127,7 +131,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
 
   private opClient: Client | undefined;
   private async initOpClientIfNeeded() {
-    if (!this.inputValues.token) return
+    if (!this.inputValues.token) return;
     if (!this.opClient) {
       this.opClient = await createClient({
         auth: this.inputValues.token,
@@ -136,6 +140,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
       });
     }
   }
+
   private async getOpItemById(ctx: ResolverContext, vaultId: VaultId, itemId: ItemId) {
     await this.initOpClientIfNeeded();
     // using sdk
@@ -155,7 +160,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
             } else if (err === 'error when retrieving item details: http error: unexpected http status: 404 Not Found') {
               throw new ResolutionError(`Item ID "${itemId}" not found within Vault ID "${vaultId}"`);
             }
-            throw new ResolutionError(`1password SDK error - ${err}`)
+            throw new ResolutionError(`1password SDK error - ${err}`);
           }
           throw err;
         }
@@ -171,6 +176,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
       return JSON.parse(itemJson);
     });
   }
+
   private async getOpItemByReference(ctx: ResolverContext, referenceUrl: ReferenceUrl) {
     await this.initOpClientIfNeeded();
     // using sdk
@@ -183,7 +189,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
       } catch (err) {
         // 1pass sdk throws strings as errors...
         if (_.isString(err)) {
-          throw new ResolutionError(`1password SDK error - ${err}`)
+          throw new ResolutionError(`1password SDK error - ${err}`);
         }
         throw err;
       }
@@ -197,10 +203,6 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
       ]);
     });
   }
-
-
-  
-
 
   private envItemsByService: Record<string, Record<string, string>> | undefined;
   private async loadEnvItems(ctx: ResolverContext) {
@@ -229,7 +231,25 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     });
     this.envItemsByService = loadedEnvByService;
   }
-  item() {
+
+
+  /**
+   * DMNO resolver to fetch a 1password value from a .env blob within a text field.
+   *
+   * Plugin instance must be initialized with `envItemLink` input set to use this resolver.
+   *
+   * Items are looked up within the blob using their key
+   *
+   * @see https://dmno.dev/docs/plugins/1password/
+   */
+  item(
+    /**
+     * optionally override the key used to look up the item within the dotenv blob
+     *
+     * _not often necessary!_
+     * */
+    overrideLookupKey?: string,
+  ) {
     // make sure the user has mapped up an input for where the env data is stored
     if (!this.inputItems.envItemLink.resolutionMethod) {
       throw new SchemaError('You must set an `envItemLink` plugin input to use the .item() resolver');
@@ -237,14 +257,16 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
 
     return this.createResolver({
       label: (ctx) => {
-        return `env blob item > ${ctx.serviceName} > ${ctx.itemPath}`;
+        return `env blob item > ${ctx.serviceName} > ${overrideLookupKey || ctx.itemPath}`;
       },
       resolve: async (ctx) => {
         if (!this.envItemsByService) await this.loadEnvItems(ctx);
 
-        const itemValue = this.envItemsByService?.[ctx.serviceName!]?.[ctx.itemPath]
+        const lookupKey = overrideLookupKey || ctx.itemPath;
+
+        const itemValue = this.envItemsByService?.[ctx.serviceName!]?.[lookupKey]
           // the label "_default" is used to signal a fallback / default to apply to all services
-          || this.envItemsByService?._default?.[ctx.itemPath];
+          || this.envItemsByService?._default?.[lookupKey];
 
         if (itemValue === undefined) {
           throw new ResolutionError('Unable to find config item in 1password', {
@@ -253,7 +275,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
               kleur.gray(`🔗 ${this.inputValues.envItemLink}`),
               `Find entry with label ${kleur.bold().cyan(ctx.serviceName!)} (or create it)`,
               'Add this secret like you would add it to a .env file',
-              `For example: \`${ctx.itemPath}="your-secret-value"\``,
+              `For example: \`${lookupKey}="your-secret-value"\``,
             ],
           });
         }
@@ -264,13 +286,24 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     });
   }
 
-
   /**
-   * reference an item using a "private link" (and json path)
+   * DMNO resolver to fetch a 1password value using a "private link" and field ID
    *
-   * To get an item's link, right click on the item and select "Copy Private Link" (or select the item and click the ellipses / more options menu)
-   * */
-  itemByLink(privateLink: string, fieldIdOrPath?: FieldId | { path: string }) {
+   * To get an item's link, right click on the item and select `Copy Private Link` (or select the item and click the ellipses / more options menu)
+   *
+   * @see https://dmno.dev/docs/plugins/1password/
+   * @see https://support.1password.com/item-links/
+   */
+  itemByLink(
+    /**
+     * 1password item _Private Link_
+     *
+     * @example "https://start.1password.com/open/i?a=..."
+     */
+    privateLink: string,
+    /** 1password Item Field ID (or path) */
+    fieldIdOrPath: FieldId | { path: string },
+  ) {
     const linkValidationResult = OnePasswordTypes.itemLink().validate(privateLink);
 
     if (linkValidationResult !== true) {
@@ -286,10 +319,19 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   }
 
 
-  // can read items by id - need a vault id, item id
-  // and then need to grab the specific data from a big json blob
-  // cli command `op item get bphvvrqjegfmd5yoz4buw2aequ --vault=ut2dftalm3ugmxc6klavms6tfq --format json`
-  itemById(vaultId: VaultId, itemId: ItemId, fieldIdOrPath?: FieldId | { path: string }) {
+  /**
+   * DMNO resolver to fetch a 1password value using UUIDs and a field ID
+   *
+   * @see https://dmno.dev/docs/plugins/1password/
+   */
+  itemById(
+    /** 1password Vault UUID */
+    vaultId: VaultId,
+    /** 1password Item UUID */
+    itemId: ItemId,
+    /** 1password Item Field id (or path) */
+    fieldIdOrPath: FieldId | { path: string },
+  ) {
     const fieldId = _.isString(fieldIdOrPath) ? fieldIdOrPath : undefined;
     const path = _.isObject(fieldIdOrPath) ? fieldIdOrPath.path : undefined;
     return this.createResolver({
@@ -329,9 +371,9 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
                 '- ',
                 f.sectionLabel ? `${f.sectionLabel} > ` : '',
                 f.label,
-                ` - ID = ${f.id}`
+                ` - ID = ${f.id}`,
               ].join('')),
-            ]
+            ],
           });
         }
         // field selection by path
@@ -353,19 +395,27 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
           }
           return valueAtPath.value;
         }
+        throw new Error('Resolver must be passed a field ID or a path object');
         // should we fallback to first item or?
-
-
-        
       },
     });
   }
 
 
-  // items have a "reference" which is like a URL that includes vault, item, and path to specific data
-  // however these are not necessarily stable...
-  // cli command `op read "op://dev test/example/username"`
-  itemByReference(referenceUrl: ReferenceUrl) {
+  /**
+   * DMNO resolver to fetch a 1password value using a secret reference URI
+   *
+   * @see https://dmno.dev/docs/plugins/1password/
+   * @see https://developer.1password.com/docs/cli/secret-reference-syntax
+   */
+  itemByReference(
+    /**
+     * 1Password secret reference URI of the secret value
+     *
+     * 📚 {@link https://developer.1password.com/docs/cli/secret-reference-syntax/#get-secret-references | 1Password docs }
+     */
+    referenceUrl: ReferenceUrl,
+  ) {
     // TODO: validate the reference url looks ok?
 
     return this.createResolver({
