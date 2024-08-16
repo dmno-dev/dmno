@@ -22,7 +22,6 @@ type VaultName = string;
 type ReferenceUrl = string;
 type ServiceAccountToken = string;
 
-
 async function execOpCliCommand(cmdArgs: Array<string>) {
   // using system-installed copy of `op`
   const cmd = spawnSync('op', cmdArgs);
@@ -54,7 +53,7 @@ async function execOpCliCommand(cmdArgs: Array<string>) {
       throw new ResolutionError('1password vault not found in account connected to op cli', {
         tip: [
           'By not using a service account token, you are relying on your local 1password cli installation and authentication.',
-          'The account currently connected to the cli does not contain (or have access) to the selected vault',
+          'The account currently connected to the cli does not contain (or have access to) the selected vault',
           'This must be resolved in your terminal - try running `op whoami` to see which account is connected to your `op` cli.',
           'You may need to call `op signout` and `op signin` to select the correct account.',
         ],
@@ -74,7 +73,7 @@ async function execOpCliCommand(cmdArgs: Array<string>) {
       });
     }
 
-    throw new Error(`op cli call failed: ${errMessage || 'unknown'}`);
+    throw new Error(`1password cli error - ${errMessage || 'unknown'}`);
   }
 }
 
@@ -143,8 +142,23 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     if (this.opClient) {
       return await ctx.getOrSetCacheItem(`1pass-sdk:V|${vaultId}/I|${itemId}`, async () => {
         // TODO: better error handling to tell you what went wrong? no access, non existant, etc
-        const opItem = await this.opClient!.items.get(vaultId, itemId);
-        return JSON.parse(JSON.stringify(opItem)); // convert to plain object
+        try {
+          const opItem = await this.opClient!.items.get(vaultId, itemId);
+          return JSON.parse(JSON.stringify(opItem)); // convert to plain object
+        } catch (err) {
+          // 1pass sdk throws strings as errors...
+          if (_.isString(err)) {
+            if (err.includes('not a valid UUID')) {
+              throw new ResolutionError('Either the Vault ID or the item ID is not a valid UUID');
+            } else if (err === 'error when retrieving vault metadata: http error: unexpected http status: 404 Not Found') {
+              throw new ResolutionError(`Vault ID "${vaultId}" not found in this account`);
+            } else if (err === 'error when retrieving item details: http error: unexpected http status: 404 Not Found') {
+              throw new ResolutionError(`Item ID "${itemId}" not found within Vault ID "${vaultId}"`);
+            }
+            throw new ResolutionError(`1password SDK error - ${err}`)
+          }
+          throw err;
+        }
       });
     }
     // using cli
@@ -161,10 +175,18 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     await this.initOpClientIfNeeded();
     // using sdk
     if (this.opClient) {
-      return await ctx.getOrSetCacheItem(`1pass-sdk:R|${referenceUrl}`, async () => {
-        // TODO: better error handling to tell you what went wrong? no access, non existant, etc
-        return await this.opClient!.secrets.resolve(referenceUrl);
-      });
+      try {
+        return await ctx.getOrSetCacheItem(`1pass-sdk:R|${referenceUrl}`, async () => {
+          // TODO: better error handling to tell you what went wrong? no access, non existant, etc
+          return await this.opClient!.secrets.resolve(referenceUrl);
+        });
+      } catch (err) {
+        // 1pass sdk throws strings as errors...
+        if (_.isString(err)) {
+          throw new ResolutionError(`1password SDK error - ${err}`)
+        }
+        throw err;
+      }
     }
     // using op CLI
     return await ctx.getOrSetCacheItem(`1pass-cli:R|${referenceUrl}`, async () => {
