@@ -10,8 +10,6 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
-    "scripts/*.mjs",
-    "scripts/*.js",
     "./.dmno/.typegen/extension-types.d.ts"
   ]
 }

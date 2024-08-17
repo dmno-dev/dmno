@@ -215,17 +215,12 @@ export abstract class DmnoPlugin<
 
     initializedPluginInstanceNames.push(instanceName);
 
-    // const callStack = new Error('').stack!.split('\n');
-    // const pluginDefinitionPath = callStack[2]
-    //   .replace(/.*\(/, '')
-    //   .replace(/:.*\)/, '');
-    // // special case for local dev when we have the plugins symlinked by pnpm
-    // if (pluginDefinitionPath.includes('/core/packages/plugins/')) {
-    //   const pluginPackageName
-    // } else {
-
-    // }
-    // console.log(pluginDefinitionPath);
+    // ideally we would detect the current package name and version automatically here but I dont think it's possible
+    // instead we made static properties, which really should be abstract, but that is not supported
+    // so here we have some runtime checks to ensure they have been set
+    // see https://github.com/microsoft/TypeScript/issues/34516
+    if (!this.pluginPackageName) throw new Error('DmnoPlugin class must set `static pluginPackageName` prop');
+    if (!this.pluginPackageVersion) throw new Error('DmnoPlugin class must set `static pluginPackageVersion` prop');
   }
 
   /** name of the plugin itself - which is the name of the class */
@@ -234,10 +229,16 @@ export abstract class DmnoPlugin<
   icon?: string;
 
   static cliPath?: string;
-  get cliPath() {
+  // these 2 should be required, but TS currently does not support static abstract
+  static pluginPackageName: string;
+  static pluginPackageVersion: string;
+  private getStaticProp(key: 'cliPath' | 'pluginPackageName' | 'pluginPackageVersion') {
     const PluginClass = this.constructor as typeof DmnoPlugin;
-    return PluginClass.cliPath;
+    return PluginClass[key];
   }
+  get cliPath() { return this.getStaticProp('cliPath'); }
+  get pluginPackageName() { return this.getStaticProp('pluginPackageName')!; }
+  get pluginPackageVersion() { return this.getStaticProp('pluginPackageVersion')!; }
 
   /**
    * reference back to the service this plugin was initialized in

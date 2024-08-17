@@ -29,16 +29,14 @@
     }
   },
   "files": [
-    "/dist",
-    "/scripts"
+    "/dist"
   ],
   "scripts": {
     "build": "tsup",
     "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
     "dev": "pnpm run build --watch",
     "lint": "eslint src --ext .ts,.cjs,.mjs",
-    "lint:fix": "pnpm run lint --fix",
-    "postinstall": "node scripts/install-cli.mjs"
+    "lint:fix": "pnpm run lint --fix"
   },
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",
@@ -52,6 +50,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@1password/sdk": "^0.1.1",
     "async": "^3.2.5",
     "kleur": "^4.1.5",
     "lodash-es": "^4.17.21",

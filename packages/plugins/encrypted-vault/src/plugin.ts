@@ -18,6 +18,7 @@ import {
 import {
   decrypt, encrypt, generateEncryptionKeyString, importDmnoEncryptionKeyString,
 } from '@dmno/encryption-lib';
+import { name as thisPackageName, version as thisPackageVersion } from '../package.json';
 
 import { EncryptedVaultTypes } from './data-types';
 
@@ -64,6 +65,8 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
   } satisfies DmnoPluginInputSchema;
 
   static cliPath = `${__dirname}/cli/cli`;
+  static pluginPackageName = thisPackageName;
+  static pluginPackageVersion = thisPackageVersion;
 
   constructor(
     instanceName: string,

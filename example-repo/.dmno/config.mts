@@ -7,25 +7,26 @@ import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-v
 const OnePassSecretsProd = new OnePasswordDmnoPlugin('1pass/prod', {
   token: configPath('OP_TOKEN'),
   envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=n4wmgfq77mydg5lebtroa3ykvm&h=dmnoinc.1password.com',
+  
   // token: InjectPluginInputByType,
   // token: 'asdf',
 });
 const OnePassSecretsDev = new OnePasswordDmnoPlugin('1pass', {
   token: configPath('OP_TOKEN'),
-  envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=n4wmgfq77mydg5lebtroa3ykvm&h=dmnoinc.1password.com',
+  envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=4u4klfhpldobgdxrcjwb2bqsta&h=dmnoinc.1password.com',
   // token: InjectPluginInputByType,
   // token: 'asdf',
 });
 
 
-const ProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
+const EncryptedVaultSecrets = new EncryptedVaultDmnoPlugin('vault/prod', {
   key: configPath('DMNO_VAULT_KEY'),
   name: 'prod',
 });
-const NonProdVault = new EncryptedVaultDmnoPlugin('vault/dev', {
-  key: configPath('DMNO_VAULT_KEY'),
-  name: 'dev',
-});
+// const NonProdVault = new EncryptedVaultDmnoPlugin('vault/dev', {
+//   key: configPath('DMNO_VAULT_KEY'),
+//   name: 'dev',
+// });
 
 
 
@@ -47,8 +48,24 @@ export default defineDmnoService({
     OP_TOKEN: {
       extends: OnePasswordTypes.serviceAccountToken,
     },
-    OP_TOKEN_PROD: {
-      extends: OnePasswordTypes.serviceAccountToken,
+    // OP_TOKEN_PROD: {
+    //   extends: OnePasswordTypes.serviceAccountToken,
+    // },
+
+    OP_ITEM_1: {
+      value: switchBy('DMNO_ENV', {
+        _default: OnePassSecretsDev.item(),
+        production: OnePassSecretsProd.item(),
+      }),
+    },
+    OP_ITEM_BY_ID: {
+      value: OnePassSecretsDev.itemById("ut2dftalm3ugmxc6klavms6tfq", "bphvvrqjegfmd5yoz4buw2aequ", "username"),
+    },
+    OP_ITEM_BY_LINK: {
+      value: OnePassSecretsDev.itemByLink("https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequ&h=dmnoinc.1password.com", "helturjryuy73yjbnaovlce5fu"),
+    },
+    OP_ITEM_BY_REFERENCE: {
+      value: OnePassSecretsDev.itemByReference("op://dev test/example/username"),
     },
 
     SOME_API_KEY: {
@@ -57,8 +74,6 @@ export default defineDmnoService({
         production: OnePassSecretsProd.item(),
       }),
     },
-
-
 
     DMNO_VAULT_KEY: {
       extends: EncryptedVaultTypes.encryptionKey,
@@ -71,16 +86,16 @@ export default defineDmnoService({
     },
 
     VAULT_ITEM_1: {
-      value: ProdVault.item(),
+      value: EncryptedVaultSecrets.item(),
     },
     VAULT_ITEM_WITH_SWITCH: {
       value: switchByNodeEnv({
-        _default: NonProdVault.item(),
+        _default: EncryptedVaultSecrets.item(),
         staging: switchBy('CONTEXT', {
-          'branch-preview': ProdVault.item(),
-          'pr-preview': ProdVault.item(),
+          'branch-preview': EncryptedVaultSecrets.item(),
+          'pr-preview': EncryptedVaultSecrets.item(),
         }),
-        production: ProdVault.item()
+        production: EncryptedVaultSecrets.item()
       }),
     },
 
@@ -92,7 +107,6 @@ export default defineDmnoService({
       extends: DmnoBaseTypes.email({
         normalize: true,
       }),
-      // required: true,
       value: 'Test@test.com'
     },
 

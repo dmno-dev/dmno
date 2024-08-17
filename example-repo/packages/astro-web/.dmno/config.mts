@@ -16,6 +16,7 @@ export default defineDmnoService({
       source: 'api',
       key: 'API_URL',
     },
+    'SOME_API_KEY',
   ],
   schema: {
     OP_TOKEN: { extends: OnePasswordTypes.serviceAccountToken },

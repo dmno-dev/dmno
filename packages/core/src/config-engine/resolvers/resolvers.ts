@@ -60,7 +60,7 @@ type ResolverDefinition = {
 ({
   resolve: (ctx: ResolverContext) => MaybePromise<ValueResolverResult>,
 } | {
-  resolveBranches: Array<ResolverBranch>
+  resolveBranches: Array<ResolverBranchDefinition>
 });
 
 export function createResolver(def: ResolverDefinition) {
@@ -70,13 +70,12 @@ export function createResolver(def: ResolverDefinition) {
 
 
 
-type ResolverBranch = {
+type ResolverBranchDefinition = {
   id: string,
   label: string;
   resolver: ConfigValueResolver;
   condition: (ctx: ResolverContext) => boolean;
   isDefault: boolean;
-  isActive?: boolean;
 };
 
 export class ConfigValueResolver {
@@ -90,18 +89,29 @@ export class ConfigValueResolver {
     // and to this parent resolver
     // so they can access the branch path if needed
     if ('resolveBranches' in this.def) {
-      _.each(this.def.resolveBranches, (branchDef) => {
-        branchDef.resolver.branchDef = branchDef;
-        branchDef.resolver.parentResolver = this;
+      this.branches = this.def.resolveBranches.map((branchDef) => {
+        return new ConfigValueResolverBranch(branchDef, this);
       });
     }
   }
 
+  // the parent/linked resolver branch, if this is a child of branched resolver
+  linkedBranch?: ConfigValueResolverBranch;
+  // child resolver branches - for something like `switchBy`
+  branches: Array<ConfigValueResolverBranch> | undefined;
   isResolved = false;
   resolvedValue?: ConfigValue;
   isUsingCache = false;
 
   resolutionError?: ResolutionError;
+  get selfOrChildResolutionError(): ResolutionError | undefined {
+    if (this.resolutionError) return this.resolutionError;
+    if (!this.branches) return;
+    for (const b of this.branches) {
+      const branchResolutionError = b.def.resolver.selfOrChildResolutionError;
+      if (branchResolutionError) return branchResolutionError;
+    }
+  }
 
   icon?: string;
   label?: string;
@@ -109,28 +119,28 @@ export class ConfigValueResolver {
   private _configItem?: DmnoConfigItemBase;
   set configItem(configItem: DmnoConfigItemBase | undefined) {
     this._configItem = configItem;
-    if ('resolveBranches' in this.def) {
-      _.each(this.def.resolveBranches, (branch) => {
-        branch.resolver.configItem = configItem;
-      });
-    }
+    this.branches?.forEach((branch) => {
+      branch.def.resolver.configItem = configItem;
+    });
   }
   get configItem() {
     return this._configItem;
   }
 
-  parentResolver?: ConfigValueResolver;
-  branchDef?: ResolverBranch;
 
+  get parentResolver() {
+    return this.linkedBranch?.parentResolver;
+  }
   get branchIdPath(): string | undefined {
-    if (!this.branchDef) return undefined;
+    if (!this.linkedBranch) return undefined;
+    const thisBranchId = this.linkedBranch.def.id;
     if (this.parentResolver) {
       const parentBranchIdPath = this.parentResolver.branchIdPath;
       if (parentBranchIdPath) {
-        return `${this.parentResolver.branchIdPath}/${this.branchDef.id}`;
+        return `${this.parentResolver.branchIdPath}/${thisBranchId}`;
       }
     }
-    return this.branchDef?.id;
+    return thisBranchId;
   }
 
   getFullPath() {
@@ -139,7 +149,6 @@ export class ConfigValueResolver {
       this.branchIdPath,
     ]).join('#');
   }
-
 
   async resolve(ctx: ResolverContext) {
     if (_.isFunction(this.def.icon)) this.icon = this.def.icon(ctx);
@@ -168,28 +177,44 @@ export class ConfigValueResolver {
     let resolutionResult: ConfigValueResolver | ValueResolverResult;
 
     // deal with branched case (ex: switch / if-else)
-    if ('resolveBranches' in this.def) {
+    if (this.branches) {
       // find first branch that passes
-      let matchingBranch = _.find(this.def.resolveBranches, (branch) => {
-        if (branch.isDefault) return false;
-        return branch.condition(ctx);
+      let matchingBranch = _.find(this.branches, (branch) => {
+        if (branch.def.isDefault) return false;
+        try {
+          return branch.def.condition(ctx);
+        } catch (err) {
+          this.resolutionError = new ResolutionError(`Error in resolver branch condition (${branch.def.label})`, { err: err as Error });
+        }
+        return false;
       });
-      if (!matchingBranch) {
-        matchingBranch = _.find(this.def.resolveBranches, (branch) => branch.isDefault);
+      // bail early if we failed evaluating resolver conditions
+      if (this.resolutionError) {
+        this.isResolved = false;
+        return;
       }
 
-      _.each(this.def.resolveBranches, (branch) => {
+      if (!matchingBranch) {
+        matchingBranch = _.find(this.branches, (branch) => branch.def.isDefault);
+      }
+
+      _.each(this.branches, (branch) => {
         branch.isActive = branch === matchingBranch;
       });
 
       // TODO: might be able to force a default to be defined?
       if (!matchingBranch) {
-        throw new Error('no matching resolver branch found and no default');
+        throw new ResolutionError('no matching resolver branch found and no default');
       }
-      resolutionResult = matchingBranch.resolver || undefined;
+      resolutionResult = matchingBranch.def.resolver || undefined;
 
     // deal with normal case
     } else {
+      // should always be the case, since resolvers must have branches or a resolve fn
+      if (!('resolve' in this.def)) {
+        throw new Error('expected `resolve` fn in resolver definition');
+      }
+
       // actually call the resolver
       try {
         resolutionResult = await this.def.resolve(ctx);
@@ -234,17 +259,36 @@ export class ConfigValueResolver {
       createdByPluginInstanceName: this.def.createdByPlugin?.instanceName,
       // itemPath: this.configItem?.getFullPath(),
       // branchIdPath: this.branchIdPath,
-      ...'resolveBranches' in this.def && {
-        branches: _.map(this.def.resolveBranches, (b) => ({
-          id: b.id,
-          label: b.label,
-          isDefault: b.isDefault,
-          isActive: b.isActive,
-          resolver: b.resolver.toJSON(),
-        })),
+      ...this.branches && {
+        branches: this.branches.map((b) => b.toJSON()),
       },
       resolvedValue: this.resolvedValue,
       resolutionError: this.resolutionError?.toJSON(),
+    };
+  }
+}
+export class ConfigValueResolverBranch {
+  constructor(
+    readonly def: ResolverBranchDefinition,
+    readonly parentResolver: ConfigValueResolver,
+  ) {
+    // link the branch definition resolver back to this object
+    this.def.resolver.linkedBranch = this;
+  }
+
+  isActive?: boolean;
+  get id() { return this.def.id; }
+  get label() { return this.def.label; }
+  get isDefault() { return this.def.isDefault; }
+  get resolver() { return this.def.resolver; }
+
+  toJSON() {
+    return {
+      id: this.id,
+      label: this.label,
+      isDefault: this.isDefault,
+      isActive: this.isActive,
+      resolver: this.resolver.toJSON(),
     };
   }
 }

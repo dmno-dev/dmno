@@ -1,29 +1,81 @@
-import { execSync } from 'child_process';
-import { fileURLToPath } from 'url';
-import path from 'path';
+import { spawnSync } from 'child_process';
 import _ from 'lodash-es';
 import kleur from 'kleur';
 import {
-  ConfigValueResolver, DmnoPlugin, ResolverContext,
+  DmnoPlugin, ResolverContext,
   DmnoPluginInputSchema,
   DmnoPluginInputMap,
   ResolutionError,
   SchemaError,
-  GetPluginInputTypes,
-  createResolver,
   _PluginInputTypesSymbol,
   loadDotEnvIntoObject,
 } from 'dmno';
+import { Client, createClient } from '@1password/sdk';
 
+import { name as thisPackageName, version as thisPackageVersion } from '../package.json';
 import { OnePasswordTypes } from './data-types';
 
+type FieldId = string;
 type ItemId = string;
 type VaultId = string;
 type VaultName = string;
 type ReferenceUrl = string;
 type ServiceAccountToken = string;
 
-const CLI_PATH = path.resolve(fileURLToPath(import.meta.url), '../../op-cli');
+async function execOpCliCommand(cmdArgs: Array<string>) {
+  // using system-installed copy of `op`
+  const cmd = spawnSync('op', cmdArgs);
+  if (cmd.status === 0) {
+    return cmd.stdout.toString();
+  } else if (cmd.error) {
+    if ((cmd.error as any).code === 'ENOENT') {
+      throw new ResolutionError('1password cli `op` not found', {
+        tip: [
+          'By not using a service account token, you are relying on your local 1password cli installation for ambient auth.',
+          'But your local 1password cli (`op`) was not found. Install it here - https://developer.1password.com/docs/cli/get-started/',
+        ],
+      });
+    } else {
+      throw new ResolutionError(`Problem invoking 1password cli: ${cmd.error.message}`);
+    }
+  } else {
+    let errMessage = cmd.stderr.toString();
+    // get rid of "[ERROR] 2024/01/23 12:34:56 " before actual message
+    if (errMessage.startsWith('[ERROR]')) errMessage = errMessage.substring(28);
+    if (errMessage.includes('authorization prompt dismissed')) {
+      throw new ResolutionError('1password app authorization prompt dismissed by user', {
+        tip: [
+          'By not using a service account token, you are relying on your local 1password installation',
+          'When the authorization prompt appears, you must authorize/unlock 1password to allow access',
+        ],
+      });
+    } else if (errMessage.includes("isn't a vault in this account")) {
+      throw new ResolutionError('1password vault not found in account connected to op cli', {
+        tip: [
+          'By not using a service account token, you are relying on your local 1password cli installation and authentication.',
+          'The account currently connected to the cli does not contain (or have access to) the selected vault',
+          'This must be resolved in your terminal - try running `op whoami` to see which account is connected to your `op` cli.',
+          'You may need to call `op signout` and `op signin` to select the correct account.',
+        ],
+      });
+    }
+    // when the desktop app integration is not connected, some interactive CLI help is displayed
+    // however if it dismissed, we get an error with no message
+    // TODO: figure out the right workflow here?
+    if (!errMessage) {
+      throw new ResolutionError('1password cli not configured', {
+        tip: [
+          'By not using a service account token, you are relying on your local 1password cli installation and authentication.',
+          'You many need to enable the 1password Desktop app integration, see https://developer.1password.com/docs/cli/get-started/#step-2-turn-on-the-1password-desktop-app-integration',
+          'Try running `op whoami` to make sure the cli is connected to the correct account',
+          'You may need to call `op signout` and `op signin` to select the correct account.',
+        ],
+      });
+    }
+
+    throw new Error(`1password cli error - ${errMessage || 'unknown'}`);
+  }
+}
 
 // Typescript has some limitations around generics and how things work across parent/child classes
 // so unfortunately, we have to add some extra type annotations, but it's not too bad
@@ -34,20 +86,34 @@ const CLI_PATH = path.resolve(fileURLToPath(import.meta.url), '../../op-cli');
 // export class OnePasswordDmnoPlugin extends DmnoPlugin<
 // typeof OnePasswordDmnoPlugin.inputSchema, typeof OnePasswordDmnoPlugin.INPUT_TYPES
 // > {
+
+/**
+ * DMNO plugin to retrieve secrets from 1Password
+ *
+ * @see https://dmno.dev/docs/plugins/1password/
+ */
 export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   icon = 'simple-icons:1password';
+
+  // would be great to do this automatically as part of `DmnoPlugin` but I don't think it's possible
+  // so instead we add some runtime checks in DmnoPlugin
+  static pluginPackageName = thisPackageName;
+  static pluginPackageVersion = thisPackageVersion;
 
   static readonly inputSchema = {
     token: {
       description: 'this service account token will be used via the CLI to communicate with 1password',
       extends: OnePasswordTypes.serviceAccountToken,
-      required: true,
+      // TODO: add validation, token must be set unless `fallbackToCliBasedAuth` is true
+      // required: true,
     },
     envItemLink: {
       description: 'link to secure note item containing dotenv style values',
       extends: OnePasswordTypes.itemLink,
     },
-
+    fallbackToCliBasedAuth: {
+      description: "if token is empty, use system's `op` CLI to communicate with 1password",
+    },
   } satisfies DmnoPluginInputSchema;
   // ^^ note this explicit `satisfies` is needed to give us better typing on our inputSchema
 
@@ -63,7 +129,80 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     this.setInputMap(inputs);
   }
 
+  private opClient: Client | undefined;
+  private async initOpClientIfNeeded() {
+    if (!this.inputValues.token) return;
+    if (!this.opClient) {
+      this.opClient = await createClient({
+        auth: this.inputValues.token,
+        integrationName: this.pluginPackageName.replaceAll('@', '').replaceAll('/', ' '),
+        integrationVersion: this.pluginPackageVersion,
+      });
+    }
+  }
 
+  private async getOpItemById(ctx: ResolverContext, vaultId: VaultId, itemId: ItemId) {
+    await this.initOpClientIfNeeded();
+    // using sdk
+    if (this.opClient) {
+      return await ctx.getOrSetCacheItem(`1pass-sdk:V|${vaultId}/I|${itemId}`, async () => {
+        // TODO: better error handling to tell you what went wrong? no access, non existant, etc
+        try {
+          const opItem = await this.opClient!.items.get(vaultId, itemId);
+          return JSON.parse(JSON.stringify(opItem)); // convert to plain object
+        } catch (err) {
+          // 1pass sdk throws strings as errors...
+          if (_.isString(err)) {
+            if (err.includes('not a valid UUID')) {
+              throw new ResolutionError('Either the Vault ID or the item ID is not a valid UUID');
+            } else if (err === 'error when retrieving vault metadata: http error: unexpected http status: 404 Not Found') {
+              throw new ResolutionError(`Vault ID "${vaultId}" not found in this account`);
+            } else if (err === 'error when retrieving item details: http error: unexpected http status: 404 Not Found') {
+              throw new ResolutionError(`Item ID "${itemId}" not found within Vault ID "${vaultId}"`);
+            }
+            throw new ResolutionError(`1password SDK error - ${err}`);
+          }
+          throw err;
+        }
+      });
+    }
+    // using cli
+    return await ctx.getOrSetCacheItem(`1pass-cli:V|${vaultId}/I|${itemId}`, async () => {
+      const itemJson = await execOpCliCommand([
+        'item', 'get', itemId,
+        `--vault=${vaultId}`,
+        '--format=json',
+      ]);
+      return JSON.parse(itemJson);
+    });
+  }
+
+  private async getOpItemByReference(ctx: ResolverContext, referenceUrl: ReferenceUrl) {
+    await this.initOpClientIfNeeded();
+    // using sdk
+    if (this.opClient) {
+      try {
+        return await ctx.getOrSetCacheItem(`1pass-sdk:R|${referenceUrl}`, async () => {
+          // TODO: better error handling to tell you what went wrong? no access, non existant, etc
+          return await this.opClient!.secrets.resolve(referenceUrl);
+        });
+      } catch (err) {
+        // 1pass sdk throws strings as errors...
+        if (_.isString(err)) {
+          throw new ResolutionError(`1password SDK error - ${err}`);
+        }
+        throw err;
+      }
+    }
+    // using op CLI
+    return await ctx.getOrSetCacheItem(`1pass-cli:R|${referenceUrl}`, async () => {
+      return await execOpCliCommand([
+        'read', referenceUrl,
+        '--force',
+        '--no-newline',
+      ]);
+    });
+  }
 
   private envItemsByService: Record<string, Record<string, string>> | undefined;
   private async loadEnvItems(ctx: ResolverContext) {
@@ -72,26 +211,18 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     const vaultId = url.searchParams.get('v')!;
     const itemId = url.searchParams.get('i')!;
 
-    const envItemJsonStr = await ctx.getOrSetCacheItem(`1pass:V|${vaultId}/I|${itemId}`, async () => {
-      return await execSync([
-        `OP_SERVICE_ACCOUNT_TOKEN=${this.inputValues.token}`,
-        CLI_PATH,
-        `item get ${itemId}`,
-        `--vault=${vaultId}`,
-        '--format json',
-      ].join(' ')).toString();
-    });
-    const envItemsObj = JSON.parse(envItemJsonStr);
+    const envItemsObj = await this.getOpItemById(ctx, vaultId, itemId);
 
     const loadedEnvByService: typeof this.envItemsByService = {};
     _.each(envItemsObj.fields, (field) => {
+      if (field.purpose === 'NOTES') return;
       // the "default" items on a secure note get added to an invisible "add more" section
       // we could force users to only add in there? but it might get confusing...?
-      const serviceName = field.label;
+      const serviceName = field.label || field.title; // cli uses "label", sdk uses "title"
 
       // make sure we dont have a duplicate
       if (loadedEnvByService[serviceName]) {
-        throw new ResolutionError(`Duplicate env item found - ${serviceName} `);
+        throw new ResolutionError(`Duplicate service entries found in 1pass item - ${serviceName} `);
       }
       const dotEnvObj = loadDotEnvIntoObject(field.value);
       loadedEnvByService[serviceName] = dotEnvObj;
@@ -100,7 +231,25 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     });
     this.envItemsByService = loadedEnvByService;
   }
-  item() {
+
+
+  /**
+   * resolver to fetch a 1password value from a .env blob within a text field.
+   *
+   * Plugin instance must be initialized with `envItemLink` input set to use this resolver.
+   *
+   * Items are looked up within the blob using their key
+   *
+   * @see https://dmno.dev/docs/plugins/1password/
+   */
+  item(
+    /**
+     * optionally override the key used to look up the item within the dotenv blob
+     *
+     * _not often necessary!_
+     * */
+    overrideLookupKey?: string,
+  ) {
     // make sure the user has mapped up an input for where the env data is stored
     if (!this.inputItems.envItemLink.resolutionMethod) {
       throw new SchemaError('You must set an `envItemLink` plugin input to use the .item() resolver');
@@ -108,14 +257,16 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
 
     return this.createResolver({
       label: (ctx) => {
-        return `env blob item > ${ctx.serviceName} > ${ctx.itemPath}`;
+        return `env blob item > ${ctx.serviceName} > ${overrideLookupKey || ctx.itemPath}`;
       },
       resolve: async (ctx) => {
         if (!this.envItemsByService) await this.loadEnvItems(ctx);
 
-        const itemValue = this.envItemsByService?.[ctx.serviceName!]?.[ctx.itemPath]
+        const lookupKey = overrideLookupKey || ctx.itemPath;
+
+        const itemValue = this.envItemsByService?.[ctx.serviceName!]?.[lookupKey]
           // the label "_default" is used to signal a fallback / default to apply to all services
-          || this.envItemsByService?._default?.[ctx.itemPath];
+          || this.envItemsByService?._default?.[lookupKey];
 
         if (itemValue === undefined) {
           throw new ResolutionError('Unable to find config item in 1password', {
@@ -124,8 +275,8 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
               kleur.gray(`🔗 ${this.inputValues.envItemLink}`),
               `Find entry with label ${kleur.bold().cyan(ctx.serviceName!)} (or create it)`,
               'Add this secret like you would add it to a .env file',
-              `For example: \`${ctx.itemPath}="your-secret-value"\``,
-            ].join('\n'),
+              `For example: \`${lookupKey}="your-secret-value"\``,
+            ],
           });
         }
 
@@ -135,13 +286,24 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     });
   }
 
-
   /**
-   * reference an item using a "private link" (and json path)
+   * resolver to fetch a 1password value using a "private link" and field ID
    *
-   * To get an item's link, right click on the item and select "Copy Private Link" (or select the item and click the ellipses / more options menu)
-   * */
-  itemByLink(privateLink: string, path?: string) {
+   * To get an item's link, right click on the item and select `Copy Private Link` (or select the item and click the ellipses / more options menu)
+   *
+   * @see https://dmno.dev/docs/plugins/1password/
+   * @see https://support.1password.com/item-links/
+   */
+  itemByLink(
+    /**
+     * 1password item _Private Link_
+     *
+     * @example "https://start.1password.com/open/i?a=..."
+     */
+    privateLink: string,
+    /** 1password Item Field ID (or path) */
+    fieldIdOrPath: FieldId | { path: string },
+  ) {
     const linkValidationResult = OnePasswordTypes.itemLink().validate(privateLink);
 
     if (linkValidationResult !== true) {
@@ -153,19 +315,31 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     const vaultId = url.searchParams.get('v')!;
     const itemId = url.searchParams.get('i')!;
 
-    return this.itemById(vaultId, itemId, path);
+    return this.itemById(vaultId, itemId, fieldIdOrPath);
   }
 
 
-  // can read items by id - need a vault id, item id
-  // and then need to grab the specific data from a big json blob
-  // cli command `op item get bphvvrqjegfmd5yoz4buw2aequ --vault=ut2dftalm3ugmxc6klavms6tfq --format json`
-  itemById(vaultId: VaultId, itemId: ItemId, path?: string) {
+  /**
+   * resolver to fetch a 1password value using UUIDs and a field ID
+   *
+   * @see https://dmno.dev/docs/plugins/1password/
+   */
+  itemById(
+    /** 1password Vault UUID */
+    vaultId: VaultId,
+    /** 1password Item UUID */
+    itemId: ItemId,
+    /** 1password Item Field id (or path) */
+    fieldIdOrPath: FieldId | { path: string },
+  ) {
+    const fieldId = _.isString(fieldIdOrPath) ? fieldIdOrPath : undefined;
+    const path = _.isObject(fieldIdOrPath) ? fieldIdOrPath.path : undefined;
     return this.createResolver({
       label: (ctx) => {
         return _.compact([
           `Vault: ${vaultId}`,
           `Item: ${itemId}`,
+          fieldId && `Field: ${fieldId}`,
           path && `Path: ${path}`,
         ]).join(', ');
       },
@@ -173,59 +347,81 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
         // we've already checked that the defaultVaultId is set above if it's needed
         // and the plugin will have a schema error if the resolution failed
 
-        const valueJsonStr = await ctx.getOrSetCacheItem(`1pass:V|${vaultId}/I|${itemId}`, async () => {
-          return await execSync([
-            `OP_SERVICE_ACCOUNT_TOKEN=${this.inputValues.token}`,
-            CLI_PATH,
-            `item get ${itemId}`,
-            `--vault=${vaultId}`,
-            '--format json',
-          ].join(' ')).toString();
-        });
+        const itemObj = await this.getOpItemById(ctx, vaultId, itemId);
 
-        const valueObj = JSON.parse(valueJsonStr);
-        if (!valueObj) {
-          throw new Error('Unable to resolve item');
+        const sectionsById = _.keyBy(itemObj.sections, (s) => s.id);
+
+        // field selection by id
+        if (fieldId !== undefined) {
+          const field = _.find(itemObj.fields, (f) => f.id === fieldId);
+          if (field) {
+            // do we want to throw an error if we found the value but its empty?
+            return field.value;
+          }
+          // console.log(itemObj);
+          const possibleFieldIds = _.compact(_.map(itemObj.fields, (f) => {
+            if (f.value === undefined || f.value === '' || f.purpose === 'NOTES') return undefined;
+            const section = sectionsById[f.sectionId || f.section?.id];
+            return { id: f.id, label: f.label || f.title, sectionLabel: section?.label || section?.title };
+          }));
+          throw new ResolutionError(`Unable to find field ID "${fieldId}" in item`, {
+            tip: [
+              'Perhaps you meant one of',
+              ...possibleFieldIds.map((f) => [
+                '- ',
+                f.sectionLabel ? `${f.sectionLabel} > ` : '',
+                f.label,
+                ` - ID = ${f.id}`,
+              ].join('')),
+            ],
+          });
         }
-
+        // field selection by path
         if (path) {
-          // TOOD: this logic is not right...
-          const valueAtPath = _.find(valueObj.fields, (i) => {
-            return i.reference.endsWith(path);
+          const valueAtPath = _.find(itemObj.fields, (i) => {
+            // using the cli, each item has the reference included
+            if (i.reference) {
+              // TODO: checking the reference ending is naive...
+              return i.reference.endsWith(path);
+            // using the sdk, we have to awkwardly reconstruct it
+            } else {
+              if (i.sectionId) return `${sectionsById[i.sectionId].title}/${i.title}` === path;
+              else return i.title === path;
+            }
           });
 
           if (!valueAtPath) {
-            throw new Error(`Unable to resolve value from path ${path}`);
+            throw new Error(`Unable to resolve value at path ${path}`);
           }
           return valueAtPath.value;
         }
-
-        // TODO: better error handling to tell you what went wrong? no access, non existant, etc
-
-
-        return valueObj;
+        throw new Error('Resolver must be passed a field ID or a path object');
+        // should we fallback to first item or?
       },
     });
   }
 
 
-  // items have a "reference" which is like a URL that includes vault, item, and path to specific data
-  // however these are not necessarily stable...
-  // cli command `op read "op://dev test/example/username"`
-  itemByReference(referenceUrl: ReferenceUrl) {
+  /**
+   * resolver to fetch a 1password value using a secret reference URI
+   *
+   * @see https://dmno.dev/docs/plugins/1password/
+   * @see https://developer.1password.com/docs/cli/secret-reference-syntax
+   */
+  itemByReference(
+    /**
+     * 1Password secret reference URI of the secret value
+     *
+     * 📚 {@link https://developer.1password.com/docs/cli/secret-reference-syntax/#get-secret-references | 1Password docs }
+     */
+    referenceUrl: ReferenceUrl,
+  ) {
     // TODO: validate the reference url looks ok?
 
     return this.createResolver({
       label: referenceUrl,
       resolve: async (ctx) => {
-        const value = await ctx.getOrSetCacheItem(`1pass:R|${referenceUrl}`, async () => {
-          return await execSync([
-            `OP_SERVICE_ACCOUNT_TOKEN=${this.inputValues.token}`,
-            CLI_PATH,
-            `read "${referenceUrl}"`,
-            '--force --no-newline',
-          ].join(' ')).toString();
-        });
+        const value = await this.getOpItemByReference(ctx, referenceUrl);
 
         // TODO: better error handling to tell you what went wrong? no access, non existant, etc
 
@@ -242,10 +438,12 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
 // TODO: this should be autogenerated from the inputSchema and live in .dmno/.typegen folder
 export interface OnePasswordDmnoPlugin {
   [_PluginInputTypesSymbol]: {
-    /** token to be used... more jsdoc info... */
+    /** 1password service account token used to fetch secrets */
     token: string,
-    /** private link to item containing dotenv style values */
+    /** private link to item containing dotenv style values (optional) */
     envItemLink?: string;
+    /** rely on auth from system installed `op` cli instead of a service account */
+    fallbackToCliBasedAuth?: boolean,
   }
 }
 

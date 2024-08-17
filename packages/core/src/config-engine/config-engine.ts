@@ -269,7 +269,7 @@ class CacheEntry {
     this.encryptedValue = more?.encryptedValue;
   }
   async getEncryptedValue() {
-    return encrypt(CacheEntry.encryptionKey, this.value, CacheEntry.encryptionKeyName);
+    return encrypt(CacheEntry.encryptionKey, JSON.stringify(this.value), CacheEntry.encryptionKeyName);
   }
   // have to make this async because of the encryption call
   async getJSON(): Promise<SerializedCacheEntry> {
@@ -283,9 +283,9 @@ class CacheEntry {
   static async fromSerialized(itemKey: string, raw: SerializedCacheEntry) {
     // currently this setup means the encryptedValue changes on every run...
     // we could instead store the encryptedValue and reuse it if it has not changed
-    const value = await decrypt(CacheEntry.encryptionKey, raw.encryptedValue, CacheEntry.encryptionKeyName);
+    const valueStr = await decrypt(CacheEntry.encryptionKey, raw.encryptedValue, CacheEntry.encryptionKeyName);
     // we are also tossing out the saved "usedBy" entries since we'll have new ones after this config run
-    return new CacheEntry(itemKey, value, {
+    return new CacheEntry(itemKey, JSON.parse(valueStr), {
       updatedAt: new Date(raw.updatedAt),
       encryptedValue: raw.encryptedValue,
     });
@@ -628,7 +628,7 @@ export class DmnoWorkspace {
       return this.valueCache[key].value;
     }
   }
-  async setCacheItem(key: string, value: string, usedBy?: string) {
+  async setCacheItem(key: string, value: any, usedBy?: string) {
     if (this.cacheMode === 'skip') return undefined;
     this.valueCache[key] = new CacheEntry(key, value, { usedBy });
   }
@@ -952,9 +952,9 @@ export class ResolverContext {
   async setCacheItem(key: string, value: ConfigValue) {
     if (process.env.DISABLE_DMNO_CACHE) return;
     if (value === undefined || value === null) return;
-    return this.service?.workspace.setCacheItem(key, value.toString(), this.itemFullPath);
+    return this.service?.workspace.setCacheItem(key, value, this.itemFullPath);
   }
-  async getOrSetCacheItem(key: string, getValToWrite: () => Promise<string>) {
+  async getOrSetCacheItem(key: string, getValToWrite: () => Promise<ConfigValue>) {
     if (!process.env.DISABLE_DMNO_CACHE) {
       const cachedValue = await this.getCacheItem(key);
       if (cachedValue) return cachedValue;
@@ -990,7 +990,7 @@ export abstract class DmnoConfigItemBase {
 
   /** error encountered during resolution */
   get resolutionError(): ResolutionError | undefined {
-    return this.valueResolver?.resolutionError;
+    return this.valueResolver?.selfOrChildResolutionError;
   }
 
   /** resolved value _after_ coercion logic applied */
