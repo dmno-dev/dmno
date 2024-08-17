@@ -95,7 +95,9 @@ export class ConfigValueResolver {
     }
   }
 
+  // the parent/linked resolver branch, if this is a child of branched resolver
   linkedBranch?: ConfigValueResolverBranch;
+  // child resolver branches - for something like `switchBy`
   branches: Array<ConfigValueResolverBranch> | undefined;
   isResolved = false;
   resolvedValue?: ConfigValue;
