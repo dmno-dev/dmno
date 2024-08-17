@@ -234,7 +234,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
 
 
   /**
-   * DMNO resolver to fetch a 1password value from a .env blob within a text field.
+   * resolver to fetch a 1password value from a .env blob within a text field.
    *
    * Plugin instance must be initialized with `envItemLink` input set to use this resolver.
    *
@@ -287,7 +287,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   }
 
   /**
-   * DMNO resolver to fetch a 1password value using a "private link" and field ID
+   * resolver to fetch a 1password value using a "private link" and field ID
    *
    * To get an item's link, right click on the item and select `Copy Private Link` (or select the item and click the ellipses / more options menu)
    *
@@ -320,7 +320,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
 
 
   /**
-   * DMNO resolver to fetch a 1password value using UUIDs and a field ID
+   * resolver to fetch a 1password value using UUIDs and a field ID
    *
    * @see https://dmno.dev/docs/plugins/1password/
    */
@@ -403,7 +403,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
 
 
   /**
-   * DMNO resolver to fetch a 1password value using a secret reference URI
+   * resolver to fetch a 1password value using a secret reference URI
    *
    * @see https://dmno.dev/docs/plugins/1password/
    * @see https://developer.1password.com/docs/cli/secret-reference-syntax
