@@ -1,5 +1,11 @@
 # dmno
 
+## 0.0.22
+
+### Patch Changes
+
+- [#125](https://github.com/dmno-dev/dmno/pull/125) [`abdaf0c`](https://github.com/dmno-dev/dmno/commit/abdaf0ce8cb0edc1f05f6cc0bf13ef0a347fdacd) Thanks [@theoephraim](https://github.com/theoephraim)! - 1password plugin improvements, related refactoring
+
 ## 0.0.21
 
 ### Patch Changes
