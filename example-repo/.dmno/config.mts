@@ -19,14 +19,14 @@ const OnePassSecretsDev = new OnePasswordDmnoPlugin('1pass', {
 });
 
 
-const ProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
+const EncryptedVaultSecrets = new EncryptedVaultDmnoPlugin('vault/prod', {
   key: configPath('DMNO_VAULT_KEY'),
   name: 'prod',
 });
-const NonProdVault = new EncryptedVaultDmnoPlugin('vault/dev', {
-  key: configPath('DMNO_VAULT_KEY'),
-  name: 'dev',
-});
+// const NonProdVault = new EncryptedVaultDmnoPlugin('vault/dev', {
+//   key: configPath('DMNO_VAULT_KEY'),
+//   name: 'dev',
+// });
 
 
 
@@ -53,7 +53,10 @@ export default defineDmnoService({
     // },
 
     OP_ITEM_1: {
-      value: OnePassSecretsDev.item(),
+      value: switchBy('DMNO_ENV', {
+        _default: OnePassSecretsDev.item(),
+        production: OnePassSecretsProd.item(),
+      }),
     },
     OP_ITEM_BY_ID: {
       value: OnePassSecretsDev.itemById("ut2dftalm3ugmxc6klavms6tfq", "bphvvrqjegfmd5yoz4buw2aequ", "username"),
@@ -72,8 +75,6 @@ export default defineDmnoService({
       }),
     },
 
-
-
     DMNO_VAULT_KEY: {
       extends: EncryptedVaultTypes.encryptionKey,
       // required: true
@@ -85,16 +86,16 @@ export default defineDmnoService({
     },
 
     VAULT_ITEM_1: {
-      value: ProdVault.item(),
+      value: EncryptedVaultSecrets.item(),
     },
     VAULT_ITEM_WITH_SWITCH: {
       value: switchByNodeEnv({
-        _default: NonProdVault.item(),
+        _default: EncryptedVaultSecrets.item(),
         staging: switchBy('CONTEXT', {
-          'branch-preview': ProdVault.item(),
-          'pr-preview': ProdVault.item(),
+          'branch-preview': EncryptedVaultSecrets.item(),
+          'pr-preview': EncryptedVaultSecrets.item(),
         }),
-        production: ProdVault.item()
+        production: EncryptedVaultSecrets.item()
       }),
     },
 
@@ -106,7 +107,6 @@ export default defineDmnoService({
       extends: DmnoBaseTypes.email({
         normalize: true,
       }),
-      // required: true,
       value: 'Test@test.com'
     },
 

@@ -990,9 +990,7 @@ export abstract class DmnoConfigItemBase {
 
   /** error encountered during resolution */
   get resolutionError(): ResolutionError | undefined {
-    return this.valueResolver?.resolutionError;
-    // TODO: look at resolver child branches
-      // || this.valueResolver?.def
+    return this.valueResolver?.selfOrChildResolutionError;
   }
 
   /** resolved value _after_ coercion logic applied */

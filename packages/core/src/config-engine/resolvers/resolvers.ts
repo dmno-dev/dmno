@@ -102,6 +102,14 @@ export class ConfigValueResolver {
   isUsingCache = false;
 
   resolutionError?: ResolutionError;
+  get selfOrChildResolutionError(): ResolutionError | undefined {
+    if (this.resolutionError) return this.resolutionError;
+    if (!this.branches) return;
+    for (const b of this.branches) {
+      const branchResolutionError = b.def.resolver.selfOrChildResolutionError;
+      if (branchResolutionError) return branchResolutionError;
+    }
+  }
 
   icon?: string;
   label?: string;
@@ -258,22 +266,27 @@ export class ConfigValueResolver {
   }
 }
 export class ConfigValueResolverBranch {
-  isActive?: boolean;
   constructor(
     readonly def: ResolverBranchDefinition,
     readonly parentResolver: ConfigValueResolver,
   ) {
-    // link the branch definition resolver to this object
+    // link the branch definition resolver back to this object
     this.def.resolver.linkedBranch = this;
   }
 
+  isActive?: boolean;
+  get id() { return this.def.id; }
+  get label() { return this.def.label; }
+  get isDefault() { return this.def.isDefault; }
+  get resolver() { return this.def.resolver; }
+
   toJSON() {
     return {
-      id: this.def.id,
-      label: this.def.label,
-      isDefault: this.def.isDefault,
+      id: this.id,
+      label: this.label,
+      isDefault: this.isDefault,
       isActive: this.isActive,
-      resolver: this.def.resolver.toJSON(),
+      resolver: this.resolver.toJSON(),
     };
   }
 }
