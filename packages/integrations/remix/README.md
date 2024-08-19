@@ -1,4 +1,4 @@
-Check out the [docs](https://dmno.dev/docs/guides/frameworks/remix/) for more information on how to use DMNO + [Remix](https://remix.run/).
+Check out the [docs](https://dmno.dev/docs/integrations/remix/) for more information on how to use [DMNO](https://dmno.dev) + [Remix](https://remix.run/).
 
 *** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
 
@@ -6,7 +6,7 @@ If you have any questions, please reach out to us on [Discord](https://chat.dmno
 
 ----
 
-# @dmno/remix-integration
+# @dmno/remix-integration [![npm](https://img.shields.io/npm/v/@dmno/remix-integration)](https://www.npmjs.com/package/@dmno/remix-integration)
 
 Provides tooling to integrate dmno into your Remix dev/build workflow
 

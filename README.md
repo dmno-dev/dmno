@@ -1,4 +1,4 @@
-# DMNO
+# DMNO [![npm](https://img.shields.io/npm/v/dmno?label=dmno)](https://www.npmjs.com/package/dmno)
 
 >Full-stack configuration & secrets.
 >Batteries included.

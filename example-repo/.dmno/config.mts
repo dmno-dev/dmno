@@ -28,8 +28,6 @@ const EncryptedVaultSecrets = new EncryptedVaultDmnoPlugin('vault/prod', {
 //   name: 'dev',
 // });
 
-
-
 export default defineDmnoService({
   name: 'root',
   isRoot: true,

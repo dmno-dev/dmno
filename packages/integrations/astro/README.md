@@ -1,4 +1,4 @@
-Check out the [docs](https://dmno.dev/docs/guides/frameworks/astro/) for more information on how to use DMNO + Astro.
+Check out the [docs](https://dmno.dev/docs/integrations/astro/) for more information on how to use [DMNO](https://dmno.dev) + [Astro](https://astro.build/).
 
 *** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
 
@@ -6,7 +6,7 @@ If you have any questions, please reach out to us on [Discord](https://chat.dmno
 
 ----
 
-# @dmno/astro-integration
+# @dmno/astro-integration [![npm](https://img.shields.io/npm/v/@dmno/astro-integration)](https://www.npmjs.com/package/@dmno/astro-integration)
 
 Provides tooling to integrate dmno into your astro dev/build workflow
 

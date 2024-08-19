@@ -16,6 +16,11 @@ try {
   const changeSetsSummary = JSON.parse(changeSetsSummaryRaw);
   // console.log(changeSetsSummary);
 
+  if (!changeSetsSummary.releases.length) {
+    console.log('No preview packages to release!');
+    process.exit(0);
+  }
+
   const releasePackagePaths = changeSetsSummary.releases
     .filter((r) => r.newVersion !== r.oldVersion)
     .map((r) => workspacePackagesInfo.find((p) => p.name === r.name))
