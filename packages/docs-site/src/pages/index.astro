@@ -10,6 +10,8 @@ import importedCode from '/.dmno/config.mts?raw';
 import intellisenseImg from '@/assets/docs-images/platform-intellisense-example.png';
 import leakImg from '@/assets/docs-images/security-demo.png';
 import screenshotImg from '@/assets/blog/screenshot-with-comments.png';
+
+const muxId = "dTb7Y3p00ajAOcSF4x00DZN7lkXGU00i2nfW3puCWVfyos";
 ---
 <LandingPage
   title="DMNO"
@@ -25,8 +27,9 @@ import screenshotImg from '@/assets/blog/screenshot-with-comments.png';
     <InitCTA 
       command="npx dmno init"
     />
-    <img src={screenshotImg.src} alt="an annotated screenshot showing DMNO's various features">
-    <!-- <VideoBlock url="https://drive.google.com/file/d/1NP3jE0UVeEbBvVczVnevvcDtAZOFo9tJ/preview"/> -->
+    <!-- <img src={screenshotImg.src} alt="an annotated screenshot showing DMNO's various features"> -->
+    <VideoBlock muxId={muxId}/>
+    
     <h2>Configuration as Code</h2>
     <Code
       code={`
@@ -103,6 +106,6 @@ export default defineDmnoService({
     margin-top: 2rem;
   }
   h2 {
-    margin: 3rem;
+    margin: 2rem 1rem;
   }
 </style>

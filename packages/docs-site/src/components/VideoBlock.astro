@@ -1,11 +1,16 @@
 ---
-const { url } = Astro.props;
+const { muxId } = Astro.props;
 ---
 
 <div class="video-container">
-  <iframe src={ url } width="640" height="480" allow="autoplay"></iframe>
+  <mux-player
+    playback-id={muxId}
+    autoplay
+    loop
+    muted
+  ></mux-player>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/@mux/mux-player"></script>
 
 
 <style>
@@ -16,10 +21,11 @@ const { url } = Astro.props;
     justify-content: center;
   }
   @media (min-width: 640px) {
-    iframe {
+    mux-player {
       border: none;
       margin: 0 auto;
       width: 90%;
+      aspect-ratio: 16/10;
     }
   }
 </style>
