@@ -1,15 +1,26 @@
 ---
 import DIcon from '@/components/DIcon.astro';
+interface Props {
+  text?: string;
+  href?: string;
+  command?: string;
+}
 
-const { command } = Astro.props;
+const { text, href, command } = Astro.props as Props;
+
 ---
 
 <div class="cta-wrap">
-  <div class="install-command">
-    <DIcon name="console" />
-    <div>{command}</div>
-    <DIcon name={['copy', 'check']} class="install-command__copy" />
-  </div>
+  { href && text && 
+    <a href={href} class="button">{text}</a>
+  }
+  {command && 
+    <div class="install-command">
+      <DIcon name="console" />
+      <div>{command}</div>
+      <DIcon name={['copy', 'check']} class="install-command__copy" />
+    </div>
+  }
 </div>
 
 <style lang="less">

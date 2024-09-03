@@ -2,7 +2,7 @@
 import { Code } from '@astrojs/starlight/components';
 import LandingPage from '@/components/layouts/LandingPage.astro';
 import VideoBlock from '@/components/VideoBlock.astro';
-import InitCTA from '@/components/InitCTA.astro';
+import CTABlock from '@/components/CTABlock.astro';
 import Hero from '@/components/Hero.astro';
 import FeatureBlock from '@/components/FeatureBlock.astro';
 
@@ -24,13 +24,15 @@ const muxId = "dTb7Y3p00ajAOcSF4x00DZN7lkXGU00i2nfW3puCWVfyos";
       heading="Environment Variables. \n Evolved."
       subheading="DMNO makes your configuration safer and smarter. It integrates with the tools you already use and it's powered by TypeScript and Vite."
     />
-    <InitCTA 
+    <CTABlock
+      text="Get started ->"
+      href="/docs/get-started/quickstart/"
       command="npx dmno init"
     />
     <!-- <img src={screenshotImg.src} alt="an annotated screenshot showing DMNO's various features"> -->
     <VideoBlock muxId={muxId}/>
     
-    <h2>Configuration as Code</h2>
+    <h2>Schema-defined configuration</h2>
     <Code
       code={`
 import { DmnoBaseTypes, defineDmnoService, switchBy } from 'dmno';
@@ -78,14 +80,19 @@ export default defineDmnoService({
       title=".dmno/config.mts - sample config file"
       class="landing-page-code"
     />
+    <CTABlock
+    text="Read more ->"
+    href="/docs/guides/schema/"
+  />
     <FeatureBlock
       title="Leak prevention and detection"
       imagePath={leakImg.src}
       imageAlt="DMNO Warning of a potential leak"
       description=""
     />
-    <InitCTA 
-      command="npx dmno init"
+    <CTABlock
+      text="Read more ->"
+      href="/docs/get-started/security/#leak-detection"
     />
     <FeatureBlock
       title="Feature-rich IntelliSense"
@@ -93,8 +100,9 @@ export default defineDmnoService({
       imageAlt="VS Code screenshot showing DMNO's IntelliSense"
       description=""
     />
-    <InitCTA 
-      command="npx dmno init"
+    <CTABlock
+      text="Read more ->"
+      href="https://dmno.dev/docs/guides/schema/#docs--intellisense"
     />
 
 </LandingPage>
@@ -106,6 +114,6 @@ export default defineDmnoService({
     margin-top: 2rem;
   }
   h2 {
-    margin: 2rem 1rem;
+    margin: 2rem 3rem;
   }
 </style>
