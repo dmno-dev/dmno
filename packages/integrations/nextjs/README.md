@@ -1,4 +1,4 @@
-Check out the [docs](https://dmno.dev/docs/guides/frameworks/nextjs/) for more information on how to use DMNO + Next.js.
+Check out the [docs](https://dmno.dev/docs/integrations/nextjs/) for more information on how to use [DMNO](https://dmno.dev) + [Next.js](https://nextjs.org/).
 
 *** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
 
@@ -6,7 +6,7 @@ If you have any questions, please reach out to us on [Discord](https://chat.dmno
 
 ----
 
-# @dmno/nextjs-integration
+# @dmno/nextjs-integration [![npm](https://img.shields.io/npm/v/@dmno/nextjs-integration)](https://www.npmjs.com/package/@dmno/nextjs-integration)
 
 Provides tooling to integrate dmno into your nextjs app
 

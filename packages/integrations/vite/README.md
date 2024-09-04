@@ -1,4 +1,4 @@
-Check out the [docs](https://dmno.dev/docs/guides/frameworks/vite/) for more information on how to use DMNO + Vite.
+Check out the [docs](https://dmno.dev/docs/integrations/vite/) for more information on how to use [DMNO](https://dmno.dev) + [Vite](https://vitejs.dev/).
 
 *** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
 
@@ -6,7 +6,7 @@ If you have any questions, please reach out to us on [Discord](https://chat.dmno
 
 ----
 
-# @dmno/vite-integration
+# @dmno/vite-integration [![npm](https://img.shields.io/npm/v/@dmno/vite-integration)](https://www.npmjs.com/package/@dmno/vite-integration)
 
 Provides tooling to integrate dmno into your vite dev/build workflow
 

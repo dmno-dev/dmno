@@ -1,0 +1,35 @@
+---
+// import { PAGE_TITLE_ID } from  "@astrojs/starlight/constants";
+import type { Props } from "@astrojs/starlight/props";
+
+// not acutally exported...?
+const PAGE_TITLE_ID = '_top';
+
+---
+
+<div>
+  <h1 id={PAGE_TITLE_ID}>
+    {Astro.props.entry.data.title}
+    {Astro.props.entry.data.npmPackage && <div class="page-title-badges">
+      <a href=`https://www.npmjs.com/package/${Astro.props.entry.data.npmPackage}`>
+        <img src=`https://img.shields.io/npm/v/${Astro.props.entry.data.npmPackage}?label=${encodeURIComponent(Astro.props.entry.data.npmPackage)}&color=9B55F5` />
+      </a>
+    </div>}
+  </h1>
+</div>
+
+<style>
+	h1 {
+		margin-top: 1rem;
+		font-size: var(--sl-text-h1);
+		line-height: var(--sl-line-height-headings);
+		font-weight: 600;
+		color: var(--sl-color-white);
+	}
+  .page-title-badges {
+    margin-top: 8px;
+    &:empty {
+      display: none;
+    }
+  }
+</style>

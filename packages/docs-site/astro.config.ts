@@ -63,6 +63,7 @@ export default defineConfig({
         ThemeProvider: './src/components/CustomStarlightThemeProvider.astro',
         MobileMenuFooter: './src/components/CustomStarlightMobileMenuFooter.astro',
         Banner: './src/components/CustomStarlightBanner.astro',
+        PageTitle: './src/components/CustomStarlightPageTitle.astro',
       },
       head: [
         {
