@@ -1,165 +1,103 @@
-import fs from 'fs';
 import path from 'path';
 import kleur from 'kleur';
-import { asyncMapValues } from './async-utils';
+import { pathExistsSync } from './fs-utils';
 
+export type JsPackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun' | 'deno';
 
-// TODO: move PACKAGE_MANAGER_RELEVANT_FILES into this
-export const PACKAGE_MANAGERS_META = {
+type JsPackageManagerMeta = {
+  name: JsPackageManager;
+  lockfile: string;
+  add: string;
+  exec: string;
+  dlx: string;
+};
+
+export const JS_PACKAGE_MANAGERS: Record<JsPackageManager, JsPackageManagerMeta> = Object.freeze({
   npm: {
-    exec: 'npm exec',
+    name: 'npm',
+    lockfile: 'package-lock.json',
+    add: 'npm install', // add also works
+    exec: 'npm exec --',
     dlx: 'npx',
   },
-  yarn: {
-    exec: 'yarn exec',
-    dlx: 'yarn dlx',
-  },
   pnpm: {
+    name: 'pnpm',
+    lockfile: 'pnpm-lock.yaml',
+    add: 'pnpm add',
     exec: 'pnpm exec',
     dlx: 'pnpm dlx',
   },
+  yarn: {
+    name: 'yarn',
+    lockfile: 'yarn.lock',
+    add: 'yarn add',
+    exec: 'yarn exec --',
+    dlx: 'yarn dlx',
+  },
   bun: {
+    name: 'bun',
+    lockfile: 'bun.lockb',
+    add: 'bun add',
     exec: 'bun run',
     dlx: 'bunx',
   },
-  moon: {
-    // TODO: fix this... we'll need to track the fact that the user is using moon and a package manager
-    exec: 'npm exec',
-    dlx: 'npx',
+  deno: { //! deno not fully supported yet
+    name: 'deno',
+    lockfile: 'deno.lock',
+    add: 'deno add',
+    // TODO: don't think these are quite right...
+    exec: 'deno run',
+    dlx: 'deno run',
   },
-} as const;
-export type PackageManager = keyof typeof PACKAGE_MANAGERS_META;
+});
 
-
-
-export async function pathExists(p: string) {
-  try {
-    await fs.promises.access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
-function pathExistsSync(p:string) {
-  try {
-    fs.accessSync(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// TODO: nx and lerna support? (lerna.json has packages array)
-// TODO: deno?
-const PACKAGE_MANAGER_RELEVANT_FILES = {
-  packageJson: 'package.json',
-  yarnLock: 'yarn.lock',
-  npmLock: 'package-lock.json',
-  pnpmLock: 'pnpm-lock.yaml',
-  pnpmWorkspace: 'pnpm-workspace.yaml',
-  bunLock: 'bun.lockb',
-  moonWorkspace: '.moon/workspace.yml',
-};
-
-// SEE SYNC VERSION BELOW - UPDATE BOTH IF ANY CHANGES ARE MADE!
-export async function detectPackageManager() {
-  let cwd = process.cwd();
+/**
+ * detect js package manager
+ *
+ * currently go up the folder tree looking for lockfiles (ex: package-lock.json, pnpm-lock.yaml)
+ * if nothing found, we'll look at process.env.npm_config_user_agent
+ * */
+export function detectJsPackageManager(opts?: {
+  cwd?: string,
+  workspaceRootPath?: string,
+}) {
+  let cwd = opts?.cwd || process.cwd();
   const cwdParts = cwd.split('/');
+  do {
+    let pm: JsPackageManager;
+    let detectedPm: JsPackageManager | undefined;
+    for (pm in JS_PACKAGE_MANAGERS) {
+      const lockFilePath = path.join(
+        cwd,
+        JS_PACKAGE_MANAGERS[pm].lockfile,
+      );
 
-  let packageManager: PackageManager | undefined;
-  let possibleRootPackage: string | undefined;
-
-  while (!packageManager) {
-    // we could also try to detect the current package manager via env vars (ex: process.env.PNPM_PACKAGE_NAME)
-    // and then not check for all of the lockfiles...?
-
-
-    const filesFound = await asyncMapValues(
-      PACKAGE_MANAGER_RELEVANT_FILES,
-      // eslint-disable-next-line @typescript-eslint/no-loop-func
-      async (filePath) => pathExists(path.resolve(cwd, filePath)),
-    );
-
-    if (filesFound.packageJson) possibleRootPackage = cwd;
-
-    if (filesFound.pnpmLock || filesFound.pnpmWorkspace) packageManager = 'pnpm';
-    else if (filesFound.npmLock) packageManager = 'npm';
-    else if (filesFound.yarnLock) packageManager = 'yarn';
-    else if (filesFound.bunLock) packageManager = 'bun';
-    else if (filesFound.moonWorkspace) packageManager = 'moon';
-
-    if (!packageManager) {
-      cwdParts.pop();
-      cwd = cwdParts.join('/');
-    }
-    // show some hopefully useful error messaging if we hit the root folder without finding anything
-    if (cwd === '') {
-      console.log(kleur.red('Unable to find detect your package manager and workspace root!'));
-      if (possibleRootPackage) {
-        console.log(`But it looks like your workspace root might be ${kleur.green().italic(possibleRootPackage)}`);
+      if (pathExistsSync(lockFilePath)) {
+        // if we find 2 lockfiles at the same level, we throw an error
+        if (detectedPm) throw new Error(`Found multiple js package manager lockfiles - ${JS_PACKAGE_MANAGERS[pm].lockfile} and ${JS_PACKAGE_MANAGERS[detectedPm].lockfile}`);
+        detectedPm = pm;
       }
-      console.log('We look for lock files (ex: package-lock.json) so you may just need to run a dependency install (ie `npm install`)');
-      process.exit(1);
+    }
+    if (detectedPm) return JS_PACKAGE_MANAGERS[detectedPm];
+
+    cwdParts.pop();
+    cwd = cwdParts.join('/');
+    if (opts?.workspaceRootPath && opts.workspaceRootPath === cwd) break;
+  } while (cwd);
+
+  // if we did not find a lockfile, we'll look at env vars for other hints
+  if (process.env.npm_config_user_agent) {
+    const pmFromAgent = process.env.npm_config_user_agent.split('/')[0];
+    if (Object.keys(JS_PACKAGE_MANAGERS).includes(pmFromAgent)) {
+      return JS_PACKAGE_MANAGERS[pmFromAgent as JsPackageManager];
     }
   }
 
-
-  return {
-    packageManager,
-    rootWorkspacePath: cwd,
-  };
+  // show some hopefully useful error messaging if we hit the root folder without finding anything
+  console.log(kleur.red('Unable to find detect your js package manager!'));
+  console.log('We look for lock files (ex: package-lock.json) so you may just need to run a dependency install (ie `npm install`)');
+  process.exit(1);
 }
-
-
-// sync version of above fn, probably dont want this... but fine for now
-export function detectPackageManagerSync() {
-  let cwd = process.cwd();
-
-  const cwdParts = cwd.split('/');
-
-  let packageManager: PackageManager | undefined;
-  let possibleRootPackage: string | undefined;
-
-  while (!packageManager) {
-    // we could also try to detect the current package manager via env vars (ex: process.env.PNPM_PACKAGE_NAME)
-    // and then not check for all of the lockfiles...?
-
-    const filesFound: Partial<Record<keyof typeof PACKAGE_MANAGER_RELEVANT_FILES, boolean>> = {};
-    for (const fileKey of Object.keys(PACKAGE_MANAGER_RELEVANT_FILES)) {
-      const key = fileKey as keyof typeof PACKAGE_MANAGER_RELEVANT_FILES;
-      const filePath = path.resolve(cwd, PACKAGE_MANAGER_RELEVANT_FILES[key]);
-      filesFound[key] = pathExistsSync(filePath);
-    }
-
-    if (filesFound.packageJson) possibleRootPackage = cwd;
-
-    if (filesFound.pnpmLock || filesFound.pnpmWorkspace) packageManager = 'pnpm';
-    else if (filesFound.npmLock) packageManager = 'npm';
-    else if (filesFound.yarnLock) packageManager = 'yarn';
-    else if (filesFound.bunLock) packageManager = 'bun';
-    else if (filesFound.moonWorkspace) packageManager = 'moon';
-
-    if (!packageManager) {
-      cwdParts.pop();
-      cwd = cwdParts.join('/');
-    }
-    // show some hopefully useful error messaging if we hit the root folder without finding anything
-    if (cwd === '') {
-      console.log(kleur.red('Unable to find detect your package manager and workspace root!'));
-      if (possibleRootPackage) {
-        console.log(`But it looks like your workspace root might be ${kleur.green().italic(possibleRootPackage)}`);
-      }
-      console.log('We look for lock files (ex: package-lock.json) so you may just need to run a dependency install (ie `npm install`)');
-      process.exit(1);
-    }
-  }
-
-  return {
-    packageManager,
-    rootWorkspacePath: cwd,
-  };
-}
-
 
 
 
