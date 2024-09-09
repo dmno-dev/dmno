@@ -15,18 +15,18 @@ export async function setupViteServer(
     // meaning we have 2 copies of classes and `instanceof` stops working
     enforce: 'pre', // Run before the builtin 'vite:resolve' of Vite
     async resolveId(source, importer, options) {
-      // console.log(kleur.bgCyan('PLUGIN RESOLVE!'), source, importer, options);
+      // console.log('PLUGIN RESOLVE!', source, importer, options);
 
       if (source === 'dmno') {
         // const resolution = await this.resolve(source, importer, options);
-        // console.log('resolution', resolution);
+        // console.log('dmno resolution', resolution);
         // if (!resolution) return;
 
         return {
           // pointing at dist/index is hard-coded...
           // we could extract the main entry point from the resolution instead?
-          id: '/node_modules/dmno/dist/index.js',
-          // I believe this path is appended to our "root" which is our workpace root
+          id: `${workspaceRootPath}/node_modules/dmno/dist/index.js`,
+          external: 'absolute',
         };
       }
     },

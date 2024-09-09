@@ -59,10 +59,13 @@ export type ExtractSettingsSchema<F> =
 
 
 export class DmnoDataType<InstanceOptions = any> {
-  // NOTE - note quite sure about this setup yet...
-  // but the idea is to provide a wrapped version of the validate/coerce (the fns that need the type instance options)
-  // while providing transparent access to the rest. This is so the ConfigItem can just walk up the chain of types
-  // without having to understand the details... The other option is to revert that change and
+  /** use instead of `instanceof DmnoDataType`
+   * because there can be a different copy of dmno being used within vite from the dmno config loading process
+   * */
+  static checkInstanceOf(other: any) {
+    return other?.typeDef && other?.primitiveTypeFactory;
+  }
+
 
   parentType?: DmnoDataType;
   private _valueResolver?: ConfigValueResolver;
@@ -94,13 +97,13 @@ export class DmnoDataType<InstanceOptions = any> {
       // deal with uninitialized case - `extends: DmnoBaseTypes.number`
       } else if (_.isFunction(this.typeDef.extends)) {
         const initializedDataType = this.typeDef.extends(typeInstanceOptions as any);
-        if (initializedDataType instanceof DmnoDataType) {
+        if (DmnoDataType.checkInstanceOf(initializedDataType)) {
           this.parentType = initializedDataType;
         } else {
           throw new Error('found invalid parent (as result of fn) in extends chain');
         }
       // normal case - `extends: DmnoBaseTypes.number({ ... })`
-      } else if (this.typeDef.extends instanceof DmnoDataType) {
+      } else if (DmnoDataType.checkInstanceOf(this.typeDef.extends)) {
         this.parentType = this.typeDef.extends;
       // anything else is considered an error
       } else if (this.typeDef.extends) {
@@ -121,7 +124,7 @@ export class DmnoDataType<InstanceOptions = any> {
 
     // value resolvers have shorthands that can be passed in (static value, functions)
     // so we'll make sure those are initialized properly as well
-    if (this.typeDef.value !== undefined) {
+    if ('value' in this.typeDef) {
       this._valueResolver = processInlineResolverDef(this.typeDef.value);
     }
 
@@ -533,7 +536,7 @@ const StringDataType = createDmnoDataType({
 
     // special handling to not allow empty strings (unless explicitly allowed)
     if (val === '' && !settings.allowEmpty) {
-      return [new ValidationError('If set, string must not be empty')];
+      return [new ValidationError('If set, string must not be empty. Use `allowEmpty` option if this is intended.')];
     }
 
     if (settings.minLength !== undefined && val.length < settings.minLength) {
