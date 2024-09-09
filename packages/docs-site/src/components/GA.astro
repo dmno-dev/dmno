@@ -9,11 +9,11 @@
   src=`https://www.googletagmanager.com/gtag/js?id=${DMNO_PUBLIC_CONFIG.GOOGLE_TAG_MANAGER_ID}`
   is:inline
 ></script>
-<script type="text/partytown" gtmid={DMNO_PUBLIC_CONFIG.GOOGLE_TAG_MANAGER_ID} is:inline>
+<script type="text/partytown" define:vars={{ gtmid: DMNO_PUBLIC_CONFIG.GOOGLE_TAG_MANAGER_ID }} is:inline>
   window.dataLayer = window.dataLayer || [];
   function gtag() {
     dataLayer.push(arguments);
   }
   gtag("js", new Date());
-  gtag("config", document.currentScript.getAttribute("gtmid"));
+  gtag("config", gtmid);
 </script>

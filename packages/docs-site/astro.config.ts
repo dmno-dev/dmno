@@ -14,11 +14,10 @@ export default defineConfig({
   site: 'https://dmno.dev',
   vite: {
     plugins: [
-      // TODO: remove this ignore, seems to just be types/versioning issue with Vite between astro and this plugin
-      // @ts-ignore
+      // TODO: remove this as any, seems to just be types/versioning issue with Vite between astro and this plugin
       IconsVitePlugin({
         compiler: 'raw',
-      }),
+      }) as any,
     ],
     // resolve: {
     //   conditions: ['ts-src'],
@@ -90,7 +89,6 @@ export default defineConfig({
               dataLayer.push(arguments);
             }
             gtag("js", new Date());
-          
             gtag("config", "${DMNO_CONFIG.GOOGLE_TAG_MANAGER_ID}");`,
           },
         },

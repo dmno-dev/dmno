@@ -1,0 +1,364 @@
+---
+
+import DIcon from '@/components/DIcon.astro';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { DmnoTileLogo } from '@dmno/ui-lib';
+
+import ViteLogoSvg from '~icons/devicon/vitejs?raw';
+import NextLogoSvg from '~icons/logos/nextjs?raw';
+import RemixLogoSvg from '~icons/logos/remix-icon?raw';
+import AstroLogoSvg from '~icons/devicon/astro?raw';
+import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
+
+---
+<StarlightPage frontmatter={{
+  title: '👋',
+  description: "Full-stack configuration & secrets. Batteries included.",
+  tableOfContents: false 
+}}>
+  <div class="homepage not-content">
+
+    <div class="hero">
+      <div class="hero__logo">
+          <DmnoTileLogo client:load />
+      </div>
+      <div class="hero__text">
+        <h1>DMNO</h1>
+        <h2>Full-stack configuration & secrets.<br/>Batteries included.</h2>
+        <div class="cta-wrap">
+          <a href='/docs/get-started/quickstart' class="button">Get started</a>
+          <div class="install-command">
+            <DIcon name="console" />
+            <div>npx dmno init</div>
+            <DIcon name={['copy', 'check']} class="install-command__copy" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <section class="value-prop-section">      
+      <div>
+        <h3>Type-safe env vars</h3>
+        <p>DMNO auto-generates powerful types for your config schema with intuitive documentation built right in.</p>
+      </div>
+      <div>
+        <h3>Validation & coercion</h3>
+        <p>Clean and check your config at every step of the way. Our built-in types cover 95% of use cases. Easily add custom validation logic on top.</p>
+      </div>
+      <div>
+        <h3>Keep your secrets safe</h3>
+        <p>DMNO prevents you from accidentally leaking any secrets, and helps you sync with teammates without sending <code>.env</code> files over slack.</p>
+      </div>
+      <div>
+        <h3>Composable config</h3>
+        <p>Easily reuse config definitions and you can even share resolved config values across services in a monorepo, if you are using one.</p>
+      </div>
+      <div>
+        <h3>Live reload</h3>
+        <p>Our <code>resolve -w</code> mode reloads your schema and restarts your code whenever anything changes. It's vite powered and FAST.</p>
+      </div>
+      <div>
+        <h3>Comprehensive configuration toolkit</h3>
+        <p>Includes everything you need to manage config - no need to wire together 5 different tools or spend weeks integrating an external service</p>
+      </div>
+      <div>
+        <h3></h3>
+        <p></p>
+      </div>
+    </section>
+
+    <section class="integrations-section">
+      <h3>Drop-in integrations for your favorite frameworks & tools</h3>
+      <div class="logo-bar">
+        <a href="/docs/integrations/remix/" set:html={RemixLogoSvg} />
+        <a href="/docs/integrations/nextjs/" set:html={NextLogoSvg} />
+        <a href="/docs/integrations/astro/" set:html={AstroLogoSvg} />
+        <a href="/docs/integrations/vite/" set:html={ViteLogoSvg} />
+        <a href="/docs/integrations/node/" set:html={NodeLogoSvg} />
+      </div>
+      <div class="richtext">
+        <p>Use something else? 💪 <a href={DMNO_PUBLIC_CONFIG.DISCORD_JOIN_URL}>Join us on discord</a> and help us build the next one!</p>
+      </div>
+    </section>
+
+  </div>
+
+  {/* hide site title */}
+  <style is:global>
+    head:has(meta[content="👋"]) ~ body .content-panel:has(h1#_top) {
+      display: none !important;
+    }
+    head:has(meta[content="👋"]) ~ body .content-panel:has(h1#_top) ~ .content-panel {
+      border-top: none;
+    }
+
+    .main-frame {
+      min-height: 100vh;
+    }
+  </style>
+
+  <style lang="less">
+
+    :global(.main-frame) {
+    }
+    .homepage {
+      .hero {
+        color: var(--color-text-full-shade);
+        padding-bottom: 2rem;
+        display: flex;
+        flex-direction: column;
+
+        @media (min-width: 50rem) {
+          gap: 2rem;
+          padding-top: 4rem;
+          padding-bottom: 5rem;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
+
+        @media (min-width: 72rem) {
+          padding-left: 4rem;
+          padding-right: 4rem;          
+          gap: 4rem;
+        }
+
+        @media (min-width: 100rem) {
+          grid-template-columns: 4fr 5fr;
+        }
+        
+        .hero__logo {
+          display: flex;
+          position: relative;
+          align-items: center;
+          
+          :global(.dmno-tile-logo) {
+            max-width: 50vw;
+            
+          }
+        }
+        .hero__text {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        &:before {
+          content: '';
+          position: absolute;
+          z-index: -1;
+          top: 0;
+          bottom: 50%;
+          left: 0%;
+          right: 0;
+          opacity: .2;
+          
+        }
+      }
+      h1 {
+        display: none;  
+        @media (min-width: 50rem) {
+          font-size: 4rem;
+          display: block;
+        }
+        line-height: .8em;
+      }
+      h2 {
+        @media (min-width: 50rem) {
+          font-size: 1.5rem;
+        }
+        
+        line-height: 1.4em;
+        margin: 1.5rem 0;
+        font-weight: 500;
+      }
+      
+      .cta-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        @media (min-width: 50rem) {
+          flex-direction: row;
+          gap: 2rem;
+        }
+        
+      }
+
+      a.button {
+
+        @property --spin {
+          syntax: '<angle>';
+          initial-value: 35deg;
+          inherits: false;
+        }
+
+        background: linear-gradient(var(--spin), var(--brand-purple) 0%, var(--brand-red) 100%);
+        color: var(--brand-white);
+        
+        font-size: 18px;
+        height: 48px;
+        border-radius: 50px;
+        padding: 0px 2rem;
+        align-content: center;
+        font-weight: bold;
+        text-wrap: nowrap;
+        text-decoration: none;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+;
+        &:hover {
+          background: linear-gradient(var(--spin), var(--brand-pink) 0%, var(--brand-pink) 100%);
+          background: var(--brand-pink);
+
+        }
+        &:hover {
+          transform: translate3d(-2px, -2px, 0);
+          background: var(--brand-pink);
+          box-shadow: 2px 2px 0 var(--tile-drop-shadow);
+        }
+        &:focus {
+          outline: 1px solid var(--brand-pink);
+        }
+        &:active {
+          transform: translate3d(0, 0, 0);
+          box-shadow: none;
+        }
+      }
+      
+
+      .install-command {
+        display: flex;
+        font-size: 18px;
+        height: 48px;
+        border: 2px solid var(--brand-pink);
+        align-items: center;
+        padding-right: 64px;
+        font-weight: bold;
+        background: black;
+        position: relative;
+        html[data-theme='light'] & {
+          background: rgba(0,0,0,.2);
+          background: var(--brand-cyan--t2);
+          color: black;
+        }
+
+        font-family: var(--code-font);
+        text-wrap: nowrap;
+
+        --border-gradient-color-1: var(--brand-green);
+        --border-gradient-color-2: var(--brand-cyan);
+        border: 2px solid var(--border-gradient-color-1);
+        border-image-source: linear-gradient(90deg, var(--border-gradient-color-1), var(--border-gradient-color-2));
+        border-image-slice: 1;
+        
+
+        :global(.d-icon) {
+          height: 44px;
+          width: 44px;
+          flex-shrink: 0;
+
+          // console/cli caret
+          &:first-child {
+            width: 36px;
+            padding: 8px;
+          }
+          
+          // copy icon
+          &:last-child {
+            position: absolute;
+            right: 0px;
+            top: 0px;
+            padding: 8px;
+            &:hover {
+              color: var(--brand-pink);
+              cursor: pointer;
+            }
+          }
+        }
+        .install-command__copy.--success {
+          color: var(--brand-green) !important;
+          :global(svg:nth-child(1)) { display: none; }
+          :global(svg:nth-child(2)) { display: block; }          
+        }
+        
+
+      }
+
+    }
+
+    .value-prop-section {
+      display: grid;
+      @media (min-width: 50rem) {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+      gap: 2.5rem;
+      h3 {
+        margin-bottom: 1rem;
+      }
+      code {
+        background: rgba(255,255,255,.15);
+        html[data-theme='light'] & {
+          background: rgba(0,0,0,.15);
+        }
+        padding: .1em .15em;
+      }
+    }
+
+    .integrations-section {
+      background: var(--brand-purple--t2);
+      padding: 1rem;
+      @media (min-width: 50rem) {
+        padding: 2rem;
+      }
+      margin: 2rem 0;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      p {
+        text-align: right;
+        font-style: italic;
+        width: 100%;
+      }
+    }
+    .logo-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5%;
+
+      > div, > a {
+        flex-grow: 1;
+        :global(> svg) {
+          display: block;
+          width: 100%;
+          height: auto;
+          max-height: 80px;
+          min-width: 30px;
+          opacity: .8;
+          
+          &:hover {
+            opacity: 1;
+            transform: scale(1.1);
+          }
+
+        }
+        
+        
+      }
+    }
+
+  </style>
+
+  <script>
+    document.querySelector('.install-command__copy')?.addEventListener('click', async (e) => {
+      await navigator.clipboard.writeText('npx dmno init');
+      if (e.target instanceof Element) {
+        e.target.classList.add('--success');
+        setTimeout(() => {
+          (e.target as Element).classList.remove('--success');
+        }, 2000);
+      }
+    });
+  </script>
+  
+</StarlightPage>

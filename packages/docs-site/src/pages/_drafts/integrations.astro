@@ -1,0 +1,23 @@
+---
+import LandingPage from '@/components/layouts/LandingPage.astro';
+import VideoBlock from '@/components/VideoBlock.astro';
+import CTABlock from '@/components/CTABlock.astro';
+import Hero from '@/components/Hero.astro';
+
+---
+<LandingPage
+  title="DMNO"
+  description="DMNO augments your favorite frameworks with type-safe env vars while detecting and preventing you from leaking sensitive information. Worried about hybrid rendering? Don't be. DMNO has you covered."
+  showToC={false}
+  showSidebar={false}
+  showIntegrations={true}
+>
+    <Hero
+      heading="Stop worrying about environment variables and just write code."
+      subheading="DMNO augments your favorite frameworks with type-safe env vars while detecting and preventing you from leaking sensitive information. Worried about hybrid rendering? Don't be. DMNO has you covered."
+    />
+    <CTABlock 
+      command="npx dmno init"
+    />
+
+</LandingPage>

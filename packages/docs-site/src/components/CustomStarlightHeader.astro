@@ -11,11 +11,28 @@ import ThemeSelect from "./ThemeSelect.vue";
 
 import { DmnoTileLogo } from "@dmno/ui-lib";
 import HeaderNav from "./HeaderNav.astro";
+import HeaderNavMarketing from "./HeaderNavMarketing.astro";
+
+// get toplevel pages outside content collections
+// order is alphabetical by filename
+// TODO move this somewhere better
+const topLevelPages = import.meta.glob("/src/pages/*.astro");
+let topLevelPageNames = Object.keys(topLevelPages).map((path) => {
+  const match = path.match(/\/src\/pages\/(.*)\.astro/);
+  if (match && match[1] === "index") {
+    return "";
+  }
+  return match ? match[1] : false;
+});
+const isTopLevel = topLevelPageNames.includes(Astro.props.slug);
+
+// add docs and blog to top level pages after check so it doesn't affect the conditional header rendering
+topLevelPageNames = topLevelPageNames.concat(["docs", "blog"]);
 
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
  */
-const shouldRenderSearch = true;
+const shouldRenderSearch = !isTopLevel;
 // config.pagefind ||
 // config.components.Search !== "@astrojs/starlight/components/Search.astro";
 ---
@@ -27,9 +44,16 @@ const shouldRenderSearch = true;
       <span class="logo-font logo-dmno-text"> DMNO </span>
     </a>
   </div>
+  
   <HeaderNav />
+  <!-- {isTopLevel ? 
+    <HeaderNavMarketing
+      navItems={topLevelPageNames} 
+    /> :
+    <HeaderNav />
+  } -->
 
-  {shouldRenderSearch && <Search {...Astro.props} />}
+  {shouldRenderSearch ? <Search {...Astro.props} /> : <div/>}
   <div class="sl-hidden md:sl-flex right-group">
     <SocialIcons />
     <ThemeSelect client:load />
@@ -56,6 +80,7 @@ const shouldRenderSearch = true;
     color: white;
     text-decoration: none;
     white-space: nowrap;
+    padding-right: 3rem;
 
     font-size: 22px;
     @media (min-width: 50rem) {
@@ -131,7 +156,7 @@ const shouldRenderSearch = true;
   }
 
   .right-group {
-    align-items: center;
+    justify-content: right ;
   }
   .header :global(.social-icons::after) {
     content: "";
