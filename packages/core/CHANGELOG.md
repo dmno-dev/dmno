@@ -1,5 +1,13 @@
 # dmno
 
+## 0.0.23
+
+### Patch Changes
+
+- [#128](https://github.com/dmno-dev/dmno/pull/128) [`f35a288`](https://github.com/dmno-dev/dmno/commit/f35a288c466bd9f6223730c63ee8e6e639bde8b7) Thanks [@theoephraim](https://github.com/theoephraim)! - fix for instanceof checks on DmnoDataType
+
+- [#121](https://github.com/dmno-dev/dmno/pull/121) [`0bb9f81`](https://github.com/dmno-dev/dmno/commit/0bb9f810118f4852b27f89e287ca8940b4b05b11) Thanks [@theoephraim](https://github.com/theoephraim)! - more flexible workspace project detection
+
 ## 0.0.22
 
 ### Patch Changes

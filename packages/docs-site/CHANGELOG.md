@@ -4,6 +4,15 @@
 
 ### Patch Changes
 
+- Updated dependencies [[`f35a288`](https://github.com/dmno-dev/dmno/commit/f35a288c466bd9f6223730c63ee8e6e639bde8b7), [`0bb9f81`](https://github.com/dmno-dev/dmno/commit/0bb9f810118f4852b27f89e287ca8940b4b05b11)]:
+  - dmno@0.0.23
+  - @dmno/astro-integration@0.0.12
+  - @dmno/netlify-platform@0.0.3
+
+## null
+
+### Patch Changes
+
 - Updated dependencies [[`abdaf0c`](https://github.com/dmno-dev/dmno/commit/abdaf0ce8cb0edc1f05f6cc0bf13ef0a347fdacd)]:
   - dmno@0.0.22
   - @dmno/astro-integration@0.0.12
