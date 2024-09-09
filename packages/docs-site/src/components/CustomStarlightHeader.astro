@@ -44,14 +44,16 @@ const shouldRenderSearch = !isTopLevel;
       <span class="logo-font logo-dmno-text"> DMNO </span>
     </a>
   </div>
-  {isTopLevel ? 
+  
+  <HeaderNav />
+  <!-- {isTopLevel ? 
     <HeaderNavMarketing
       navItems={topLevelPageNames} 
     /> :
     <HeaderNav />
-  }
+  } -->
 
-  {shouldRenderSearch && <Search {...Astro.props} />}
+  {shouldRenderSearch ? <Search {...Astro.props} /> : <div/>}
   <div class="sl-hidden md:sl-flex right-group">
     <SocialIcons />
     <ThemeSelect client:load />
@@ -78,6 +80,7 @@ const shouldRenderSearch = !isTopLevel;
     color: white;
     text-decoration: none;
     white-space: nowrap;
+    padding-right: 3rem;
 
     font-size: 22px;
     @media (min-width: 50rem) {

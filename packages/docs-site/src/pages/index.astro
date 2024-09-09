@@ -4,7 +4,7 @@ import LandingPage from '@/components/layouts/LandingPage.astro';
 import VideoBlock from '@/components/VideoBlock.astro';
 import CTABlock from '@/components/CTABlock.astro';
 import Hero from '@/components/Hero.astro';
-import FeatureBlock from '@/components/FeatureBlock.astro';
+import LandingPageSection from '@/components/LandingPageSection.astro';
 
 import importedCode from '/.dmno/config.mts?raw';
 import intellisenseImg from '@/assets/docs-images/platform-intellisense-example.png';
@@ -20,100 +20,92 @@ const muxId = "dTb7Y3p00ajAOcSF4x00DZN7lkXGU00i2nfW3puCWVfyos";
   showSidebar={false}
   showIntegrations={true}
 >
-    <Hero
-      heading="Environment Variables. \n Evolved."
-      subheading="DMNO makes your configuration safer and smarter. It integrates with the tools you already use and it's powered by TypeScript and Vite."
-    />
+    <Hero>
+      <Fragment slot="heading">
+        Environment Variables.<br/>Evolved.
+      </Fragment>
+      <Fragment slot="subheading">
+        DMNO makes your configuration safer and smarter.<br/>It integrates with the tools you already use and it's powered by TypeScript and Vite.
+      </Fragment>
+    </Hero>
+
     <CTABlock
       text="Get started ->"
       href="/docs/get-started/quickstart/"
       command="npx dmno init"
     />
+
     <!-- <img src={screenshotImg.src} alt="an annotated screenshot showing DMNO's various features"> -->
-    <VideoBlock muxId={muxId}/>
+    <LandingPageSection>
+      <VideoBlock muxId={muxId} />  
+    </LandingPageSection>
     
-    <h2>Schema-defined configuration</h2>
-    <Code
-      code={`
+    
+    <LandingPageSection
+      title="Schema-defined configuration"
+      ctaLink="/docs/guides/schema/"
+    >
+      <Code
+        code={`
 import { DmnoBaseTypes, defineDmnoService, switchBy } from 'dmno';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
+import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 
-// optionally encrypt production secrets in a vault you commit to your repo
+// use a plugin to fetch secrets from a secure backend like 1Password
+const OnePass = new OnePasswordDmnoPlugin('1pass', {
+  token: configPath('OP_TOKEN'),
+});
+// or store them encrypted within your repo
 const MyProdVault = new EncryptedVaultDmnoPlugin('vault', {
   key: configPath('DMNO_VAULT_KEY'),
 });
 
 export default defineDmnoService({
-  name: 'my-service',
   settings: {
     // automatically detect and prevent leaks
     interceptSensitiveLeakRequests: true,
     redactSensitiveLogs: true,
     preventClientLeaks: true,
   }, 
-  // re-use shared items
-  pick: [
-    'API_KEY',
-    'DB_URL', 
-    'DMNO_ENV',
-  ], 
-  // define service specific items
+  // re-use items defined in other services
+  pick: ['API_KEY', 'DB_URL', 'DMNO_ENV'], 
+  // more config specific to this service
   schema: {
     DMNO_VAULT_KEY: {
+      // re-use existing types with validation and docs info built-in
       extends: EncryptedVaultTypes.encryptionKey,
     },
-
-    SAAS_KEY: {
-      required: true,
-      // load different values based on another value
+    OP_TOKEN: {
+      extends: OnePasswordTypes.serviceAccountToken,
+    },
+    SAAS_API_KEY: {
+      // load different values based on any other value
       value: switchBy('DMNO_ENV', {
-        _default: 'my-dev-key', 
+        _default: 'my-dev-key',
         production: MyProdVault.item(),
       }),
-      
     },
-
+    SAAS_PROJECT_TAG: {
+      // use a function to set a value - reference any other config
+      value: (ctx) => \`myapp_\${DMNO_CONFIG.DMNO_ENV}\`,
+    },
   }
 });
-      `}
-      lang="ts"
-      title=".dmno/config.mts - sample config file"
-      class="landing-page-code"
-    />
-    <CTABlock
-    text="Read more ->"
-    href="/docs/guides/schema/"
-  />
-    <FeatureBlock
+        `}
+        lang="ts"
+        title=".dmno/config.mts - sample config file"
+      />
+    </LandingPageSection>
+    <LandingPageSection
       title="Leak prevention and detection"
-      imagePath={leakImg.src}
-      imageAlt="DMNO Warning of a potential leak"
-      description=""
+      imgPath={leakImg.src}
+      imgAlt="DMNO Warning of a potential leak"
+      ctaLink="/docs/get-started/security/#leak-detection"
     />
-    <CTABlock
-      text="Read more ->"
-      href="/docs/get-started/security/#leak-detection"
-    />
-    <FeatureBlock
+    <LandingPageSection
       title="Feature-rich IntelliSense"
-      imagePath={intellisenseImg.src}
-      imageAlt="VS Code screenshot showing DMNO's IntelliSense"
-      description=""
+      imgPath={intellisenseImg.src}
+      imgAlt="VS Code screenshot showing DMNO's IntelliSense"
+      ctaLink="https://dmno.dev/docs/guides/schema/#docs--intellisense"
     />
-    <CTABlock
-      text="Read more ->"
-      href="https://dmno.dev/docs/guides/schema/#docs--intellisense"
-    />
-
 </LandingPage>
-
-<style>
-  .landing-page-code {
-    width: 90%;
-    margin: 0 auto;
-    margin-top: 2rem;
-  }
-  h2 {
-    margin: 2rem 3rem;
-  }
-</style>

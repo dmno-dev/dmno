@@ -10,7 +10,7 @@ const { text, href, command } = Astro.props as Props;
 
 ---
 
-<div class="cta-wrap">
+<div class="cta-block">
   { href && text && 
     <a href={href} class="button">{text}</a>
   }
@@ -24,12 +24,14 @@ const { text, href, command } = Astro.props as Props;
 </div>
 
 <style lang="less">
-  .cta-wrap {
+  .cta-block {
     display: flex;
+    flex-wrap: wrap;
     // flex-direction: column;
     justify-content: center;
     gap: 1rem;
-    margin: 2rem 0;
+
+
     @media (min-width: 50rem) {
       flex-direction: row;
       gap: 2rem;

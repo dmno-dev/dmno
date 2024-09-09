@@ -23,6 +23,8 @@ h5 {
   --body-font: 'Inter', ui-sans-serif, Arial, 'Noto Sans', sans-serif;
   --logo-font: 'Days One', sans-serif;
   --code-font: 'Fira Mono', ui-monospace, monospace;
+
+  --sl-content-width: 75rem;
 }
 
 // custom color palette
@@ -136,6 +138,11 @@ h5 {
 
   .sl-badge {}
 
+  // hide the starlight blog's inserted link to the blog on the docs mobile sidebar
+  >div:first-child {
+    display: none;
+  }
+
 }
 
 
@@ -163,7 +170,9 @@ starlight-file-tree,
 // image borders 
 .sl-markdown-content p>img:first-child,
 .dmno-cli-command img,
-li>p>img:last-child {
+li>p>img:last-child,
+figure>img,
+.video-block {
   border: 1px solid var(--brand-blue--t1);
 }
 

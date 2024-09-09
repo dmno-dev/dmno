@@ -24,12 +24,11 @@ const {
 
 ---
 <StarlightPage frontmatter={{
-  title: '👋',
-  description: description,
-  tableOfContents: showToC,
-}}
-  hasSidebar={showSidebar}
-  
+    title: '👋',
+    description: description,
+    tableOfContents: showToC,
+  }}
+  hasSidebar={true}
 >
   <div class="homepage not-content">
 
@@ -62,21 +61,30 @@ const {
     head:has(meta[content="👋"]) ~ body .content-panel:has(h1#_top) ~ .content-panel {
       border-top: none;
     }
-    :root {
-      --sl-content-width: 75rem;
-    }
 
     .main-frame {
       min-height: 100vh;
-      
     }
   </style>
+
+  { /* hiding the sidebar another way, so we can keep the burger menu on mobile */ }
+  { showSidebar === false && <style is:global>
+    @media (min-width: 50rem) {
+      #starlight__sidebar {
+        display: none !important;
+      }
+      :root { 
+        --sl-sidebar-width: 0px;
+      }
+    }
+  </style>}
 
 <style lang="less">
 
   :global(.main-frame) {
   }
   .homepage {
+    container-type: inline-size;
     .hero {
       color: var(--color-text-full-shade);
       padding-bottom: 2rem;

@@ -2,31 +2,34 @@
 const { muxId } = Astro.props;
 ---
 
-<div class="video-container">
+<div class="video-block">
   <mux-player
     playback-id={muxId}
     autoplay
     loop
     muted
-  ></mux-player>
+  />
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@mux/mux-player"></script>
 
 
 <style>
-  /* center, 80% width */
-  .video-container {
-    margin: 0 auto;
-    display: flex;
-    justify-content: center;
-  }
-  @media (min-width: 640px) {
+  .video-block {
+    padding: 0;
     mux-player {
+      margin: 0;
+      padding: 0;
+      --mute-button: none;
+      display: block;
       border: none;
       margin: 0 auto;
-      width: 90%;
       aspect-ratio: 16/10;
       --mute-button: none;
+
     }
+
+    /* margin: 0 auto; */
+    /* display: flex; */
+    /* justify-content: center; */
   }
 </style>
