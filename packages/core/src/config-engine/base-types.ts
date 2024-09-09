@@ -124,7 +124,7 @@ export class DmnoDataType<InstanceOptions = any> {
 
     // value resolvers have shorthands that can be passed in (static value, functions)
     // so we'll make sure those are initialized properly as well
-    if (this.typeDef.value !== undefined) {
+    if ('value' in this.typeDef) {
       this._valueResolver = processInlineResolverDef(this.typeDef.value);
     }
 
@@ -536,7 +536,7 @@ const StringDataType = createDmnoDataType({
 
     // special handling to not allow empty strings (unless explicitly allowed)
     if (val === '' && !settings.allowEmpty) {
-      return [new ValidationError('If set, string must not be empty')];
+      return [new ValidationError('If set, string must not be empty. Use `allowEmpty` option if this is intended.')];
     }
 
     if (settings.minLength !== undefined && val.length < settings.minLength) {

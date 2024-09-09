@@ -90,6 +90,7 @@ export default defineDmnoService({
       value: switchByNodeEnv({
         _default: EncryptedVaultSecrets.item(),
         staging: switchBy('CONTEXT', {
+          _default: undefined,
           'branch-preview': EncryptedVaultSecrets.item(),
           'pr-preview': EncryptedVaultSecrets.item(),
         }),

@@ -9,7 +9,10 @@ import { SerializedResolver } from '../../config-loader/serialization-types';
 
 // TODO: do we allow Date?
 // what to do about null/undefined?
-export type ConfigValue = string | number | boolean | null | { [key: string]: ConfigValue } | Array<ConfigValue>;
+export type ConfigValue =
+  string | number | boolean | null | undefined |
+  { [key: string]: ConfigValue } |
+  Array<ConfigValue>;
 
 type ValueResolverResult = undefined | ConfigValue;
 type ConfigValueInlineFunction =
@@ -308,15 +311,13 @@ export function processInlineResolverDef(resolverDef: InlineValueResolverDef) {
   } else if (resolverDef instanceof ConfigValueResolver) {
     return resolverDef;
 
-  // static value case
-  } else if (resolverDef !== undefined) {
+  // static value case - including undefined
+  } else {
     return createResolver({
       icon: 'material-symbols:check-circle',
       label: 'static',
       resolve: async () => resolverDef,
     });
-  } else {
-    throw new Error('invalid resolver definition');
   }
 }
 

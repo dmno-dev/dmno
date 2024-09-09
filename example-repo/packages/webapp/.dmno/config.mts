@@ -81,7 +81,7 @@ export default defineDmnoService({
     },
     SWITCH_EXAMPLE: {
       value: switchByNodeEnv({
-        _default: 'default-val',
+        _default: 'dev-value',
         staging: 'staging-value',
         production: (ctx) => `prod-${DMNO_CONFIG.NODE_ENV}`,
       })

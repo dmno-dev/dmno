@@ -21,7 +21,7 @@ export function createVendorSchema(
 ) {
   if (!commonTraits) return schema;
   return _.mapValues(schema, (item, _itemKey) => {
-    if (item instanceof DmnoDataType || _.isString(item) || _.isFunction(item)) {
+    if (DmnoDataType.checkInstanceOf(item) || _.isString(item) || _.isFunction(item)) {
       return {
         extends: item,
         ...commonTraits,

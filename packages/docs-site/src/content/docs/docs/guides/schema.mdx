@@ -427,7 +427,7 @@ export default defineDmnoService({
 });
 ```
 
-Internally, we even wrap the static values and inline functions into resolvers, so that we can always display some additional metadata about _how_ the value is being set - even without actually resolving it. These resolvers can also return more resolvers, and have a notion of multiple branches built in, leading to some very powerful composition capabilities.
+Internally, we even wrap the static values and inline functions into resolvers, so that we can always display some additional metadata about _how_ the value is being set - even without actually resolving it. Resolvers also have a notion of multiple branches built in, which can then use more resolvers. This enables some very powerful composition capabilities.
 
 An quick example to illustrate using our built-in [`switchBy`](/docs/reference/helper-methods/#switchby) resolver which selects a value based on the current value of another within your config.
 
@@ -441,7 +441,7 @@ export default defineDmnoService({
         _default: 'dev123',
         test: 'test123',
         staging: 'staging123',
-        // sensitive key we don't want in our repo
+        // sensitive key we need to pull from somewhere secure
         production: prodOnePassSecrets.item(),
       }),
     },

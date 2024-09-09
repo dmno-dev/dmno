@@ -397,11 +397,14 @@ This method is used to define different configurations for different values of a
 
 ```typescript
 type opts = {
-  _default?: any;
+  _default: any;
   [key: string]: any;
 };
 ```
-Note: `_default` is a reserved key that will be used if the current key is not defined in the object. All the other keys should match the possible values of the `SWITCH_BY_KEY` config item.
+
+Note: `_default` is a reserved key that will be used if the current value is not found. All the other keys should match the possible values of the `SWITCH_BY_KEY` config item. **You must set `_default` value in the switch object, even if it is `_default: undefined`.**
+
+
 
 Example: 
 ```javascript
@@ -433,7 +436,7 @@ This method is used to define different configurations for different environment
 
 ```typescript
 type SwitchByNodeEnvOpts = {
-  _default?: any;
+  _default: any;
   development?: any;
   staging?: any;
   production?: any;

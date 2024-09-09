@@ -6,7 +6,10 @@ import {
 } from './resolvers';
 import { ResolverContext } from '../config-engine';
 
-type SwitchByResolverOptions = Record<string, InlineValueResolverDef>;
+type SwitchByResolverOptions =
+  // a default value is required, even if undefined - can be set via `_` or `_default`
+  ({ '_': InlineValueResolverDef } | { '_default': InlineValueResolverDef })
+  & { [value: string]: InlineValueResolverDef };
 
 export const switchBy = (switchByKey: string, branches: SwitchByResolverOptions) => {
   return createResolver({
