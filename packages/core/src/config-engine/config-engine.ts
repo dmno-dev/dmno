@@ -1200,15 +1200,15 @@ export class DmnoConfigItem extends DmnoConfigItemBase {
     } else if (_.isFunction(defOrShorthand)) {
       // in this case, we have no settings to pass through, so we pass an empty object
       const shorthandFnResult = defOrShorthand({});
-      if (!(shorthandFnResult instanceof DmnoDataType)) {
+      if (!DmnoDataType.checkInstanceOf(shorthandFnResult)) {
         // TODO: put this in schema error instead?
         console.log(DmnoDataType, shorthandFnResult);
         throw new Error('invalid schema as result of fn shorthand');
       } else {
         this.type = shorthandFnResult;
       }
-    } else if (defOrShorthand instanceof DmnoDataType) {
-      this.type = defOrShorthand;
+    } else if (DmnoDataType.checkInstanceOf(defOrShorthand)) {
+      this.type = defOrShorthand as DmnoDataType;
     } else if (_.isObject(defOrShorthand)) {
       // this is the only real difference b/w the handling of extends...
       // we create a DmnoDataType directly without a reusable type for the items defined in the schema directly
