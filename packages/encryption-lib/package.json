@@ -10,7 +10,7 @@
     "lint:fix": "pnpm run lint --fix"
   },
   "dependencies": {
-    "@types/node": "^20.12.7",
+    "@types/node": "catalog:",
     "base64-arraybuffer": "^1.0.2"
   },
   "devDependencies": {

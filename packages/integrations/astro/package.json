@@ -50,19 +50,19 @@
     "@dmno/ts-lib": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "@types/async": "^3.2.24",
-    "@types/debug": "^4.1.12",
-    "@types/lodash-es": "^4.17.12",
-    "@types/node": "^20.14.8",
+    "@types/debug": "catalog:",
+    "@types/lodash-es": "catalog:",
+    "@types/node": "catalog:",
     "astro": "^4.13.3",
     "dmno": "workspace:*",
-    "tsup": "^8.1.0",
-    "typescript": "^5.5.4"
+    "tsup": "catalog:",
+    "typescript": "catalog:"
   },
   "peerDependencies": {
     "astro": "^4",
     "dmno": "^0"
   },
   "dependencies": {
-    "debug": "^4.3.5"
+    "debug": "catalog:"
   }
 }

@@ -49,10 +49,10 @@
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
-    "@types/node": "^20.12.7",
+    "@types/node": "catalog:",
     "dmno": "workspace:*",
-    "tsup": "^8.0.2",
-    "typescript": "^5.4.5"
+    "tsup": "catalog:",
+    "typescript": "catalog:"
   },
   "peerDependencies": {
     "dmno": "^0",
