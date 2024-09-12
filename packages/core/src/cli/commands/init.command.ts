@@ -11,7 +11,7 @@ import {
 import { tryCatch } from '@dmno/ts-lib';
 
 import gradient from 'gradient-string';
-import { PackageManager, findDmnoServices, pathExists } from '../../config-loader/find-services';
+import { findDmnoServices, pathExists } from '../../config-loader/find-services';
 import { DmnoCommand } from '../lib/dmno-command';
 
 import { formatError, formattedValue, joinAndCompact } from '../lib/formatting';
@@ -23,6 +23,7 @@ import {
 import { initDmnoForService } from '../lib/init-helpers';
 import { DISCORD_INVITE_URL, GITHUB_REPO_URL } from '../../lib/constants';
 import { CliExitError } from '../lib/cli-error';
+import { detectJsPackageManager } from '../../lib/detect-package-manager';
 
 const program = new DmnoCommand('init')
   .summary('Sets up dmno')
@@ -46,7 +47,9 @@ program.action(async (opts: {
 
   const rootPath = workspaceInfo.workspacePackages[0].path;
 
-  console.log(kleur.gray(`- Package manager: ${workspaceInfo.packageManager}`));
+  const packageManager = detectJsPackageManager();
+
+  console.log(kleur.gray(`- Package manager: ${packageManager.name}`));
   console.log(kleur.gray(`- Workspace root path: ${rootPath}`));
   if (workspaceInfo.isMonorepo) {
     console.log(kleur.gray(`- Monorepo mode: ENABLED (${workspaceInfo.workspacePackages.length - 1} child packages)`));
