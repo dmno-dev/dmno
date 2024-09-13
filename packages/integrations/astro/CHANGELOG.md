@@ -1,5 +1,11 @@
 # @dmno/astro-integration
 
+## 0.0.13
+
+### Patch Changes
+
+- [#117](https://github.com/dmno-dev/dmno/pull/117) [`0b73d65`](https://github.com/dmno-dev/dmno/commit/0b73d6528bde14b32b79cf15bf5752d5bdcd8045) Thanks [@philmillman](https://github.com/philmillman)! - bump astro (and related) versions
+
 ## 0.0.12
 
 ### Patch Changes
