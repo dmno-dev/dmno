@@ -76,6 +76,11 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
         const filePath = path.join(cwd, globLocation.file);
         if (!await pathExists(filePath)) continue;
 
+        // assume first package.json file found is root until we find evidence otherwise
+        if (globLocation.file === 'package.json' && !dmnoWorkspaceRootPath) {
+          dmnoWorkspaceRootPath = cwd;
+        }
+
         debug(`looking for workspace globs in ${filePath} > ${globLocation.path}`);
         const fileType = path.extname(filePath);
         let fileContents: any;
