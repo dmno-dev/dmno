@@ -1,5 +1,11 @@
 # dmno
 
+## 0.0.24
+
+### Patch Changes
+
+- [#133](https://github.com/dmno-dev/dmno/pull/133) [`00b3984`](https://github.com/dmno-dev/dmno/commit/00b39847dbe2664af5e7f200cdc17cc0529fc24c) Thanks [@theoephraim](https://github.com/theoephraim)! - support workspace root detection in single-repo without git
+
 ## 0.0.23
 
 ### Patch Changes
