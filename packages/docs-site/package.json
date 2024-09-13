@@ -1,6 +1,5 @@
 {
   "name": "@dmno/docs-site",
-  "version": "0",
   "private": true,
   "type": "module",
   "scripts": {
