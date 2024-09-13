@@ -5,7 +5,7 @@ description: Learn how to manage dynamic and static config items in DMNO in your
 
 If you do any front-end development, you're probably used to the concept of replacing references to env vars with actual values _at build time_ (e.g., [vite](https://vitejs.dev/config/shared-options.html#define), [webpack](https://webpack.js.org/plugins/define-plugin/)). This is useful so that:
 - the client doesn't have to fetch config before using it
-- bundlers can drop unreachable code and dependendencies
+- bundlers can drop unreachable code and dependencies
 
 In most frameworks and build tools, this concept is tightly coupled with something being _**public**_, and is triggered via a special prefix (e.g., `NEXT_PUBLIC_`) but can also be dependent on _where and how_ you access the config, especially now that server-side/hybrid rendering is gaining popularity over the totally static JAMStack sites of the last decade.
 
