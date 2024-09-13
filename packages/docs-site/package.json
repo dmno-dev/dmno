@@ -1,7 +1,7 @@
 {
   "name": "@dmno/docs-site",
-  "version": "0",
   "private": true,
+  "version": null,
   "type": "module",
   "scripts": {
     "dev": "astro dev",
