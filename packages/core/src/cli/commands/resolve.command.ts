@@ -52,7 +52,7 @@ program.action(async (opts: {
   const workspace = ctx.workspace!;
   const service = ctx.selectedService;
   checkForSchemaErrors(workspace);
-  await service.resolveConfig();
+  await workspace.resolveConfig();
   checkForConfigErrors(service, { showAll: opts?.showAll });
 
   // console.log(service.config);

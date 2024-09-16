@@ -1,10 +1,10 @@
 import _ from 'lodash-es';
 import Debug from 'debug';
 import {
-  ConfigraphNodeBase, TypeExtendsDefinition,
+  ConfigraphNodeBase,
 } from './config-node';
 
-import { ConfigraphDataType } from './data-types';
+import { ConfigraphDataType, ConfigraphTypeExtendsDefinition } from './data-types';
 import { ConfigValue, ConfigValueResolver, createResolver } from './resolvers';
 import { CoercionError, SchemaError, ValidationError } from './errors';
 import { ConfigraphEntity } from './entity';
@@ -44,8 +44,7 @@ type PluginSchemaItemDefinition = {
   /** description of the input */
   description?: string,
   /** data type of this input */
-  extends?: TypeExtendsDefinition,
-
+  extends?: ConfigraphTypeExtendsDefinition,
   // TODO: what other item schema properties do we want?
 };
 

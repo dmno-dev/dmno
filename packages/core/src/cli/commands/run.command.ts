@@ -59,7 +59,7 @@ program.action(async (_command, opts: {
   const workspace = ctx.workspace!;
   const service = ctx.selectedService;
   checkForSchemaErrors(workspace);
-  await service.resolveConfig();
+  await workspace.resolveConfig();
   checkForConfigErrors(service);
 
   const serviceEnv = service.getEnv();

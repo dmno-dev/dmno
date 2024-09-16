@@ -2,6 +2,7 @@
 import _ from 'lodash-es';
 import { ConfigraphNodeBase } from './config-node';
 import { ResolutionError, SchemaError, ValidationError } from './errors';
+import { SerializedResolver, SerializedResolverBranch } from '.';
 
 
 // TODO: do we allow Date?
@@ -298,22 +299,21 @@ export class ConfigValueResolver {
     }
   }
 
-  //! move serialization out of core objects
-  // toJSON(): SerializedResolver {
-  //   return {
-  //     isResolved: this.isResolved,
-  //     icon: this.icon,
-  //     label: this.label,
-  //     createdByPluginInstanceName: this.def.createdByPlugin?.instanceName,
-  //     // itemPath: this.configItem?.getFullPath(),
-  //     // branchIdPath: this.branchIdPath,
-  //     ...this.branches && {
-  //       branches: this.branches.map((b) => b.toJSON()),
-  //     },
-  //     resolvedValue: this.resolvedValue,
-  //     resolutionError: this.resolutionError?.toJSON(),
-  //   };
-  // }
+  toJSON(): SerializedResolver {
+    return {
+      isResolved: this.isResolved,
+      icon: this.icon,
+      label: this.label,
+      createdByPluginId: this.def.createdByPluginId,
+      // itemPath: this.configItem?.getFullPath(),
+      // branchIdPath: this.branchIdPath,
+      ...this.branches && {
+        branches: this.branches.map((b) => b.toJSON()),
+      },
+      resolvedValue: this.resolvedValue,
+      resolutionError: this.resolutionError?.toJSON(),
+    };
+  }
 }
 export class ConfigValueResolverBranch {
   constructor(
@@ -330,16 +330,15 @@ export class ConfigValueResolverBranch {
   get isDefault() { return this.def.isDefault; }
   get resolver() { return this.def.resolver; }
 
-  //! move out of core
-  // toJSON() {
-  //   return {
-  //     id: this.id,
-  //     label: this.label,
-  //     isDefault: this.isDefault,
-  //     isActive: this.isActive,
-  //     resolver: this.resolver.toJSON(),
-  //   };
-  // }
+  toJSON(): SerializedResolverBranch {
+    return {
+      id: this.id,
+      label: this.label,
+      isDefault: this.isDefault,
+      isActive: this.isActive,
+      resolver: this.resolver.toJSON(),
+    };
+  }
 }
 
 export function processInlineResolverDef(resolverDef: InlineValueResolverDef) {

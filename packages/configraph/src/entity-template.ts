@@ -1,6 +1,6 @@
 import { ConfigraphEntityDef } from './entity';
 
-export class ConfigraphEntityTemplate {
+export class ConfigraphEntityTemplate<EntityMetadata = {}, NodeMetadata = {}> {
   constructor(readonly meta: {
     label: string,
     // description: string,
@@ -8,8 +8,8 @@ export class ConfigraphEntityTemplate {
 
   }
 
-  entities: Array<ConfigraphEntityDef> = [];
-  addEntity(entityDef: ConfigraphEntityDef) {
+  entities: Array<ConfigraphEntityDef<EntityMetadata, NodeMetadata>> = [];
+  addEntity(entityDef: ConfigraphEntityDef<EntityMetadata, NodeMetadata>) {
     this.entities.push(entityDef);
   }
 

@@ -7,6 +7,7 @@ import { SchemaError } from './errors';
 import { ConfigraphEntity, ConfigraphEntityDef } from './entity';
 import { ConfigraphPlugin } from './plugin';
 import { DependencyNotResolvedResolutionError } from './resolvers';
+import { ConfigraphDataTypesRegistry } from '.';
 
 const debug = Debug('configraph');
 
@@ -16,7 +17,18 @@ const debug = Debug('configraph');
 // we may want to restrict "__" if we use that as the nesting separator for env var overrides?
 const VALID_NODE_KEY_REGEX = /^[a-z]\w*$/i;
 
-export class Configraph<EntityMetadata = any, NodeMetadata = any> {
+
+// TODO: ideally we would extract the shape of the entity metadata from these schema objects
+// but currently we are passing it in twice, once for TS and once for runtime
+export type MetadataSchemaObject = Record<string, {
+  required?: boolean,
+  serialize?: boolean
+}>;
+
+export class Configraph<
+  EntityMetadata extends Record<string, any> = {},
+  NodeMetadata extends Record<string, any> = {},
+> {
   static autoIdEntityCounter = 1;
 
   _rootEntityId!: string;
@@ -25,11 +37,17 @@ export class Configraph<EntityMetadata = any, NodeMetadata = any> {
   sortedEntityIds: Array<string> = [];
 
   pluginsById: Record<string, ConfigraphPlugin> = {};
-
   nodesByFullPath: Record<string, ConfigraphNodeBase> = {};
-  // constructor() {
 
-  // }
+  readonly defaultDataTypeRegistry: ConfigraphDataTypesRegistry;
+
+  constructor(opts?: {
+    entityMetadata?: MetadataSchemaObject
+    // nodeMetadata?: MetadataSchemaObject
+    defaultTypeRegistry?: ConfigraphDataTypesRegistry,
+  }) {
+    this.defaultDataTypeRegistry = opts?.defaultTypeRegistry || new ConfigraphDataTypesRegistry();
+  }
 
   get rootEntity() {
     if (!this._rootEntityId) throw new Error('ConfiGraph root entity id is not set');
@@ -46,7 +64,7 @@ export class Configraph<EntityMetadata = any, NodeMetadata = any> {
   }
 
   createEntity(
-    entityDef: ConfigraphEntityDef,
+    entityDef: ConfigraphEntityDef<EntityMetadata, NodeMetadata>,
     /** plugin instances _owned_ by this entity */
     plugins?: Array<ConfigraphPlugin>,
   ) {
@@ -72,7 +90,7 @@ export class Configraph<EntityMetadata = any, NodeMetadata = any> {
     return entity;
   }
 
-  private registerEntity(entity: ConfigraphEntity) {
+  registerEntity(entity: ConfigraphEntity) {
     if (this.entitiesById[entity.id]) {
       // TODO: this should likely roll up into a graph level error, rather than exploding
       throw new Error(`Entity IDs must be unique - duplicate id detected "${entity.id}"`);
@@ -381,20 +399,3 @@ export class Configraph<EntityMetadata = any, NodeMetadata = any> {
     return entity.getConfigNodeByPath(itemPath);
   }
 }
-
-
-
-
-export class ConfiGraphEntityNode {
-
-}
-
-
-export class ConfigGraphDataTypeTemplate {
-
-}
-
-export class ConfigGraphDataTypeInstance {
-
-}
-

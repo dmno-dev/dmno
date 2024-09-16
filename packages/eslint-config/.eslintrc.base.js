@@ -33,6 +33,7 @@ module.exports = {
     // camelcase: 0,
     "@typescript-eslint/ban-ts-comment": 0,
     "import/prefer-default-export": 0,
+    "import/no-extraneous-dependencies": 0,
     "no-plusplus": 0,
     radix: 0,
     "prefer-destructuring": 0,

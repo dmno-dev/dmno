@@ -1,6 +1,7 @@
 node_modules
 dist
 *.ignore
+ignore
 
 .DS_Store
 

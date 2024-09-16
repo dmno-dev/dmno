@@ -8,35 +8,41 @@
   and force us to use the same name internally and when we send over the wire
 */
 
-import { DmnoDataType } from '../config-engine/base-types';
 import {
-  ConfigItemDefinition, DmnoConfigItemBase, DmnoService, InjectedDmnoEnv,
+  ConfigraphDataTypeDefinition, ConfigValueResolver,
+  ConfigraphPlugin, ConfigraphPluginInputItem,
+  ConfigraphNodeBase,
+  SerializedConfigraphEntity,
+} from '@dmno/configraph';
+import {
+  DmnoService, InjectedDmnoEnv,
 } from '../config-engine/config-engine';
-import { DmnoPlugin, DmnoPluginInputItem } from '../config-engine/plugins';
-import { ConfigValueOverride, ConfigValueResolver } from '../config-engine/resolvers/resolvers';
+import { DmnoDataTypeMetadata } from '../config-engine/configraph-adapter';
 
 
 export type SerializedWorkspace = {
   services: Record<string, SerializedService>,
   plugins: Record<string, SerializedDmnoPlugin>,
-
 };
 
 export type SerializedService =
   Pick<DmnoService, 'packageName' | 'serviceName' | 'path' | 'settings'>
   & {
-    isSchemaValid: boolean,
-    isValid: boolean,
-    isResolved: boolean,
+    //! injectedEnv: InjectedDmnoEnv,
     configLoadError?: SerializedDmnoError,
-    schemaErrors?: Array<SerializedDmnoError>,
-    ownedPluginNames: Array<string>,
-    injectedPluginNames: Array<string>,
-    config: Record<string, SerializedConfigItem>,
-    injectedEnv: InjectedDmnoEnv,
-  };
+  } & SerializedConfigraphEntity;
 
-export type SerializedDmnoPlugin = Pick<DmnoPlugin, 'pluginType' | 'instanceName' | 'isValid'>
+//   isSchemaValid: boolean,
+//   isValid: boolean,
+//   isResolved: boolean,
+//   schemaErrors?: Array<SerializedDmnoError>,
+//   ownedPluginNames: Array<string>,
+//   injectedPluginNames: Array<string>,
+//   configNodes: Record<string, SerializedConfigItem>,
+
+// };
+
+export type SerializedDmnoPlugin = Pick<ConfigraphPlugin, 'pluginType' | 'instanceName' | 'isValid'>
 & {
   cliPath?: string,
   initializedInService: string,
@@ -44,7 +50,7 @@ export type SerializedDmnoPlugin = Pick<DmnoPlugin, 'pluginType' | 'instanceName
   inputs: Record<string, SerializedDmnoPluginInput>,
   usedByConfigItemResolverPaths?: Array<string>,
 };
-export type SerializedDmnoPluginInput = Pick<DmnoPluginInputItem, 'key' | 'isValid' | 'resolvedValue' | 'isResolved' | 'resolutionMethod'> & {
+export type SerializedDmnoPluginInput = Pick<ConfigraphPluginInputItem, 'key' | 'isValid' | 'resolvedValue' | 'isResolved' | 'resolutionMethod'> & {
   isValid: boolean,
   mappedToItemPath?: string,
   coercionError?: SerializedDmnoError,
@@ -53,7 +59,7 @@ export type SerializedDmnoPluginInput = Pick<DmnoPluginInputItem, 'key' | 'isVal
 };
 
 export type SerializedConfigItem =
-  Pick<DmnoConfigItemBase, 'key' | 'isValid' | 'isSchemaValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved' | 'isDynamic'>
+  Pick<ConfigraphNodeBase, 'key' | 'isValid' | 'isSchemaValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved'>
   & {
     dataType: SerializedDmnoDataType,
     children: Record<string, SerializedConfigItem>,
@@ -63,7 +69,10 @@ export type SerializedConfigItem =
     // TODO: dedupe some items from the resolver
     resolutionError?: SerializedDmnoError,
     resolver?: SerializedResolver,
-    overrides?: Array<ConfigValueOverride>,
+    // overrides?: Array<ConfigValueOverride>,
+
+    // dmno specific
+    //! isDynamic: boolean,
   };
 
 export type SerializedResolver =
@@ -86,9 +95,11 @@ export type SerializedResolverBranch = {
 };
 
 export type SerializedDmnoDataType = Pick<
-ConfigItemDefinition,
-'summary' | 'description' | 'typeDescription' | 'externalDocs' | 'ui' |
-'required' | 'sensitive' | 'expose' | 'useAt' | 'dynamic'
+ConfigraphDataTypeDefinition<any, DmnoDataTypeMetadata>,
+'summary' | 'description' | 'typeDescription' | 'required' | 'expose' |
+'externalDocs' | 'ui' |
+// dmno config specific metadata
+'sensitive' | 'useAt' | 'dynamic'
 >;
 
 

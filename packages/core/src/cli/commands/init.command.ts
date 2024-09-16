@@ -63,6 +63,7 @@ program.action(async (opts: {
   // console.log('');
 
   const rootPackage = workspaceInfo.workspacePackages[0];
+  console.log(workspaceInfo.workspacePackages);
 
   if (!workspaceInfo.autoSelectedPackage) {
     throw new Error('unable to detect which package you are in... whats happening?');

@@ -5,6 +5,8 @@ import _ from 'lodash-es';
 
 import Debug from 'debug';
 
+import { ConfigLoadError, Configraph } from '@dmno/configraph';
+
 import { DeferredPromise, createDeferredPromise } from '@dmno/ts-lib';
 import { HmrContext } from 'vite';
 import { ViteNodeRunner } from 'vite-node/client';
@@ -15,8 +17,6 @@ import { ScannedWorkspaceInfo, WorkspacePackagesListing, findDmnoServices } from
 import {
   DmnoService, DmnoWorkspace, DmnoServiceConfig, CacheMode,
 } from '../config-engine/config-engine';
-import { beginServiceLoadPlugins, beginWorkspaceLoadPlugins, finishServiceLoadPlugins } from '../config-engine/plugins';
-import { ConfigLoadError } from '../config-engine/errors';
 import { generateServiceTypes } from '../config-engine/type-generation';
 
 const debugTimer = createDebugTimer('dmno:config-loader');
@@ -107,7 +107,7 @@ export class ConfigLoader {
     // TODO: if not first load, clean up previous workspace? or reuse it somehow?
     this.dmnoWorkspace = new DmnoWorkspace();
     this.dmnoWorkspace.setCacheMode(this.cacheMode);
-    beginWorkspaceLoadPlugins(this.dmnoWorkspace);
+    //! beginWorkspaceLoadPlugins(this.dmnoWorkspace);
 
     // TODO: we may want to set up an initial sort of the services so at least root is first?
     for (const w of this.workspacePackagesData) {
@@ -116,7 +116,6 @@ export class ConfigLoader {
       // especially in the 1 service context, it may feel odd
       // const configFilePath = `${w.path}/.dmno/${isRoot ? 'workspace-' : ''}config.mts`;
       const configFilePath = `${w.path}/.dmno/config.mts`;
-
 
       const serviceInitOpts = {
         isRoot: w.isRoot,
@@ -127,7 +126,7 @@ export class ConfigLoader {
 
       let service: DmnoService;
       try {
-        beginServiceLoadPlugins();
+        //! beginServiceLoadPlugins();
 
         // node-vite runs the file and returns the loaded module
 
@@ -153,7 +152,7 @@ export class ConfigLoader {
           rawConfig: importedConfig.default as DmnoServiceConfig,
         });
 
-        finishServiceLoadPlugins(service);
+        //! finishServiceLoadPlugins(service);
       } catch (err) {
         debug('found error when loading config');
         service = new DmnoService({

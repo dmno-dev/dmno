@@ -2,8 +2,6 @@ import kleur from 'kleur';
 import _ from 'lodash-es';
 import { outdent } from 'outdent';
 import { SerializedConfigItem, SerializedDmnoError } from '../../config-loader/serialization-types';
-import { DmnoError } from '../../config-engine/errors';
-import { DmnoConfigItemBase } from '../../config-engine/config-engine';
 
 type ColorMod = Exclude<keyof typeof kleur, 'enabled'>;
 type ColorMods = ColorMod | Array<ColorMod>;
@@ -120,5 +118,11 @@ export function getItemSummary(item: SerializedConfigItem) {
       summary.push(...err.tip.split('\n').map((line) => `     ${line}`));
     }
   });
+
+  for (const childItem of _.values(item.children)) {
+    const childSummary = getItemSummary(childItem);
+    summary.push(childSummary.split('\n').map((l) => `  ${l}`).join('\n'));
+  }
+
   return summary.join('\n');
 }

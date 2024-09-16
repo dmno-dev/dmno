@@ -238,7 +238,7 @@ export class ConfigServerClient {
       return false;
     }
 
-    const failingItems = Object.values(service.config).filter((c) => !c.isValid);
+    const failingItems = Object.values(service.configNodes).filter((c) => !c.isValid);
     if (failingItems.length) {
       console.log('🚨 🚨 🚨  config is invalid  🚨 🚨 🚨');
       failingItems.forEach((item) => {

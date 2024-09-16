@@ -1,14 +1,15 @@
 import _ from 'lodash-es';
 import {
-  ConfigraphNodeDefinitionOrShorthand, ConfigraphNode, ConfigraphNodeBase, ConfigraphPickedNode,
+  ConfigraphNode, ConfigraphNodeBase, ConfigraphPickedNode,
 } from './config-node';
 import { SchemaError } from './errors';
 import { Configraph } from './graph';
 import { ConfigraphPlugin } from './plugin';
-import { ConfigValue, DependencyNotResolvedResolutionError } from './resolvers';
+import { ConfigValue } from './resolvers';
 import { ExternalDocsEntry } from './common';
 import { ConfigraphEntityTemplate } from './entity-template';
-
+import { ConfigraphDataTypeDefinitionOrShorthand } from './data-types';
+import { SerializedConfigraphEntity } from './serialization-types';
 
 type NestedOverrideObj<T = string> = {
   [key: string]: NestedOverrideObj<T> | T;
@@ -28,7 +29,7 @@ export class OverrideSource {
 }
 
 
-type PickSchemaEntry = {
+export type PickSchemaEntry = {
   /** id of entity to pick from, defaults to root entity */
   entityId?: string;
   /** key(s) to pick, or function that matches against all keys from source */
@@ -43,6 +44,7 @@ type PickSchemaEntry = {
   // TOOD: also allow setting the value (not transforming)
   // value?: use same value type as above
 };
+export type ConfigraphPickSchemaEntryOrShorthand = PickSchemaEntry | string;
 
 //! this needs to support transformations, resolvers, etc?
 type EntityOverrideValue = ConfigValue;
@@ -59,21 +61,20 @@ function getEntityOverridesDefs(rawOverrides: EntityOverridesDef) {
   return _.map(rawOverrides, (value, path) => ({ value, path }));
 }
 
-export type ConfigraphEntityDef = {
+export type ConfigraphEntityDef<EntityMetadata, NodeMetadata> = EntityMetadata & {
   id?: string,
   parentId?: string,
 
-  extends?: ConfigraphEntityTemplate;
+  extends?: ConfigraphEntityTemplate<EntityMetadata, NodeMetadata>;
   overrides?: EntityOverridesDef;
 
-  configSchema?: Record<string, ConfigraphNodeDefinitionOrShorthand>;
+  configSchema?: Record<string, ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata>>;
   pickSchema?: Array<PickSchemaEntry | string>;
 
   // additional entity-level validations for checking combinations of things
   // ? would array of validation fns be better?
   validate?: () => boolean,
   asyncValidate?: () => Promise<boolean>,
-
 
   // additional metadata, similar to data types to be able to display in a UI
   // unclear if all of this is needed, or should live on a template or both??
@@ -96,18 +97,25 @@ export type ConfigraphEntityDef = {
 };
 
 
-export class ConfigraphEntity<Metadata = any> {
-  // metadata: Metadata;
+
+
+
+export class ConfigraphEntity<
+  EntityMetadata = unknown,
+  NodeMetadata = unknown,
+> {
   // template: ConfiGraphEntityTemplate;
 
   readonly id: string;
   parentId?: string;
 
-  configSchema: Record<string, ConfigraphNodeDefinitionOrShorthand> = {};
+  nodeClass = ConfigraphNode;
+
+  configSchema: Record<string, ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata>> = {};
   pickSchema: Array<PickSchemaEntry | string> = [];
 
   // processed config nodes
-  configNodes: Record<string, ConfigraphNode | ConfigraphPickedNode> = {};
+  configNodes: Record<string, typeof this.nodeClass | ConfigraphPickedNode> = {};
 
   //! combine into one? not sure...
   injectedPlugins: Array<ConfigraphPlugin> = [];
@@ -116,12 +124,15 @@ export class ConfigraphEntity<Metadata = any> {
   state: any;
   private overrideSources = [] as Array<OverrideSource>;
 
+  // /** error encountered while _loading_ the config */
+  // readonly configLoadError?: ConfigLoadError;
+
   /** error within the schema itself */
-  readonly schemaErrors: Array<SchemaError> = []; // TODO: probably want a specific error type...?
+  readonly schemaErrors: Array<SchemaError> = [];
 
   constructor(
     readonly graphRoot: Configraph,
-    readonly def: ConfigraphEntityDef,
+    readonly def: ConfigraphEntityDef<EntityMetadata, NodeMetadata>,
   ) {
     // if this entity is using a template, we need to merge the template definition with the specific instance settings
     const entityTemplate = def.extends;
@@ -159,7 +170,9 @@ export class ConfigraphEntity<Metadata = any> {
     if (def?.configSchema) this.configSchema = def?.configSchema;
   }
 
-  private getDefItem<T extends keyof ConfigraphEntityDef>(key: T) {
+  private getDefItem<
+    K extends keyof ConfigraphEntityDef<EntityMetadata, NodeMetadata>,
+  >(key: K): ConfigraphEntityDef<EntityMetadata, NodeMetadata>[K] {
     if (key in this.def) return this.def[key];
     let entityTemplate = this.def.extends?.rootEntity;
     while (entityTemplate) {
@@ -169,6 +182,11 @@ export class ConfigraphEntity<Metadata = any> {
       // templates can extend each other, so we potentially have to follow up a chain
       entityTemplate = entityTemplate.extends?.rootEntity;
     }
+    return this.parentEntity?.getDefItem(key as any);
+  }
+
+  getMetadata<K extends keyof EntityMetadata>(key: K) {
+    return this.getDefItem(key);
   }
 
   get label() { return this.getDefItem('label'); }
@@ -282,4 +300,25 @@ export class ConfigraphEntity<Metadata = any> {
       }
     }
   }
+
+  toJSON(): SerializedConfigraphEntity {
+    return {
+      id: this.id,
+      parentId: this.parentId,
+      isSchemaValid: this.isSchemaValid,
+      isValid: this.isValid,
+      isResolved: true,
+      schemaErrors:
+        this.schemaErrors?.length
+          ? _.map(this.schemaErrors, (err) => err.toJSON())
+          : undefined,
+      ownedPluginNames: _.map(this.ownedPlugins, (p) => p.instanceName),
+      injectedPluginNames: _.map(this.injectedPlugins, (p) => p.instanceName),
+      // configNodes: _.mapValues(this.configNodes, (item, _key) => item.toJSON()),
+    };
+  }
 }
+
+
+export type NodeCtor<ChildClass extends ConfigraphNode = ConfigraphNode> =
+  { new (): ChildClass } & typeof ConfigraphNode;

@@ -1,6 +1,7 @@
 import _ from 'lodash-es';
-import { ConfigItemDefinition, ConfigItemDefinitionOrShorthand } from './config-engine';
-import { DmnoDataType } from './base-types';
+import {
+  ConfigraphDataType, ConfigraphDataTypeDefinitionOrShorthand, ConfigraphDataTypeDefinition,
+} from '@dmno/configraph';
 // TODO: figure out how to get unique array typing...
 
 // export function pickFromSchemaObject<S extends Record<string, any>>(schemaObj: S, keys: Array<keyof S>);
@@ -16,12 +17,12 @@ export function pickFromSchemaObject<S extends Record<string, any>>(
 
 
 export function createVendorSchema(
-  schema: Record<string, ConfigItemDefinitionOrShorthand>,
-  commonTraits?: Partial<ConfigItemDefinition>,
+  schema: Record<string, ConfigraphDataTypeDefinitionOrShorthand>,
+  commonTraits?: Partial<ConfigraphDataTypeDefinition>,
 ) {
   if (!commonTraits) return schema;
   return _.mapValues(schema, (item, _itemKey) => {
-    if (DmnoDataType.checkInstanceOf(item) || _.isString(item) || _.isFunction(item)) {
+    if (ConfigraphDataType.checkInstanceOf(item) || _.isString(item) || _.isFunction(item)) {
       return {
         extends: item,
         ...commonTraits,

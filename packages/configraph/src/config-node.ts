@@ -5,111 +5,18 @@ import {
   CoercionError, ValidationError, ResolutionError,
 } from './errors';
 
-import { ConfigraphBaseTypes, ConfigraphDataType, ConfigraphSimpleBaseTypeNames } from './data-types';
+import {
+  ConfigraphBaseTypes, ConfigraphDataType, ConfigraphDataTypeDefinitionOrShorthand,
+} from './data-types';
 import {
   ConfigValue, ConfigValueResolver, createdPickedValueResolver,
-  InlineValueResolverDef, ResolverContext,
+  ResolverContext,
 } from './resolvers';
 
 import { ConfigraphEntity } from './entity';
-import { ExternalDocsEntry } from './common';
-
+import { ConfigraphDataTypeDefinition, SerializedConfigraphNode } from '.';
 
 const debug = Debug('configraph:node');
-
-// items (and types) can extend other types by either specifying
-// - another type that was initialized - ex: `DmnoBaseTypes.string({ ... })`
-// - another type that was not initialized - ex: `DmnoBaseTypes.string`
-// - string label for a small subset of simple base types - ex: `'string'`
-export type TypeExtendsDefinition<TypeSettings = any, MoreTypeSettings = any> =
-  ConfigraphDataType |
-  ConfigraphSimpleBaseTypeNames |
-  (() => ConfigraphDataType) |
-  ((opts: TypeSettings, moreOpts?: MoreTypeSettings) => ConfigraphDataType);
-
-
-
-
-export type TypeValidationResult = boolean | undefined | void | Error | Array<Error>;
-
-//! probably want to move all of this into the data-type system itself
-export type ConfigraphNodeDefinition<ExtendsTypeSettings = any, ExtendsTypeMoreSettings = any> = {
-  /** short description of what this config item is for */
-  summary?: string;
-  /** longer description info including details, gotchas, etc... supports markdown  */
-  description?: string;
-
-  //! this probably needs to be reworked a bit
-  /** expose this item to be "pick"ed by other services, usually used for outputs of run/deploy */
-  expose?: boolean;
-
-  /** description of the data type itself, rather than the instance */
-  typeDescription?: string;
-
-  /** example value */
-  exampleValue?: any;
-
-  /** link to external documentation */
-  externalDocs?: ExternalDocsEntry | Array<ExternalDocsEntry>;
-
-  /** dmno config ui specific options */
-  ui?: {
-    /** icon to use, see https://icones.js.org/ for available options
-    * @example mdi:aws
-    */
-    icon?: string;
-
-    /** color (any valid css color)
-    * @example FF0000
-    */
-    color?: string;
-  };
-
-  /** is this config item required, an error will be shown if empty */
-  required?: boolean; // TODO: can this be a (ctx) => fn?
-
-  // we allow the fn that returns the data type so you can use the data type without calling the empty initializer
-  // ie `DmnoBaseTypes.string` instead of `DmnoBaseTypes.string({})`;
-  /** the data type of the item, can be a DmnoBaseType or something custom */
-  extends?: TypeExtendsDefinition<ExtendsTypeSettings, ExtendsTypeMoreSettings>;
-
-  /** a validation function for the value, return true if valid, otherwise throw an error */
-  validate?: ((val: any, ctx: ResolverContext) => TypeValidationResult);
-  /** same as \`validate\` but async */
-  asyncValidate?: ((val: any, ctx: ResolverContext) => Promise<TypeValidationResult>);
-  /** a function to coerce values */
-  coerce?: ((val: any, ctx: ResolverContext) => any);
-
-  /** set the value, can be static, or a function, or use helpers */
-  value?: InlineValueResolverDef;
-
-
-  //! these must now move to domain specific metadata
-  // /** set if the item will be injected by a platform/framework */
-  // fromVendor?: string,
-
-  // /** whether this config is sensitive and must be kept secret */
-  // sensitive?: boolean | {
-  //   /** customize redact/masking behaviour rules (defaults to `show_first_2`) */
-  //   redactMode?: RedactMode,
-  //   /** list of allowed domains this sensitive item is allowed be sent to */
-  //   allowedDomains?: Array<string>
-  // }
-
-
-  // /** at what time is this value required */
-  // useAt?: ConfigRequiredAtTypes | Array<ConfigRequiredAtTypes>;
-
-  // /** opt in/out of build-type code replacements - default is false unless changed at the service level */
-  // dynamic?: boolean;
-
-  // /** import value a env variable with a different name */
-  // importEnvKey?: string;
-  // /** export value as env variable with a different name */
-  // exportEnvKey?: string;
-};
-
-export type ConfigraphNodeDefinitionOrShorthand = ConfigraphNodeDefinition | TypeExtendsDefinition;
 
 //! this might be in the wrong place?
 export type ConfigValueOverride = {
@@ -135,6 +42,15 @@ export class WaitingForParentResolutionError extends ResolutionError {
 export class WaitingForChildResolutionError extends ResolutionError {
   retryable = true;
 }
+
+
+//! probably want to add a restriction on node keys?
+// config item keys are all checked against this regex
+// currently it must start with a letter (to make it a valid js property)
+// and can only contain letters, number, and underscore
+// we may want to restrict "__" if we use that as the nesting separator for env var overrides?
+const VALID_ITEM_KEY_REGEX = /^[a-z]\w+$/i;
+
 
 export abstract class ConfigraphNodeBase {
   constructor(
@@ -388,50 +304,87 @@ export abstract class ConfigraphNodeBase {
       this.isValid ? '✅' : `❌ ${this.validationErrors?.[0]?.message}`,
     );
   }
+
+  toJSON(): SerializedConfigraphNode {
+    return {
+      key: this.key,
+      isSchemaValid: this.isSchemaValid,
+      isValid: this.isValid,
+      dataType: this.type.toJSON(),
+
+      resolvedRawValue: this.resolvedRawValue,
+      resolvedValue: this.resolvedValue,
+      isResolved: this.isResolved,
+      children: _.mapValues(this.children, (c) => c.toJSON()),
+
+      resolver: this.valueResolver?.toJSON(),
+      // overrides: this.overrides,
+
+      schemaErrors: this.schemaErrors?.length
+        ? _.map(this.schemaErrors, (err) => err.toJSON())
+        : undefined,
+      resolutionError: this.resolutionError?.toJSON(),
+      coercionError: this.coercionError?.toJSON(),
+      validationErrors:
+        this.validationErrors?.length
+          ? _.map(this.validationErrors, (err) => err.toJSON())
+          : undefined,
+    };
+  }
 }
 
 
 
 // this is a "processed" config node
-export class ConfigraphNode extends ConfigraphNodeBase {
+export class ConfigraphNode<NodeMetadata = unknown> extends ConfigraphNodeBase {
   readonly type: ConfigraphDataType;
   readonly schemaError?: Error;
 
   constructor(
     key: string,
-    defOrShorthand: ConfigraphNodeDefinitionOrShorthand,
+    defOrShorthand: ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata>,
     parent?: ConfigraphEntity | ConfigraphNode,
   ) {
     super(key, parent);
 
 
-    // TODO: DRY this up -- it's (mostly) the same logic that DmnoDataType uses when handling extends
+    // similar logic that the data types uses when handling extends
+    // except we always create a new "inline" type as the last in the chain
+    // see note below about linking to type registry
+    let typeDef: ConfigraphDataTypeDefinition;
     if (_.isString(defOrShorthand)) {
       if (!ConfigraphBaseTypes[defOrShorthand]) {
         throw new Error(`found invalid parent (string) in extends chain - "${defOrShorthand}"`);
       } else {
-        this.type = ConfigraphBaseTypes[defOrShorthand]({});
+        typeDef = { extends: ConfigraphBaseTypes[defOrShorthand]({}) };
       }
     } else if (_.isFunction(defOrShorthand)) {
       // in this case, we have no settings to pass through, so we pass an empty object
       const shorthandFnResult = defOrShorthand({});
-      if (!(shorthandFnResult instanceof ConfigraphDataType)) {
+      if (!ConfigraphDataType.checkInstanceOf(shorthandFnResult)) {
         // TODO: put this in schema error instead?
         console.log(ConfigraphDataType, shorthandFnResult);
         throw new Error('invalid schema as result of fn shorthand');
       } else {
-        this.type = shorthandFnResult;
+        typeDef = { extends: shorthandFnResult };
       }
-    } else if (defOrShorthand instanceof ConfigraphDataType) {
-      this.type = defOrShorthand;
+    } else if (ConfigraphDataType.checkInstanceOf(defOrShorthand)) {
+      // TODO: without proper instanceof check, we must resort to `as any`
+      typeDef = { extends: defOrShorthand as any };
     } else if (_.isObject(defOrShorthand)) {
-      // this is the only real difference b/w the handling of extends...
-      // we create a DmnoDataType directly without a reusable type for the items defined in the schema directly
-      this.type = new ConfigraphDataType(defOrShorthand as any, undefined, undefined);
+      typeDef = defOrShorthand;
     } else {
       // TODO: put this in schema error instead?
       throw new Error('invalid item schema');
     }
+    this.type = new ConfigraphDataType(
+      typeDef,
+      undefined,
+      undefined,
+      // link back to the "type registry" connected to the graph root
+      // so that we know the shape of the metadata
+      this.parentEntity?.graphRoot?.defaultDataTypeRegistry,
+    );
 
     try {
       this.initializeChildren();

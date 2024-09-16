@@ -2,6 +2,7 @@
   // not sure if this should be browser or not?
   "extends": "@dmno/tsconfig/tsconfig.node.json",
   "compilerOptions": {
+    "rootDir": ".",
     "declarationDir": "./dist",
     "outDir": "./dist",
     // this is needed for vite unfortunately...

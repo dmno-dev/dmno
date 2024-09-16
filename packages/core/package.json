@@ -84,6 +84,7 @@
     "dmno": "./dist/cli/cli-executable.js"
   },
   "devDependencies": {
+    "@dmno/configraph": "workspace:*",
     "@dmno/encryption-lib": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
     "@dmno/ts-lib": "workspace:*",

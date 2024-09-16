@@ -31,7 +31,7 @@ program.action(async (itemPath: string, opts: {}, thisCommand) => {
   const workspace = ctx.workspace!;
   const service = ctx.selectedService;
   checkForSchemaErrors(workspace);
-  await service.resolveConfig();
+  await workspace.resolveConfig();
   checkForConfigErrors(service);
 
   // TODO: could be smarter about not caring about errors unless they affect the item(s) being printed

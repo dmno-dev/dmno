@@ -217,6 +217,9 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
     devDependencies:
+      '@dmno/configraph':
+        specifier: workspace:*
+        version: link:../configraph
       '@dmno/encryption-lib':
         specifier: workspace:*
         version: link:../encryption-lib
