@@ -5,7 +5,7 @@ import _ from 'lodash-es';
 
 import Debug from 'debug';
 
-import { ConfigLoadError, Configraph } from '@dmno/configraph';
+import { ConfigLoadError, Configraph, CacheMode } from '@dmno/configraph';
 
 import { DeferredPromise, createDeferredPromise } from '@dmno/ts-lib';
 import { HmrContext } from 'vite';
@@ -15,9 +15,10 @@ import { createDebugTimer } from '../cli/lib/debug-timer';
 import { setupViteServer } from './vite-server';
 import { ScannedWorkspaceInfo, WorkspacePackagesListing, findDmnoServices } from './find-services';
 import {
-  DmnoService, DmnoWorkspace, DmnoServiceConfig, CacheMode,
+  DmnoService, DmnoWorkspace, DmnoServiceConfig,
 } from '../config-engine/config-engine';
 import { generateServiceTypes } from '../config-engine/type-generation';
+import { beginServiceLoadPlugins, beginWorkspaceLoadPlugins, finishServiceLoadPlugins } from '../config-engine/plugins';
 
 const debugTimer = createDebugTimer('dmno:config-loader');
 
@@ -35,14 +36,6 @@ export class ConfigLoader {
     this.isReady = this.finishInit();
     this.startAt = new Date();
   }
-
-  private cacheMode: CacheMode = true;
-  setCacheMode(cacheMode: typeof this.cacheMode) {
-    debug(`Config loader - setting cache mode = ${cacheMode}`);
-    if (this.dmnoWorkspace) this.dmnoWorkspace.setCacheMode(cacheMode);
-    this.cacheMode = cacheMode;
-  }
-
 
   viteRunner?: ViteNodeRunner;
 
@@ -91,6 +84,7 @@ export class ConfigLoader {
   devMode = false;
   schemaLoaded = false;
   dmnoWorkspace?: DmnoWorkspace;
+  cacheMode: CacheMode = true;
 
   async getWorkspace() {
     if (this.dmnoWorkspace) return this.dmnoWorkspace;
@@ -106,8 +100,8 @@ export class ConfigLoader {
 
     // TODO: if not first load, clean up previous workspace? or reuse it somehow?
     this.dmnoWorkspace = new DmnoWorkspace();
-    this.dmnoWorkspace.setCacheMode(this.cacheMode);
-    //! beginWorkspaceLoadPlugins(this.dmnoWorkspace);
+    this.dmnoWorkspace.configraph.setCacheMode(this.cacheMode);
+    beginWorkspaceLoadPlugins(this.dmnoWorkspace);
 
     // TODO: we may want to set up an initial sort of the services so at least root is first?
     for (const w of this.workspacePackagesData) {
@@ -126,7 +120,7 @@ export class ConfigLoader {
 
       let service: DmnoService;
       try {
-        //! beginServiceLoadPlugins();
+        beginServiceLoadPlugins();
 
         // node-vite runs the file and returns the loaded module
 
@@ -152,9 +146,10 @@ export class ConfigLoader {
           rawConfig: importedConfig.default as DmnoServiceConfig,
         });
 
-        //! finishServiceLoadPlugins(service);
+        finishServiceLoadPlugins(service);
       } catch (err) {
         debug('found error when loading config');
+        console.log(err);
         service = new DmnoService({
           ...serviceInitOpts,
           rawConfig: new ConfigLoadError(err as Error),
@@ -171,10 +166,6 @@ export class ConfigLoader {
     await this.regenerateAllTypeFiles();
     await this.dmnoWorkspace.resolveConfig();
 
-    // if (this.devMode) {
-    //   await this.regenerateAllTypeFiles();
-    //   await this.dmnoWorkspace.resolveConfig();
-    // }
     this.schemaLoaded = true;
   }
 

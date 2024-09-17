@@ -59,7 +59,7 @@ program.action(async (opts: {
   if (opts.format === 'json') {
     let exposedConfig = service.config;
     if (opts.public) {
-      exposedConfig = _.pickBy(exposedConfig, (c) => !c.type.sensitive);
+      exposedConfig = _.pickBy(exposedConfig, (c) => !c.type.getMetadata('sensitive'));
     }
     const valuesOnly = _.mapValues(exposedConfig, (val) => val.resolvedValue);
 
@@ -68,7 +68,7 @@ program.action(async (opts: {
     // TODO: this includes sensitive info when using --public option
     console.dir(service.toJSON(), { depth: null });
   } else if (opts.format === 'json-injected') {
-    console.log(JSON.stringify(service.getInjectedEnvJSON()));
+    console.log(JSON.stringify(service.configraphEntity.getInjectedEnvJSON()));
   } else {
     _.each(service.config, (item) => {
       console.log(getItemSummary(item.toJSON()));

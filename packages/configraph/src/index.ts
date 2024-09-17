@@ -9,8 +9,6 @@ export {
 export { ConfigraphEntityTemplate } from './entity-template';
 export {
   ConfigraphNode,
-  ConfigraphNodeBase,
-  ConfigraphPickedNode,
 } from './config-node';
 export {
   ConfigraphDataTypesRegistry,
@@ -19,18 +17,31 @@ export {
   ConfigraphDataTypeDefinition,
   ConfigraphDataTypeDefinitionOrShorthand,
   ConfigraphDataTypeFactoryFn,
+  ConfigraphTypeExtendsDefinition,
+  TypeValidationResult,
 } from './data-types';
 
 export { inject, collect } from './injection';
 export {
-  switchBy, createResolver,
+  createResolver,
+
   ConfigValueResolver,
   ResolverContext, InlineValueResolverDef,
+  ConfigValue,
+
+  cacheFunctionResult, switchBy, switchByDmnoEnv, switchByNodeEnv,
 } from './resolvers';
 
+export * from './errors';
+export * from './serialization-types';
+export * from './caching';
+export * from './type-generation';
+
+
+// TODO: maybe export this plugin stuff separately
 export {
   ConfigraphPlugin, ConfigraphPluginInputItem,
+  ConfigraphPluginInputSchema, ConfigraphPluginInputMap,
+  _PluginInputTypesSymbol, ConfigPath, configPath,
 } from './plugin';
-export * from './errors';
 
-export * from './serialization-types';

@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, defineDmnoService, configPath, switchByNodeEnv, NodeEnvType, switchBy } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, configPath, NodeEnvType, switchBy } from 'dmno';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
@@ -83,11 +83,13 @@ export default defineDmnoService({
       value: 'rootonly',
     },
 
+    CONTEXT: { value: 'branch-preview' },
+
     VAULT_ITEM_1: {
       value: EncryptedVaultSecrets.item(),
     },
     VAULT_ITEM_WITH_SWITCH: {
-      value: switchByNodeEnv({
+      value: switchBy('NODE_ENV', {
         _default: EncryptedVaultSecrets.item(),
         staging: switchBy('CONTEXT', {
           _default: undefined,

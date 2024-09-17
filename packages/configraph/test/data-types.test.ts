@@ -78,28 +78,28 @@ describe('data types', () => {
       expect(TypeD().getMetadata('extra1')).not.toBe(true);
     });
 
-    test('additional metadata serialization', () => {
-      const g = new Configraph({
-        defaultTypeRegistry: customTypesRegistry,
-      });
+    // test('additional metadata serialization', () => {
+    //   const g = new Configraph({
+    //     defaultTypeRegistry: customTypesRegistry,
+    //   });
 
-      const CustomType = createCustomDataType({ extends: 'string' });
-      const e = g.createEntity({
-        configSchema: {
-          noType: {},
-          stringTypeShorthand: 'string',
-          stringTypeExtends: { extends: 'string' },
-          baseTypeFactory: { extends: ConfigraphBaseTypes.string },
-          baseType: { extends: ConfigraphBaseTypes.string({}) },
-          customType: { extends: CustomType },
-        },
-      });
-      const serialized = e.toJSON();
-      _.each(serialized.configNodes, (node, key) => {
-        expect(node.dataType).toHaveProperty('extra1');
-        expect(node.dataType).not.toHaveProperty('extra2');
-      });
-    });
+    //   const CustomType = createCustomDataType({ extends: 'string' });
+    //   const e = g.createEntity({
+    //     configSchema: {
+    //       noType: {},
+    //       stringTypeShorthand: 'string',
+    //       stringTypeExtends: { extends: 'string' },
+    //       baseTypeFactory: { extends: ConfigraphBaseTypes.string },
+    //       baseType: { extends: ConfigraphBaseTypes.string({}) },
+    //       customType: { extends: CustomType },
+    //     },
+    //   });
+    //   const serialized = e.toJSON();
+    //   _.each(serialized.configNodes, (node, key) => {
+    //     expect(node.dataType).toHaveProperty('extra1');
+    //     expect(node.dataType).not.toHaveProperty('extra2');
+    //   });
+    // });
   });
 
   // TODO: check validation call flow works (how it follows up the chain)

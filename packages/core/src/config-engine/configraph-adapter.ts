@@ -1,20 +1,27 @@
+import _ from 'lodash-es';
 import {
   Configraph,
-  ConfigraphBaseTypes,
   ConfigraphDataTypesRegistry,
   ConfigraphEntity,
   ConfigraphNode,
-  ConfigraphNodeBase,
-  SerializedConfigraphEntity,
 } from '@dmno/configraph';
 
+
 import { RedactMode } from '../lib/redaction-helpers';
+import { SerializedConfigItem } from '../config-loader/serialization-types';
+import {
+  InjectedDmnoEnv, InjectedDmnoEnvItem,
+} from './config-engine';
+import { DmnoConfigraphCachingProvider } from './dmno-configraph-cache';
 
 export {
   ConfigraphBaseTypes as DmnoBaseTypes,
 
+  ResolverContext,
+
   // error types
-  ConfigLoadError, CoercionError, ValidationError, ResolutionError,
+  ConfigLoadError, SchemaError, ResolutionError, CoercionError, ValidationError,
+
 } from '@dmno/configraph';
 export { RedactMode };
 
@@ -44,52 +51,14 @@ export type DmnoDataTypeMetadata = {
   importEnvKey?: string;
   /** export value as env variable with a different name */
   exportEnvKey?: string;
+
 };
-
-
-// // absolutely gnarly and illegible stuff to make the types work :(
-// export function createDmnoDataType<T>(
-//   ...args: Parameters<typeof createConfigraphDataType<T, DmnoDataTypeMetadata>>
-// ): ReturnType<typeof createConfigraphDataType<T, DmnoDataTypeMetadata>> {
-//   return createConfigraphDataType(...args);
-// }
-// const t1 = createDmnoDataType<{ foo: string }>({
-//   extends: 'string',
-//   sensitive: true,
-//   badKey: 1,
-// });
-// t1({ foo: 'asdf', bar: 'x' });
-
-
 
 // way more legible, but super weird that we are involving a class like this
 // abusing type generics on a class in order to simplify things a bit...
 class DmnoDataTypesRegistry extends ConfigraphDataTypesRegistry<DmnoDataTypeMetadata> {}
 const dmnoDataTypesRegistry = new DmnoDataTypesRegistry();
 export const createDmnoDataType = dmnoDataTypesRegistry.create;
-
-
-
-// class DmnoDataTypesRegistry<M = DmnoDataTypeMetadata> {
-//   // eslint-disable-next-line class-methods-use-this
-//   create<T>(...opts: Parameters<typeof createConfigraphDataType<T, M>>) {
-//     return createConfigraphDataType<T, M>(...opts);
-//   }
-// }
-// const createDmnoDataType2 = (new DmnoDataTypesRegistry()).create;
-
-// const t1 = createDmnoDataType({});
-// const t2 = createDmnoDataType<{ foo: string }>({
-//   extends: t1({ foo: 1 }),
-//   sensitive: true,
-//   badKey: 1,
-// });
-
-// t1({ foo: 1 });
-
-
-// t2({ foo: 'asdf', bar: 'x' });
-
 
 
 
@@ -117,33 +86,54 @@ export type DmnoServiceSettings = {
   preventClientLeaks?: boolean,
 };
 
+export type DmnoServiceMeta = {
+  path?: string,
+};
+export type DmnoEntityMetadata = DmnoServiceSettings & DmnoServiceMeta;
 
-export class DmnoConfigraph extends Configraph<DmnoServiceSettings> {
+
+export class DmnoConfigraph extends Configraph<DmnoEntityMetadata> {
   defaultDataTypeRegistry = dmnoDataTypesRegistry;
+  cacheProvider = new DmnoConfigraphCachingProvider();
 
   // we dont need the options available on the Configraph constructor
   // eslint-disable-next-line @typescript-eslint/no-useless-constructor
   constructor() { super(); }
 }
-export class DmnoConfigraphServiceEntity extends ConfigraphEntity<DmnoServiceSettings> {
-  nodeClass = DmnoConfigraphNode;
-
+export class DmnoConfigraphServiceEntity extends ConfigraphEntity<
+DmnoEntityMetadata, DmnoDataTypeMetadata, DmnoConfigraphNode
+> {
+  NodeClass = DmnoConfigraphNode;
 
   get dynamicConfig() { return this.getMetadata('dynamicConfig'); }
   get redactSensitiveLogs() { return this.getMetadata('redactSensitiveLogs'); }
   get interceptSensitiveLeakRequests() { return this.getMetadata('interceptSensitiveLeakRequests'); }
   get preventClientLeaks() { return this.getMetadata('preventClientLeaks'); }
 
+  get settings() {
+    return {
+      dynamicConfig: this.dynamicConfig,
+      redactSensitiveLogs: this.redactSensitiveLogs,
+      interceptSensitiveLeakRequests: this.interceptSensitiveLeakRequests,
+      preventClientLeaks: this.preventClientLeaks,
+    };
+  }
+
   toJSON() {
     return {
-      ...super.toJSON(),
-      settings: {
-        dynamicConfig: this.dynamicConfig,
-        redactSensitiveLogs: this.redactSensitiveLogs,
-        interceptSensitiveLeakRequests: this.interceptSensitiveLeakRequests,
-        preventClientLeaks: this.preventClientLeaks,
-      },
+      ...super.toCoreJSON(),
+      settings: this.settings,
+      configNodes: _.mapValues(this.configNodes, (item, _key) => item.toJSON()),
     };
+  }
+
+  getInjectedEnvJSON(): InjectedDmnoEnv {
+    // some funky ts stuff going on here... doesn't like how I set the values,
+    // but otherwise the type seems to work ok?
+    const env: any = _.mapValues(this.configNodes, (item) => item.toInjectedJSON());
+    // simple way to get settings passed through to injected stuff - we may want
+    env.$SETTINGS = this.settings;
+    return env as any;
   }
 }
 
@@ -152,6 +142,10 @@ export class DmnoConfigraphNode extends ConfigraphNode<DmnoDataTypeMetadata> {
   // get redactSensitiveLogs() { return this.getMetadata('redactSensitiveLogs'); }
   // get interceptSensitiveLeakRequests() { return this.getMetadata('interceptSensitiveLeakRequests'); }
   // get preventClientLeaks() { return this.getMetadata('preventClientLeaks'); }
+
+  get isSensitive() {
+    return !!this.type.getMetadata('sensitive');
+  }
 
   get isDynamic() {
     // this resolves whether the item should actually be treated as static or dynamic
@@ -178,11 +172,37 @@ export class DmnoConfigraphNode extends ConfigraphNode<DmnoDataTypeMetadata> {
   }
 
 
-  toJSON() {
+  toJSON(): SerializedConfigItem {
     return {
-      ...super.toJSON(),
+      ...super.toCoreJSON(),
+      children: _.mapValues(this.children, (c) => c.toJSON()),
       isDynamic: this.isDynamic,
+      isSensitive: this.isSensitive,
     };
   }
+  /** this is the shape that gets injected into an serialized json env var by `dmno run` */
+  toInjectedJSON(): InjectedDmnoEnvItem {
+    const sensitiveSettings = this.type.getMetadata('sensitive');
+    return {
+      ...this.isSensitive && { sensitive: 1 },
+      // adds `redactMode` and `allowedDomains`
+      ..._.isObject(sensitiveSettings) && sensitiveSettings,
+      ...this.isDynamic && { dynamic: 1 },
+      value: this.resolvedValue,
+    };
+  }
+
+  // slight customization of ts type generation which includes some of our custom metadata
+  typeGen = {
+    customLabel: () => (this.isSensitive ? ' 🔐 _sensitive_' : ''),
+    customSuffix: () => {
+      const vendorName = this.type.getMetadata('fromVendor');
+      return vendorName ? `_injected by ${vendorName}_` : undefined;
+    },
+  };
 }
+
+export {
+  switchBy, switchByDmnoEnv, switchByNodeEnv, cacheFunctionResult,
+} from '@dmno/configraph';
 

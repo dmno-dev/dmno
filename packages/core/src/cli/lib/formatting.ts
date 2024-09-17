@@ -85,7 +85,7 @@ export function getItemSummary(item: SerializedConfigItem) {
   const summary: Array<string> = [];
   const icon = item.coercionError?.icon || item.resolutionError?.icon || item?.validationErrors?.[0]?.icon || '✅';
   // item.resolvedValue === undefined ? '✅' : '✅';
-  const isSensitive = item.dataType?.sensitive;
+  const isSensitive = item.isSensitive;
   const isRequired = item.dataType?.required;
   summary.push(joinAndCompact([
     icon,
@@ -114,6 +114,7 @@ export function getItemSummary(item: SerializedConfigItem) {
   const errors = _.compact([item.coercionError, item.resolutionError, ...item.validationErrors || []]);
   errors?.forEach((err) => {
     summary.push(kleur.red(`   - ${err.message}`));
+    summary.push(...err.cleanedStack || '');
     if (err.tip) {
       summary.push(...err.tip.split('\n').map((line) => `     ${line}`));
     }

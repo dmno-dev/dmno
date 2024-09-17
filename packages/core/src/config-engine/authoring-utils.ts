@@ -2,6 +2,7 @@ import _ from 'lodash-es';
 import {
   ConfigraphDataType, ConfigraphDataTypeDefinitionOrShorthand, ConfigraphDataTypeDefinition,
 } from '@dmno/configraph';
+import { DmnoDataTypeMetadata } from './configraph-adapter';
 // TODO: figure out how to get unique array typing...
 
 // export function pickFromSchemaObject<S extends Record<string, any>>(schemaObj: S, keys: Array<keyof S>);
@@ -17,8 +18,8 @@ export function pickFromSchemaObject<S extends Record<string, any>>(
 
 
 export function createVendorSchema(
-  schema: Record<string, ConfigraphDataTypeDefinitionOrShorthand>,
-  commonTraits?: Partial<ConfigraphDataTypeDefinition>,
+  schema: Record<string, ConfigraphDataTypeDefinitionOrShorthand<DmnoDataTypeMetadata>>,
+  commonTraits?: Partial<ConfigraphDataTypeDefinition<unknown, DmnoDataTypeMetadata>>,
 ) {
   if (!commonTraits) return schema;
   return _.mapValues(schema, (item, _itemKey) => {

@@ -2,12 +2,15 @@ import _ from 'lodash-es';
 import graphlib from '@dagrejs/graphlib';
 import Debug from 'debug';
 
-import { ConfigraphNode, ConfigraphNodeBase, ConfigraphPickedNode } from './config-node';
+import { ConfigraphNode } from './config-node';
 import { SchemaError } from './errors';
 import { ConfigraphEntity, ConfigraphEntityDef } from './entity';
 import { ConfigraphPlugin } from './plugin';
 import { DependencyNotResolvedResolutionError } from './resolvers';
-import { ConfigraphDataTypesRegistry } from '.';
+import { ConfigraphCachingProvider } from './caching';
+
+import { CacheMode, ConfigraphDataTypesRegistry, ConfigValue } from '.';
+
 
 const debug = Debug('configraph');
 
@@ -37,13 +40,11 @@ export class Configraph<
   sortedEntityIds: Array<string> = [];
 
   pluginsById: Record<string, ConfigraphPlugin> = {};
-  nodesByFullPath: Record<string, ConfigraphNodeBase> = {};
+  nodesByFullPath: Record<string, ConfigraphNode> = {};
 
   readonly defaultDataTypeRegistry: ConfigraphDataTypesRegistry;
 
   constructor(opts?: {
-    entityMetadata?: MetadataSchemaObject
-    // nodeMetadata?: MetadataSchemaObject
     defaultTypeRegistry?: ConfigraphDataTypesRegistry,
   }) {
     this.defaultDataTypeRegistry = opts?.defaultTypeRegistry || new ConfigraphDataTypesRegistry();
@@ -65,29 +66,11 @@ export class Configraph<
 
   createEntity(
     entityDef: ConfigraphEntityDef<EntityMetadata, NodeMetadata>,
-    /** plugin instances _owned_ by this entity */
-    plugins?: Array<ConfigraphPlugin>,
   ) {
-    const entity = new ConfigraphEntity(
+    return new ConfigraphEntity(
       this,
       entityDef,
     );
-    // if (entityOpts.configSchema) entity.configSchema = entityOpts.configSchema;
-    // if (entityOpts.pickSchema) entity.pickSchema = entityOpts.pickSchema;
-
-    // right now the root is being set as the first registered entity
-    // but we might want to be more explicit? either with an option or a separate function?
-    // depending on what we do, we can throw an error if the root entity is trying to pick anything
-    this.registerEntity(entity);
-
-    //! few ways we can do this, keep an eye on this
-    for (const plugin of plugins || []) {
-      this.registerPlugin(plugin); // checks for dupe ids
-      plugin.ownedByEntity = entity;
-      entity.ownedPlugins.push(plugin);
-    }
-
-    return entity;
   }
 
   registerEntity(entity: ConfigraphEntity) {
@@ -104,13 +87,6 @@ export class Configraph<
       this.entitiesByParentId[entity.parentId].push(entity);
     }
     // do we also want to add to an array?
-  }
-
-  private registerPlugin(plugin: ConfigraphPlugin) {
-    if (this.pluginsById[plugin.instanceName]) {
-      throw new Error('Plugin IDs must be unique');
-    }
-    this.pluginsById[plugin.instanceName] = plugin;
   }
 
   // these dags probably should be private, but for now we are reaching up into them to manipulate them
@@ -297,12 +273,10 @@ export class Configraph<
               }
             }
 
-            const sourceNode = pickFromService.configNodes[pickKey];
-            const pickedNode = new ConfigraphPickedNode(newKeyName, {
-              sourceNode,
+            entity.addConfigNode(newKeyName, {
+              sourceNode: pickFromService.configNodes[pickKey],
               transformValue: _.isString(rawPickItem) ? undefined : rawPickItem.transformValue,
-            }, entity);
-            entity.addConfigNode(pickedNode);
+            });
           }
         }
       }
@@ -314,8 +288,7 @@ export class Configraph<
         } else {
           const nodeDef = entity.configSchema[nodeKey];
           // this descends into children
-          const node = new ConfigraphNode(nodeKey, nodeDef, entity);
-          entity.addConfigNode(node);
+          entity.addConfigNode(nodeKey, nodeDef);
         }
       }
 
@@ -352,6 +325,8 @@ export class Configraph<
   async resolveConfig() {
     if (!this._configProcessed) this.processConfig();
 
+    await this.cacheProvider?.load();
+
     let nodeIdsToResolve = graphlib.alg.topsort(this.nodesDag);
     // console.log('sorted node ids', nodeIdsToResolve);
     let nextBatchNodeIds: Array<string> = [];
@@ -369,12 +344,12 @@ export class Configraph<
         if (!node.isFullyResolved) {
           nextBatchNodeIds.push(nodeId);
         }
-        // // notify all plugins about the resolved item in case it resolves an input
-        // if (item.isResolved) {
-        //   for (const plugin of this.ownedPlugins) {
-        //     plugin.attemptInputResolutionsUsingConfigItem(item);
-        //   }
-        // }
+        // notify all plugins about the resolved item in case it resolves an input
+        if (node.isFullyResolved && node.parentEntity) {
+          for (const plugin of node.parentEntity.ownedPlugins) {
+            plugin.attemptInputResolutionsUsingConfigItem(node);
+          }
+        }
       }
 
       if (nextBatchNodeIds.length > 0) {
@@ -390,6 +365,8 @@ export class Configraph<
         nodeIdsToResolve = [];
       }
     }
+
+    await this.cacheProvider?.save();
   }
 
   getItemByPath(fullPath: string) {
@@ -397,5 +374,21 @@ export class Configraph<
     const entity = this.entitiesById[entityId];
     if (!entity) throw new Error(`Invalid entity id - ${entityId}`);
     return entity.getConfigNodeByPath(itemPath);
+  }
+
+  // CACHING
+  private cacheMode: CacheMode = true;
+  setCacheMode(cacheMode: typeof this.cacheMode) {
+    debug(`Config loader - setting cache mode = ${cacheMode}`);
+    this.cacheMode = cacheMode;
+  }
+  cacheProvider?: ConfigraphCachingProvider;
+  async getCacheItem(key: string, nodeFullPath: string): Promise<ConfigValue | undefined> {
+    if (!this.cacheProvider || this.cacheMode !== true) return undefined;
+    return this.cacheProvider.getItem(key, nodeFullPath);
+  }
+  async setCacheItem(key: string, value: ConfigValue, nodeFullPath: string) {
+    if (!this.cacheProvider || this.cacheMode !== true) return;
+    return this.cacheProvider.setItem(key, value, nodeFullPath);
   }
 }

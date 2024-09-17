@@ -11,7 +11,7 @@
 import {
   ConfigraphDataTypeDefinition, ConfigValueResolver,
   ConfigraphPlugin, ConfigraphPluginInputItem,
-  ConfigraphNodeBase,
+  ConfigraphNode,
   ConfigraphEntity,
 } from '@dmno/configraph';
 // import {
@@ -59,7 +59,7 @@ export type SerializedConfigraphPluginInput = Pick<ConfigraphPluginInputItem, 'k
 };
 
 export type SerializedConfigraphNode =
-  Pick<ConfigraphNodeBase, 'key' | 'isValid' | 'isSchemaValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved'>
+  Pick<ConfigraphNode, 'key' | 'isValid' | 'isSchemaValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved'>
   & {
     dataType: SerializedConfigraphDataType,
     children: Record<string, SerializedConfigraphNode>,
@@ -116,3 +116,6 @@ export type SerializedConfigraphError = {
   cleanedStack?: Array<string>,
   tip?: string,
 };
+
+
+

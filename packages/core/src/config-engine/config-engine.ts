@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { execSync } from 'node:child_process';
+import path from 'node:path';
 import _ from 'lodash-es';
 import Debug from 'debug';
 import validatePackageName from 'validate-npm-package-name';
@@ -24,10 +25,9 @@ import { RedactMode } from '../lib/redaction-helpers';
 import {
   DmnoConfigraph, DmnoConfigraphServiceEntity, DmnoDataTypeMetadata, DmnoServiceSettings,
 } from './configraph-adapter';
+import { DmnoPlugin } from './plugins';
 
 const debug = Debug('dmno');
-
-export type CacheMode = 'skip' | 'clear' | true;
 
 type PickConfigItemDefinition = {
   /** which service to pick from, defaults to "root" */
@@ -165,7 +165,7 @@ type NestedOverrideObj<T = string> = {
 export class OverrideSource {
   constructor(
     readonly type: string,
-    private values: NestedOverrideObj,
+    readonly values: NestedOverrideObj,
     readonly enabled = true,
   ) {}
 
@@ -187,6 +187,8 @@ export class DmnoWorkspace {
   get rootPath() { return this.rootService.path; }
 
   readonly processEnvOverrides = new OverrideSource('process.env', getConfigFromEnvVars());
+
+  plugins: Record<string, DmnoPlugin> = {};
 
   addService(service: DmnoService) {
     if (this.services[service.serviceName]) {
@@ -267,11 +269,16 @@ export class DmnoWorkspace {
 
       service.configraphEntity = new DmnoConfigraphServiceEntity(this.configraph, {
         id: service.serviceName,
+
+        // plugins need some other service metadata, so we pass it in here
+        path: service.path,
+
         // if we had a loading error, we dont add any actual info, just create the service
         ...!service.configLoadError && {
           configSchema: service.rawConfig?.schema as any,
           // pick is only available on non-root services
           ...service.rawConfig && !service.rawConfig.isRoot && {
+            parentId: service.rawConfig.parent,
             pickSchema: _.map(service.rawConfig.pick, (p) => {
               if (_.isString(p)) return p;
               return {
@@ -283,6 +290,13 @@ export class DmnoWorkspace {
           },
         },
       });
+
+      for (const pluginName of service.ownedPluginNames) {
+        service.configraphEntity.addOwnedPlugin(this.plugins[pluginName]);
+      }
+      for (const pluginName of service.injectedPluginNames) {
+        service.configraphEntity.addInjectedPlugin(this.plugins[pluginName]);
+      }
     }
 
     // and then process the entire graph
@@ -290,9 +304,29 @@ export class DmnoWorkspace {
   }
 
   async resolveConfig() {
-    // await this.loadCache();
+    for (const service of this.allServices) {
+      // we want to load all the override files, since we may want to display them in the UI
+      // but they will not be all enabled
+      await service.loadOverrideFiles();
+
+      // TODO: clean all of this up - just wanted to get basic overrides applied again
+      // this currently does not support anything nested!
+      _.each(service.overrideSources, (overrideSource) => {
+        if (!overrideSource.enabled) return;
+        _.each(overrideSource.values, (val, key) => {
+          const node = service.configraphEntity.getConfigNodeByPath(key);
+          if (!node) return;
+          node.overrides.push({
+            source: 'env file',
+            value: val,
+          });
+        });
+      });
+    }
+
+    this.configraph.cacheProvider.cacheDirPath = path.join(this.rootService.path, '.dmno');
+
     await this.configraph.resolveConfig();
-    // await this.writeCache();
   }
 
   get allServices() {
@@ -309,102 +343,9 @@ export class DmnoWorkspace {
     throw new Error(`unable to find service - ${descriptor}`);
   }
 
-  get cacheFilePath() { return `${this.rootPath}/.dmno/cache.json`; }
-  get cacheKeyFilePath() { return `${this.rootPath}/.dmno/cache-key.json`; }
-  private valueCache: Record<string, CacheEntry> = {};
-  private cacheLastLoadedAt: Date | undefined;
-  private cacheMode: CacheMode = true;
-  setCacheMode(cacheMode: typeof this.cacheMode) {
-    this.cacheMode = cacheMode;
-  }
-  private async loadCache() {
-    if (this.cacheMode === 'skip') return;
-    // might want to attach the CacheEntry to the workspace instead to get the key?
-    // or we could always pass it around as needed
-
-    // currently we are creating a cache key automatically if one does not exist
-    // is that what we want to do? or have the user take more manual steps? not sure
-    if (!fs.existsSync(this.cacheKeyFilePath)) {
-      let keyName: string;
-      try {
-        const gitUserEmail = execSync('git config user.email').toString().trim();
-        keyName = `${gitUserEmail}/${new Date().toISOString()}`;
-      } catch (err) {}
-      // when running in CI or elsewhere we wont have a git username so we fallback to something else
-      keyName ||= `${process.env.NODE_ENV}/${new Date().toISOString()}`;
-      const dmnoKeyStr = await generateDmnoEncryptionKeyString(keyName);
-
-      const reimportedDmnoKey = await importDmnoEncryptionKeyString(dmnoKeyStr);
-      if (reimportedDmnoKey.keyName !== keyName) throw new Error('reimported key name doesnt match');
-      CacheEntry.encryptionKey = reimportedDmnoKey.key;
-      CacheEntry.encryptionKeyName = keyName;
-
-      const cacheKeyData: SerializedCacheKey = {
-        version: '0.0.1',
-        key: dmnoKeyStr,
-      };
-      await fs.promises.writeFile(this.cacheKeyFilePath, stringifyJsonWithCommentBanner(cacheKeyData));
-
-      if (fs.existsSync(this.cacheFilePath)) {
-        // destroy the cache file, since it will not match the new key...
-        // should we confirm this with the user? probably doesn't matter?
-        await fs.promises.unlink(this.cacheFilePath);
-      }
-    } else {
-      const cacheKeyRawStr = await fs.promises.readFile(this.cacheKeyFilePath, 'utf-8');
-      const cacheKeyRaw = parseJSONC(cacheKeyRawStr) as SerializedCacheKey;
-      const importedDmnoKey = await importDmnoEncryptionKeyString(cacheKeyRaw.key);
-      CacheEntry.encryptionKey = importedDmnoKey.key;
-      CacheEntry.encryptionKeyName = importedDmnoKey.keyName;
-    }
-
-    if (this.cacheMode === 'clear') return;
-    if (!fs.existsSync(this.cacheFilePath)) return;
-    const cacheRawStr = await fs.promises.readFile(this.cacheFilePath, 'utf-8');
-    const cacheRaw = parseJSONC(cacheRawStr) as SerializedCache;
-
-    // check if the ID in the cache file matches the cache key
-    if (CacheEntry.encryptionKeyName !== cacheRaw.keyName) {
-      throw new Error('DMNO cache file does not match cache key');
-    }
-
-    for (const itemCacheKey in cacheRaw.items) {
-      this.valueCache[itemCacheKey] = await CacheEntry.fromSerialized(itemCacheKey, cacheRaw.items[itemCacheKey]);
-    }
-    this.cacheLastLoadedAt = new Date();
-  }
-  private async writeCache() {
-    if (this.cacheMode === 'skip') return;
-    // we don't want to write a file if the cache has not changed because it will trigger vite to reload
-    if (this.cacheLastLoadedAt && _.every(this.valueCache, (item) => item.updatedAt < this.cacheLastLoadedAt!)) {
-      return;
-    }
-
-    const serializedCache: SerializedCache = {
-      version: '0.0.1',
-      keyName: CacheEntry.encryptionKeyName,
-      items: await asyncMapValues(this.valueCache, async (cacheItem) => cacheItem.getJSON()),
-    };
-    const serializedCacheStr = stringifyJsonWithCommentBanner(serializedCache);
-    await fs.promises.writeFile(this.cacheFilePath, serializedCacheStr, 'utf-8');
-  }
-  async getCacheItem(key: string, usedBy?: string) {
-    debug('get cache item', key);
-    if (this.cacheMode === 'skip') return undefined;
-    if (key in this.valueCache) {
-      if (usedBy) this.valueCache[key].usedByItems.add(usedBy);
-      return this.valueCache[key].value;
-    }
-  }
-  async setCacheItem(key: string, value: any, usedBy?: string) {
-    if (this.cacheMode === 'skip') return undefined;
-    this.valueCache[key] = new CacheEntry(key, value, { usedBy });
-  }
   toJSON(): SerializedWorkspace {
     return {
-      //! fix plugins
-      // plugins: _.mapValues(this.plugins, (p) => p.toJSON()),
-      plugins: {},
+      plugins: _.mapValues(this.plugins, (p) => p.toJSON()),
       services: _.mapValues(
         _.keyBy(this.services, (s) => s.serviceName),
         (s) => s.toJSON(),
@@ -435,8 +376,8 @@ export class DmnoService {
   /** error within the schema itself */
   get schemaErrors() { return this.configraphEntity.schemaErrors; }
 
-  // injectedPlugins: Array<DmnoPlugin> = [];
-  // ownedPlugins: Array<DmnoPlugin> = [];
+  injectedPluginNames: Array<string> = [];
+  ownedPluginNames: Array<string> = [];
 
   constructor(opts: {
     packageName: string,
@@ -487,8 +428,7 @@ export class DmnoService {
     return this.configraphEntity.configNodes;
   }
 
-  //! need to fix this
-  overrideSources: Array<any> = [];
+  overrideSources: Array<OverrideSource> = [];
   async loadOverrideFiles() {
     this.overrideSources = [];
 
@@ -535,15 +475,6 @@ export class DmnoService {
     });
     return env;
   }
-  // getInjectedEnvJSON(): InjectedDmnoEnv {
-  //   // some funky ts stuff going on here... doesn't like how I set the values,
-  //   // but otherwise the type seems to work ok?
-  //   // const env: any = _.mapValues(this.configraphEntity.configNodes, (item) => item.toInjectedJSON());
-  //   // // simple way to get settings passed through to injected stuff - we may want
-  //   // env.$SETTINGS = this.settings;
-  //   // return env as any;
-  //   return {} as any;
-  // }
 
   get settings(): DmnoServiceSettings {
     // TODO: we should probably cache this instead of recalculating on each access?
@@ -561,11 +492,10 @@ export class DmnoService {
       serviceName: this.serviceName,
       path: this.path,
       configLoadError: this.configLoadError?.toJSON(),
+      injectedEnv: this.configraphEntity.getInjectedEnvJSON(),
 
       // this contains all the interesting stuff...
       ...this.configraphEntity.toJSON(),
-
-      // injectedEnv: this.getInjectedEnvJSON(),
     };
   }
 }

@@ -6,14 +6,12 @@ import crypto from 'node:crypto';
 import _ from 'lodash-es';
 import { parse as parseJSONC } from 'jsonc-parser';
 import {
-  ConfigValueResolver, DmnoPlugin, ResolverContext,
+  DmnoPlugin,
   DmnoPluginInputSchema,
   DmnoPluginInputMap,
   ResolutionError,
-  SchemaError,
-  GetPluginInputTypes,
-  createResolver,
   _PluginInputTypesSymbol,
+  DmnoConfigraphServiceEntity,
 } from 'dmno';
 import {
   decrypt, encrypt, generateEncryptionKeyString, importDmnoEncryptionKeyString,
@@ -68,26 +66,29 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
   static pluginPackageName = thisPackageName;
   static pluginPackageVersion = thisPackageVersion;
 
-  constructor(
-    instanceName: string,
-    inputs: DmnoPluginInputMap<typeof EncryptedVaultDmnoPlugin.inputSchema>,
-  ) {
-    super(instanceName);
-    this.setInputMap(inputs);
-  }
+  // constructor(
+  //   instanceName: string,
+  //   inputs: DmnoPluginInputMap<typeof EncryptedVaultDmnoPlugin.inputSchema>,
+  // ) {
+  //   super(instanceName);
+  //   this.setInputMap(inputs);
+  // }
 
 
   private vaultFilePath?: string;
   private vaultFileLoaded = false;
   private vaultItems: Record<string, EncryptedVaultItem> = {};
   private async loadVaultFile() {
-    if (!this.initByService) throw new Error('Cannot load vault file unless connected to a service');
+    if (!this.ownedByEntity) throw new Error('Cannot load vault file unless connected to a service');
+    if (!(this.ownedByEntity instanceof DmnoConfigraphServiceEntity)) {
+      throw new Error('Vault plugin can only b e used in DMNO graph');
+    }
 
     const importedKey = await importDmnoEncryptionKeyString(this.inputValues.key);
     this.vaultKey = importedKey.key;
     this.vaultKeyName = importedKey.keyName;
 
-    this.vaultFilePath = `${this.initByService.path}/.dmno/${this.inputValues.name || 'default'}.vault.json`;
+    this.vaultFilePath = `${this.ownedByEntity.getMetadata('path')}/.dmno/${this.inputValues.name || 'default'}.vault.json`;
     const vaultFileRaw = await fs.promises.readFile(this.vaultFilePath, 'utf-8');
     const vaultFileObj = parseJSONC(vaultFileRaw.toString());
     for (const key in vaultFileObj.items) {
@@ -126,7 +127,7 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin<EncryptedVaultDmnoPlugi
         // console.log(ctx);
 
         const vaultItem = this.vaultItems[ctx.resolverFullPath];
-        if (!vaultItem) throw new ResolutionError(`Item not found - ${ctx.serviceName} / ${ctx.resolverFullPath}`);
+        if (!vaultItem) throw new ResolutionError(`Item not found - ${ctx.entityId} / ${ctx.resolverFullPath}`);
         return await vaultItem.getRawValue(this.vaultKey!, this.vaultKeyName!);
       },
     });

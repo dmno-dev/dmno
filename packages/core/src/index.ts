@@ -2,6 +2,8 @@ export * from './config-engine/config-engine';
 export * from './config-engine/authoring-utils';
 
 export * from './config-engine/configraph-adapter';
+export * from './config-engine/plugins';
+export * from './config-engine/data-types';
 
 // TODO: probably want to clean up how these are exported
 // export * from './config-engine/base-types';

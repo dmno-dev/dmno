@@ -23,10 +23,10 @@ export type ConfigraphTypeExtendsDefinition =
 
 export type TypeValidationResult = boolean | undefined | void | Error | Array<Error>;
 
-export type ConfigraphDataTypeDefinitionOrShorthand<Metadata = unknown> =
-  CoreConfigraphDataTypeOptions<unknown, Metadata> | ConfigraphTypeExtendsDefinition;
+export type ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata = unknown> =
+  CoreConfigraphDataTypeOptions<unknown, NodeMetadata> | ConfigraphTypeExtendsDefinition;
 
-type CoreConfigraphDataTypeOptions<ExtendsTypeSettings = unknown, Metadata = unknown> = Metadata & {
+type CoreConfigraphDataTypeOptions<ExtendsTypeSettings = unknown, NodeMetadata = unknown> = NodeMetadata & {
   /** short description of what this config item is for */
   summary?: string;
   /** longer description info including details, gotchas, etc... supports markdown  */
@@ -167,7 +167,7 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
 
   constructor(
     readonly typeDef: ConfigraphDataTypeDefinition<InstanceOptions, Metadata>,
-    readonly typeInstanceOptions: InstanceOptions,
+    readonly typeInstanceOptions?: InstanceOptions,
     /**
      * the factory function that created this item
      * Should be always defined unless this is an inline defined type from a config schema
@@ -490,7 +490,7 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
   get ui() { return this.getDefItem('ui'); }
   get required() { return this.getDefItem('required'); }
 
-  getMetadata(key: keyof Metadata) {
+  getMetadata<K extends keyof Metadata>(key: K): Metadata[K] | undefined {
     return this.getDefItem(key);
   }
 
@@ -578,6 +578,8 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
 }
 
 
+// abusing a class here to be able to attach the additional type argument
+// which is necessary to be able define a new type registry for types with extra metadata
 export class ConfigraphDataTypesRegistry<Metadata = {}> {
   // TODO: ideally we unify the passed in Metadata generic and this schema object
   nodeMetadataSchema: MetadataSchemaObject = {};
@@ -601,31 +603,21 @@ export class ConfigraphDataTypesRegistry<Metadata = {}> {
 export const createConfigraphDataType = (new ConfigraphDataTypesRegistry()).create;
 
 
-// // TODO: figure this out
-// // when using a type, ideally we could omit usage options only when the schema has been marked as `undefined | {}...`
-// // alternatively, we can force the user to write it a certain way, but it's nice to be flexible
-// // note that we have allowed the bare (non-function call, ie `extends: ConfigraphBaseTypes.string`) which
-// // is also unaware if the settings schema is able to be undefined or not
-// // (we're talking about allowing `ConfigraphBaseTypes.string()` vs only `ConfigraphBaseTypes.string({})`)
-// function createConfigraphDataTypeRaw<TypeSettings, Metadata>(
-//   opts: (
-//     ConfigraphDataTypeDefinition<TypeSettings, Metadata>
-//     //! previously was required, but maybe not necessary?
-//     // & Required<Pick<ConfigraphDataTypeOptions, 'typeLabel'>>
-//   ),
-//   registry: ConfigraphDataTypesRegistry,
-// ): ConfigraphDataTypeFactoryFn<TypeSettings, Metadata> {
-//   // we are going to return a function which takes an _instance_ of the type settings schema for example `{ minLength: 2 }`
-//   // and returns something which is able to use the DmnoDataType which knows how to combine the data type defintition and that isntance
-//   // of the options together
-
-//   // by storing a reference to this factory function we'll be able to compare a usage of the data type to the "type" itself
-//   // for example `myCustomStringType.isType(ConfigraphBaseTypes.string)`
-
+// another very gnarly and illegible way to make that work :(
+// export function createDmnoDataType<T>(
+//   ...args: Parameters<typeof createConfigraphDataType<T, DmnoDataTypeMetadata>>
+// ): ReturnType<typeof createConfigraphDataType<T, DmnoDataTypeMetadata>> {
+//   return createConfigraphDataType(...args);
 // }
+// const t1 = createDmnoDataType<{ foo: string }>({
+//   extends: 'string',
+//   sensitive: true,
+//   badKey: 1,
+// });
+// t1({ foo: 'asdf', bar: 'x' });
 
 
-// we'll use this to mark our primitive types in a way that end users can't do by accident
+// we'll use this type to mark our primitive types in a way that end users can't do by accident
 const PrimitiveBaseType = createConfigraphDataType({ typeLabel: 'dmno/primitive' });
 
 /**
@@ -688,28 +680,28 @@ const StringDataType = createConfigraphDataType<StringDataTypeSettings>({
     const errors = [] as Array<ValidationError>;
 
     // special handling to not allow empty strings (unless explicitly allowed)
-    if (val === '' && !settings.allowEmpty) {
+    if (val === '' && !settings?.allowEmpty) {
       return [new ValidationError('If set, string must not be empty')];
     }
 
-    if (settings.minLength !== undefined && val.length < settings.minLength) {
+    if (settings?.minLength !== undefined && val.length < settings.minLength) {
       errors.push(new ValidationError(`Length must be more than ${settings.minLength}`));
     }
-    if (settings.maxLength !== undefined && val.length > settings.maxLength) {
+    if (settings?.maxLength !== undefined && val.length > settings.maxLength) {
       errors.push(new ValidationError(`Length must be less than ${settings.maxLength}`));
     }
-    if (settings.isLength !== undefined && val.length !== settings.isLength) {
+    if (settings?.isLength !== undefined && val.length !== settings.isLength) {
       errors.push(new ValidationError(`Length must be exactly ${settings.isLength}`));
     }
 
-    if (settings.startsWith && !val.startsWith(settings.startsWith)) {
+    if (settings?.startsWith && !val.startsWith(settings.startsWith)) {
       errors.push(new ValidationError(`Value must start with "${settings.startsWith}"`));
     }
-    if (settings.endsWith && !val.endsWith(settings.endsWith)) {
+    if (settings?.endsWith && !val.endsWith(settings.endsWith)) {
       errors.push(new ValidationError(`Value must start with "${settings.endsWith}"`));
     }
 
-    if (settings.matches) {
+    if (settings?.matches) {
       const regex = _.isString(settings.matches) ? new RegExp(settings.matches) : settings.matches;
       const matches = val.match(regex);
       if (!matches) {
@@ -919,7 +911,7 @@ const _RawObjectDataType = createConfigraphDataType<ObjectDataTypeSettings>({
     const settings = this.typeInstanceOptions;
     const errors = [] as Array<ValidationError>;
     // special handling to not allow empty strings (unless explicitly allowed)
-    if (_.isEmpty(val) && !settings.allowEmpty) {
+    if (_.isEmpty(val) && !settings?.allowEmpty) {
       return [new ValidationError('If set, object must not be empty')];
     }
     return true;
@@ -1028,7 +1020,8 @@ const EnumDataType = createConfigraphDataType<EnumDataTypeSettings>({
   typeLabel: 'dmno/enum',
   extends: PrimitiveBaseType,
   injectable: false,
-  validate(val, settings) {
+  validate(val) {
+    const settings = this.typeInstanceOptions;
     let possibleValues: Array<any>;
     if (_.isPlainObject(settings)) {
       possibleValues = _.keys(settings);
@@ -1081,7 +1074,7 @@ const ipAddressDataType = createConfigraphDataType<{
   validate(val) {
     const settings = this.typeInstanceOptions;
     // default to v4
-    const regex = settings.version === 6 ? IP_V6_ADDRESS_REGEX : IP_V4_ADDRESS_REGEX;
+    const regex = settings?.version === 6 ? IP_V6_ADDRESS_REGEX : IP_V4_ADDRESS_REGEX;
     const result = regex.test(val);
     if (result) return true;
     return new ValidationError('Value must be a valid IP address');

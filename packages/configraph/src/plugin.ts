@@ -1,13 +1,14 @@
 import _ from 'lodash-es';
 import Debug from 'debug';
 import {
-  ConfigraphNodeBase,
+  ConfigraphNode,
 } from './config-node';
 
 import { ConfigraphDataType, ConfigraphTypeExtendsDefinition } from './data-types';
 import { ConfigValue, ConfigValueResolver, createResolver } from './resolvers';
 import { CoercionError, SchemaError, ValidationError } from './errors';
 import { ConfigraphEntity } from './entity';
+import { SerializedConfigraphPlugin, SerializedConfigraphPluginInput } from './serialization-types';
 
 // import { SerializedDmnoPlugin, SerializedDmnoPluginInput } from '../config-loader/serialization-types';
 
@@ -84,7 +85,7 @@ export class ConfigraphPluginInputItem<ValueType = any> {
   resolvedValue?: ValueType;
 
   isResolved = false;
-  resolvingConfigItems?: Array<ConfigraphNodeBase>;
+  resolvingConfigItems?: Array<ConfigraphNode>;
 
   get resolutionMethod() {
     if (this.typeInjectionEnabled) return 'type';
@@ -140,7 +141,7 @@ export class ConfigraphPluginInputItem<ValueType = any> {
     this.validationErrors = validationResult === true ? [] : validationResult;
   }
 
-  attemptResolutionUsingConfigItem(item: ConfigraphNodeBase) {
+  attemptResolutionUsingConfigItem(item: ConfigraphNode) {
     // if we were waiting for this item by path, it is now resolved
     if (this.configPath?.path === item.getPath()) {
       debug(`PLUGIN input "${this.key}" resolved by path`, this.configPath.path);
@@ -192,39 +193,30 @@ export class ConfigraphPluginInputItem<ValueType = any> {
     return true;
   }
 
-  //! serialization needs to go somewhere
-  // toJSON(): SerializedDmnoPluginInput {
-  //   return {
-  //     key: this.key,
-  //     resolutionMethod: this.resolutionMethod,
-  //     isValid: this.isValid,
-  //     isResolved: this.isResolved,
-  //     // TODO: in the future we may have an array case so we may want to make this an array
-  //     // but it will likely be a single 90+% of the time...
-  //     mappedToItemPath: this.resolvingConfigItems?.[0]?.getFullPath(),
-  //     resolvedValue: this.resolvedValue,
-  //     coercionError: this.coercionError?.toJSON(),
-  //     schemaError: this.schemaError?.toJSON(),
-  //     validationErrors:
-  //       this.validationErrors?.length
-  //         ? _.map(this.validationErrors, (err) => err.toJSON())
-  //         : undefined,
-  //   };
-  // }
+  toJSON(): SerializedConfigraphPluginInput {
+    return {
+      key: this.key,
+      resolutionMethod: this.resolutionMethod,
+      isValid: this.isValid,
+      isResolved: this.isResolved,
+      // TODO: in the future we may have an array case so we may want to make this an array
+      // but it will likely be a single 90+% of the time...
+      mappedToItemPath: this.resolvingConfigItems?.[0]?.getFullPath(),
+      resolvedValue: this.resolvedValue,
+      coercionError: this.coercionError?.toJSON(),
+      schemaError: this.schemaError?.toJSON(),
+      validationErrors:
+        this.validationErrors?.length
+          ? _.map(this.validationErrors, (err) => err.toJSON())
+          : undefined,
+    };
+  }
 }
 
 export abstract class ConfigraphPlugin<
   ChildPlugin extends ConfigraphPlugin = NoopPlugin,
 > {
   constructor(readonly instanceName: string) {
-    // see below, we are registering the plugin in a singleton object
-    if (allPlugins[instanceName]) {
-      throw new SchemaError(`Plugin instance names must be unique! Duplicate name: ${instanceName}`);
-    }
-    allPlugins[instanceName] = this;
-
-    initializedPluginInstanceNames.push(instanceName);
-
     // ideally we would detect the current package name and version automatically here but I dont think it's possible
     // instead we made static properties, which really should be abstract, but that is not supported
     // so here we have some runtime checks to ensure they have been set
@@ -286,7 +278,7 @@ export abstract class ConfigraphPlugin<
   private _inputsAllResolved = false;
   get inputsAllResolved() { return this._inputsAllResolved; }
 
-  protected setInputMap(
+  setInputMap(
     inputMapping: ConfigraphPluginInputMap<ConfigraphPluginClass<ChildPlugin>['inputSchema']
     >,
   ) {
@@ -330,7 +322,7 @@ export abstract class ConfigraphPlugin<
   // when each (or all?) inputs are resolved. This would let us for example
   // make an api request to validate that all the settings together are valid?
 
-  attemptInputResolutionsUsingConfigItem(node: ConfigraphNodeBase) {
+  attemptInputResolutionsUsingConfigItem(node: ConfigraphNode) {
     for (const inputKey in this.inputItems) {
       this.inputItems[inputKey].attemptResolutionUsingConfigItem(node);
     }
@@ -361,90 +353,23 @@ export abstract class ConfigraphPlugin<
   //   onInitComplete?: () => Promise<void>;
   // };
 
-  //! deal with serialization
-  // toJSON(): SerializedDmnoPlugin {
-  //   return {
-  //     pluginType: this.pluginType,
-  //     cliPath: (this.constructor as any).cliPath,
-  //     instanceName: this.instanceName,
-  //     isValid: this.isValid,
-  //     initializedInService: this.ownedByEntity?.serviceName || '',
-  //     injectedIntoServices: _.map(this.injectedByEntities, (s) => s.serviceName),
-  //     inputs: _.mapValues(this.inputItems, (i) => i.toJSON()),
-  //     usedByConfigItemResolverPaths: _.map(this.resolvers, (r) => r.getFullPath()),
-  //   };
-  // }
 
-
-  static create<T extends ConfigraphPlugin>(
-    this: new (...args: Array<any>) => T,
-    instanceName: string,
-    inputMap?: any,
-  ) {
-    if (!allPlugins[instanceName]) {
-      allPlugins[instanceName] = new this(instanceName);
-    }
-    // TODO: check for double create call
-    allPlugins[instanceName].setInputMap(inputMap);
-
-    return allPlugins[instanceName] as T;
-  }
-
-  static injectInstance<T extends ConfigraphPlugin>(
-    this: new (...args: Array<any>) => T,
-    instanceName: string,
-  ) {
-    if (!allPlugins[instanceName]) {
-      allPlugins[instanceName] = new this(instanceName);
-    }
-    return allPlugins[instanceName] as T;
-
-    //! rework errors, move to overall graph schema checks
-
-    // const pluginToInject = allPlugins[instanceName];
-    // if (!pluginToInject) {
-    //   throw new SchemaError(`Plugin injection failed - no plugin named "${instanceName}" exists`);
-    // }
-    // if (!pluginToInject.ownedByEntity || pluginToInject.ownedByEntity.serviceName !== 'root') {
-    //   throw new SchemaError(`Plugin injection failed for "${instanceName}" - you can only inject plugins from the root`);
-    // }
-
-    // if (!(pluginToInject instanceof this)) {
-    //   throw new SchemaError(`Type of plugin being injected does not match. Requested = ${this.name}, Injected = ${(pluginToInject as any).constructor.name}`);
-    // }
-    // injectedPluginInstanceNames.push(instanceName);
-    // return pluginToInject as T;
+  toJSON(): SerializedConfigraphPlugin {
+    return {
+      pluginType: this.pluginType,
+      cliPath: (this.constructor as any).cliPath,
+      instanceName: this.instanceName,
+      isValid: this.isValid,
+      initializedInService: this.ownedByEntity?.id || '',
+      injectedIntoServices: _.map(this.injectedByEntities, (s) => s.id),
+      inputs: _.mapValues(this.inputItems, (i) => i.toJSON()),
+      usedByConfigItemResolverPaths: _.map(this.resolvers, (r) => r.getFullPath()),
+    };
   }
 }
 
 // TODO: this is a pretty naive approach to capturing the plugins while loading config
 // probably should move to something like AsnycLocalStorage to make it more flexible
 
-
-
-let allPlugins: Record<string, ConfigraphPlugin> = {};
-let initializedPluginInstanceNames: Array<string> = [];
-let injectedPluginInstanceNames: Array<string> = [];
-
-// export function beginWorkspaceLoadPlugins(workspace: DmnoWorkspace) {
-//   allPlugins = workspace.plugins;
-// }
-
-// export function beginServiceLoadPlugins() {
-//   initializedPluginInstanceNames = [];
-//   injectedPluginInstanceNames = [];
-// }
-// export function finishServiceLoadPlugins(service: DmnoService) {
-//   service.injectedPlugins = _.values(_.pick(allPlugins, injectedPluginInstanceNames));
-//   service.ownedPlugins = _.values(_.pick(allPlugins, initializedPluginInstanceNames));
-
-//   _.each(injectedPluginInstanceNames, (pName) => {
-//     allPlugins[pName].injectedByEntities ||= [];
-//     allPlugins[pName].injectedByEntities?.push(service);
-//   });
-//   _.each(initializedPluginInstanceNames, (pName) => {
-//     allPlugins[pName].ownedByEntity = service;
-//   });
-// }
 
 class NoopPlugin extends ConfigraphPlugin {}

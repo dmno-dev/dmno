@@ -1,6 +1,7 @@
 import _ from 'lodash-es';
 import {
-  ConfigraphNode, ConfigraphNodeBase, ConfigraphPickedNode,
+  ConfigraphNode,
+  PickedNodeDef,
 } from './config-node';
 import { SchemaError } from './errors';
 import { Configraph } from './graph';
@@ -99,23 +100,27 @@ export type ConfigraphEntityDef<EntityMetadata, NodeMetadata> = EntityMetadata &
 
 
 
+type ExtractNodeMetadata<ConfigraphNodeSubclass> = ConfigraphNodeSubclass extends ConfigraphNode<infer X> ? X : never;
 
 export class ConfigraphEntity<
   EntityMetadata = unknown,
   NodeMetadata = unknown,
+  N extends ConfigraphNode = ConfigraphNode,
 > {
   // template: ConfiGraphEntityTemplate;
 
   readonly id: string;
   parentId?: string;
 
-  nodeClass = ConfigraphNode;
-
   configSchema: Record<string, ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata>> = {};
   pickSchema: Array<PickSchemaEntry | string> = [];
 
+
+  // @ts-ignore
+  NodeClass: (new (...args: Array<any>) => N) = ConfigraphNode;
+
   // processed config nodes
-  configNodes: Record<string, typeof this.nodeClass | ConfigraphPickedNode> = {};
+  configNodes: Record<string, InstanceType<typeof this.NodeClass>> = {};
 
   //! combine into one? not sure...
   injectedPlugins: Array<ConfigraphPlugin> = [];
@@ -133,6 +138,7 @@ export class ConfigraphEntity<
   constructor(
     readonly graphRoot: Configraph,
     readonly def: ConfigraphEntityDef<EntityMetadata, NodeMetadata>,
+    // readonly NodeClass: (new (...args: Array<any>) => N),
   ) {
     // if this entity is using a template, we need to merge the template definition with the specific instance settings
     const entityTemplate = def.extends;
@@ -168,7 +174,28 @@ export class ConfigraphEntity<
 
     if (def?.pickSchema) this.pickSchema = def?.pickSchema;
     if (def?.configSchema) this.configSchema = def?.configSchema;
+
+    // automatically register, since we are already passing in the graph reference
+    graphRoot.registerEntity(this);
   }
+
+  addOwnedPlugin(plugin: ConfigraphPlugin) {
+    if (plugin.ownedByEntity) {
+      throw new Error('Plugin is already owned by an entity');
+    }
+
+    if (this.graphRoot.pluginsById[plugin.instanceName]) {
+      throw new Error('Plugin IDs must be unique');
+    }
+    this.graphRoot.pluginsById[plugin.instanceName] = plugin;
+    plugin.ownedByEntity = this;
+    this.ownedPlugins.push(plugin);
+  }
+  addInjectedPlugin(plugin: ConfigraphPlugin) {
+    plugin.injectedByEntities?.push(this);
+    this.injectedPlugins.push(plugin);
+  }
+
 
   private getDefItem<
     K extends keyof ConfigraphEntityDef<EntityMetadata, NodeMetadata>,
@@ -226,11 +253,13 @@ export class ConfigraphEntity<
   //   return this.parentService?.getSettingsItem(key);
   // }
 
-  addConfigNode(node: ConfigraphNode | ConfigraphPickedNode) {
-    if (node instanceof ConfigraphPickedNode && this.configSchema[node.key]) {
-      // check if a picked node is conflicting with a regular node
-      this.schemaErrors.push(new SchemaError(`Picked config key conflicting with a locally defined node - "${node.key}"`));
-    } else if (this.configNodes[node.key]) {
+  addConfigNode(
+    key: string,
+    nodeDef: ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata> | PickedNodeDef,
+  ) {
+    const node = new (this.NodeClass)(key, nodeDef, this);
+
+    if (this.configNodes[node.key]) {
       // might want to expose more info here? or keep it under a modified key?
       this.schemaErrors.push(new SchemaError(`Config keys must be unique, duplicate detected - "${node.key}"`));
     } else {
@@ -240,7 +269,7 @@ export class ConfigraphEntity<
 
   getConfigNodeByPath(path: string) {
     const pathParts = path.split('.');
-    let currentNode: ConfigraphNodeBase = this.configNodes[pathParts[0]];
+    let currentNode: ConfigraphNode = this.configNodes[pathParts[0]];
     // TODO: we'll need some smarter logic if path is reaching _into values_ of an object/array/map
     for (let i = 1; i < pathParts.length; i++) {
       const pathPart = pathParts[i];
@@ -301,7 +330,7 @@ export class ConfigraphEntity<
     }
   }
 
-  toJSON(): SerializedConfigraphEntity {
+  toCoreJSON() {
     return {
       id: this.id,
       parentId: this.parentId,

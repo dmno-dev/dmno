@@ -84,7 +84,6 @@
     "dmno": "./dist/cli/cli-executable.js"
   },
   "devDependencies": {
-    "@dmno/configraph": "workspace:*",
     "@dmno/encryption-lib": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
     "@dmno/ts-lib": "workspace:*",
@@ -102,7 +101,8 @@
     "vitest": "catalog:"
   },
   "dependencies": {
-    "@dagrejs/graphlib": "^2.2.2",
+    "@dagrejs/graphlib": "catalog:",
+    "@dmno/configraph": "workspace:*",
     "@inquirer/core": "^8.0.1",
     "@inquirer/prompts": "^5.0.1",
     "acorn": "^8.11.3",
@@ -128,10 +128,9 @@
     "outdent": "^0.8.0",
     "picomatch": "^3.0.1",
     "read-yaml-file": "^2.1.0",
-    "svgo": "^3.2.0",
     "typescript": "catalog:",
     "validate-npm-package-name": "^5.0.0",
-    "vite": "^5.2.10",
+    "vite": "catalog:",
     "vite-node": "catalog:",
     "which": "^4.0.0"
   }

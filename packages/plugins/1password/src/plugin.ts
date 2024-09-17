@@ -10,7 +10,7 @@ import {
   _PluginInputTypesSymbol,
   loadDotEnvIntoObject,
 } from 'dmno';
-import { Client, createClient } from '@1password/sdk';
+import { Client, createClient, Item } from '@1password/sdk';
 
 import { name as thisPackageName, version as thisPackageVersion } from '../package.json';
 import { OnePasswordTypes } from './data-types';
@@ -41,6 +41,7 @@ async function execOpCliCommand(cmdArgs: Array<string>) {
   } else {
     let errMessage = cmd.stderr.toString();
     // get rid of "[ERROR] 2024/01/23 12:34:56 " before actual message
+    console.log('1pass cli error', errMessage);
     if (errMessage.startsWith('[ERROR]')) errMessage = errMessage.substring(28);
     if (errMessage.includes('authorization prompt dismissed')) {
       throw new ResolutionError('1password app authorization prompt dismissed by user', {
@@ -87,6 +88,7 @@ async function execOpCliCommand(cmdArgs: Array<string>) {
 // typeof OnePasswordDmnoPlugin.inputSchema, typeof OnePasswordDmnoPlugin.INPUT_TYPES
 // > {
 
+
 /**
  * DMNO plugin to retrieve secrets from 1Password
  *
@@ -121,27 +123,32 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   // accept a mapping of how to fill inputs - each can be set to a
   // static value, config path, or use type-based injection
   // TODO: this is still not giving me types on the static input values... :(
+  // eslint-disable-next-line @typescript-eslint/no-useless-constructor
   constructor(
     instanceName: string,
-    inputs: DmnoPluginInputMap<typeof OnePasswordDmnoPlugin.inputSchema>,
+    inputMap: DmnoPluginInputMap<typeof OnePasswordDmnoPlugin.inputSchema>,
   ) {
-    super(instanceName);
-    this.setInputMap(inputs);
+    super(instanceName, inputMap);
   }
 
   private opClient: Client | undefined;
   private async initOpClientIfNeeded() {
-    if (!this.inputValues.token) return;
+    if (!this.inputValues.token) {
+      if (!this.inputValues.fallbackToCliBasedAuth) {
+        throw new Error('Either a service account token must be provided, or you must enable `fallbackToCliBasedAuth`');
+      }
+      return;
+    }
     if (!this.opClient) {
       this.opClient = await createClient({
         auth: this.inputValues.token,
-        integrationName: this.pluginPackageName.replaceAll('@', '').replaceAll('/', ' '),
-        integrationVersion: this.pluginPackageVersion,
+        integrationName: OnePasswordDmnoPlugin.pluginPackageName.replaceAll('@', '').replaceAll('/', ' '),
+        integrationVersion: OnePasswordDmnoPlugin.pluginPackageVersion,
       });
     }
   }
 
-  private async getOpItemById(ctx: ResolverContext, vaultId: VaultId, itemId: ItemId) {
+  private async getOpItemById(ctx: ResolverContext, vaultId: VaultId, itemId: ItemId): Promise<any> {
     await this.initOpClientIfNeeded();
     // using sdk
     if (this.opClient) {
@@ -250,21 +257,22 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
      * */
     overrideLookupKey?: string,
   ) {
-    // make sure the user has mapped up an input for where the env data is stored
-    if (!this.inputItems.envItemLink.resolutionMethod) {
-      throw new SchemaError('You must set an `envItemLink` plugin input to use the .item() resolver');
-    }
-
     return this.createResolver({
       label: (ctx) => {
-        return `env blob item > ${ctx.serviceName} > ${overrideLookupKey || ctx.itemPath}`;
+        return `env blob item > ${ctx.entityId} > ${overrideLookupKey || ctx.nodePath}`;
       },
       resolve: async (ctx) => {
+        // make sure the user has mapped up an input for where the env data is stored
+        if (!this.inputItems.envItemLink.resolutionMethod) {
+          throw new SchemaError('You must set an `envItemLink` plugin input to use the .item() resolver');
+        }
+
+
         if (!this.envItemsByService) await this.loadEnvItems(ctx);
 
-        const lookupKey = overrideLookupKey || ctx.itemPath;
+        const lookupKey = overrideLookupKey || ctx.nodePath;
 
-        const itemValue = this.envItemsByService?.[ctx.serviceName!]?.[lookupKey]
+        const itemValue = this.envItemsByService?.[ctx.entityId!]?.[lookupKey]
           // the label "_default" is used to signal a fallback / default to apply to all services
           || this.envItemsByService?._default?.[lookupKey];
 
@@ -273,7 +281,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
             tip: [
               'Open the 1password item where your secrets are stored:',
               kleur.gray(`🔗 ${this.inputValues.envItemLink}`),
-              `Find entry with label ${kleur.bold().cyan(ctx.serviceName!)} (or create it)`,
+              `Find entry with label ${kleur.bold().cyan(ctx.entityId!)} (or create it)`,
               'Add this secret like you would add it to a .env file',
               `For example: \`${lookupKey}="your-secret-value"\``,
             ],

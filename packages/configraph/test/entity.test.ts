@@ -1,6 +1,8 @@
 import { expect, test, describe } from 'vitest';
-import { Configraph, ConfigraphEntity, SerializedConfigraphEntity } from '@dmno/configraph';
-import { ConfigraphEntityDef } from '../src/entity';
+import _ from 'lodash-es';
+import {
+  Configraph, ConfigraphEntity, ConfigraphNode,
+} from '@dmno/configraph';
 
 describe('graph entities', () => {
   describe('entity metadata', () => {
@@ -10,12 +12,7 @@ describe('graph entities', () => {
         requiredMetadata: string,
         optionalMetadata?: string
       };
-      const g = new Configraph<CustomEntityMetadata>({
-        entityMetadata: {
-          requiredMetadata: { required: true },
-          optionalMetadata: {},
-        },
-      });
+      const g = new Configraph<CustomEntityMetadata>();
       const root = g.createEntity({
         id: 'root',
         requiredMetadata: 'root-required',
@@ -41,7 +38,7 @@ describe('graph entities', () => {
     //       extra1: { serialize: true },
     //       extra2: { serialize: false },
     //     },
-    //   });
+    // });
     //   const e = g.createEntity({
     //     extra1: 'extra1-val',
     //     extra2: 'extra2-val',
@@ -56,25 +53,34 @@ describe('graph entities', () => {
     test('asdf', async () => {
       class CustomConfigraph extends Configraph {}
 
+      type CustomNodeMetadata = {
+        nodeExtra?: string,
+      };
+
+      class CustomConfigraphNode extends ConfigraphNode<CustomNodeMetadata> {
+        toJSON() {
+          return {
+            ...super.toCoreJSON(),
+            nodeExtra: this.type.getMetadata('nodeExtra'),
+          };
+        }
+      }
 
       type CustomEntityMetadata = {
-        extra1: string;
+        entityExtra: string;
       };
-      class CustomConfigraphEntity extends ConfigraphEntity<CustomEntityMetadata> {
-        // eslint-disable-next-line @typescript-eslint/no-useless-constructor
-        constructor(
-          graphRoot: CustomConfigraph,
-          def: ConfigraphEntityDef<CustomEntityMetadata, {}>,
-        ) {
-          super(graphRoot, def);
-        }
+      class CustomConfigraphEntity extends ConfigraphEntity<
+      CustomEntityMetadata, CustomNodeMetadata, CustomConfigraphNode
+      > {
+        NodeClass = CustomConfigraphNode;
 
-        get extra1() { return this.getMetadata('extra1'); }
+        get entityExtra() { return this.getMetadata('entityExtra'); }
 
         toJSON() {
           return {
-            ...super.toJSON(),
-            extra1: this.extra1,
+            ...super.toCoreJSON(),
+            entityExtra: this.entityExtra,
+            configNodes: _.mapValues(this.configNodes, (item, _key) => item.toJSON()),
           };
         }
       }
@@ -82,9 +88,17 @@ describe('graph entities', () => {
       const g = new CustomConfigraph();
       const e = new CustomConfigraphEntity(g, {
         id: 'asdf',
-        extra1: 'extra1-val',
+        entityExtra: 'entity-metadata',
+        configSchema: {
+          c1: { nodeExtra: 'node-metadata' },
+          c2: {},
+        },
       });
-      expect(e.toJSON().extra1).toBe('extra1-val');
+      await g.resolveConfig();
+      const entityJson = e.toJSON();
+      expect(entityJson.entityExtra).toBe('entity-metadata');
+      expect(entityJson.configNodes.c1.nodeExtra).toBe('node-metadata');
+      expect(entityJson.configNodes.c2.nodeExtra).toBeUndefined();
     });
   });
 });

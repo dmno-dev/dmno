@@ -1,12 +1,12 @@
 {
   "extends": "@dmno/tsconfig/tsconfig.node.json",
   "compilerOptions": {
+    "rootDir": ".",
     "module": "ESNext",
     "outDir": "dist",
     "lib": [
       "ESNext"
     ],
-    "rootDir": "src",
   },
   "include": [
     "src/**/*.ts",

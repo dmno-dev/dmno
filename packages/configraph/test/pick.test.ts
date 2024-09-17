@@ -68,6 +68,15 @@ describe('pick behaviour', async () => {
       await g.resolveConfig();
       expect(e.configNodes.a.resolvedValue).toEqual('a-val');
     });
+
+    test('type chain is inherited properly', async () => {
+      const g = new Configraph();
+      g.createEntity({ id: 'e1', configSchema: { a: { value: 'a-val', expose: true } } });
+      g.createEntity({ id: 'e2', parentId: 'e1', pickSchema: ['a'] });
+      const e = g.createEntity({ id: 'e3', parentId: 'e2', pickSchema: [{ entityId: 'e2', key: 'a' }] });
+      await g.resolveConfig();
+      expect(e.configNodes.a.type.expose).toBe(true);
+    });
   });
 
   describe('key renaming', () => {

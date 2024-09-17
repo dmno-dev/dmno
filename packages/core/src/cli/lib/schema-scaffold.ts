@@ -135,7 +135,7 @@ export function generateDmnoSchemaCode(schemaScaffold: DmnoConfigScaffold) {
       for (const envKey in scaffoldItem.valuesForEnv) {
         switchEntries.push(`${envKey}: ${JSON.stringify(scaffoldItem.valuesForEnv[envKey])}`);
       }
-      itemCode += '  value: switchByNodeEnv({\n';
+      itemCode += '  value: switchBy(\'NODE_ENV\', {\n';
       itemCode += switchEntries.map((switchEntryLine) => `    ${switchEntryLine},\n`).join('');
       itemCode += '  })\n';
     }
@@ -155,11 +155,11 @@ export function generateDmnoConfigInitialCode(opts: {
   configSchemaScaffold: DmnoConfigScaffold,
 }) {
   const schemaConfigAsCode = generateDmnoSchemaCode(opts.configSchemaScaffold);
-  const usesSwitchByNodeEnv = schemaConfigAsCode.includes('value: switchByNodeEnv({');
+  const usesSwitchBy = schemaConfigAsCode.includes('value: switchBy(');
   const dmnoImports = [
     'DmnoBaseTypes',
     'defineDmnoService',
-    usesSwitchByNodeEnv && 'switchByNodeEnv',
+    usesSwitchBy && 'switchBy',
   ];
   return joinAndCompact([
     `import { ${joinAndCompact(dmnoImports, ', ')} } from 'dmno';`,

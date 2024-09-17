@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
 import _ from 'lodash-es';
-import { ConfigraphNodeBase } from './config-node';
+import { ConfigraphNode } from './config-node';
 import { ResolutionError, SchemaError, ValidationError } from './errors';
 import { SerializedResolver, SerializedResolverBranch } from '.';
 
@@ -122,14 +122,14 @@ export class ConfigValueResolver {
   icon?: string;
   label?: string;
 
-  private _configNode?: ConfigraphNodeBase;
-  set configNode(node: ConfigraphNodeBase | undefined) {
+  private _configNode?: ConfigraphNode;
+  set configNode(node: ConfigraphNode | undefined) {
     this._configNode = node;
     this.branches?.forEach((branch) => {
       branch.def.resolver.configNode = node;
     });
   }
-  get configNode(): ConfigraphNodeBase {
+  get configNode(): ConfigraphNode {
     if (!this._configNode) throw new Error('expected resolver configNode to be set');
     return this._configNode;
   }
@@ -187,7 +187,7 @@ export class ConfigValueResolver {
   }
   get dependsOnPaths() { return _.keys(this.dependsOnPathsObj); }
 
-  process(item: ConfigraphNodeBase): void | Array<() => void> {
+  process(item: ConfigraphNode): void | Array<() => void> {
     const postProcessFns = [];
     // call process fn if one is defined
     const postProcessFn = this.def.process?.call(this);
@@ -376,10 +376,10 @@ export class ResolverContext {
   // TODO: the item has everything we need, but is it what we want to pass in?
   // lots of ? and ! on ts types here because data doesn't exist at init time...
   private resolver?: ConfigValueResolver;
-  private configNode: ConfigraphNodeBase;
+  private configNode: ConfigraphNode;
   constructor(
     // private configItem: DmnoConfigItemBase,
-    resolverOrNode: ConfigValueResolver | ConfigraphNodeBase,
+    resolverOrNode: ConfigValueResolver | ConfigraphNode,
   ) {
     if (resolverOrNode instanceof ConfigValueResolver) {
       this.resolver = resolverOrNode;
@@ -462,31 +462,20 @@ export class ResolverContext {
     });
   }
 
-  //! need to reenable these caching helpers
-  //! maybe need to hook into behaviour defined elsewhere?
-  // TODO: probably dont want to pull cache disable setting from the workspace/service/etc
+
   async getCacheItem(key: string) {
-    return undefined;
-    // if (process.env.DISABLE_DMNO_CACHE) return undefined;
-    // return this.entity?.workspace.getCacheItem(key, this.itemFullPath);
+    return this.entity?.graphRoot.getCacheItem(key, this.nodeFullPath);
   }
   async setCacheItem(key: string, value: ConfigValue) {
-    return;
-    // if (process.env.DISABLE_DMNO_CACHE) return;
-    // if (value === undefined || value === null) return;
-    // return this.entity?.workspace.setCacheItem(key, value, this.itemFullPath);
+    if (value === undefined || value === null) return;
+    return this.entity?.graphRoot.setCacheItem(key, value, this.nodeFullPath);
   }
   async getOrSetCacheItem(key: string, getValToWrite: () => Promise<ConfigValue>) {
-    return await getValToWrite();
-    // if (!process.env.DISABLE_DMNO_CACHE) {
-    //   const cachedValue = await this.getCacheItem(key);
-    //   if (cachedValue) return cachedValue;
-    // }
-    // const val = await getValToWrite();
-    // if (!process.env.DISABLE_DMNO_CACHE) {
-    //   await this.setCacheItem(key, val);
-    // }
-    // return val;
+    const cachedValue = await this.getCacheItem(key);
+    if (cachedValue !== undefined) return cachedValue;
+    const val = await getValToWrite();
+    await this.setCacheItem(key, val);
+    return val;
   }
 }
 
@@ -528,7 +517,7 @@ export function cacheFunctionResult(
 
 
 export function createdPickedValueResolver(
-  sourceNode: ConfigraphNodeBase,
+  sourceNode: ConfigraphNode,
   valueTransform?: ((val: any) => any),
 ) {
   return createResolver({
@@ -577,5 +566,9 @@ export function switchBy(switchByKey: string, branches: SwitchByResolverOptions)
     })),
   });
 }
+
+export const switchByNodeEnv = (branches: SwitchByResolverOptions) => switchBy('NODE_ENV', branches);
+export const switchByDmnoEnv = (branches: SwitchByResolverOptions) => switchBy('DMNO_ENV', branches);
+
 
 

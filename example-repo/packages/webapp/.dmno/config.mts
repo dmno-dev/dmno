@@ -1,19 +1,15 @@
-import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheFunctionResult, createDmnoDataType, defineDmnoService, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from 'dmno';
+import { DmnoBaseTypes, cacheFunctionResult, createDmnoDataType, defineDmnoService, switchBy } from 'dmno';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
 
-const customUrlType = createDmnoDataType({
+const customUrlType = createDmnoDataType<{ newSetting: boolean }>({
   typeLabel: 'my-custom-url',
   extends: DmnoBaseTypes.url({
     prependProtocol: true,
     normalize: true,
   }),
   summary: 'summary from custom type',
-  
-  settingsSchema: Object as {
-    newSetting?: boolean,
-  },
 });
 
 export default defineDmnoService({
@@ -80,8 +76,13 @@ export default defineDmnoService({
       },
     },
     SWITCH_EXAMPLE: {
+<<<<<<< HEAD
       value: switchByNodeEnv({
         _default: 'dev-value',
+=======
+      value: switchBy('NODE_ENV', {
+        _default: 'default-val',
+>>>>>>> 5b94fea (dmno config all functioning again!)
         staging: 'staging-value',
         production: (ctx) => `prod-${DMNO_CONFIG.NODE_ENV}`,
       })

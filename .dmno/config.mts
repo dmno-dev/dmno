@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv, NodeEnvType } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService } from 'dmno';
 import { GitDataTypes, GithubDataTypes } from 'dmno/vendor-types';
 
 export default defineDmnoService({

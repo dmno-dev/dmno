@@ -44,6 +44,11 @@ export class WaitingForChildResolutionError extends ResolutionError {
 }
 
 
+export type PickedNodeDef<NodeMetadata = unknown> = {
+  sourceNode: ConfigraphNode<NodeMetadata>,
+  transformValue?: (val: any) => any,
+};
+
 //! probably want to add a restriction on node keys?
 // config item keys are all checked against this regex
 // currently it must start with a letter (to make it a valid js property)
@@ -52,13 +57,98 @@ export class WaitingForChildResolutionError extends ResolutionError {
 const VALID_ITEM_KEY_REGEX = /^[a-z]\w+$/i;
 
 
-export abstract class ConfigraphNodeBase {
+export class ConfigraphNode<NodeMetadata = any> {
+  /** full chain of items up to the actual config item */
+  readonly pickFromNode?: ConfigraphNode<NodeMetadata>;
+
+  readonly type: ConfigraphDataType<unknown, NodeMetadata>;
+
   constructor(
-    /** the item key / name */
     readonly key: string,
-    private parent?: ConfigraphEntity | ConfigraphNodeBase,
+    defOrShorthand:
+    ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata> | PickedNodeDef<NodeMetadata>,
+    private parent?: ConfigraphEntity | ConfigraphNode<NodeMetadata>,
   ) {
+    // deal with picked items
+    if (_.isObject(defOrShorthand) && 'sourceNode' in defOrShorthand) {
+      const pickDef = defOrShorthand;
+      this.pickFromNode = pickDef.sourceNode;
+
+      // TODO: will need to deal with overriding some parts of the type
+      // and probably need to clone / extend it
+      this.type = this.pickFromNode.type as any;
+      if (this.pickFromNode.children) {
+        _.each(this.pickFromNode.children, (sourceChild, childKey) => {
+          this.children[childKey] = new (this.constructor as any)(sourceChild.key, { sourceNode: sourceChild }, this);
+        });
+      }
+
+      // this may end up following up multiple picked + transformed parents
+      this.valueResolver = createdPickedValueResolver(this.pickFromNode, pickDef.transformValue);
+      this.valueResolver.configNode = this;
+
+      return;
+    }
+
+
+    // similar logic that the data types uses when handling extends
+    // except we always create a new "inline" type as the last in the chain
+    // see note below about linking to type registry
+    let typeDef: ConfigraphDataTypeDefinition;
+    if (_.isString(defOrShorthand)) {
+      if (!ConfigraphBaseTypes[defOrShorthand]) {
+        throw new Error(`found invalid parent (string) in extends chain - "${defOrShorthand}"`);
+      } else {
+        typeDef = { extends: ConfigraphBaseTypes[defOrShorthand]({}) };
+      }
+    } else if (_.isFunction(defOrShorthand)) {
+      // in this case, we have no settings to pass through, so we pass an empty object
+      const shorthandFnResult = defOrShorthand({});
+      if (!ConfigraphDataType.checkInstanceOf(shorthandFnResult)) {
+        // TODO: put this in schema error instead?
+        console.log(ConfigraphDataType, shorthandFnResult);
+        throw new Error('invalid schema as result of fn shorthand');
+      } else {
+        typeDef = { extends: shorthandFnResult };
+      }
+    } else if (ConfigraphDataType.checkInstanceOf(defOrShorthand)) {
+      // TODO: without proper instanceof check, we must resort to `as any`
+      typeDef = { extends: defOrShorthand as any };
+    } else if (_.isObject(defOrShorthand)) {
+      typeDef = defOrShorthand;
+    } else {
+      // TODO: put this in schema error instead?
+      throw new Error('invalid item schema');
+    }
+    this.type = new ConfigraphDataType<NodeMetadata>(
+      typeDef,
+      undefined as any, // TODO: better typing here
+      undefined,
+      // link back to the "type registry" connected to the graph root
+      // so that we know the shape of the metadata
+      this.parentEntity?.graphRoot?.defaultDataTypeRegistry,
+    );
+
+    try {
+      // console.log(this.type);
+      // special handling for object nodes to initialize children
+      if (this.type.extendsType(ConfigraphBaseTypes.object)) {
+        _.each(this.type.primitiveType.typeInstanceOptions.children, (childDef, childKey) => {
+          this.children[childKey] = new (this.constructor as any)(childKey, childDef, this);
+        });
+      }
+      // TODO: also need to initialize the `itemType` for array and dictionary
+      // unless we change how those work altogether...
+    } catch (err) {
+      this.schemaError = err as Error;
+      debug(err);
+    }
+
+    this.valueResolver = this.type.valueResolver;
+    if (this.valueResolver) this.valueResolver.configNode = this;
   }
+
+  readonly schemaError?: Error;
 
   overrides: Array<ConfigValueOverride> = [];
   valueFromParent?: ConfigValue;
@@ -117,12 +207,10 @@ export abstract class ConfigraphNodeBase {
     return true;
   }
 
-  abstract get type(): ConfigraphDataType;
+  children: Record<string, typeof this> = {};
 
-  children: Record<string, ConfigraphNodeBase> = {};
-
-  get parentNode(): ConfigraphNodeBase | undefined {
-    if (this.parent instanceof ConfigraphNodeBase) {
+  get parentNode(): ConfigraphNode | undefined {
+    if (this.parent instanceof ConfigraphNode) {
       return this.parent;
     }
   }
@@ -130,7 +218,7 @@ export abstract class ConfigraphNodeBase {
   get parentEntity(): ConfigraphEntity | undefined {
     if (this.parent instanceof ConfigraphEntity) {
       return this.parent;
-    } else if (this.parent instanceof ConfigraphNodeBase) {
+    } else if (this.parent instanceof ConfigraphNode) {
       return this.parent.parentEntity;
     }
   }
@@ -152,7 +240,7 @@ export abstract class ConfigraphNodeBase {
   // }
 
   getPath(): string {
-    if (this.parent instanceof ConfigraphNodeBase) {
+    if (this.parent instanceof ConfigraphNode) {
       const parentPath = this.parent.getPath();
       return `${parentPath}.${this.key}`;
     }
@@ -305,7 +393,7 @@ export abstract class ConfigraphNodeBase {
     );
   }
 
-  toJSON(): SerializedConfigraphNode {
+  toCoreJSON(): SerializedConfigraphNode {
     return {
       key: this.key,
       isSchemaValid: this.isSchemaValid,
@@ -315,7 +403,7 @@ export abstract class ConfigraphNodeBase {
       resolvedRawValue: this.resolvedRawValue,
       resolvedValue: this.resolvedValue,
       isResolved: this.isResolved,
-      children: _.mapValues(this.children, (c) => c.toJSON()),
+      children: _.mapValues(this.children, (c) => c.toCoreJSON()),
 
       resolver: this.valueResolver?.toJSON(),
       // overrides: this.overrides,
@@ -331,129 +419,12 @@ export abstract class ConfigraphNodeBase {
           : undefined,
     };
   }
-}
 
 
-
-// this is a "processed" config node
-export class ConfigraphNode<NodeMetadata = unknown> extends ConfigraphNodeBase {
-  readonly type: ConfigraphDataType;
-  readonly schemaError?: Error;
-
-  constructor(
-    key: string,
-    defOrShorthand: ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata>,
-    parent?: ConfigraphEntity | ConfigraphNode,
-  ) {
-    super(key, parent);
-
-
-    // similar logic that the data types uses when handling extends
-    // except we always create a new "inline" type as the last in the chain
-    // see note below about linking to type registry
-    let typeDef: ConfigraphDataTypeDefinition;
-    if (_.isString(defOrShorthand)) {
-      if (!ConfigraphBaseTypes[defOrShorthand]) {
-        throw new Error(`found invalid parent (string) in extends chain - "${defOrShorthand}"`);
-      } else {
-        typeDef = { extends: ConfigraphBaseTypes[defOrShorthand]({}) };
-      }
-    } else if (_.isFunction(defOrShorthand)) {
-      // in this case, we have no settings to pass through, so we pass an empty object
-      const shorthandFnResult = defOrShorthand({});
-      if (!ConfigraphDataType.checkInstanceOf(shorthandFnResult)) {
-        // TODO: put this in schema error instead?
-        console.log(ConfigraphDataType, shorthandFnResult);
-        throw new Error('invalid schema as result of fn shorthand');
-      } else {
-        typeDef = { extends: shorthandFnResult };
-      }
-    } else if (ConfigraphDataType.checkInstanceOf(defOrShorthand)) {
-      // TODO: without proper instanceof check, we must resort to `as any`
-      typeDef = { extends: defOrShorthand as any };
-    } else if (_.isObject(defOrShorthand)) {
-      typeDef = defOrShorthand;
-    } else {
-      // TODO: put this in schema error instead?
-      throw new Error('invalid item schema');
-    }
-    this.type = new ConfigraphDataType(
-      typeDef,
-      undefined,
-      undefined,
-      // link back to the "type registry" connected to the graph root
-      // so that we know the shape of the metadata
-      this.parentEntity?.graphRoot?.defaultDataTypeRegistry,
-    );
-
-    try {
-      this.initializeChildren();
-    } catch (err) {
-      this.schemaError = err as Error;
-      debug(err);
-    }
-
-    this.valueResolver = this.type.valueResolver;
-    if (this.valueResolver) this.valueResolver.configNode = this;
-  }
-
-  private initializeChildren() {
-    // special handling for object nodes to initialize children
-    if (this.type.extendsType(ConfigraphBaseTypes.object)) {
-      _.each(this.type.primitiveType.typeInstanceOptions.children, (childDef, childKey) => {
-        this.children[childKey] = new ConfigraphNode(childKey, childDef, this);
-      });
-    }
-    // TODO: also need to initialize the `itemType` for array and dictionary
-    // unless we change how those work altogether...
-  }
-}
-
-// TODO: we could merge this with the above and handle both cases? we'll see
-
-export class ConfigraphPickedNode extends ConfigraphNodeBase {
-  /** full chain of items up to the actual config item */
-  private pickChain: Array<ConfigraphNodeBase> = [];
-
-  constructor(
-    key: string,
-    private def: {
-      sourceNode: ConfigraphNodeBase,
-      transformValue?: (val: any) => any,
-    },
-    parent?: ConfigraphEntity | ConfigraphPickedNode,
-  ) {
-    super(key, parent);
-
-    // we'll follow through the chain of picked items until we get to a real config item
-    // note we're storing them in the opposite order as the typechain above
-    // because we'll want to traverse them in this order to do value transformations
-    this.pickChain.unshift(this.def.sourceNode);
-    while (this.pickChain[0] instanceof ConfigraphPickedNode) {
-      this.pickChain.unshift(this.pickChain[0].def.sourceNode);
-    }
-
-    this.initializeChildren();
-
-    // each item in the chain could have a value transformer, so we must follow the entire chain
-    this.valueResolver = createdPickedValueResolver(this.def.sourceNode, this.def.transformValue);
-    this.valueResolver.configNode = this;
-  }
-
-  /** the real source config item - which defines most of the settings */
-  get originalConfigItem() {
-    // we know the first item in the list will be the actual source (and a DmnoConfigItem)
-    return this.pickChain[0] as ConfigraphNode;
-  }
-  get type() {
-    return this.originalConfigItem.type;
-  }
-
-  private initializeChildren() {
-    if (this.originalConfigItem.children) {
-      _.each(this.originalConfigItem.children, (sourceChild, childKey) => {
-        this.children[childKey] = new ConfigraphPickedNode(sourceChild.key, { sourceNode: sourceChild }, this);
-      });
-    }
-  }
+  // TS type generation customization
+  // TODO: probably want to add more options here...
+  typeGen?: {
+    customLabel?: () => string | undefined;
+    customSuffix?: () => string | undefined;
+  };
 }

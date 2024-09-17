@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@dagrejs/graphlib':
+      specifier: ^2.2.4
+      version: 2.2.4
     '@types/debug':
       specifier: ^4.1.12
       version: 4.1.12
@@ -27,11 +30,14 @@ catalogs:
     typescript:
       specifier: ^5.5.4
       version: 5.5.4
+    vite:
+      specifier: ^5.4.6
+      version: 5.4.6
     vite-node:
-      specifier: ^2.0.5
+      specifier: ^2.1.1
       version: 2.1.1
     vitest:
-      specifier: ^2.0.5
+      specifier: ^2.1.1
       version: 2.1.1
 
 importers:
@@ -60,7 +66,7 @@ importers:
   packages/configraph:
     dependencies:
       '@dagrejs/graphlib':
-        specifier: ^2.2.2
+        specifier: 'catalog:'
         version: 2.2.4
       debug:
         specifier: 'catalog:'
@@ -74,6 +80,9 @@ importers:
       mitt:
         specifier: ^3.0.1
         version: 3.0.1
+      svgo:
+        specifier: ^3.2.0
+        version: 3.3.2
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -121,8 +130,11 @@ importers:
   packages/core:
     dependencies:
       '@dagrejs/graphlib':
-        specifier: ^2.2.2
+        specifier: 'catalog:'
         version: 2.2.4
+      '@dmno/configraph':
+        specifier: workspace:*
+        version: link:../configraph
       '@inquirer/core':
         specifier: ^8.0.1
         version: 8.0.1
@@ -198,9 +210,6 @@ importers:
       read-yaml-file:
         specifier: ^2.1.0
         version: 2.1.0
-      svgo:
-        specifier: ^3.2.0
-        version: 3.3.2
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -208,7 +217,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       vite:
-        specifier: ^5.2.10
+        specifier: 'catalog:'
         version: 5.4.6(@types/node@20.14.12)(less@4.2.0)
       vite-node:
         specifier: 'catalog:'
@@ -217,9 +226,6 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
     devDependencies:
-      '@dmno/configraph':
-        specifier: workspace:*
-        version: link:../configraph
       '@dmno/encryption-lib':
         specifier: workspace:*
         version: link:../encryption-lib

@@ -46,6 +46,9 @@ export async function generateDmnoEncryptionKeyString(keyName: string) {
 }
 
 export async function importDmnoEncryptionKeyString(dmnoKeyStr: string) {
+  if (!dmnoKeyStr) {
+    throw new Error('dmno encryption key must not be empty');
+  }
   if (!dmnoKeyStr.startsWith(`dmno${KEY_SPLIT_SEP}`)) {
     throw new Error(`dmno keys must start with dmno${KEY_SPLIT_SEP}`);
   }

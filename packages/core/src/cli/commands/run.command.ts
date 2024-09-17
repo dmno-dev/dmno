@@ -74,7 +74,7 @@ program.action(async (_command, opts: {
       if (strVal !== undefined) fullInjectedEnv[key] = strVal;
     }
   }
-  fullInjectedEnv.DMNO_INJECTED_ENV = JSON.stringify(service.getInjectedEnvJSON());
+  fullInjectedEnv.DMNO_INJECTED_ENV = JSON.stringify(service.configraphEntity.getInjectedEnvJSON());
 
   commandProcess = execa(pathAwareCommand || rawCommand, commandArgsOnly, {
     stdio: 'inherit',

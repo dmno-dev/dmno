@@ -1,4 +1,4 @@
-import { ConfigraphNodeBase } from './config-node';
+import { ConfigraphNode } from './config-node';
 import { SchemaError } from './errors';
 import { createResolver } from './resolvers';
 
@@ -16,7 +16,7 @@ export function inject(injectOpts?: {}) {
       // if we do, we must filter skip the current item!
       const containingEntity = this.configNode.parentEntity!;
       let entityToSearch = containingEntity.parentEntity;
-      const matchingNodes: Array<ConfigraphNodeBase> = [];
+      const matchingNodes: Array<ConfigraphNode> = [];
       while (entityToSearch) {
         for (const nodeToCheck of entityToSearch.flatConfigNodes) {
           // TODO: we'll want to check some graph-level registry of "compatible" types
@@ -65,7 +65,7 @@ export function collect(collectOpts?: {}) {
       return () => {
         const containingEntity = this.configNode.parentEntity!;
         const entitiesToSearch = [...containingEntity.childEntities];
-        const matchingNodes: Array<ConfigraphNodeBase> = [];
+        const matchingNodes: Array<ConfigraphNode> = [];
         while (entitiesToSearch.length) {
           const entityToSearch = entitiesToSearch.shift()!;
           entitiesToSearch.push(...entityToSearch.childEntities || []);
