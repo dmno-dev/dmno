@@ -69,7 +69,8 @@ export async function getTsDefinitionForNode(item: ConfigraphNode, indentLevel =
 
 
   if (item.type.ui?.icon) {
-    const iconSvg = await fetchIconSvg(item.type.ui?.icon!, item.type.ui?.color, iconCachePath);
+    const iconSvg = await fetchIconSvg(item.type.ui?.icon!, item.type.ui?.color);
+    // const iconSvg = await fetchIconSvg(item.type.ui?.icon!, item.type.ui?.color, iconCachePath);
 
     if (iconSvg) {
       iconMd = `![icon](data:image/svg+xml;utf-8,${encodeURIComponent(iconSvg)}) `;

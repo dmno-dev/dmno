@@ -180,19 +180,14 @@ export class ConfigraphEntity<
   }
 
   addOwnedPlugin(plugin: ConfigraphPlugin) {
-    if (plugin.ownedByEntity) {
-      throw new Error('Plugin is already owned by an entity');
-    }
-
-    if (this.graphRoot.pluginsById[plugin.instanceName]) {
-      throw new Error('Plugin IDs must be unique');
-    }
-    this.graphRoot.pluginsById[plugin.instanceName] = plugin;
-    plugin.ownedByEntity = this;
+    // TODO: clean this up!
+    this.graphRoot.registerPlugin(plugin, this.id);
+    console.log('registering plugin', plugin.instanceId, this.id);
+    plugin.ownedByEntityId = this.id;
     this.ownedPlugins.push(plugin);
   }
   addInjectedPlugin(plugin: ConfigraphPlugin) {
-    plugin.injectedByEntities?.push(this);
+    plugin.injectedByEntityIds?.push(this.id);
     this.injectedPlugins.push(plugin);
   }
 
@@ -341,8 +336,8 @@ export class ConfigraphEntity<
         this.schemaErrors?.length
           ? _.map(this.schemaErrors, (err) => err.toJSON())
           : undefined,
-      ownedPluginNames: _.map(this.ownedPlugins, (p) => p.instanceName),
-      injectedPluginNames: _.map(this.injectedPlugins, (p) => p.instanceName),
+      ownedPluginIds: _.map(this.ownedPlugins, (p) => p.instanceId),
+      injectedPluginIds: _.map(this.injectedPlugins, (p) => p.instanceId),
       // configNodes: _.mapValues(this.configNodes, (item, _key) => item.toJSON()),
     };
   }

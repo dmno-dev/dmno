@@ -10,9 +10,8 @@
 
 import {
   ConfigraphDataTypeDefinition, ConfigValueResolver,
-  ConfigraphPlugin, ConfigraphPluginInputItem,
+  ConfigraphPlugin,
   ConfigraphNode,
-  ConfigraphEntity,
 } from '@dmno/configraph';
 // import {
 //   DmnoService, InjectedDmnoEnv,
@@ -42,20 +41,12 @@ export type SerializedConfigraphEntity =
     // injectedEnv: InjectedDmnoEnv,
   };
 
-export type SerializedConfigraphPlugin = Pick<ConfigraphPlugin, 'pluginType' | 'instanceName' | 'isValid'>
+export type SerializedConfigraphPlugin = Pick<ConfigraphPlugin, 'pluginType' | 'instanceId' | 'isValid'>
 & {
   cliPath?: string,
   initializedInService: string,
   injectedIntoServices: Array<string>,
-  inputs: Record<string, SerializedConfigraphPluginInput>,
   usedByConfigItemResolverPaths?: Array<string>,
-};
-
-export type SerializedConfigraphPluginInput = Pick<ConfigraphPluginInputItem, 'key' | 'isValid' | 'resolvedValue' | 'isResolved' | 'resolutionMethod'> & {
-  mappedToItemPath?: string,
-  coercionError?: SerializedConfigraphError,
-  validationErrors?: Array<SerializedConfigraphError>,
-  schemaError?: SerializedConfigraphError,
 };
 
 export type SerializedConfigraphNode =

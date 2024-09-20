@@ -14,7 +14,7 @@ export type ConfigValue =
   Array<ConfigValue>;
 
 type ValueResolverResult = undefined | ConfigValue;
-type ConfigValueInlineFunction =
+export type ConfigValueInlineFunction =
   (ctx: ResolverContext) => MaybePromise<ValueResolverResult>;
 export type InlineValueResolverDef =
   // static value
@@ -478,97 +478,3 @@ export class ResolverContext {
     return val;
   }
 }
-
-// BUILT-IN RESOLVERS ///////////////////////////////////////////////////////////
-
-/**
- * helper fn to add caching to a value resolver that does not have it built-in
- * for example, a fn that generates a random number / key
- * */
-export function cacheFunctionResult(resolverFn: ConfigValueInlineFunction): ConfigValueResolver;
-export function cacheFunctionResult(cacheKey: string, resolverFn: ConfigValueInlineFunction): ConfigValueResolver;
-export function cacheFunctionResult(
-  cacheKeyOrResolverFn: string | ConfigValueInlineFunction,
-  resolverFn?: ConfigValueInlineFunction,
-): ConfigValueResolver {
-  const explicitCacheKey = _.isString(cacheKeyOrResolverFn) ? cacheKeyOrResolverFn : undefined;
-  const fn = _.isString(cacheKeyOrResolverFn) ? resolverFn! : cacheKeyOrResolverFn;
-
-  return createResolver({
-    icon: 'f7:function', // TODO: different fn for cached?
-    label: 'cached fn',
-    cacheKey: explicitCacheKey || ((ctx) => ctx.resolverFullPath),
-    resolve: fn,
-  });
-}
-
-
-
-// export class DeferredDeploymentResolver extends ConfigValueResolver {
-//   icon = 'radix-icons:component-placeholder';
-//   getPreviewLabel() {
-//     return 'generated during deployment';
-//   }
-//   async _resolve(ctx: ResolverContext) {
-//     return 'resolved by deployment process';
-//   }
-// }
-// export const valueCreatedDuringDeployment = () => new DeferredDeploymentResolver();
-
-
-export function createdPickedValueResolver(
-  sourceNode: ConfigraphNode,
-  valueTransform?: ((val: any) => any),
-) {
-  return createResolver({
-    icon: 'material-symbols:content-copy-outline-sharp',
-    label: 'picked value',
-    process() {
-      this.dependsOnPathsObj[sourceNode.getFullPath()] = 'schema';
-    },
-    async resolve(ctx) {
-      // since we handle resolution of services in the right order
-      // we can assume the picked value will be resolved already (if it was possible at all)
-      if (!sourceNode.isResolved) {
-        return new Error('picked value has not been resolved yet');
-      }
-      if (valueTransform) {
-        return valueTransform(sourceNode.resolvedValue);
-      } else {
-        return sourceNode.resolvedValue;
-      }
-    },
-  });
-}
-
-type SwitchByResolverOptions = Record<string, InlineValueResolverDef>;
-
-export function switchBy(switchByKey: string, branches: SwitchByResolverOptions) {
-  return createResolver({
-    icon: 'gravity-ui:branches-right',
-    label: `switch by ${switchByKey}`,
-    process() {
-      const containingEntity = this.configNode.parentEntity!;
-      const switchFromNode = containingEntity.getConfigNodeByPath(switchByKey);
-      if (!switchFromNode) {
-        this.configNode.schemaErrors.push(new SchemaError(`switchBy referencing invalid path - ${switchByKey}`));
-        return;
-      }
-      this.dependsOnPathsObj[switchFromNode.getFullPath()] = 'schema';
-    },
-    resolveBranches: _.map(branches, (itemDef, itemKey) => ({
-      // TODO: do we want to use a special symbol? or pass default as different arg?
-      isDefault: itemKey === '_default' || itemKey === '_',
-      condition: (ctx: ResolverContext) => ctx.get(switchByKey) === itemKey,
-      id: itemKey,
-      label: `${switchByKey} === "${itemKey}"`,
-      resolver: processInlineResolverDef(itemDef),
-    })),
-  });
-}
-
-export const switchByNodeEnv = (branches: SwitchByResolverOptions) => switchBy('NODE_ENV', branches);
-export const switchByDmnoEnv = (branches: SwitchByResolverOptions) => switchBy('DMNO_ENV', branches);
-
-
-

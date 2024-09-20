@@ -9,9 +9,10 @@ import {
   ConfigraphBaseTypes, ConfigraphDataType, ConfigraphDataTypeDefinitionOrShorthand,
 } from './data-types';
 import {
-  ConfigValue, ConfigValueResolver, createdPickedValueResolver,
+  ConfigValue, ConfigValueResolver,
   ResolverContext,
 } from './resolvers';
+import { createdPickedValueResolver } from './resolvers/pick';
 
 import { ConfigraphEntity } from './entity';
 import { ConfigraphDataTypeDefinition, SerializedConfigraphNode } from '.';
@@ -94,7 +95,7 @@ export class ConfigraphNode<NodeMetadata = any> {
     // similar logic that the data types uses when handling extends
     // except we always create a new "inline" type as the last in the chain
     // see note below about linking to type registry
-    let typeDef: ConfigraphDataTypeDefinition;
+    let typeDef: ConfigraphDataTypeDefinition<unknown, unknown>;
     if (_.isString(defOrShorthand)) {
       if (!ConfigraphBaseTypes[defOrShorthand]) {
         throw new Error(`found invalid parent (string) in extends chain - "${defOrShorthand}"`);
@@ -120,13 +121,14 @@ export class ConfigraphNode<NodeMetadata = any> {
       // TODO: put this in schema error instead?
       throw new Error('invalid item schema');
     }
-    this.type = new ConfigraphDataType<NodeMetadata>(
-      typeDef,
-      undefined as any, // TODO: better typing here
+    // TODO: better typing - remove these "as any"s
+    this.type = new ConfigraphDataType<unknown, NodeMetadata>(
+      typeDef as any,
+      undefined,
       undefined,
       // link back to the "type registry" connected to the graph root
       // so that we know the shape of the metadata
-      this.parentEntity?.graphRoot?.defaultDataTypeRegistry,
+      this.parentEntity?.graphRoot?.defaultDataTypeRegistry as any,
     );
 
     try {

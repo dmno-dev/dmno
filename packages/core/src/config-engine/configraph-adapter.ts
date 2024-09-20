@@ -17,11 +17,11 @@ import { DmnoConfigraphCachingProvider } from './dmno-configraph-cache';
 export {
   ConfigraphBaseTypes as DmnoBaseTypes,
 
+  inject, collect, configPath,
   ResolverContext,
 
   // error types
   ConfigLoadError, SchemaError, ResolutionError, CoercionError, ValidationError,
-
 } from '@dmno/configraph';
 export { RedactMode };
 

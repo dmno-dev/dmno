@@ -96,68 +96,7 @@ export function defineDmnoService(opts: DmnoServiceConfig) {
   return opts;
 }
 
-
-type SerializedCacheEntry = {
-  updatedAt: string,
-  encryptedValue: string;
-  usedByItems: Array<string>;
-};
-type SerializedCache = {
-  version: string;
-  keyName: string;
-  items: Record<string, SerializedCacheEntry>;
-};
-type SerializedCacheKey = {
-  version: string;
-  key: string;
-};
-class CacheEntry {
-  readonly usedByItems: Set<string>;
-  readonly updatedAt: Date;
-  readonly encryptedValue?: string;
-
-  constructor(
-    readonly key: string,
-    readonly value: any,
-    more?: {
-      encryptedValue?: string,
-      usedBy?: string | Array<string>,
-      updatedAt?: Date,
-    },
-  ) {
-    this.updatedAt = more?.updatedAt || new Date();
-    this.usedByItems = new Set(_.castArray(more?.usedBy || []));
-    // we store the value passed rather than recalculating so the cache file won't churn
-    this.encryptedValue = more?.encryptedValue;
-  }
-  async getEncryptedValue() {
-    return encrypt(CacheEntry.encryptionKey, JSON.stringify(this.value), CacheEntry.encryptionKeyName);
-  }
-  // have to make this async because of the encryption call
-  async getJSON(): Promise<SerializedCacheEntry> {
-    return {
-      encryptedValue: this.encryptedValue || await this.getEncryptedValue(),
-      updatedAt: this.updatedAt.toISOString(),
-      usedByItems: Array.from(this.usedByItems),
-    };
-  }
-
-  static async fromSerialized(itemKey: string, raw: SerializedCacheEntry) {
-    // currently this setup means the encryptedValue changes on every run...
-    // we could instead store the encryptedValue and reuse it if it has not changed
-    const valueStr = await decrypt(CacheEntry.encryptionKey, raw.encryptedValue, CacheEntry.encryptionKeyName);
-    // we are also tossing out the saved "usedBy" entries since we'll have new ones after this config run
-    return new CacheEntry(itemKey, JSON.parse(valueStr), {
-      updatedAt: new Date(raw.updatedAt),
-      encryptedValue: raw.encryptedValue,
-    });
-  }
-
-  // not sure about this... but for now it seems true that we'll use a single key at a time
-  static encryptionKey: crypto.webcrypto.CryptoKey;
-  static encryptionKeyName: string;
-}
-
+//! need to clean up overrrides
 type NestedOverrideObj<T = string> = {
   [key: string]: NestedOverrideObj<T> | T;
 };
@@ -174,8 +113,6 @@ export class OverrideSource {
     return _.get(this.values, path);
   }
 }
-
-
 
 export class DmnoWorkspace {
   private services: Record<string, DmnoService> = {};
@@ -207,6 +144,7 @@ export class DmnoWorkspace {
     // first we need to just determine the services order based on parent ids, so we can _initialize_ in the right order
     for (const service of this.servicesArray) {
       this.servicesDag.setNode(service.serviceName, { /* can add more metadata here */ });
+      console.log('service -', service.serviceName);
     }
 
     // first set up graph edges based on "parent"
@@ -258,6 +196,7 @@ export class DmnoWorkspace {
       // we'll sort the services array into dependency order
       this.servicesArray = _.map(sortedServiceNames, (serviceName) => this.services[serviceName]);
       debug('DEP SORTED SERVICES', sortedServiceNames);
+      console.log('DEP SORTED SERVICES', sortedServiceNames);
     }
   }
 
@@ -291,6 +230,7 @@ export class DmnoWorkspace {
         },
       });
 
+      console.log('processing config - service', service.serviceName, service.ownedPluginNames)
       for (const pluginName of service.ownedPluginNames) {
         service.configraphEntity.addOwnedPlugin(this.plugins[pluginName]);
       }
@@ -345,7 +285,8 @@ export class DmnoWorkspace {
 
   toJSON(): SerializedWorkspace {
     return {
-      plugins: _.mapValues(this.plugins, (p) => p.toJSON()),
+      plugins: {},
+      // plugins: _.mapValues(this.plugins, (p) => p.toJSON()),
       services: _.mapValues(
         _.keyBy(this.services, (s) => s.serviceName),
         (s) => s.toJSON(),
@@ -496,6 +437,10 @@ export class DmnoService {
 
       // this contains all the interesting stuff...
       ...this.configraphEntity.toJSON(),
+
+      //! fix this
+      ownedPluginNames: [],
+      injectedPluginNames: [],
     };
   }
 }

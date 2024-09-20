@@ -38,7 +38,6 @@ export class Configraph<
   entitiesById: Record<string, ConfigraphEntity> = {};
   entitiesByParentId: Record<string, Array<ConfigraphEntity>> = {};
   sortedEntityIds: Array<string> = [];
-
   pluginsById: Record<string, ConfigraphPlugin> = {};
   nodesByFullPath: Record<string, ConfigraphNode> = {};
 
@@ -87,6 +86,25 @@ export class Configraph<
       this.entitiesByParentId[entity.parentId].push(entity);
     }
     // do we also want to add to an array?
+  }
+
+  registerPlugin(plugin: ConfigraphPlugin, parentEntityId?: string) {
+    if (this.pluginsById[plugin.instanceId]) {
+      // TODO: this should likely roll up into a graph level error, rather than exploding
+      throw new Error(`Plugin instance IDs must be unique - duplicate id detected "${plugin.instanceId}"`);
+    }
+    this.pluginsById[plugin.instanceId] = plugin;
+    if (parentEntityId && !this.entitiesById[parentEntityId]) {
+      // TODO: make a schema error on the plugin I guess?
+      throw new Error(`Invalid parent entity ID "${parentEntityId}" for plugin ${plugin.instanceId}`);
+    }
+
+    plugin.internalEntity = new ConfigraphEntity(this, {
+      // TODO: something better for the id? figure out what characters are reserved?
+      id: `$PLUGINS/${plugin.instanceId}`,
+      parentId: parentEntityId,
+      configSchema: plugin.inputSchema,
+    });
   }
 
   // these dags probably should be private, but for now we are reaching up into them to manipulate them
@@ -343,12 +361,6 @@ export class Configraph<
         if (!nodeWasResolved && node.isResolved) resolvedCount++;
         if (!node.isFullyResolved) {
           nextBatchNodeIds.push(nodeId);
-        }
-        // notify all plugins about the resolved item in case it resolves an input
-        if (node.isFullyResolved && node.parentEntity) {
-          for (const plugin of node.parentEntity.ownedPlugins) {
-            plugin.attemptInputResolutionsUsingConfigItem(node);
-          }
         }
       }
 

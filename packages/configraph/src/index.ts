@@ -24,13 +24,13 @@ export {
 export { inject, collect } from './injection';
 export {
   createResolver,
-
   ConfigValueResolver,
   ResolverContext, InlineValueResolverDef,
   ConfigValue,
-
-  cacheFunctionResult, switchBy, switchByDmnoEnv, switchByNodeEnv,
 } from './resolvers';
+export * from './resolvers/switch';
+export * from './resolvers/cache-resolver';
+export * from './resolvers/config-path';
 
 export * from './errors';
 export * from './serialization-types';
@@ -40,8 +40,7 @@ export * from './type-generation';
 
 // TODO: maybe export this plugin stuff separately
 export {
-  ConfigraphPlugin, ConfigraphPluginInputItem,
-  ConfigraphPluginInputSchema, ConfigraphPluginInputMap,
-  _PluginInputTypesSymbol, ConfigPath, configPath,
+  ConfigraphPlugin,
 } from './plugin';
+export type { PluginInputValue } from './plugin';
 
