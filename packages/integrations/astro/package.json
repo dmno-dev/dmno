@@ -53,7 +53,7 @@
     "@types/debug": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
-    "astro": "^4.13.3",
+    "astro": "^4.15.9",
     "dmno": "workspace:*",
     "tsup": "catalog:",
     "typescript": "catalog:"

@@ -14,7 +14,7 @@ const startLoadAt = new Date();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-let astroCommand: 'dev' | 'build' | 'preview' | undefined;
+let astroCommand: 'dev' | 'build' | 'preview' | 'sync' | undefined;
 let dmnoHasTriggeredReload = false;
 let enableDynamicPublicClientLoading = false;
 let configItemKeysAccessed: Record<string, boolean> = {};

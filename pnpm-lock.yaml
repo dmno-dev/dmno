@@ -461,7 +461,7 @@ importers:
         specifier: 'catalog:'
         version: 20.14.12
       astro:
-        specifier: ^4.13.3
+        specifier: ^4.15.9
         version: 4.15.9(@types/node@20.14.12)(less@4.2.0)(rollup@4.21.3)(typescript@5.5.4)
       dmno:
         specifier: workspace:*
