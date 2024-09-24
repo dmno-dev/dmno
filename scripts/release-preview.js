@@ -1,12 +1,48 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
+import path from "node:path";
+import readYamlFile from 'read-yaml-file';
+
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+let pnpmCatalog;
+async function fixPackageJsonCatalogEntries(packageJsonPath) {
+  if (!pnpmCatalog) {
+    const pnpmWorkspaceYaml = await readYamlFile(path.resolve(__dirname, "../pnpm-workspace.yaml"));
+    pnpmCatalog = pnpmWorkspaceYaml.catalog;
+    console.log('loaded catalog', pnpmCatalog);
+  }
+  console.log('fixing', packageJsonPath);
+
+  const packageJsonRaw = await fs.promises.readFile(packageJsonPath, 'utf8');
+  const packageJsonObj = JSON.parse(packageJsonRaw);
+  
+  for (const depObjKey of ['dependencies', 'devDependencies', 'peerDependencies']) {
+    const depObj = packageJsonObj[depObjKey];
+    if (!depObj) continue;
+    for (const depName of Object.keys(depObj)) {
+      if (depObj[depName] === 'catalog:') {
+        const catalogVersion = pnpmCatalog[depName];
+        if (!catalogVersion) throw new Error('Missing pnpm catalog version for ' + depName);
+        depObj[depName] = catalogVersion;
+      } else if (depObj[depName].startsWith('catalog:')) {
+        throw new Error('multiple named catalogs not supported');
+      }
+    }
+  }
+
+  await fs.promises.writeFile(packageJsonPath, JSON.stringify(packageJsonObj, null, 2));
+}
+
 
 let err;
 try {
-  // pnpm m ls --json --depth=-1 | node -e "const path = require('path'); console.log(JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf-8')).map((m) => path.relative(__dirname, m.path)).filter(Boolean))"
   const workspacePackagesInfoRaw = execSync('pnpm m ls --json --depth=-1');
   const workspacePackagesInfo = JSON.parse(workspacePackagesInfoRaw);
-  // console.log(workspacePackagesInfo);
 
   // generate sumamry of changed (publishable) modules according to changesets
   // only has option to output to a file
@@ -25,7 +61,12 @@ try {
     .filter((r) => r.newVersion !== r.oldVersion)
     .map((r) => workspacePackagesInfo.find((p) => p.name === r.name))
     .map((p) => p.path);
-  // console.log(releasePackagePaths);
+
+  // Temporary workaround for https://github.com/stackblitz-labs/pkg.pr.new/issues/204
+  console.log('replacing pnpm `catalog:*` deps');
+  for (const releasePackagePath of releasePackagePaths) {
+    await fixPackageJsonCatalogEntries(path.join(releasePackagePath, 'package.json'))
+  }
 
   const publishResult = execSync(`pnpm dlx pkg-pr-new publish --compact ${releasePackagePaths.join(' ')}`);
   console.log('published preview packages!')
