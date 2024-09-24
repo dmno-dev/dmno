@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@types/node": "catalog:",
-    "base64-arraybuffer": "^1.0.2"
+    "base64-arraybuffer": "catalog:"
   },
   "devDependencies": {
     "@dmno/eslint-config": "workspace:*",

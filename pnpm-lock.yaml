@@ -18,6 +18,9 @@ catalogs:
     '@types/node':
       specifier: ^20.14.11
       version: 20.14.12
+    base64-arraybuffer:
+      specifier: ^1.0.2
+      version: 1.0.2
     debug:
       specifier: ^4.3.4
       version: 4.3.7
@@ -135,15 +138,6 @@ importers:
       '@dagrejs/graphlib':
         specifier: 'catalog:'
         version: 2.2.4
-      '@dmno/configraph':
-        specifier: workspace:*
-        version: link:../configraph
-      '@dmno/encryption-lib':
-        specifier: workspace:*
-        version: link:../encryption-lib
-      '@dmno/ts-lib':
-        specifier: workspace:*
-        version: link:../ts-lib
       '@inquirer/core':
         specifier: ^8.0.1
         version: 8.0.1
@@ -160,7 +154,7 @@ importers:
         specifier: ^8.3.3
         version: 8.3.3
       base64-arraybuffer:
-        specifier: ^1.0.2
+        specifier: 'catalog:'
         version: 1.0.2
       boxen:
         specifier: ^7.1.1
@@ -238,9 +232,18 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
     devDependencies:
+      '@dmno/configraph':
+        specifier: workspace:*
+        version: link:../configraph
+      '@dmno/encryption-lib':
+        specifier: workspace:*
+        version: link:../encryption-lib
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
+      '@dmno/ts-lib':
+        specifier: workspace:*
+        version: link:../ts-lib
       '@dmno/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -381,7 +384,7 @@ importers:
         specifier: 'catalog:'
         version: 20.14.12
       base64-arraybuffer:
-        specifier: ^1.0.2
+        specifier: 'catalog:'
         version: 1.0.2
     devDependencies:
       '@dmno/eslint-config':
@@ -712,6 +715,9 @@ importers:
       async:
         specifier: ^3.2.5
         version: 3.2.5
+      base64-arraybuffer:
+        specifier: 'catalog:'
+        version: 1.0.2
       jsonc-parser:
         specifier: ^3.2.1
         version: 3.2.1

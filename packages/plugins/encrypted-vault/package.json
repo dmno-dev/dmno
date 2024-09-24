@@ -56,8 +56,10 @@
   "dependencies": {
     "@inquirer/prompts": "^4.3.0",
     "async": "^3.2.5",
+    "base64-arraybuffer": "catalog:",
     "jsonc-parser": "^3.2.1",
     "lodash-es": "catalog:"
+
   },
   "peerDependencies": {
     "dmno": "^0"
