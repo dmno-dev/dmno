@@ -1,7 +1,8 @@
 /* eslint-disable class-methods-use-this */
+import { AsyncLocalStorage } from 'node:async_hooks';
 import _ from 'lodash-es';
 import { ConfigraphNode } from './config-node';
-import { ResolutionError, SchemaError, ValidationError } from './errors';
+import { ResolutionError } from './errors';
 import { SerializedResolver, SerializedResolverBranch } from '.';
 
 
@@ -149,9 +150,9 @@ export class ConfigValueResolver {
     return thisBranchId;
   }
 
-  getFullPath() {
+  get fullPath() {
     return _.compact([
-      this.configNode?.getFullPath(),
+      this.configNode?.fullPath,
       this.branchIdPath,
     ]).join('#');
   }
@@ -206,7 +207,7 @@ export class ConfigValueResolver {
   async resolve(ctx: ResolverContext) {
     // if we have previously resolved, we need to clear the error, branch active state, etc
     this.resetResolutionState();
-    // console.log('> running resolver for item', this.configNode.getFullPath());
+    // console.log('> running resolver for item', this.configNode.fullPath);
 
     if (_.isFunction(this.def.icon)) this.icon = this.def.icon(ctx);
     if (_.isFunction(this.def.label)) this.label = this.def.label(ctx);
@@ -305,7 +306,7 @@ export class ConfigValueResolver {
       icon: this.icon,
       label: this.label,
       createdByPluginId: this.def.createdByPluginId,
-      // itemPath: this.configItem?.getFullPath(),
+      // itemPath: this.configItem?.fullPath,
       // branchIdPath: this.branchIdPath,
       ...this.branches && {
         branches: this.branches.map((b) => b.toJSON()),
@@ -375,7 +376,7 @@ export function processInlineResolverDef(resolverDef: InlineValueResolverDef) {
 export class ResolverContext {
   // TODO: the item has everything we need, but is it what we want to pass in?
   // lots of ? and ! on ts types here because data doesn't exist at init time...
-  private resolver?: ConfigValueResolver;
+  readonly resolver?: ConfigValueResolver;
   private configNode: ConfigraphNode;
   constructor(
     // private configItem: DmnoConfigItemBase,
@@ -396,13 +397,13 @@ export class ResolverContext {
     return this.entity?.id;
   }
   get nodePath() {
-    return this.configNode.getPath();
+    return this.configNode.path;
   }
   get nodeFullPath() {
-    return this.configNode.getFullPath();
+    return this.configNode.fullPath;
   }
   get resolverFullPath() {
-    return this.resolver ? this.resolver.getFullPath() : this.nodeFullPath;
+    return this.resolver ? this.resolver.fullPath : this.nodeFullPath;
   }
   get resolverBranchIdPath() {
     return this.resolver?.branchIdPath;
@@ -418,11 +419,11 @@ export class ResolverContext {
     }
 
     // just checking in case... can probably remove later
-    if (node.getPath() !== nodePath) throw new Error('node path did not match');
+    if (node.path !== nodePath) throw new Error('node path did not match');
 
     // could track more info here - like if we are waiting for it
     // for now we'll track in several places, not sure yet how we want to roll it up
-    const itemFullPath = node.getFullPath();
+    const itemFullPath = node.fullPath;
     this.dependsOnPathsObj[itemFullPath] = true;
     if (this.resolver) this.resolver.dependsOnPathsObj[itemFullPath] ||= 'resolution';
 
@@ -477,4 +478,11 @@ export class ResolverContext {
     await this.setCacheItem(key, val);
     return val;
   }
+}
+
+export const resolverCtxAls = new AsyncLocalStorage<ResolverContext>();
+export function getResolverCtx() {
+  const ctx = resolverCtxAls.getStore();
+  if (!ctx) throw new Error('unable to find resolver ctx in ALS');
+  return ctx;
 }

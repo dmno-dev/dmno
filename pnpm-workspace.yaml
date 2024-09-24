@@ -7,9 +7,12 @@ packages:
 
 catalog:
   "debug": "^4.3.4"
+  "kleur": "^4.1.5"
+  "lodash-es": "^4.17.21"
+  "mitt": "^3.0.1"
+  "svgo": "^3.2.0"
   "tsup": "^8.2.4"
   "typescript": "^5.5.4"
-  "lodash-es": "^4.17.21"
   "vite": "^5.4.6"
   "vite-node": "^2.1.1"
   "vitest": "^2.1.1"

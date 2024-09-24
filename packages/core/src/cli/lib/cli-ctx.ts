@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { ConfigLoader } from '../../config-loader/config-loader';
 import { DmnoService, DmnoWorkspace } from '../../config-engine/config-engine';
-import { DmnoPlugin } from '../../config-engine/plugins';
+import { DmnoPlugin } from '../../config-engine/dmno-plugin';
 
 export type CliRunCtx = {
   configLoader: ConfigLoader;

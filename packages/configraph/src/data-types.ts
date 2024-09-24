@@ -8,7 +8,6 @@ import {
 } from './errors';
 import { ExternalDocsEntry } from './common';
 import { SerializedConfigraphDataType } from './serialization-types';
-import { MetadataSchemaObject } from './graph';
 
 type ArrayOrSingle<T> = T | Array<T>;
 
@@ -221,24 +220,6 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
     if ('value' in this.typeDef) {
       this._valueResolver = processInlineResolverDef(this.typeDef.value);
     }
-
-    //! maybe dont need this!
-    // if we are dealing with one of our schema inline-defined types (instead of via a reusable data type)
-    // we must adjust validate/coerce functions because they do not accept any settings
-    // if (this.isInlineDefinedType) {
-    //   if (this.typeDef.validate) {
-    //     const originalValidate = this.typeDef.validate;
-    //     this.typeDef.validate = (val, _settings, ctx) => (originalValidate as any)(val, ctx as any);
-    //   }
-    //   if (this.typeDef.asyncValidate) {
-    //     const originalAsyncValidate = this.typeDef.asyncValidate;
-    //     this.typeDef.asyncValidate = (val, _settings, ctx) => (originalAsyncValidate as any)(val, ctx as any);
-    //   }
-    //   if (this.typeDef.coerce) {
-    //     const originalCoerce = this.typeDef.coerce;
-    //     this.typeDef.coerce = (val, _settings, ctx) => (originalCoerce as any)(val, ctx as any);
-    //   }
-    // }
   }
 
   get valueResolver(): ConfigValueResolver | undefined {
@@ -276,12 +257,8 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
 
     if (this.typeDef.validate !== undefined) {
       try {
-        // we can identify the schema-defined types by not having a typeFactoryFn set
-        // and the validation/coercion logic set there expects a resolver context, not a settings object
-        // TODO: see if theres a better way to deal with TS for this?
-        //! const validationResult = this.typeDef.validate(val, ctx, this.typeInstanceOptions);
+        // attaching `this` properly allows the validator to access type isntance settings if applicable/necessary
         const validationResult = this.typeDef.validate.call(this, val, ctx);
-
 
         // TODO: think through validation fn shape - how to return status and errors...
         if (
@@ -501,14 +478,6 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
     return this.getDefItem('injectable', { inherit: false });
   }
 
-  //! to move to domain-specific implementation
-  // get fromVendor() { return this.getDefItem('fromVendor'); }
-  // get sensitive() { return this.getDefItem('sensitive'); }
-  // get useAt() { return this.getDefItem('useAt'); }
-  // get dynamic() { return this.getDefItem('dynamic'); }
-  // get importEnvKey() { return this.getDefItem('importEnvKey'); }
-  // get exportEnvKey() { return this.getDefItem('exportEnvKey'); }
-
   /** checks if this data type is directly an instance of the data type (not via inheritance) */
   isType(factoryFn: ConfigraphDataTypeFactoryFn<any, any> | typeof ObjectDataType): boolean {
     if (factoryFn === ObjectDataType) return this.isType(_RawObjectDataType);
@@ -552,14 +521,6 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
   }
 
   toJSON(): SerializedConfigraphDataType {
-    // we'll also add additional metadata, as defined on the graph itself
-    const metadata = _.mapValues(
-      // pick metadata items marked for serialization
-      _.pickBy(this._registry?.nodeMetadataSchema, (schema) => schema.serialize),
-      // grab the values
-      (schema, key) => this.getMetadata(key as any),
-    );
-
     return {
       summary: this.summary,
       description: this.description,
@@ -568,11 +529,6 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
       externalDocs: this.externalDocs,
       ui: this.ui,
       required: this.required,
-
-      // sensitive: this.sensitive,
-      // useAt: this.useAt,
-      // dynamic: this.dynamic,
-      ...metadata as any,
     };
   }
 }
@@ -581,9 +537,6 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
 // abusing a class here to be able to attach the additional type argument
 // which is necessary to be able define a new type registry for types with extra metadata
 export class ConfigraphDataTypesRegistry<Metadata = {}> {
-  // TODO: ideally we unify the passed in Metadata generic and this schema object
-  nodeMetadataSchema: MetadataSchemaObject = {};
-
   // eslint-disable-next-line class-methods-use-this
   create<TypeSettings = {}>(
     opts: ConfigraphDataTypeDefinition<TypeSettings, Metadata>,
@@ -602,19 +555,6 @@ export class ConfigraphDataTypesRegistry<Metadata = {}> {
 }
 export const createConfigraphDataType = (new ConfigraphDataTypesRegistry()).create;
 
-
-// another very gnarly and illegible way to make that work :(
-// export function createDmnoDataType<T>(
-//   ...args: Parameters<typeof createConfigraphDataType<T, DmnoDataTypeMetadata>>
-// ): ReturnType<typeof createConfigraphDataType<T, DmnoDataTypeMetadata>> {
-//   return createConfigraphDataType(...args);
-// }
-// const t1 = createDmnoDataType<{ foo: string }>({
-//   extends: 'string',
-//   sensitive: true,
-//   badKey: 1,
-// });
-// t1({ foo: 'asdf', bar: 'x' });
 
 
 // we'll use this type to mark our primitive types in a way that end users can't do by accident
@@ -848,7 +788,7 @@ const UrlDataType = createConfigraphDataType<{
     const result = URL_REGEX.test(val);
     if (!result) return new ValidationError('URL doesnt match url regex check');
     if (settings?.allowedDomains) {
-      const [protocol, , domain] = val.split('/');
+      const [_protocol, , domain] = val.split('/');
       if (!settings.allowedDomains.includes(domain.toLowerCase())) {
         return new ValidationError(`Domain (${domain}) is not in allowed list: ${settings.allowedDomains.join(',')}`);
       }
@@ -909,7 +849,6 @@ const _RawObjectDataType = createConfigraphDataType<ObjectDataTypeSettings>({
   },
   validate(val) {
     const settings = this.typeInstanceOptions;
-    const errors = [] as Array<ValidationError>;
     // special handling to not allow empty strings (unless explicitly allowed)
     if (_.isEmpty(val) && !settings?.allowEmpty) {
       return [new ValidationError('If set, object must not be empty')];

@@ -6,7 +6,6 @@ import { ConfigraphNode } from './config-node';
 import { SchemaError } from './errors';
 import { ConfigraphEntity, ConfigraphEntityDef } from './entity';
 import { ConfigraphPlugin } from './plugin';
-import { DependencyNotResolvedResolutionError } from './resolvers';
 import { ConfigraphCachingProvider } from './caching';
 
 import { CacheMode, ConfigraphDataTypesRegistry, ConfigValue } from '.';
@@ -99,12 +98,10 @@ export class Configraph<
       throw new Error(`Invalid parent entity ID "${parentEntityId}" for plugin ${plugin.instanceId}`);
     }
 
-    plugin.internalEntity = new ConfigraphEntity(this, {
-      // TODO: something better for the id? figure out what characters are reserved?
-      id: `$PLUGINS/${plugin.instanceId}`,
-      parentId: parentEntityId,
-      configSchema: plugin.inputSchema,
-    });
+    if (!this._rootEntityId) {
+      throw new Error('Root entity must be created before any plugins are registered');
+    }
+    plugin.initInternalEntity(this, parentEntityId || this._rootEntityId);
   }
 
   // these dags probably should be private, but for now we are reaching up into them to manipulate them
@@ -312,9 +309,9 @@ export class Configraph<
 
       // now that all config nodes exist, process the resolvers
       for (const node of entity.flatConfigNodes) {
-        this.nodesDag.setNode(node.getFullPath());
+        this.nodesDag.setNode(node.fullPath);
 
-        this.nodesByFullPath[node.getFullPath()] = node;
+        this.nodesByFullPath[node.fullPath] = node;
         // calls process on each item's resolver, and collects "post-processing" functions to call if necessary
         const nodePostProcessFns = node.valueResolver?.process(node);
         postProcessFns.push(...nodePostProcessFns || []);
@@ -340,6 +337,7 @@ export class Configraph<
     //! add some plugin related checks here?
   }
 
+  private cacheCleared = false;
   async resolveConfig() {
     if (!this._configProcessed) this.processConfig();
 
@@ -396,11 +394,11 @@ export class Configraph<
   }
   cacheProvider?: ConfigraphCachingProvider;
   async getCacheItem(key: string, nodeFullPath: string): Promise<ConfigValue | undefined> {
-    if (!this.cacheProvider || this.cacheMode !== true) return undefined;
+    if (!this.cacheProvider || this.cacheMode === 'skip') return undefined;
     return this.cacheProvider.getItem(key, nodeFullPath);
   }
   async setCacheItem(key: string, value: ConfigValue, nodeFullPath: string) {
-    if (!this.cacheProvider || this.cacheMode !== true) return;
+    if (!this.cacheProvider || this.cacheMode === 'skip') return;
     return this.cacheProvider.setItem(key, value, nodeFullPath);
   }
 }

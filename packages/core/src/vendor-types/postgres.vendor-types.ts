@@ -15,7 +15,7 @@ const ConnectionString = createDmnoDataType({
     color: '336791', // postgres brand color :)
   },
 
-  validate(val, ctx) {
+  validate(val) {
     if (!PG_REGEX.test(val)) return new ValidationError('Invalid postgres connection url');
   },
 });

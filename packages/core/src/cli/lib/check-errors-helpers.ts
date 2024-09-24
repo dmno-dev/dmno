@@ -27,35 +27,36 @@ export function checkForSchemaErrors(workspace: DmnoWorkspace) {
   }
 
   // now show plugin errors - which would also likely cause further errors
-  // if (_.some(_.values(workspace.plugins), (p) => !p.isValid)) {
-  //   console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your plugins were unable to initialize correctly')}  🚨 🚨 🚨\n`);
+  if (_.some(_.values(workspace.plugins), (p) => !p.isValid)) {
+    console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your plugins were unable to initialize correctly')}  🚨 🚨 🚨\n`);
 
-  //   _.each(workspace.plugins, (plugin) => {
-  //     _.each(plugin.inputItems, (item) => {
-  //       if (item.isValid) return;
+    _.each(workspace.plugins, (plugin) => {
+      _.each(plugin.inputNodes, (item) => {
+        if (item.isValid) return;
 
-  //       console.log(kleur.red('Failing plugin input ------------------'));
+        console.log(kleur.red('Failing plugin input ------------------'));
 
-  //       console.log([
-  //         `${plugin.initByService?.serviceName || ''} ${kleur.gray('(service)')}`,
-  //         `${kleur.gray('└')}${plugin.instanceName} ${kleur.gray('(plugin instance)')}`,
-  //         ` ${kleur.gray('└')}${item.key} ${kleur.gray('(input key)')}`,
-  //       ].join('\n'));
+        console.log([
+          `${plugin.parentEntityId || ''} ${kleur.gray('(service)')}`,
+          `${kleur.gray('└')}${plugin.instanceId} ${kleur.gray('(plugin instance)')}`,
+          ` ${kleur.gray('└')}${item.key} ${kleur.gray('(input key)')}`,
+        ].join('\n'));
 
-  //       console.log(`\n${kleur.underline('Input value')}: ${formattedValue(item.resolvedValue, false)}`);
+        console.log(`\n${kleur.underline('Input value')}: ${formattedValue(item.resolvedValue, false)}`);
 
-  //       const errors = _.compact([
-  //         item.coercionError,
-  //         ...item.validationErrors || [],
-  //         item.schemaError,
-  //       ]);
-  //       console.log(`\n${kleur.underline('Error(s)')}:`);
-  //       console.log(errors?.map((err) => `- ${err.message}`).join('\n'));
-  //     });
-  //   });
+        const errors = _.compact([
+          item.coercionError,
+          ...item.validationErrors || [],
+          item.schemaError,
+        ]);
+        console.log(`\n${kleur.underline('Error(s)')}:`);
+        console.log(errors?.map((err) => `- ${err.message}`).join('\n'));
+        console.log('');
+      });
+    });
 
-  //   throw new CliExitError('Plugin initialization errors');
-  // }
+    throw new CliExitError('Plugin initialization errors');
+  }
 
   // now show schema errors
   const servicesWithSchemaErrors = _.values(workspace.allServices).filter(

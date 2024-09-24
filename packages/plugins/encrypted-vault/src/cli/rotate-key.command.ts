@@ -28,8 +28,8 @@ export const RotateKeyCommand = createDmnoPluginCliCommand({
   ],
   async handler(ctx, opts, command) {
     // TODO: check plugin is in valid state
-    const vaultName = ctx.plugin.inputs.name.resolvedValue || 'default';
-    const primaryService = ctx.workspace.services[ctx.plugin.initializedInService];
+    const vaultName = ctx.plugin.inputNodes.name.resolvedValue || 'default';
+    const primaryService = ctx.workspace.services[ctx.plugin.parentEntityId];
 
     if (ctx.selectedServiceName) {
       console.log('Running this command will affect the entire vault - do not select a specific service');
@@ -38,7 +38,7 @@ export const RotateKeyCommand = createDmnoPluginCliCommand({
 
     const vaultPath = `${primaryService.path}/.dmno/${vaultName}.vault.json`;
     const vaultFileExists = fs.existsSync(vaultPath);
-    const vaultKeyIsSet = ctx.plugin.inputs.key.isResolved && ctx.plugin.inputs.key.isValid;
+    const vaultKeyIsSet = ctx.plugin.inputNodes.key.isResolved && ctx.plugin.inputNodes.key.isValid;
 
     if (!vaultFileExists) {
       console.log('Vault is not set up!');
@@ -50,7 +50,8 @@ export const RotateKeyCommand = createDmnoPluginCliCommand({
     }
 
 
-    const currentKeyStr = ctx.plugin.inputs.key.resolvedValue;
+    const currentKeyStr = ctx.plugin.inputNodes.key.resolvedValue;
+    if (!_.isString(currentKeyStr)) throw new Error('key must be a string');
     const { keyName, key } = await importDmnoEncryptionKeyString(currentKeyStr);
 
     const newKeyName = `${vaultName}-${new Date().toISOString().substring(0, 10)}`;
@@ -68,11 +69,11 @@ export const RotateKeyCommand = createDmnoPluginCliCommand({
     vaultObj.keyName = newKeyName;
 
 
-    if (!ctx.plugin.inputs.key.mappedToItemPath) {
+    if (!ctx.plugin.inputNodes.key.mappedToNodePath) {
       throw new Error('You must configure this plugin to set where the key will be stored');
     }
 
-    const [, keyItemPath] = ctx.plugin.inputs.key.mappedToItemPath.split('!');
+    const [, keyItemPath] = ctx.plugin.inputNodes.key.mappedToNodePath.split('!');
     let replacedInEnvLocal = false;
     const envLocalPath = `${primaryService.path}/.dmno/.env.local`;
     if (fs.existsSync(envLocalPath)) {

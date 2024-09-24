@@ -8,8 +8,6 @@ const OnePassSecretsProd = new OnePasswordDmnoPlugin('1pass/prod', {
   token: inject(),
   envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=n4wmgfq77mydg5lebtroa3ykvm&h=dmnoinc.1password.com',
   fallbackToCliBasedAuth: true,
-  // token: InjectPluginInputByType,
-  // token: 'asdf',
 });
 const OnePassSecretsDev = new OnePasswordDmnoPlugin('1pass', {
   token: inject(),
@@ -20,7 +18,7 @@ const OnePassSecretsDev = new OnePasswordDmnoPlugin('1pass', {
 });
 
 
-const EncryptedVaultSecrets = new EncryptedVaultDmnoPlugin('vault/prod', 'prod', inject());
+const EncryptedVaultSecrets = new EncryptedVaultDmnoPlugin('vault/prod', { name: 'prod', key: inject() });
 // const NonProdVault = new EncryptedVaultDmnoPlugin('vault/dev', {
 //   key: configPath('DMNO_VAULT_KEY'),
 //   name: 'dev',
@@ -99,7 +97,7 @@ export default defineDmnoService({
     },
 
     PICK_TEST: {
-      value: (ctx) => `pick-test--${DMNO_CONFIG.ROOT_ONLY}`,
+      value: () => `pick-test--${DMNO_CONFIG.ROOT_ONLY}`,
     },
 
     CONTACT_EMAIL: {

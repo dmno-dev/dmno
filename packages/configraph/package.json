@@ -1,6 +1,7 @@
 {
   "name": "@dmno/configraph",
-  "version": "0.0.0",
+  "private": true,
+  "version": null,
   "description": "reactive configuration graph - core that powers DMNO Config",
   "author": "dmno-dev",
   "license": "MIT",
@@ -13,10 +14,10 @@
   "homepage": "https://dmno.dev",
   "keywords": [ ],
   "scripts": {
-    "clean": "rm -rf dist",
-    "build": "pnpm run clean && tsup",
-    "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
-    "dev": "pnpm run clean && tsup --watch",
+    "Xclean": "rm -rf dist",
+    "Xbuild": "pnpm run clean && tsup",
+    "Xbuild:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
+    "Xdev": "pnpm run clean && tsup --watch",
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix",
     "test": "vitest"
@@ -25,16 +26,8 @@
     "node": ">=20"
   },
   "type": "module",
-  "exports": {
-    ".": {
-      "ts-src": "./src/index.ts",
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
-  "files": [
-    "/dist"
-  ],
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "devDependencies": {
     "@dmno/encryption-lib": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
@@ -43,7 +36,6 @@
     "@types/debug": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
-    "@types/validate-npm-package-name": "^4.0.2",
     "tsup": "catalog:",
     "vite-node": "catalog:",
     "vite-tsconfig-paths": "^5.0.1",
@@ -52,11 +44,10 @@
   "dependencies": {
     "@dagrejs/graphlib": "catalog:",
     "debug": "catalog:",
-    "kleur": "^4.1.5",
+    "kleur": "catalog:",
     "lodash-es": "catalog:",
-    "mitt": "^3.0.1",
-    "svgo": "^3.2.0",
-    "typescript": "catalog:",
-    "validate-npm-package-name": "^5.0.1"
+    "mitt": "catalog:",
+    "svgo": "catalog:",
+    "typescript": "catalog:"
   }
 }

@@ -80,7 +80,7 @@ export default defineDmnoService({
       extends: DmnoBaseTypes.string({}),
       expose: true,
       value: switchByNodeEnv({
-        _default: (ctx) => `http://localhost:${DMNO_CONFIG.PORT}`,
+        _default: () => `http://localhost:${DMNO_CONFIG.PORT}`,
         // staging: valueCreatedDuringDeployment(),
         production: 'https://api.dmnoexampleapp.com',
       })

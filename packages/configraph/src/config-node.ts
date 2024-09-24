@@ -11,6 +11,7 @@ import {
 import {
   ConfigValue, ConfigValueResolver,
   ResolverContext,
+  resolverCtxAls,
 } from './resolvers';
 import { createdPickedValueResolver } from './resolvers/pick';
 
@@ -21,18 +22,14 @@ const debug = Debug('configraph:node');
 
 //! this might be in the wrong place?
 export type ConfigValueOverride = {
+  sourceType: string;
+  sourceLabel?: string;
+
   /** the value of the override */
   value: ConfigValue;
 
   /** comments about the item from the file */
   comments?: string
-
-  // TODO: this will get more complex, as env files can be in different levels of the project
-  /** where does the value come from */
-  source: string;
-  /**
-   * some overrides apply only in certan envs, for example if coming from `.env.production` */
-  envFlag?: string;
 };
 
 
@@ -107,7 +104,6 @@ export class ConfigraphNode<NodeMetadata = any> {
       const shorthandFnResult = defOrShorthand({});
       if (!ConfigraphDataType.checkInstanceOf(shorthandFnResult)) {
         // TODO: put this in schema error instead?
-        console.log(ConfigraphDataType, shorthandFnResult);
         throw new Error('invalid schema as result of fn shorthand');
       } else {
         typeDef = { extends: shorthandFnResult };
@@ -225,34 +221,18 @@ export class ConfigraphNode<NodeMetadata = any> {
     }
   }
 
-  //! previous impl that has key overriding
-  // getPath(respectImportOverride = false): string {
-  //   const itemKey = (respectImportOverride && this.type.importEnvKey) || this.key;
-  //   if (this.parent instanceof DmnoConfigItemBase) {
-  //     const parentPath = this.parent.getPath(respectImportOverride);
-  //     return `${parentPath}.${itemKey}`;
-  //   }
-  //   return itemKey;
-  // }
-  // getFullPath(respectImportOverride = false): string {
-  //   if (!this.parentEntity?.id) {
-  //     throw new Error('unable to get full path - this item is not attached to a service');
-  //   }
-  //   return `${this.parentEntity.id}!${this.getPath(respectImportOverride)}`;
-  // }
-
-  getPath(): string {
+  get path(): string {
     if (this.parent instanceof ConfigraphNode) {
-      const parentPath = this.parent.getPath();
+      const parentPath = this.parent.path;
       return `${parentPath}.${this.key}`;
     }
     return this.key;
   }
-  getFullPath(): string {
+  get fullPath(): string {
     if (!this.parentEntity?.id) {
       throw new Error('unable to get full path - this item is not attached to a service');
     }
-    return `${this.parentEntity.id}!${this.getPath()}`;
+    return `${this.parentEntity.id}!${this.path}`;
   }
 
   get dependsOnPathsObj(): Record<string, 'schema' | 'resolution'> {
@@ -263,16 +243,13 @@ export class ConfigraphNode<NodeMetadata = any> {
 
   _debug?: Debug.Debugger;
   debug(...args: Parameters<Debug.Debugger>) {
-    if (!this._debug) this._debug = debug.extend(this.getFullPath());
+    if (!this._debug) this._debug = debug.extend(this.fullPath);
     this._debug(...args);
   }
 
   async resolve() {
-    //! not quite sure about this - currently the entity is orchestrating resolution order
-    //! we'll need more logic to reset this when dependency values change
-    // if (this.isFullyResolved) return;
-
     // RESET
+    //! we'll need more logic to reset properly as dependency values are changing, once we incorporate multi-stage async resolution
     this.dependencyResolutionError = undefined;
 
     // if this is a child of another node, we need the parent to have resolved its value first, so it can pass down a value
@@ -300,8 +277,10 @@ export class ConfigraphNode<NodeMetadata = any> {
     // now deal with resolution
     // TODO: need to track dependencies used in coerce/validate/etc
 
-    // TODO: might want to skip resolution if we have overrides present?
+    // TODO: probably want to _skip_ resolution if we have overrides present?
     const itemResolverCtx = new ResolverContext(this.valueResolver || this);
+    resolverCtxAls.enterWith(itemResolverCtx);
+
     if (this.valueResolver) {
       if (!this.valueResolver.isFullyResolved) {
         await this.valueResolver.resolve(itemResolverCtx);
@@ -388,11 +367,18 @@ export class ConfigraphNode<NodeMetadata = any> {
     this.isFullyResolved = true;
 
     debug(
-      `${this.parentEntity?.id}/${this.getPath()} = `,
+      `${this.parentEntity?.id}/${this.path} = `,
       JSON.stringify(this.resolvedRawValue),
       JSON.stringify(this.resolvedValue),
       this.isValid ? '✅' : `❌ ${this.validationErrors?.[0]?.message}`,
     );
+  }
+
+  get mappedToNodePath() {
+    //! This is not exactly right, but it's close
+    // what we want to know if a node is mapped _exactly_ to another without transformation (ie inject, configPath)
+    // it is currently used for the vault plugin to know what key/path to use when writing the vault key to the .env.local file
+    if (this.dependsOnPaths.length === 1) return this.dependsOnPaths[0];
   }
 
   toCoreJSON(): SerializedConfigraphNode {
@@ -407,8 +393,10 @@ export class ConfigraphNode<NodeMetadata = any> {
       isResolved: this.isResolved,
       children: _.mapValues(this.children, (c) => c.toCoreJSON()),
 
+      mappedToNodePath: this.mappedToNodePath,
+
       resolver: this.valueResolver?.toJSON(),
-      // overrides: this.overrides,
+      overrides: this.overrides,
 
       schemaErrors: this.schemaErrors?.length
         ? _.map(this.schemaErrors, (err) => err.toJSON())

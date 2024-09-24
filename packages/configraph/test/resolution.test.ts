@@ -1,6 +1,7 @@
 import { expect, test, describe } from 'vitest';
 import {
   Configraph, ConfigraphBaseTypes, createResolver, ResolutionError, switchBy,
+  getResolverCtx,
 } from '@dmno/configraph';
 
 const testResolver = (opts?: {
@@ -36,6 +37,24 @@ describe('graph resolution', () => {
     expect(e.configNodes.c.isSchemaValid).toBe(true);
     expect(e.configNodes.c.resolvedValue).toEqual(5);
   });
+
+  test('resolver functions can use `getResolverCtx` instead of a `ctx` param', async () => {
+    const g = new Configraph();
+    const e = g.createEntity({
+      configSchema: {
+        a: { value: 1 },
+        b: {
+          extends: 'number',
+          value: () => 2 + getResolverCtx().get('a')
+        },
+      },
+    });
+    await g.resolveConfig();
+    expect(e.configNodes.b.resolvedValue).toEqual(3);
+  });
+
+
+  getResolverCtx
 
   test('resolver failures always result in a ResolutionError', async () => {
     const g = new Configraph();

@@ -63,10 +63,8 @@ export async function getTsDefinitionForNode(item: ConfigraphNode, indentLevel =
   const jsDocLines = [];
   let iconMd = '';
 
-  //!
+  //! previously we were caching within the .dmno folder, maybe not important?
   // const iconCachePath = `${item.parentService?.workspace.rootService.path}/.dmno/.icon-cache`;
-  const iconCachePath = undefined;
-
 
   if (item.type.ui?.icon) {
     const iconSvg = await fetchIconSvg(item.type.ui?.icon!, item.type.ui?.color);

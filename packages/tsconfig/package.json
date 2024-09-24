@@ -1,7 +1,7 @@
 {
   "name": "@dmno/tsconfig",
   "private": true,
-  "version": "0.0.0",
+  "version": null,
   "exports": {
     "./tsconfig.browser.json": "./tsconfig.browser.json",
     "./tsconfig.node.json": "./tsconfig.node.json"

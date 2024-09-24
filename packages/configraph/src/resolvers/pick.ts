@@ -9,9 +9,9 @@ export function createdPickedValueResolver(
     icon: 'material-symbols:content-copy-outline-sharp',
     label: 'picked value',
     process() {
-      this.dependsOnPathsObj[sourceNode.getFullPath()] = 'schema';
+      this.dependsOnPathsObj[sourceNode.fullPath] = 'schema';
     },
-    async resolve(ctx) {
+    async resolve() {
       // since we handle resolution of services in the right order
       // we can assume the picked value will be resolved already (if it was possible at all)
       if (!sourceNode.isResolved) {

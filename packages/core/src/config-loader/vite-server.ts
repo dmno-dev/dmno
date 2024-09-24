@@ -32,10 +32,13 @@ export async function setupViteServer(
     },
 
     transform(code, id, options) {
-      // fairly naive way of doing this... but for now we are replacing `DMNO_CONFIG.SOME_KEY` with `ctx.get('SOME_KEY')`
+      // fairly naive way of doing this... but for now we are replacing `DMNO_CONFIG.SOME_KEY` with `getResolverCtx().get('SOME_KEY')`
       // TODO: we probably should limit which files this applies in
-      // TODO: this also assumes the user is only calling this within a resolver that has a `(ctx) => ` call signature...
-      return code.replaceAll(/DMNO_CONFIG\.([\w\d.]+)/g, 'ctx.get(\'$1\')');
+      let fixedCode = code;
+      if (!code.includes("import { getResolverCtx } from 'dmno';")) {
+        fixedCode = `import { getResolverCtx } from 'dmno';\n${fixedCode}`;
+      }
+      return fixedCode.replaceAll(/DMNO_CONFIG\.([\w\d.]+)/g, 'getResolverCtx().get(\'$1\')');
     },
 
     async handleHotUpdate(ctx) {

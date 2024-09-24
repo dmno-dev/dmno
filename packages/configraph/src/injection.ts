@@ -40,7 +40,7 @@ export function inject(injectOpts?: {}) {
       } else if (matchingNodes.length > 1) {
         this.configNode.schemaErrors.push(new SchemaError(`Injection failed - found multiple matches for type ${this.configNode.type.typeLabel}`));
       } else {
-        this.dependsOnPathsObj[matchingNodes[0].getFullPath()] = 'schema';
+        this.dependsOnPathsObj[matchingNodes[0].fullPath] = 'schema';
       }
     },
     resolve(ctx) {
@@ -94,7 +94,7 @@ export function collect(collectOpts?: {}) {
           // TODO: multiple mode will toggle this on/off
           this.configNode.schemaErrors.push(new SchemaError(`Collect failed - found multiple matches for type ${this.configNode.type.typeLabel}`));
         } else {
-          this.dependsOnPathsObj[matchingNodes[0].getFullPath()] = 'schema';
+          this.dependsOnPathsObj[matchingNodes[0].fullPath] = 'schema';
         }
       };
     },

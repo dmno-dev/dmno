@@ -26,7 +26,7 @@ export {
   createResolver,
   ConfigValueResolver,
   ResolverContext, InlineValueResolverDef,
-  ConfigValue,
+  ConfigValue, getResolverCtx,
 } from './resolvers';
 export * from './resolvers/switch';
 export * from './resolvers/cache-resolver';

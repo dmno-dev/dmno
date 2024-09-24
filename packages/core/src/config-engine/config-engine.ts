@@ -1,31 +1,19 @@
-import fs from 'node:fs';
-import crypto from 'node:crypto';
-import { execSync } from 'node:child_process';
 import path from 'node:path';
 import _ from 'lodash-es';
 import Debug from 'debug';
 import validatePackageName from 'validate-npm-package-name';
 import graphlib from '@dagrejs/graphlib';
 import {
-  decrypt, encrypt, generateDmnoEncryptionKeyString, generateEncryptionKeyString, importDmnoEncryptionKeyString,
-} from '@dmno/encryption-lib';
-import { parse as parseJSONC } from 'jsonc-parser';
-import {
-  ConfigLoadError,
-  ConfigraphDataTypeDefinitionOrShorthand, ConfigraphEntity,
-  SchemaError,
+  ConfigLoadError, ConfigraphDataTypeDefinitionOrShorthand, SchemaError,
 } from '@dmno/configraph';
-
 import { getConfigFromEnvVars } from '../lib/env-vars';
-import { SerializedConfigItem, SerializedService, SerializedWorkspace } from '../config-loader/serialization-types';
-import { stringifyJsonWithCommentBanner } from '../lib/json-utils';
-import { loadDotEnvIntoObject, loadServiceDotEnvFiles } from '../lib/dotenv-utils';
-import { asyncMapValues } from '../lib/async-utils';
+import { SerializedService, SerializedWorkspace } from '../config-loader/serialization-types';
+import { loadServiceDotEnvFiles } from '../lib/dotenv-utils';
 import { RedactMode } from '../lib/redaction-helpers';
 import {
   DmnoConfigraph, DmnoConfigraphServiceEntity, DmnoDataTypeMetadata, DmnoServiceSettings,
 } from './configraph-adapter';
-import { DmnoPlugin } from './plugins';
+import { DmnoPlugin } from './dmno-plugin';
 
 const debug = Debug('dmno');
 
@@ -104,6 +92,7 @@ type NestedOverrideObj<T = string> = {
 export class OverrideSource {
   constructor(
     readonly type: string,
+    readonly label: string | undefined,
     readonly values: NestedOverrideObj,
     readonly enabled = true,
   ) {}
@@ -123,7 +112,7 @@ export class DmnoWorkspace {
   get rootService() { return this.services[this.rootServiceName]; }
   get rootPath() { return this.rootService.path; }
 
-  readonly processEnvOverrides = new OverrideSource('process.env', getConfigFromEnvVars());
+  readonly processEnvOverrides = new OverrideSource('process', undefined, getConfigFromEnvVars());
 
   plugins: Record<string, DmnoPlugin> = {};
 
@@ -144,7 +133,6 @@ export class DmnoWorkspace {
     // first we need to just determine the services order based on parent ids, so we can _initialize_ in the right order
     for (const service of this.servicesArray) {
       this.servicesDag.setNode(service.serviceName, { /* can add more metadata here */ });
-      console.log('service -', service.serviceName);
     }
 
     // first set up graph edges based on "parent"
@@ -196,7 +184,6 @@ export class DmnoWorkspace {
       // we'll sort the services array into dependency order
       this.servicesArray = _.map(sortedServiceNames, (serviceName) => this.services[serviceName]);
       debug('DEP SORTED SERVICES', sortedServiceNames);
-      console.log('DEP SORTED SERVICES', sortedServiceNames);
     }
   }
 
@@ -214,8 +201,12 @@ export class DmnoWorkspace {
 
         // if we had a loading error, we dont add any actual info, just create the service
         ...!service.configLoadError && {
+          // service settings are applied as additional entity metadata
+          ...service.rawConfig?.settings,
+
           configSchema: service.rawConfig?.schema as any,
-          // pick is only available on non-root services
+
+          // pick and parentId is only available on non-root services
           ...service.rawConfig && !service.rawConfig.isRoot && {
             parentId: service.rawConfig.parent,
             pickSchema: _.map(service.rawConfig.pick, (p) => {
@@ -230,7 +221,6 @@ export class DmnoWorkspace {
         },
       });
 
-      console.log('processing config - service', service.serviceName, service.ownedPluginNames)
       for (const pluginName of service.ownedPluginNames) {
         service.configraphEntity.addOwnedPlugin(this.plugins[pluginName]);
       }
@@ -249,6 +239,10 @@ export class DmnoWorkspace {
       // but they will not be all enabled
       await service.loadOverrideFiles();
 
+      // for now we'll apply the process.env level overrides to every service
+      // TODO: think through how we can allow targeting specific services, and nested object nodes
+      service.overrideSources.unshift(this.processEnvOverrides);
+
       // TODO: clean all of this up - just wanted to get basic overrides applied again
       // this currently does not support anything nested!
       _.each(service.overrideSources, (overrideSource) => {
@@ -257,7 +251,8 @@ export class DmnoWorkspace {
           const node = service.configraphEntity.getConfigNodeByPath(key);
           if (!node) return;
           node.overrides.push({
-            source: 'env file',
+            sourceType: overrideSource.type,
+            sourceLabel: overrideSource.label,
             value: val,
           });
         });
@@ -265,7 +260,6 @@ export class DmnoWorkspace {
     }
 
     this.configraph.cacheProvider.cacheDirPath = path.join(this.rootService.path, '.dmno');
-
     await this.configraph.resolveConfig();
   }
 
@@ -285,8 +279,7 @@ export class DmnoWorkspace {
 
   toJSON(): SerializedWorkspace {
     return {
-      plugins: {},
-      // plugins: _.mapValues(this.plugins, (p) => p.toJSON()),
+      plugins: _.mapValues(this.plugins, (p) => p.toJSON()),
       services: _.mapValues(
         _.keyBy(this.services, (s) => s.serviceName),
         (s) => s.toJSON(),
@@ -371,33 +364,30 @@ export class DmnoService {
 
   overrideSources: Array<OverrideSource> = [];
   async loadOverrideFiles() {
-    this.overrideSources = [];
-
     // TODO: this is not at all optimized for speed...
     // particularly it is doing a check on if the file is gitignored
     // and if we are loading not in dev mode, we may just want to load files that will be applied
     const dotEnvFiles = await loadServiceDotEnvFiles(this.path, { onlyLoadDmnoFolder: true });
 
-    dotEnvFiles.forEach((dotEnvFile) => {
-      this.overrideSources.unshift(
-        new OverrideSource(
-          dotEnvFile.fileName,
-          dotEnvFile.envObj,
-          // TODO: specific env overrides are being enabled based on process.env.NODE_ENV
-          // we probably want to be smarter about how _that_ gets resolved first
-          // and store it at the workspace level or something...?
-          !dotEnvFile.applyForEnv || dotEnvFile.applyForEnv === process.env.NODE_ENV,
-        ),
-      );
-    });
+    // TODO: support other formats (yaml, toml, json) - probably should all be through a plugin system
 
-    // load multiple override files
+    // loads multiple override files, in order from more specific to least
     // .env.{ENV}.local
     // .env.local
     // .env.{ENV}
     // .env
 
-    // TODO: support other formats (yaml, toml, json) - probably should all be through a plugin system
+    this.overrideSources = _.map(dotEnvFiles, (dotEnvFile) => {
+      return new OverrideSource(
+        '.env file',
+        dotEnvFile.fileName,
+        dotEnvFile.envObj,
+        // TODO: specific env overrides are being enabled based on process.env.NODE_ENV
+        // we probably want to be smarter about how _that_ gets resolved first
+        // and store it at the workspace level or something...?
+        !dotEnvFile.applyForEnv || dotEnvFile.applyForEnv === process.env.NODE_ENV,
+      );
+    });
   }
 
   get isSchemaValid() {

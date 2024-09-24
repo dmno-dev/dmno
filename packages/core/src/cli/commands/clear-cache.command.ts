@@ -1,15 +1,9 @@
-import fs from 'node:fs/promises';
 import kleur from 'kleur';
 import _ from 'lodash-es';
 import { outdent } from 'outdent';
 import { DmnoCommand } from '../lib/dmno-command';
-import { formatError, formattedValue, getItemSummary } from '../lib/formatting';
 import { getCliRunCtx } from '../lib/cli-ctx';
-import { ConfigServer } from '../../config-loader/config-server';
-import { addCacheFlags } from '../lib/cache-helpers';
-import { addServiceSelection } from '../lib/selection-helpers';
-import { fallingDmnoLoader, fallingDmnosAnimation } from '../lib/loaders';
-import { pathExists } from '../../config-loader/find-services';
+import { pathExists } from '../../lib/fs-utils';
 
 const program = new DmnoCommand('clear-cache')
   .summary('cache utils')
@@ -28,15 +22,17 @@ program.action(async (opts, more) => {
   const ctx = getCliRunCtx();
   const workspace = await ctx.configLoader.getWorkspace();
 
-  if (!await pathExists(workspace.cacheFilePath)) {
+  const cacheFilePath = workspace.configraph.cacheProvider.cacheFilePath;
+
+  if (!await pathExists(cacheFilePath)) {
     console.log('👻 Workspace cache file already gone!\n');
     process.exit(0);
   }
 
+  await workspace.configraph.cacheProvider.reset();
 
-  await fs.rm(workspace.cacheFilePath);
   console.log('🧲💾 Workspace cache file erased');
-  console.log(kleur.italic().gray(workspace.cacheFilePath));
+  console.log(kleur.italic().gray(cacheFilePath));
   console.log();
 
   process.exit(0);

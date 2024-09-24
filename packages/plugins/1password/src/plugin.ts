@@ -8,7 +8,8 @@ import {
   loadDotEnvIntoObject,
   PluginInputValue,
 } from 'dmno';
-import { Client, createClient, Item } from '@1password/sdk';
+
+import { Client, createClient } from '@1password/sdk';
 
 import { name as thisPackageName, version as thisPackageVersion } from '../package.json';
 import { OnePasswordTypes } from './data-types';
@@ -107,7 +108,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
   // eslint-disable-next-line @typescript-eslint/no-useless-constructor
   constructor(
     instanceName: string,
-    inputs?: {
+    inputValues?: {
       token: PluginInputValue,
       envItemLink?: string,
       fallbackToCliBasedAuth?: boolean,
@@ -118,18 +119,18 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
         token: {
           description: 'this service account token will be used via the CLI to communicate with 1password',
           extends: OnePasswordTypes.serviceAccountToken,
-          value: inputs?.token,
+          value: inputValues?.token,
           // TODO: add validation, token must be set unless `fallbackToCliBasedAuth` is true
           // required: true,
         },
         envItemLink: {
           description: 'link to secure note item containing dotenv style values',
           extends: OnePasswordTypes.itemLink,
-          value: inputs?.envItemLink,
+          value: inputValues?.envItemLink,
         },
         fallbackToCliBasedAuth: {
           description: "if token is empty, use system's `op` CLI to communicate with 1password",
-          value: inputs?.fallbackToCliBasedAuth,
+          value: inputValues?.fallbackToCliBasedAuth,
         },
       },
     });

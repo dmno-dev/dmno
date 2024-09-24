@@ -25,7 +25,7 @@ export default defineDmnoService({
         _default: 'default value',
         development: 'development value',
         staging: 'staging value',
-        production: (ctx) => {
+        production: () => {
           return DMNO_CONFIG.OTHER_ITEM ? 'production value' : 'production value 2';
         },
       }),

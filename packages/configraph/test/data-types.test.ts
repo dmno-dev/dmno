@@ -52,16 +52,11 @@ describe('data types', () => {
   });
 
   describe('additional metadata', () => {
-    // TODO: hopefully we can unify the extra metadata schema and type generic passed in
-    class CustomTypesRegistry extends ConfigraphDataTypesRegistry<{
+    type ExtraNodeMetadata = {
       extra1?: boolean,
       extra2?: boolean,
-    }> {
-      nodeMetadataSchema = {
-        extra1: { serialize: true },
-        extra2: { serialize: false },
-      };
-    }
+    };
+    class CustomTypesRegistry extends ConfigraphDataTypesRegistry<ExtraNodeMetadata> {}
     const customTypesRegistry = new CustomTypesRegistry();
     const createCustomDataType = customTypesRegistry.create;
 
@@ -77,29 +72,6 @@ describe('data types', () => {
       expect(TypeC().getMetadata('extra1')).toBe(true);
       expect(TypeD().getMetadata('extra1')).not.toBe(true);
     });
-
-    // test('additional metadata serialization', () => {
-    //   const g = new Configraph({
-    //     defaultTypeRegistry: customTypesRegistry,
-    //   });
-
-    //   const CustomType = createCustomDataType({ extends: 'string' });
-    //   const e = g.createEntity({
-    //     configSchema: {
-    //       noType: {},
-    //       stringTypeShorthand: 'string',
-    //       stringTypeExtends: { extends: 'string' },
-    //       baseTypeFactory: { extends: ConfigraphBaseTypes.string },
-    //       baseType: { extends: ConfigraphBaseTypes.string({}) },
-    //       customType: { extends: CustomType },
-    //     },
-    //   });
-    //   const serialized = e.toJSON();
-    //   _.each(serialized.configNodes, (node, key) => {
-    //     expect(node.dataType).toHaveProperty('extra1');
-    //     expect(node.dataType).not.toHaveProperty('extra2');
-    //   });
-    // });
   });
 
   // TODO: check validation call flow works (how it follows up the chain)

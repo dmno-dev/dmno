@@ -20,21 +20,23 @@ export const SetupCommand = createDmnoPluginCliCommand({
     },
   ],
   async handler(ctx, opts, command) {
-    // const vaultName = ctx.plugin.inputs.
-    // console.dir(ctx.plugin.inputs, { depth: null });
+    // const vaultName = ctx.plugin.inputNodes.
+    // console.dir(ctx.plugin.inputNodes, { depth: null });
 
-    const vaultName = ctx.plugin.inputs.name.resolvedValue || 'default';
+    const vaultName = ctx.plugin.inputNodes.name.resolvedValue || 'default';
 
 
 
-    if (!ctx.plugin.inputs.key.mappedToItemPath) {
+    console.log(ctx.plugin.inputNodes.key);
+    const mappedToNodePath = ctx.plugin.inputNodes.key.mappedToNodePath;
+    if (!mappedToNodePath) {
       throw new Error('You must configure this plugin to set where the key will be stored');
     }
 
-    const [, keyItemPath] = ctx.plugin.inputs.key.mappedToItemPath.split('!');
+    const [, keyItemPath] = mappedToNodePath.split('!');
 
 
-    const primaryService = ctx.workspace.services[ctx.plugin.initializedInService];
+    const primaryService = ctx.workspace.services[ctx.plugin.parentEntityId];
 
 
 
@@ -42,12 +44,12 @@ export const SetupCommand = createDmnoPluginCliCommand({
     const vaultFileExists = fs.existsSync(vaultPath);
 
 
-    if (!ctx.plugin.inputs.key.isResolved && !ctx.plugin.inputs.key.isValid) {
+    if (!ctx.plugin.inputNodes.key.isResolved && !ctx.plugin.inputNodes.key.isValid) {
       console.log('Looks like you have a vault key that is not valid!');
       process.exit(1);
     }
 
-    const vaultKeyIsSet = ctx.plugin.inputs.key.isResolved && ctx.plugin.inputs.key.isValid;
+    const vaultKeyIsSet = ctx.plugin.inputNodes.key.isResolved && ctx.plugin.inputNodes.key.isValid;
 
 
     // we have a key and a vault
@@ -185,7 +187,7 @@ export const SetupCommand = createDmnoPluginCliCommand({
         kleur.bold('This file is safe/intended to be committed to source control!'),
         '',
         'To start adding items, run',
-        kleur.magenta(`pnpm exec dmno plugin -p ${ctx.plugin.instanceName} -- add-item`),
+        kleur.magenta(`pnpm exec dmno plugin -p ${ctx.plugin.instanceId} -- add-item`),
       ].join('\n'));
 
       process.exit(0);

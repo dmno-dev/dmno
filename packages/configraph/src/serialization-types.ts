@@ -13,6 +13,7 @@ import {
   ConfigraphPlugin,
   ConfigraphNode,
 } from '@dmno/configraph';
+import { ConfigValueOverride } from './config-node';
 // import {
 //   DmnoService, InjectedDmnoEnv,
 // } from '../config-engine/config-engine';
@@ -41,12 +42,13 @@ export type SerializedConfigraphEntity =
     // injectedEnv: InjectedDmnoEnv,
   };
 
-export type SerializedConfigraphPlugin = Pick<ConfigraphPlugin, 'pluginType' | 'instanceId' | 'isValid'>
-& {
-  cliPath?: string,
-  initializedInService: string,
-  injectedIntoServices: Array<string>,
+export type SerializedConfigraphPlugin = Pick<
+ConfigraphPlugin,
+'pluginType' | 'instanceId' | 'isValid' | 'isSchemaValid' | 'parentEntityId'
+> & {
   usedByConfigItemResolverPaths?: Array<string>,
+  schemaErrors?: Array<SerializedConfigraphError>,
+  inputNodes: Record<string, SerializedConfigraphNode>,
 };
 
 export type SerializedConfigraphNode =
@@ -60,7 +62,9 @@ export type SerializedConfigraphNode =
     // TODO: dedupe some items from the resolver
     resolutionError?: SerializedConfigraphError,
     resolver?: SerializedResolver,
-    // overrides?: Array<ConfigValueOverride>,
+
+    mappedToNodePath: string | undefined,
+    overrides?: Array<ConfigValueOverride>,
 
     // dmno specific
     // isDynamic: boolean,

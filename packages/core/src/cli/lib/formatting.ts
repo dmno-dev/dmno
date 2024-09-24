@@ -1,6 +1,5 @@
 import kleur from 'kleur';
 import _ from 'lodash-es';
-import { outdent } from 'outdent';
 import { SerializedConfigItem, SerializedDmnoError } from '../../config-loader/serialization-types';
 
 type ColorMod = Exclude<keyof typeof kleur, 'enabled'>;
@@ -110,6 +109,14 @@ export function getItemSummary(item: SerializedConfigItem) {
   // if (item.resolvedRawValue !== item.resolvedValue) {
   //   summary.push(kleur.gray().italic('   > coerced from ') + formattedValue(item.resolvedRawValue, false));
   // }
+  if (item.overrides?.length) {
+    const activeOverride = item.overrides[0];
+    let overrideNote = kleur.gray().italic('value set via override: ');
+    overrideNote += kleur.gray(activeOverride.sourceType);
+    if (activeOverride.sourceLabel) overrideNote += kleur.gray(` - ${activeOverride.sourceLabel}`);
+
+    summary.push(`      ${overrideNote}`);
+  }
 
   const errors = _.compact([item.coercionError, item.resolutionError, ...item.validationErrors || []]);
   errors?.forEach((err) => {

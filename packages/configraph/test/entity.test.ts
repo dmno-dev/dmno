@@ -31,22 +31,6 @@ describe('graph entities', () => {
 
       // TODO: also need to check how metadata is inherited via templates as well
     });
-
-    // test('graph can set entity metadata serialization rules', () => {
-    //   const g = new Configraph<{ extra1: string, extra2: string }>({
-    //     entityMetadata: {
-    //       extra1: { serialize: true },
-    //       extra2: { serialize: false },
-    //     },
-    // });
-    //   const e = g.createEntity({
-    //     extra1: 'extra1-val',
-    //     extra2: 'extra2-val',
-    //   });
-    //   const serialized = e.toJSON();
-    //   expect(serialized.extra1).toBe('extra1-val');
-    //   expect(serialized).not.toHaveProperty('extra2');
-    // });
   });
 
   describe('metadata v2', () => {

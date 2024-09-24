@@ -9,7 +9,8 @@ import {
 import {
   DmnoService, DmnoWorkspace,
 } from './config-engine';
-import { DmnoDataTypeMetadata } from './configraph-adapter';
+import { DmnoConfigraphNode, DmnoConfigraphServiceEntity, DmnoDataTypeMetadata } from './configraph-adapter';
+import { SerializedDmnoPlugin } from '../config-loader/serialization-types';
 
 const debug = Debug('dmno:plugins');
 
@@ -21,10 +22,27 @@ export type { PluginInputValue } from '@dmno/configraph';
 
 export class InjectedPluginDoesNotExistError extends SchemaError {}
 
-export abstract class DmnoPlugin extends ConfigraphPlugin<DmnoDataTypeMetadata> {
+export abstract class DmnoPlugin extends ConfigraphPlugin<
+DmnoDataTypeMetadata, DmnoConfigraphServiceEntity
+> {
+  static cliPath?: string;
+  // these 2 should be required, but TS currently does not support static abstract
+  static pluginPackageName: string;
+  static pluginPackageVersion: string;
+  private getStaticProp(key: 'cliPath' | 'pluginPackageName' | 'pluginPackageVersion') {
+    const PluginClass = this.constructor as typeof DmnoPlugin;
+    return PluginClass[key];
+  }
+  get cliPath() { return this.getStaticProp('cliPath'); }
+  get pluginPackageName() { return this.getStaticProp('pluginPackageName'); }
+  get pluginPackageVersion() { return this.getStaticProp('pluginPackageVersion'); }
+
+  EntityClass = DmnoConfigraphServiceEntity;
+
   constructor(...args: ConstructorParameters<typeof ConfigraphPlugin<DmnoDataTypeMetadata>>) {
     super(...args);
-    allPlugins[args[0]] = this;
+    // instanceId set in super() call
+    allPlugins[this.instanceId] = this;
     initializedPluginInstanceNames.push(this.instanceId);
   }
 
@@ -32,12 +50,18 @@ export abstract class DmnoPlugin extends ConfigraphPlugin<DmnoDataTypeMetadata> 
     this: new (...args: Array<any>) => T,
     instanceName: string,
   ) {
-    console.log('inject plugin!', instanceName);
     if (!allPlugins[instanceName]) {
       throw new InjectedPluginDoesNotExistError('plugin injection failed');
     }
     injectedPluginInstanceNames.push(instanceName);
     return allPlugins[instanceName] as T;
+  }
+
+  toJSON(): SerializedDmnoPlugin {
+    return {
+      ...this.toCoreJSON(),
+      inputNodes: _.mapValues(this.internalEntity?.configNodes, (n) => n.toJSON()),
+    };
   }
 }
 
@@ -53,12 +77,4 @@ export function finishServiceLoadPlugins(service: DmnoService) {
   debug('finish loading plugins for service', service.serviceName, injectedPluginInstanceNames, initializedPluginInstanceNames);
   service.injectedPluginNames = injectedPluginInstanceNames;
   service.ownedPluginNames = initializedPluginInstanceNames;
-
-  // _.each(injectedPluginInstanceNames, (pName) => {
-  //   allPlugins[pName].injectedByEntities ||= [];
-  //   allPlugins[pName].injectedByEntities?.push(service);
-  // });
-  // _.each(initializedPluginInstanceNames, (pName) => {
-  //   allPlugins[pName].ownedByEntity = service;
-  // });
 }

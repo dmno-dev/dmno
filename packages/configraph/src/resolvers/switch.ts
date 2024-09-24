@@ -17,7 +17,7 @@ export function switchBy(switchByKey: string, branches: SwitchByResolverOptions)
         this.configNode.schemaErrors.push(new SchemaError(`switchBy referencing invalid path - ${switchByKey}`));
         return;
       }
-      this.dependsOnPathsObj[switchFromNode.getFullPath()] = 'schema';
+      this.dependsOnPathsObj[switchFromNode.fullPath] = 'schema';
     },
     resolveBranches: _.map(branches, (itemDef, itemKey) => ({
       // TODO: do we want to use a special symbol? or pass default as different arg?

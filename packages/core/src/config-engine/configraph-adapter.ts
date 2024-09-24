@@ -6,7 +6,6 @@ import {
   ConfigraphNode,
 } from '@dmno/configraph';
 
-
 import { RedactMode } from '../lib/redaction-helpers';
 import { SerializedConfigItem } from '../config-loader/serialization-types';
 import {
@@ -18,11 +17,24 @@ export {
   ConfigraphBaseTypes as DmnoBaseTypes,
 
   inject, collect, configPath,
-  ResolverContext,
+  createResolver,
+  ResolverContext, getResolverCtx, ConfigValueResolver,
+
+  ConfigraphDataType,
+  ConfigraphDataTypeDefinitionOrShorthand,
+  ConfigraphDataTypeDefinition,
+  ConfigraphDataTypeFactoryFn,
+  ConfigraphDataTypesRegistry,
+  InlineValueResolverDef,
+  ConfigraphTypeExtendsDefinition,
+  TypeValidationResult,
+  ExternalDocsEntry,
 
   // error types
   ConfigLoadError, SchemaError, ResolutionError, CoercionError, ValidationError,
 } from '@dmno/configraph';
+
+
 export { RedactMode };
 
 
@@ -46,12 +58,6 @@ export type DmnoDataTypeMetadata = {
 
   /** opt in/out of build-type code replacements - default is false unless changed at the service level */
   dynamic?: boolean;
-
-  /** import value a env variable with a different name */
-  importEnvKey?: string;
-  /** export value as env variable with a different name */
-  exportEnvKey?: string;
-
 };
 
 // way more legible, but super weird that we are involving a class like this

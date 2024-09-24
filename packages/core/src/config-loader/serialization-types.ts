@@ -10,9 +10,9 @@
 
 import {
   ConfigraphDataTypeDefinition, ConfigValueResolver,
-  ConfigraphNode,
   SerializedConfigraphEntity,
   SerializedConfigraphPlugin,
+  SerializedConfigraphNode,
 } from '@dmno/configraph';
 import {
   DmnoService, InjectedDmnoEnv,
@@ -22,7 +22,7 @@ import { DmnoDataTypeMetadata } from '../config-engine/configraph-adapter';
 
 export type SerializedWorkspace = {
   services: Record<string, SerializedService>,
-  plugins: Record<string, SerializedConfigraphPlugin>,
+  plugins: Record<string, SerializedDmnoPlugin>,
 };
 
 export type SerializedService =
@@ -44,18 +44,10 @@ export type SerializedService =
 // };
 
 export type SerializedConfigItem =
-  Pick<ConfigraphNode, 'key' | 'isValid' | 'isSchemaValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved'>
+  Omit<SerializedConfigraphNode, 'dataType' | 'children'>
   & {
     dataType: SerializedDmnoDataType,
     children: Record<string, SerializedConfigItem>,
-    coercionError?: SerializedDmnoError,
-    validationErrors?: Array<SerializedDmnoError>,
-    schemaErrors?: Array<SerializedDmnoError>,
-    // TODO: dedupe some items from the resolver
-    resolutionError?: SerializedDmnoError,
-    resolver?: SerializedResolver,
-    // overrides?: Array<ConfigValueOverride>,
-
     // dmno specific
     isDynamic: boolean,
     isSensitive: boolean,
@@ -89,7 +81,10 @@ ConfigraphDataTypeDefinition<any, DmnoDataTypeMetadata>,
 'sensitive' | 'useAt' | 'dynamic'
 >;
 
-export type SerializedDmnoPlugin = SerializedConfigraphPlugin;
+export type SerializedDmnoPlugin =
+Omit<SerializedConfigraphPlugin, 'inputNodes'> & {
+  inputNodes: Record<string, SerializedConfigItem>
+};
 
 
 

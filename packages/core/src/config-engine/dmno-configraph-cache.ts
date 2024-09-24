@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { execSync } from 'node:child_process';
+import Debug from 'debug';
 import { parse as parseJSONC } from 'jsonc-parser';
 import { ConfigraphCacheEntry, ConfigraphCachingProvider } from '@dmno/configraph';
 import {
@@ -8,7 +9,9 @@ import {
 } from '@dmno/encryption-lib';
 import { stringifyJsonWithCommentBanner } from '../lib/json-utils';
 import { asyncMapValues } from '../lib/async-utils';
+import { pathExists } from '../lib/fs-utils';
 
+const debug = Debug('dmno:cache');
 
 type SerializedCacheEntry = {
   updatedAt: string,
@@ -134,5 +137,34 @@ export class DmnoConfigraphCachingProvider extends ConfigraphCachingProvider {
     };
     const serializedCacheStr = stringifyJsonWithCommentBanner(serializedCache);
     await fs.promises.writeFile(this.cacheFilePath, serializedCacheStr, 'utf-8');
+  }
+
+  async reset() {
+    debug('resetting dmno cache', {
+      cacheFilePath: this.cacheFilePath,
+      cacheKeyFilePath: this.cacheKeyFilePath,
+    });
+
+    if (await pathExists(this.cacheFilePath)) {
+      try {
+        await fs.promises.unlink(this.cacheFilePath);
+        debug('cache file deleted');
+      } catch (err) {
+        debug(err);
+      }
+    } else {
+      debug('cache file not found');
+    }
+
+    if (await pathExists(this.cacheKeyFilePath)) {
+      try {
+        await fs.promises.unlink(this.cacheKeyFilePath);
+        debug('cache key file deleted');
+      } catch (err) {
+        debug(err);
+      }
+    } else {
+      debug('cache key file not found');
+    }
   }
 }

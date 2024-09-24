@@ -17,12 +17,12 @@ export default defineDmnoService({
     },
     GITHUB_ORG_URL: {
       extends: DmnoBaseTypes.url({ allowedDomains: ['github.com'] }),
-      value: (ctx) => `https://github.com/${DMNO_CONFIG.GITHUB_ORG_NAME}`,
+      value: () => `https://github.com/${DMNO_CONFIG.GITHUB_ORG_NAME}`,
       required: true,
     },
     GITHUB_REPO_URL: {
       extends: GitDataTypes.PublicRepoUrl,
-      value: (ctx) => `${DMNO_CONFIG.GITHUB_ORG_URL}/${DMNO_CONFIG.GITHUB_REPO_NAME}`,
+      value: () => `${DMNO_CONFIG.GITHUB_ORG_URL}/${DMNO_CONFIG.GITHUB_REPO_NAME}`,
       required: true,
     },
     DISCORD_JOIN_URL: {

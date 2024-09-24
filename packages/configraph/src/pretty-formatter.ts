@@ -1,7 +1,7 @@
 import kleur from 'kleur';
 import _ from 'lodash-es';
 import { ConfigraphError } from './errors';
-import { ConfigraphNodeBase } from './config-node';
+import { ConfigraphNode } from './config-node';
 
 type ColorMod = Exclude<keyof typeof kleur, 'enabled'>;
 type ColorMods = ColorMod | Array<ColorMod>;
@@ -81,7 +81,7 @@ export function joinAndCompact(strings: Array<string | number | boolean | undefi
   )).join(joinChar);
 }
 
-export function getPrettyItemSummary(item: ConfigraphNodeBase) {
+export function getPrettyItemSummary(item: ConfigraphNode) {
   const summary: Array<string> = [];
   const icon = item.coercionError?.icon || item.resolutionError?.icon || item?.validationErrors?.[0]?.icon || '✅';
   // item.resolvedValue === undefined ? '✅' : '✅';
@@ -89,7 +89,7 @@ export function getPrettyItemSummary(item: ConfigraphNodeBase) {
   const isRequired = item.type?.required;
   summary.push(joinAndCompact([
     icon,
-    kleur[item.isValid ? 'cyan' : 'red'](item.getPath()) + (isRequired ? kleur.magenta('*') : ''),
+    kleur[item.isValid ? 'cyan' : 'red'](item.path) + (isRequired ? kleur.magenta('*') : ''),
 
     // kleur.gray(`[type = ${item.type.typeLabel}]`),
     // isSensitive && ` 🔐${kleur.italic().gray('sensitive')}`,

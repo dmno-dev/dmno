@@ -40,7 +40,7 @@ export default defineDmnoService({
     ...pickFromSchemaObject(VercelEnvSchema, 'VERCEL_ENV', 'VERCEL_GIT_COMMIT_REF'),
     // example of adding more specificity/control over env flag using vercel's env vars
     APP_ENV: {
-      value: (ctx) => {
+      value: () => {
         if (DMNO_CONFIG.VERCEL_ENV === 'production') return 'production';
         if (DMNO_CONFIG.VERCEL_ENV === 'preview') {
           if (DMNO_CONFIG.VERCEL_GIT_COMMIT_REF === 'staging') return 'staging';
@@ -81,11 +81,11 @@ import {
 // you could use a single vault, but it's best practice
 // to split out prod secrets to limit access
 const DevSecretsVault = new EncryptedVaultDmnoPlugin('vault/dev', {
-  key: configPath('DMNO_VAULT_KEY_DEV'),
+  key: configPath('..', 'DMNO_VAULT_KEY_DEV'),
   name: 'dev',
 });
 const ProdSecretsVault = new EncryptedVaultDmnoPlugin('vault/prod', {
-  key: configPath('DMNO_VAULT_KEY_PROD'),
+  key: configPath('..', 'DMNO_VAULT_KEY_PROD'),
   name: 'prod',
 });
 

@@ -17,10 +17,10 @@ class TestCache extends ConfigraphCachingProvider {
   /* eslint-disable class-methods-use-this,@typescript-eslint/no-empty-function */
   async load() {}
   async save() {}
-  async getItem(key) {
+  async getItem(key: string) {
     return this.items[key];
   }
-  async setItem(key, value) {
+  async setItem(key: string, value: any) {
     this.items[key] = value;
   }
 }
@@ -30,7 +30,7 @@ const loadSpy = vi.spyOn(testCache, 'load');
 const saveSpy = vi.spyOn(testCache, 'save');
 
 let cacheCounter = 1;
-const cacheTestResolver = (cacheKey) => createResolver({
+const cacheTestResolver = (cacheKey: string) => createResolver({
   label: 'cache-test-resolver',
   async resolve(ctx) {
     return ctx.getOrSetCacheItem(cacheKey, async () => {
@@ -51,8 +51,8 @@ describe('caching', () => {
 
     const e = g.createEntity({
       configSchema: {
-        random: { value: (ctx) => Math.floor(Math.random() * 100) },
-        randomCached: { value: cacheFunctionResult((ctx) => Math.floor(Math.random() * 100)) },
+        random: { value: () => Math.floor(Math.random() * 100) },
+        randomCached: { value: cacheFunctionResult(() => Math.floor(Math.random() * 100)) },
         testCache: { value: cacheTestResolver('key1') },
         testCache2: { value: cacheTestResolver('key1') },
         testCache3: { value: cacheTestResolver('key2') },

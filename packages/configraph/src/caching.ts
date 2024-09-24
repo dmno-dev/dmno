@@ -7,11 +7,6 @@ export abstract class ConfigraphCachingProvider {
   protected cacheLastLoadedAt: Date | undefined;
   protected items: Record<string, ConfigraphCacheEntry> = {};
 
-  // default implementation of encrypt/decrypt is to do nothing
-  /* eslint-disable class-methods-use-this */
-  // async encrypt(val: any): Promise<string> { return val; }
-  // async decrypt(val: string): Promise<any> { return val; }
-
   async getItem(key: string, nodeFullPath: string) {
     if (this.items[key]) {
       this.items[key].usedByItems.add(nodeFullPath);
@@ -24,21 +19,18 @@ export abstract class ConfigraphCachingProvider {
     if (existingItem) {
       // TODO: update the existing item?
       this.items[key] = new ConfigraphCacheEntry(key, value, {
-        // encryptedValue: await this.encrypt(value),
         usedBy: nodeFullPath,
       });
     } else {
       this.items[key] = new ConfigraphCacheEntry(key, value, {
-        // encryptedValue: await this.encrypt(value),
         usedBy: nodeFullPath,
       });
     }
   }
 
-  // abstract _getItemByKey(key: string, nodeFullPath: string): any;
-  // abstract _setItem(key: string, value: any, nodeFullPath: string): any;
   abstract load(): Promise<void>;
   abstract save(): Promise<void>;
+  abstract reset(): Promise<void>;
 }
 
 export class ConfigraphCacheEntry {

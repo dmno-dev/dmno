@@ -1,4 +1,5 @@
 import _ from 'lodash-es';
+import Debug from 'debug';
 import {
   ConfigraphNode,
   PickedNodeDef,
@@ -10,7 +11,8 @@ import { ConfigValue } from './resolvers';
 import { ExternalDocsEntry } from './common';
 import { ConfigraphEntityTemplate } from './entity-template';
 import { ConfigraphDataTypeDefinitionOrShorthand } from './data-types';
-import { SerializedConfigraphEntity } from './serialization-types';
+
+const debug = Debug('configraph');
 
 type NestedOverrideObj<T = string> = {
   [key: string]: NestedOverrideObj<T> | T;
@@ -100,7 +102,7 @@ export type ConfigraphEntityDef<EntityMetadata, NodeMetadata> = EntityMetadata &
 
 
 
-type ExtractNodeMetadata<ConfigraphNodeSubclass> = ConfigraphNodeSubclass extends ConfigraphNode<infer X> ? X : never;
+// type ExtractNodeMetadata<ConfigraphNodeSubclass> = ConfigraphNodeSubclass extends ConfigraphNode<infer X> ? X : never;
 
 export class ConfigraphEntity<
   EntityMetadata = unknown,
@@ -182,12 +184,11 @@ export class ConfigraphEntity<
   addOwnedPlugin(plugin: ConfigraphPlugin) {
     // TODO: clean this up!
     this.graphRoot.registerPlugin(plugin, this.id);
-    console.log('registering plugin', plugin.instanceId, this.id);
-    plugin.ownedByEntityId = this.id;
+    debug('registering plugin with entity', plugin.instanceId, this.id);
     this.ownedPlugins.push(plugin);
   }
   addInjectedPlugin(plugin: ConfigraphPlugin) {
-    plugin.injectedByEntityIds?.push(this.id);
+    // plugin.injectedByEntityIds?.push(this.id);
     this.injectedPlugins.push(plugin);
   }
 
@@ -235,19 +236,6 @@ export class ConfigraphEntity<
     return [];
   }
 
-  //! needs to look at metadata object?
-  //! maybe respect some sort of settings for each item of how values are merged/resolved?
-  /**
-   * helper to get applied value of service setting
-   * this walks up the chain of ancestors until a value is found
-   * */
-  // private getSettingsItem<K extends keyof DmnoServiceSettings>(key: K): DmnoServiceSettings[K] | undefined {
-  //   if (this.rawConfig?.settings && key in this.rawConfig.settings) {
-  //     return this.rawConfig.settings[key];
-  //   }
-  //   return this.parentService?.getSettingsItem(key);
-  // }
-
   addConfigNode(
     key: string,
     nodeDef: ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata> | PickedNodeDef,
@@ -270,6 +258,9 @@ export class ConfigraphEntity<
       const pathPart = pathParts[i];
       if (_.has(currentNode.children, pathPart)) {
         currentNode = currentNode.children[pathPart];
+        if (!currentNode) {
+          throw new Error(`Trying to access ${this.id} / ${path} failed at ${pathPart}`);
+        }
       } else {
         throw new Error(`Trying to access ${this.id} / ${path} failed at ${pathPart}`);
       }
@@ -307,7 +298,7 @@ export class ConfigraphEntity<
       for (const overrideItem of getEntityOverridesDefs(entityOverridesFromTemplate)) {
         const node = this.getConfigNodeByPath(overrideItem.path);
         node.overrides.unshift({
-          source: 'entity template',
+          sourceType: 'entity template',
           value: overrideItem.value,
         });
       }
@@ -318,7 +309,7 @@ export class ConfigraphEntity<
       for (const overrideItem of getEntityOverridesDefs(this.def.overrides)) {
         const node = this.getConfigNodeByPath(overrideItem.path);
         node.overrides.unshift({
-          source: 'entity definition',
+          sourceType: 'entity definition',
           value: overrideItem.value,
         });
       }

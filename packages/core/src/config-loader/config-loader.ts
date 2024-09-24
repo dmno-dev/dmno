@@ -1,5 +1,7 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
+import path from 'node:path';
+
 import kleur from 'kleur';
 import _ from 'lodash-es';
 
@@ -18,7 +20,10 @@ import {
   DmnoService, DmnoWorkspace, DmnoServiceConfig,
 } from '../config-engine/config-engine';
 import { generateServiceTypes } from '../config-engine/type-generation';
-import { beginServiceLoadPlugins, beginWorkspaceLoadPlugins, finishServiceLoadPlugins, InjectedPluginDoesNotExistError } from '../config-engine/plugins';
+import {
+  beginServiceLoadPlugins, beginWorkspaceLoadPlugins, finishServiceLoadPlugins, InjectedPluginDoesNotExistError,
+} from '../config-engine/dmno-plugin';
+
 
 const debugTimer = createDebugTimer('dmno:config-loader');
 
@@ -100,7 +105,18 @@ export class ConfigLoader {
 
     // TODO: if not first load, clean up previous workspace? or reuse it somehow?
     this.dmnoWorkspace = new DmnoWorkspace();
+
+    //! keep an eye on this, not sure if in the right place... we want to clear the cache _once_ and then go back to normal
+    if (this.cacheMode === 'clear') {
+      // normally the cache directory path gets set later, but we'll set it here so we can clear it
+      this.dmnoWorkspace.configraph.cacheProvider.cacheDirPath = path.join(this.workspaceRootPath, '.dmno');
+      await this.dmnoWorkspace.configraph.cacheProvider?.reset();
+      this.cacheMode = true;
+    }
+
     this.dmnoWorkspace.configraph.setCacheMode(this.cacheMode);
+
+
     beginWorkspaceLoadPlugins(this.dmnoWorkspace);
 
     let servicesToLoad = [...this.workspacePackagesData];
@@ -151,7 +167,7 @@ export class ConfigLoader {
 
           finishServiceLoadPlugins(service);
         } catch (err) {
-          // in injection failed, we put back onto the 
+          // in injection failed, we put back onto the
           if (err instanceof InjectedPluginDoesNotExistError) {
             nextBatchServicesToLoad.push(w);
           }
@@ -166,7 +182,7 @@ export class ConfigLoader {
         this.dmnoWorkspace.addService(service);
         debug('init service', service);
       }
-      
+
       // if we went through a batch and made no progress, we're in an error state
       if (toLoadCount === nextBatchServicesToLoad.length) {
         // ERROR!

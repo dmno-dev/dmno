@@ -26,13 +26,13 @@ export const DeleteItemCommand = createDmnoPluginCliCommand({
   ],
   async handler(ctx, opts, command) {
     // TODO: check plugin is in valid state
-    const vaultName = ctx.plugin.inputs.name.resolvedValue || 'default';
-    const primaryService = ctx.workspace.services[ctx.plugin.initializedInService];
+    const vaultName = ctx.plugin.inputNodes.name.resolvedValue || 'default';
+    const primaryService = ctx.workspace.services[ctx.plugin.parentEntityId];
 
     const vaultPath = `${primaryService.path}/.dmno/${vaultName}.vault.json`;
     const vaultFileExists = fs.existsSync(vaultPath);
 
-    const { keyName, key } = await importDmnoEncryptionKeyString(ctx.plugin.inputs.key.resolvedValue);
+    const { keyName, key } = await importDmnoEncryptionKeyString(ctx.plugin.inputNodes.key.resolvedValue as string);
 
     // TODO: we'll want to preserve comments, looks possible with the jsonc tool we are using!
     const vaultRaw = fs.readFileSync(vaultPath);

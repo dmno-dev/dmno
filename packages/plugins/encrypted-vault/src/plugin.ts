@@ -51,8 +51,10 @@ export class EncryptedVaultItem {
 export class EncryptedVaultDmnoPlugin extends DmnoPlugin {
   constructor(
     instanceId: string,
-    name: string,
-    encryptionKey: PluginInputValue,
+    inputValues: {
+      name?: string,
+      key: PluginInputValue,
+    },
   ) {
     super(instanceId, {
       inputSchema: {
@@ -60,12 +62,12 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin {
           description: 'the key to use to encrypt/decrypt this vault file',
           extends: EncryptedVaultTypes.encryptionKey,
           required: true,
-          value: encryptionKey,
+          value: inputValues.key,
         },
         name: {
           description: 'the name of the vault - will be used in the vault filename',
           extends: 'string',
-          value: name,
+          value: inputValues.name,
         },
       },
     });
