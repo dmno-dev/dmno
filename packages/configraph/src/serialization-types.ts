@@ -8,12 +8,10 @@
   and force us to use the same name internally and when we send over the wire
 */
 
-import {
-  ConfigraphDataTypeDefinition, ConfigValueResolver,
-  ConfigraphPlugin,
-  ConfigraphNode,
-} from '@dmno/configraph';
-import { ConfigValueOverride } from './config-node';
+import { ConfigraphNode, ConfigValueOverride } from './config-node';
+import { ConfigraphDataTypeDefinition } from './data-types';
+import { ConfigraphPlugin } from './plugin';
+import { ConfigValueResolver } from './resolvers';
 // import {
 //   DmnoService, InjectedDmnoEnv,
 // } from '../config-engine/config-engine';

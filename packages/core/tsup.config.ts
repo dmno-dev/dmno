@@ -15,7 +15,7 @@ export default defineConfig({
 
   // imported as TS directly, so we have to tell tsup to compile it instead of leaving it external
   noExternal: [
-    '@dmno/ts-lib', '@dmno/encryption-lib', '@dmno/configraph',
+    '@dmno/ts-lib', '@dmno/encryption-lib',
     
     // yarn was having issues with finding the strong-type package for some reason
     // so we'll just bundle them in as a short term solution
@@ -27,7 +27,14 @@ export default defineConfig({
     'dmno'
   ],
 
-  dts: true, // Generate .d.ts files
+  // dts: { // Generate .d.ts files
+  //   resolve: true, // resolves and bundles external package types if in devDependencies only
+  // },
+  dts: true,
+  // experimentalDts: {
+  //   compilerOptions: { skipLibCheck: true },
+  // },
+
   // minify: true, // Minify output
   sourcemap: true, // Generate sourcemaps
   treeshake: true, // Remove unused code

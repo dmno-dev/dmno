@@ -1,8 +1,7 @@
 {
   "name": "@dmno/configraph",
-  "private": true,
-  "version": null,
-  "description": "reactive configuration graph - core that powers DMNO Config",
+  "version": "0.0.0",
+  "description": "reactive configuration graph - core that powers DMNO",
   "author": "dmno-dev",
   "license": "MIT",
   "repository": {
@@ -14,10 +13,10 @@
   "homepage": "https://dmno.dev",
   "keywords": [ ],
   "scripts": {
-    "Xclean": "rm -rf dist",
-    "Xbuild": "pnpm run clean && tsup",
-    "Xbuild:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
-    "Xdev": "pnpm run clean && tsup --watch",
+    "clean": "rm -rf dist",
+    "build": "pnpm run clean && tsup",
+    "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
+    "dev": "pnpm run clean && tsup --watch",
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix",
     "test": "vitest"
@@ -26,8 +25,14 @@
     "node": ">=20"
   },
   "type": "module",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "ts-src": "./src/index.ts",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [ "/dist" ],
   "devDependencies": {
     "@dmno/encryption-lib": "workspace:*",
     "@dmno/eslint-config": "workspace:*",

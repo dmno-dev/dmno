@@ -14,9 +14,7 @@ async function fixPackageJsonCatalogEntries(packageJsonPath) {
   if (!pnpmCatalog) {
     const pnpmWorkspaceYaml = await readYamlFile(path.resolve(__dirname, "../pnpm-workspace.yaml"));
     pnpmCatalog = pnpmWorkspaceYaml.catalog;
-    console.log('loaded catalog', pnpmCatalog);
   }
-  console.log('fixing', packageJsonPath);
 
   const packageJsonRaw = await fs.promises.readFile(packageJsonPath, 'utf8');
   const packageJsonObj = JSON.parse(packageJsonRaw);
@@ -44,7 +42,7 @@ try {
   const workspacePackagesInfoRaw = execSync('pnpm m ls --json --depth=-1');
   const workspacePackagesInfo = JSON.parse(workspacePackagesInfoRaw);
 
-  // generate sumamry of changed (publishable) modules according to changesets
+  // generate summary of changed (publishable) modules according to changesets
   // only has option to output to a file
   execSync('pnpm exec changeset status --output=changesets-summary.json');
 
@@ -68,7 +66,7 @@ try {
     await fixPackageJsonCatalogEntries(path.join(releasePackagePath, 'package.json'))
   }
 
-  const publishResult = execSync(`pnpm dlx pkg-pr-new publish --compact ${releasePackagePaths.join(' ')}`);
+  const publishResult = execSync(`pnpm dlx pkg-pr-new publish --compact --pnpm ${releasePackagePaths.join(' ')}`);
   console.log('published preview packages!')
   console.log(publishResult);
 
