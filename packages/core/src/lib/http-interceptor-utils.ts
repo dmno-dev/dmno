@@ -29,7 +29,8 @@ function buildSensitiveValuesLoookup(lookup?: SensitiveValueLookup) {
 
 // @ts-ignore
 function dmnoPatchedFetch(...args: Array<any>) {
-  if ((globalThis.fetch as any)._dmnoSensitiveRegex) {
+  // console.log('patched fetch!', (dmnoPatchedFetch as any)._dmnoSensitiveRegex, (dmnoPatchedFetch as any)._dmnoSensitiveLookup);
+  if ((dmnoPatchedFetch as any)._dmnoSensitiveRegex) {
     const [urlOrFetchOpts, fetchOptsArg] = args;
     const fetchOpts = (typeof urlOrFetchOpts === 'object' ? urlOrFetchOpts : fetchOptsArg) || {};
     const fetchUrl = (typeof urlOrFetchOpts === 'object' ? (urlOrFetchOpts as Request).url : urlOrFetchOpts).toString();
@@ -37,9 +38,9 @@ function dmnoPatchedFetch(...args: Array<any>) {
     // TODO: probably want to be smarter here and just scan headers, and body depending on content type
     const objToCheckAsString = JSON.stringify(fetchOpts);
 
-    const matches = objToCheckAsString.match((globalThis.fetch as any)._dmnoSensitiveRegex);
+    const matches = objToCheckAsString.match((dmnoPatchedFetch as any)._dmnoSensitiveRegex);
     for (const match of matches || []) {
-      const matchedItem = (globalThis.fetch as any)._dmnoSensitiveLookup[match];
+      const matchedItem = (dmnoPatchedFetch as any)._dmnoSensitiveLookup[match];
       if (checkUrlInAllowList(fetchUrl, matchedItem.allowedDomains)) continue;
 
       // logging the issue with more details - not sure if this is the best way?
@@ -84,8 +85,8 @@ export function enableHttpInterceptor() {
     Object.defineProperty(dmnoPatchedFetch, '_patchedByDmno', { value: true });
     globalThis.fetch = dmnoPatchedFetch;
   }
-  (globalThis.fetch as any)._dmnoSensitiveRegex = regex;
-  (globalThis.fetch as any)._dmnoSensitiveLookup = lookup;
+  (dmnoPatchedFetch as any)._dmnoSensitiveRegex = regex;
+  (dmnoPatchedFetch as any)._dmnoSensitiveLookup = lookup;
 }
 export function disableHttpInterceptor() {
   if ((globalThis.fetch as any)._unpatchedFetch) {

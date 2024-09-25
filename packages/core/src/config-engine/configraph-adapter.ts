@@ -20,6 +20,13 @@ export {
   createResolver,
   ResolverContext, getResolverCtx, ConfigValueResolver,
 
+  switchBy, switchByDmnoEnv, switchByNodeEnv, cacheFunctionResult,
+
+  // error types
+  ConfigLoadError, SchemaError, ResolutionError, CoercionError, ValidationError,
+} from '@dmno/configraph';
+
+export type {
   ConfigraphDataType,
   ConfigraphDataTypeDefinitionOrShorthand,
   ConfigraphDataTypeDefinition,
@@ -29,9 +36,6 @@ export {
   ConfigraphTypeExtendsDefinition,
   TypeValidationResult,
   ExternalDocsEntry,
-
-  // error types
-  ConfigLoadError, SchemaError, ResolutionError, CoercionError, ValidationError,
 } from '@dmno/configraph';
 
 
@@ -207,8 +211,3 @@ export class DmnoConfigraphNode extends ConfigraphNode<DmnoDataTypeMetadata> {
     },
   };
 }
-
-export {
-  switchBy, switchByDmnoEnv, switchByNodeEnv, cacheFunctionResult,
-} from '@dmno/configraph';
-
