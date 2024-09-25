@@ -1,5 +1,3 @@
-import path from 'path';
-import fs from 'fs';
 import {
   parse, modify, applyEdits, findNodeAtLocation, parseTree,
 } from 'jsonc-parser';

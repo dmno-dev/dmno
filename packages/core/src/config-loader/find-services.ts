@@ -6,6 +6,8 @@ import readYamlFile from 'read-yaml-file';
 import { fdir } from 'fdir';
 import { tryCatch } from '@dmno/ts-lib';
 import Debug from 'debug';
+import { pathExists } from '../lib/fs-utils';
+
 
 const debug = Debug('dmno:find-services');
 
@@ -28,15 +30,6 @@ export type ScannedWorkspaceInfo = {
   workspacePackages: Array<WorkspacePackagesListing>,
   autoSelectedPackage?: WorkspacePackagesListing;
 };
-
-export async function pathExists(p: string) {
-  try {
-    await fs.promises.access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 // list of locations to look for workspace project globs
 // TODO: we could add extra conditions so we dont waste time looking for all the files?

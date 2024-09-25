@@ -188,11 +188,9 @@ type ConfigItemDefinition = {
   description?: string,
   dynamic?: boolean,
   exampleValue?: any,
-  exportEnvKey?: string,
   expose?: boolean,
   extends?: DmnoDataType | string | () => DmnoDataType,
   externalDocs?: { description?, url } | Array<{ description?, url }>,
-  importEnvKey?: string,
   required?: boolean,
   sensitive?: boolean,
   summary?: string,
@@ -235,11 +233,6 @@ type ConfigItemDefinition = {
           description: 'An example value for the item.'
         },
         {
-          name: 'exportEnvKey',
-          type: 'string',
-          description: 'The key to use when exporting the item to an env var.'
-        },
-        {
           name: 'expose',
           type: 'boolean',
           description: 'Whether the item should be exposed to other services. i.e., is it "pickable" by siblings'
@@ -253,11 +246,6 @@ type ConfigItemDefinition = {
           name: 'externalDocs',
           type: '{ description?, url } | Array<{ description?, url }>',
           description: 'External documentation for the item.'
-        },
-        {
-          name: 'importEnvKey',
-          type: 'string',
-          description: 'The key to use when importing the item from the environment.'
         },
         {
           name: 'required',

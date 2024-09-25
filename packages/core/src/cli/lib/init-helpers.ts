@@ -10,7 +10,7 @@ import { input, confirm } from '@inquirer/prompts';
 import validatePackageName from 'validate-npm-package-name';
 import boxen from 'boxen';
 import { tryCatch, promiseDelay } from '@dmno/ts-lib';
-import { PackageManager, ScannedWorkspaceInfo, pathExists } from '../../config-loader/find-services';
+import { ScannedWorkspaceInfo } from '../../config-loader/find-services';
 import { joinAndCompact } from './formatting';
 import { findOrCreateConfigFile, updateConfigFile } from './config-file-updater';
 import { getDiffColoredText } from './diff-utils';
@@ -20,6 +20,7 @@ import {
 } from './schema-scaffold';
 import { checkIsFileGitIgnored } from '../../lib/git-utils';
 import { detectJsPackageManager, JsPackageManager } from '../../lib/detect-package-manager';
+import { pathExists } from '../../lib/fs-utils';
 
 const STEP_DELAY = 300;
 

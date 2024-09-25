@@ -21,6 +21,10 @@
     "root!VAULT_ITEM_WITH_SWITCH#production/val2": {
       "encryptedValue": "ulgnwWQMXjQO1hPdDTEHK1r4tRcwdYEmlO6D22Cuy7c0TnGSsuCa",
       "updatedAt": "2024-04-23T19:42:21.648Z"
+    },
+    "root!VAULT_ITEM_WITH_SWITCH#production": {
+      "encryptedValue": "xoUIhrZDwiEzPnuBBK6a+Md/h/zFXrmJABkBznbuS39HdSJijCCtGmeorxZu77Y=",
+      "updatedAt": "2024-09-20T22:39:16.882Z"
     }
   }
 }

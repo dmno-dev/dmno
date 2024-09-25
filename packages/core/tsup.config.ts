@@ -27,16 +27,30 @@ export default defineConfig({
     'dmno'
   ],
 
-  dts: true, // Generate .d.ts files
+  // dts: { // Generate .d.ts files
+  //   resolve: true, // resolves and bundles external package types if in devDependencies only
+  // },
+  dts: true,
+  // experimentalDts: {
+  //   compilerOptions: { skipLibCheck: true },
+  // },
+
   // minify: true, // Minify output
   sourcemap: true, // Generate sourcemaps
   treeshake: true, // Remove unused code
   
   // clean: true, // Clean output directory before building
-  outDir: "dist", // Output directory
+  outDir: 'dist', // Output directory
   
   format: ['esm'], // Output format(s)
   
   splitting: true, // split output into chunks - MUST BE ON! or we get issues with multiple copies of classes and instanceof
   keepNames: true, // stops build from prefixing our class names with `_` in some cases
+
+  // using `--watch` option overrides this setting, so we must detect if we are in dev mode or not, and then watch the correct paths
+  watch: process.env.npm_lifecycle_event === 'dev' ? [
+    'src',
+    // internal libraries that we are bundling into this one rather than publishing
+    '../configraph/src', '../ts-lib/src', '../encryption-lib/src'
+  ] : false
 });

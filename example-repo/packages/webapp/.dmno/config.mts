@@ -1,19 +1,15 @@
-import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheFunctionResult, createDmnoDataType, defineDmnoService, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from 'dmno';
+import { DmnoBaseTypes, cacheFunctionResult, createDmnoDataType, defineDmnoService, switchBy } from 'dmno';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
 
-const customUrlType = createDmnoDataType({
+const customUrlType = createDmnoDataType<{ newSetting: boolean }>({
   typeLabel: 'my-custom-url',
   extends: DmnoBaseTypes.url({
     prependProtocol: true,
     normalize: true,
   }),
   summary: 'summary from custom type',
-  
-  settingsSchema: Object as {
-    newSetting?: boolean,
-  },
 });
 
 export default defineDmnoService({
@@ -47,7 +43,7 @@ export default defineDmnoService({
     // },
 
     // EX1: {
-    //   value: (ctx) => DMNO_CONFIG.BOOLEAN_EXAMPLE,
+    //   value: () => DMNO_CONFIG.BOOLEAN_EXAMPLE,
     // },
 
     ENUM_EXAMPLE: {
@@ -80,10 +76,10 @@ export default defineDmnoService({
       },
     },
     SWITCH_EXAMPLE: {
-      value: switchByNodeEnv({
-        _default: 'dev-value',
+      value: switchBy('NODE_ENV', {
+        _default: 'default-val',
         staging: 'staging-value',
-        production: (ctx) => `prod-${DMNO_CONFIG.NODE_ENV}`,
+        production: () => `prod-${DMNO_CONFIG.NODE_ENV}`,
       })
     },
 
@@ -98,7 +94,7 @@ export default defineDmnoService({
     },
     BOOLEAN_OPPOSITE: {
       extends: 'boolean',
-      value: (ctx) => !DMNO_CONFIG.BOOLEAN_EXAMPLE,
+      value: () => !DMNO_CONFIG.BOOLEAN_EXAMPLE,
     },
 
     SIMPLE_OBJECT: {
@@ -110,13 +106,13 @@ export default defineDmnoService({
       extends: DmnoBaseTypes.number,
       description: 'random number that will change each time config resolution runs',
       required: true,
-      value: (ctx) => Math.floor(Math.random() * 100),
+      value: () => Math.floor(Math.random() * 100),
     },
     CACHED_RANDOM_NUM: {
       extends: DmnoBaseTypes.number,
       description: 'random number that is cached, so should stay constant until cache is cleared',
       required: true,
-      value: cacheFunctionResult((ctx) => Math.floor(Math.random() * 100)),
+      value: cacheFunctionResult(() => Math.floor(Math.random() * 100)),
     },
     VITE_STATIC_VAL_NUM: {
       extends: DmnoBaseTypes.number({

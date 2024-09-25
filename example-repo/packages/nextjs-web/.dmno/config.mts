@@ -65,12 +65,9 @@ export default defineDmnoService({
       required: true,
     },
     
-
-    
     NEXT_PUBLIC_STATIC: {
-      value: (ctx) => DMNO_CONFIG.PUBLIC_STATIC,
+      value: () => DMNO_CONFIG.PUBLIC_STATIC,
     },
-
 
   },
 })

@@ -52,14 +52,14 @@ program.action(async (opts: {
   const workspace = ctx.workspace!;
   const service = ctx.selectedService;
   checkForSchemaErrors(workspace);
-  await service.resolveConfig();
+  await workspace.resolveConfig();
   checkForConfigErrors(service, { showAll: opts?.showAll });
 
   // console.log(service.config);
   if (opts.format === 'json') {
     let exposedConfig = service.config;
     if (opts.public) {
-      exposedConfig = _.pickBy(exposedConfig, (c) => !c.type.sensitive);
+      exposedConfig = _.pickBy(exposedConfig, (c) => !c.type.getMetadata('sensitive'));
     }
     const valuesOnly = _.mapValues(exposedConfig, (val) => val.resolvedValue);
 
@@ -68,7 +68,7 @@ program.action(async (opts: {
     // TODO: this includes sensitive info when using --public option
     console.dir(service.toJSON(), { depth: null });
   } else if (opts.format === 'json-injected') {
-    console.log(JSON.stringify(service.getInjectedEnvJSON()));
+    console.log(JSON.stringify(service.configraphEntity.getInjectedEnvJSON()));
   } else {
     _.each(service.config, (item) => {
       console.log(getItemSummary(item.toJSON()));

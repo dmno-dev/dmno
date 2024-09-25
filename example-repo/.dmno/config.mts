@@ -1,28 +1,24 @@
-import { DmnoBaseTypes, defineDmnoService, configPath, switchByNodeEnv, NodeEnvType, switchBy } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, configPath, NodeEnvType, switchBy, inject } from 'dmno';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
 
 
 const OnePassSecretsProd = new OnePasswordDmnoPlugin('1pass/prod', {
-  token: configPath('OP_TOKEN'),
+  token: inject(),
   envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=n4wmgfq77mydg5lebtroa3ykvm&h=dmnoinc.1password.com',
-  
-  // token: InjectPluginInputByType,
-  // token: 'asdf',
+  fallbackToCliBasedAuth: true,
 });
 const OnePassSecretsDev = new OnePasswordDmnoPlugin('1pass', {
-  token: configPath('OP_TOKEN'),
+  token: inject(),
   envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=4u4klfhpldobgdxrcjwb2bqsta&h=dmnoinc.1password.com',
+  fallbackToCliBasedAuth: true,
   // token: InjectPluginInputByType,
   // token: 'asdf',
 });
 
 
-const EncryptedVaultSecrets = new EncryptedVaultDmnoPlugin('vault/prod', {
-  key: configPath('DMNO_VAULT_KEY'),
-  name: 'prod',
-});
+const EncryptedVaultSecrets = new EncryptedVaultDmnoPlugin('vault/prod', { name: 'prod', key: inject() });
 // const NonProdVault = new EncryptedVaultDmnoPlugin('vault/dev', {
 //   key: configPath('DMNO_VAULT_KEY'),
 //   name: 'dev',
@@ -83,11 +79,13 @@ export default defineDmnoService({
       value: 'rootonly',
     },
 
+    CONTEXT: { value: 'branch-preview' },
+
     VAULT_ITEM_1: {
       value: EncryptedVaultSecrets.item(),
     },
     VAULT_ITEM_WITH_SWITCH: {
-      value: switchByNodeEnv({
+      value: switchBy('NODE_ENV', {
         _default: EncryptedVaultSecrets.item(),
         staging: switchBy('CONTEXT', {
           _default: undefined,
@@ -99,7 +97,7 @@ export default defineDmnoService({
     },
 
     PICK_TEST: {
-      value: (ctx) => `pick-test--${DMNO_CONFIG.ROOT_ONLY}`,
+      value: () => `pick-test--${DMNO_CONFIG.ROOT_ONLY}`,
     },
 
     CONTACT_EMAIL: {

@@ -1,29 +1,26 @@
-import { execSync } from 'node:child_process';
-import fs from 'node:fs';
 import kleur from 'kleur';
 import _ from 'lodash-es';
 import boxen from 'boxen';
-import outdent from 'outdent';
+
 import {
-  select, input, checkbox, confirm,
+  input, checkbox, confirm,
 } from '@inquirer/prompts';
 
 import { tryCatch } from '@dmno/ts-lib';
 
-import gradient from 'gradient-string';
-import { findDmnoServices, pathExists } from '../../config-loader/find-services';
+import { findDmnoServices } from '../../config-loader/find-services';
 import { DmnoCommand } from '../lib/dmno-command';
 
-import { formatError, formattedValue, joinAndCompact } from '../lib/formatting';
-import { getCliRunCtx } from '../lib/cli-ctx';
+import { joinAndCompact } from '../lib/formatting';
 import {
-  DMNO_DEV_BANNER, fallingDmnoLoader, fallingDmnosAnimation,
+  DMNO_DEV_BANNER, fallingDmnosAnimation,
   getDmnoMascot,
 } from '../lib/loaders';
 import { initDmnoForService } from '../lib/init-helpers';
 import { DISCORD_INVITE_URL, GITHUB_REPO_URL } from '../../lib/constants';
 import { CliExitError } from '../lib/cli-error';
 import { detectJsPackageManager } from '../../lib/detect-package-manager';
+import { pathExists } from '../../lib/fs-utils';
 
 const program = new DmnoCommand('init')
   .summary('Sets up dmno')
@@ -63,6 +60,7 @@ program.action(async (opts: {
   // console.log('');
 
   const rootPackage = workspaceInfo.workspacePackages[0];
+  console.log(workspaceInfo.workspacePackages);
 
   if (!workspaceInfo.autoSelectedPackage) {
     throw new Error('unable to detect which package you are in... whats happening?');

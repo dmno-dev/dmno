@@ -1,9 +1,6 @@
 import kleur from 'kleur';
 import _ from 'lodash-es';
-import { outdent } from 'outdent';
 import { SerializedConfigItem, SerializedDmnoError } from '../../config-loader/serialization-types';
-import { DmnoError } from '../../config-engine/errors';
-import { DmnoConfigItemBase } from '../../config-engine/config-engine';
 
 type ColorMod = Exclude<keyof typeof kleur, 'enabled'>;
 type ColorMods = ColorMod | Array<ColorMod>;
@@ -87,7 +84,7 @@ export function getItemSummary(item: SerializedConfigItem) {
   const summary: Array<string> = [];
   const icon = item.coercionError?.icon || item.resolutionError?.icon || item?.validationErrors?.[0]?.icon || '✅';
   // item.resolvedValue === undefined ? '✅' : '✅';
-  const isSensitive = item.dataType?.sensitive;
+  const isSensitive = item.isSensitive;
   const isRequired = item.dataType?.required;
   summary.push(joinAndCompact([
     icon,
@@ -112,13 +109,28 @@ export function getItemSummary(item: SerializedConfigItem) {
   // if (item.resolvedRawValue !== item.resolvedValue) {
   //   summary.push(kleur.gray().italic('   > coerced from ') + formattedValue(item.resolvedRawValue, false));
   // }
+  if (item.overrides?.length) {
+    const activeOverride = item.overrides[0];
+    let overrideNote = kleur.gray().italic('value set via override: ');
+    overrideNote += kleur.gray(activeOverride.sourceType);
+    if (activeOverride.sourceLabel) overrideNote += kleur.gray(` - ${activeOverride.sourceLabel}`);
+
+    summary.push(`      ${overrideNote}`);
+  }
 
   const errors = _.compact([item.coercionError, item.resolutionError, ...item.validationErrors || []]);
   errors?.forEach((err) => {
     summary.push(kleur.red(`   - ${err.message}`));
+    summary.push(...err.cleanedStack || '');
     if (err.tip) {
       summary.push(...err.tip.split('\n').map((line) => `     ${line}`));
     }
   });
+
+  for (const childItem of _.values(item.children)) {
+    const childSummary = getItemSummary(childItem);
+    summary.push(childSummary.split('\n').map((l) => `  ${l}`).join('\n'));
+  }
+
   return summary.join('\n');
 }

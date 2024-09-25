@@ -1,6 +1,8 @@
 import { DmnoBaseTypes, createDmnoDataType, createVendorSchema } from 'dmno';
 import { GitDataTypes, GithubDataTypes } from 'dmno/vendor-types';
 
+export type { createDmnoDataType } from 'dmno';
+
 function getCommonTypeInfo(skipIcon = false) {
   return {
     externalDocs: {
@@ -56,7 +58,6 @@ export const VercelDataTypes = {
     },
   }),
 };
-
 
 
 export const VercelEnvSchema = createVendorSchema({

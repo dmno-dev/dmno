@@ -1,4 +1,3 @@
-import kleur from 'kleur';
 import _ from 'lodash-es';
 
 // copied these error types from Astro
@@ -31,7 +30,7 @@ export type ErrorWithMetadata = {
   cause?: any;
 };
 
-export class DmnoError extends Error {
+export class ConfigraphError extends Error {
   originalError?: Error;
   get isUnexpected() { return !!this.originalError; }
 
@@ -73,7 +72,7 @@ export class DmnoError extends Error {
   }
 }
 
-export class ConfigLoadError extends DmnoError {
+export class ConfigLoadError extends ConfigraphError {
   readonly cleanedStack: Array<string>;
   constructor(err: Error) {
     super(err);
@@ -83,6 +82,7 @@ export class ConfigLoadError extends DmnoError {
     stackLines = stackLines.filter((l) => {
       // filter out unimportant lines related to just running/loading
       // we could filter out more of dmno/core code once things stabilize
+      //! these are probably not relevant anymore, or needs to move to a plugin layer?
       if (l.includes(' at ViteNodeRunner.')) return false;
       if (l.includes('core/src/config-loader/config-loader.ts')) return false;
       return true;
@@ -102,17 +102,18 @@ export class ConfigLoadError extends DmnoError {
     };
   }
 }
-export class SchemaError extends DmnoError {
+export class SchemaError extends ConfigraphError {
   icon = '🧰';
 }
-export class ValidationError extends DmnoError {
+export class ValidationError extends ConfigraphError {
   icon = '❌';
 }
-export class CoercionError extends DmnoError {
+export class CoercionError extends ConfigraphError {
   icon = '🛑';
 }
-export class ResolutionError extends DmnoError {
+export class ResolutionError extends ConfigraphError {
   icon = '⛔';
+  retryable?: boolean = false;
 }
 
 export class EmptyRequiredValueError extends ValidationError {

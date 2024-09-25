@@ -31,14 +31,14 @@ export function checkForSchemaErrors(workspace: DmnoWorkspace) {
     console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your plugins were unable to initialize correctly')}  🚨 🚨 🚨\n`);
 
     _.each(workspace.plugins, (plugin) => {
-      _.each(plugin.inputItems, (item) => {
+      _.each(plugin.inputNodes, (item) => {
         if (item.isValid) return;
 
         console.log(kleur.red('Failing plugin input ------------------'));
 
         console.log([
-          `${plugin.initByService?.serviceName || ''} ${kleur.gray('(service)')}`,
-          `${kleur.gray('└')}${plugin.instanceName} ${kleur.gray('(plugin instance)')}`,
+          `${plugin.parentEntityId || ''} ${kleur.gray('(service)')}`,
+          `${kleur.gray('└')}${plugin.instanceId} ${kleur.gray('(plugin instance)')}`,
           ` ${kleur.gray('└')}${item.key} ${kleur.gray('(input key)')}`,
         ].join('\n'));
 
@@ -51,6 +51,7 @@ export function checkForSchemaErrors(workspace: DmnoWorkspace) {
         ]);
         console.log(`\n${kleur.underline('Error(s)')}:`);
         console.log(errors?.map((err) => `- ${err.message}`).join('\n'));
+        console.log('');
       });
     });
 

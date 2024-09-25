@@ -30,6 +30,6 @@
     "@dmno/tsconfig": "workspace:*",
     "less": "^4.2.0",
     "pug": "^3.0.2",
-    "typescript": "^5.4.5"
+    "typescript": "catalog:"
   }
 }

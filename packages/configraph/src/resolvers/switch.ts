@@ -1,20 +1,24 @@
-/* eslint-disable class-methods-use-this */
 import _ from 'lodash-es';
-
+import { SchemaError } from '../errors';
 import {
-  InlineValueResolverDef, createResolver, processInlineResolverDef,
-} from './resolvers';
-import { ResolverContext } from '../config-engine';
+  createResolver, InlineValueResolverDef, processInlineResolverDef, ResolverContext,
+} from '../resolvers';
 
-type SwitchByResolverOptions =
-  // a default value is required, even if undefined - can be set via `_` or `_default`
-  ({ '_': InlineValueResolverDef } | { '_default': InlineValueResolverDef })
-  & { [value: string]: InlineValueResolverDef };
+type SwitchByResolverOptions = Record<string, InlineValueResolverDef>;
 
-export const switchBy = (switchByKey: string, branches: SwitchByResolverOptions) => {
+export function switchBy(switchByKey: string, branches: SwitchByResolverOptions) {
   return createResolver({
     icon: 'gravity-ui:branches-right',
     label: `switch by ${switchByKey}`,
+    process() {
+      const containingEntity = this.configNode.parentEntity!;
+      const switchFromNode = containingEntity.getConfigNodeByPath(switchByKey);
+      if (!switchFromNode) {
+        this.configNode.schemaErrors.push(new SchemaError(`switchBy referencing invalid path - ${switchByKey}`));
+        return;
+      }
+      this.dependsOnPathsObj[switchFromNode.fullPath] = 'schema';
+    },
     resolveBranches: _.map(branches, (itemDef, itemKey) => ({
       // TODO: do we want to use a special symbol? or pass default as different arg?
       isDefault: itemKey === '_default' || itemKey === '_',
@@ -24,7 +28,8 @@ export const switchBy = (switchByKey: string, branches: SwitchByResolverOptions)
       resolver: processInlineResolverDef(itemDef),
     })),
   });
-};
+}
 
 export const switchByNodeEnv = (branches: SwitchByResolverOptions) => switchBy('NODE_ENV', branches);
 export const switchByDmnoEnv = (branches: SwitchByResolverOptions) => switchBy('DMNO_ENV', branches);
+

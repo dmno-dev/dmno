@@ -99,5 +99,3 @@ export function detectJsPackageManager(opts?: {
   process.exit(1);
 }
 
-
-

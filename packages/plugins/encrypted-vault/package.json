@@ -48,16 +48,18 @@
     "@dmno/ts-lib": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "@types/async": "^3.2.24",
-    "@types/lodash-es": "^4.17.12",
-    "@types/node": "^20.12.7",
-    "tsup": "^8.0.2",
-    "typescript": "^5.4.5"
+    "@types/lodash-es": "catalog:",
+    "@types/node": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@inquirer/prompts": "^4.3.0",
     "async": "^3.2.5",
+    "base64-arraybuffer": "catalog:",
     "jsonc-parser": "^3.2.1",
-    "lodash-es": "^4.17.21"
+    "lodash-es": "catalog:"
+
   },
   "peerDependencies": {
     "dmno": "^0"

@@ -1,0 +1,58 @@
+{
+  "name": "@dmno/configraph",
+  "version": "0.0.0",
+  "description": "reactive configuration graph - core that powers DMNO",
+  "author": "dmno-dev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dmno-dev/dmno.git",
+    "directory": "packages/configraph"
+  },
+  "bugs": "https://github.com/dmno-dev/dmno/issues",
+  "homepage": "https://dmno.dev",
+  "keywords": [ ],
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "pnpm run clean && tsup",
+    "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
+    "dev": "pnpm run clean && tsup --watch",
+    "lint": "eslint src --ext .ts,.cjs",
+    "lint:fix": "pnpm run lint --fix",
+    "test": "vitest"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "ts-src": "./src/index.ts",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [ "/dist" ],
+  "devDependencies": {
+    "@dmno/encryption-lib": "workspace:*",
+    "@dmno/eslint-config": "workspace:*",
+    "@dmno/ts-lib": "workspace:*",
+    "@dmno/tsconfig": "workspace:*",
+    "@types/debug": "catalog:",
+    "@types/lodash-es": "catalog:",
+    "@types/node": "catalog:",
+    "tsup": "catalog:",
+    "vite-node": "catalog:",
+    "vite-tsconfig-paths": "^5.0.1",
+    "vitest": "catalog:"
+  },
+  "dependencies": {
+    "@dagrejs/graphlib": "catalog:",
+    "debug": "catalog:",
+    "kleur": "catalog:",
+    "lodash-es": "catalog:",
+    "mitt": "catalog:",
+    "svgo": "catalog:",
+    "typescript": "catalog:"
+  }
+}

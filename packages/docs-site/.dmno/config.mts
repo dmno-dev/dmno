@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv, configPath, switchBy, pickFromSchemaObject } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, switchBy, pickFromSchemaObject } from 'dmno';
 import { NetlifyEnvSchema } from '@dmno/netlify-platform/types';
 
 export default defineDmnoService({

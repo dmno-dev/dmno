@@ -1,4 +1,4 @@
-import { defineDmnoService, DmnoBaseTypes, NodeEnvType, configPath, dmnoFormula, switchByNodeEnv, createDmnoDataType } from 'dmno';
+import { defineDmnoService, DmnoBaseTypes, switchByNodeEnv } from 'dmno';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 import { EncryptedVaultDmnoPlugin } from '@dmno/encrypted-vault-plugin';
 
@@ -80,7 +80,7 @@ export default defineDmnoService({
       extends: DmnoBaseTypes.string({}),
       expose: true,
       value: switchByNodeEnv({
-        _default: (ctx) => `http://localhost:${DMNO_CONFIG.PORT}`,
+        _default: () => `http://localhost:${DMNO_CONFIG.PORT}`,
         // staging: valueCreatedDuringDeployment(),
         production: 'https://api.dmnoexampleapp.com',
       })

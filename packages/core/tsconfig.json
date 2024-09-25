@@ -2,21 +2,19 @@
   // not sure if this should be browser or not?
   "extends": "@dmno/tsconfig/tsconfig.node.json",
   "compilerOptions": {
+    "rootDir": ".",
     "declarationDir": "./dist",
     "outDir": "./dist",
     // this is needed for vite unfortunately...
     // see https://github.com/vitejs/vite/issues/9813
     "lib": [ "ES2023", "dom", "dom.iterable" ],
-
-
     "paths": {
       // make our self-imports work in our separate exports / entry points
       "dmno": [ "./src/index.ts" ],
     }
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.d.ts",
+    "src/**/*.ts", "src/**/*.d.ts",
     "*.ts", "vite.config.mts",
-  ]
+  ],
 }

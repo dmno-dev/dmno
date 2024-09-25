@@ -3,13 +3,12 @@ import _ from 'lodash-es';
 import kleur from 'kleur';
 import {
   DmnoPlugin, ResolverContext,
-  DmnoPluginInputSchema,
-  DmnoPluginInputMap,
   ResolutionError,
   SchemaError,
-  _PluginInputTypesSymbol,
   loadDotEnvIntoObject,
+  PluginInputValue,
 } from 'dmno';
+
 import { Client, createClient } from '@1password/sdk';
 
 import { name as thisPackageName, version as thisPackageVersion } from '../package.json';
@@ -41,6 +40,7 @@ async function execOpCliCommand(cmdArgs: Array<string>) {
   } else {
     let errMessage = cmd.stderr.toString();
     // get rid of "[ERROR] 2024/01/23 12:34:56 " before actual message
+    console.log('1pass cli error', errMessage);
     if (errMessage.startsWith('[ERROR]')) errMessage = errMessage.substring(28);
     if (errMessage.includes('authorization prompt dismissed')) {
       throw new ResolutionError('1password app authorization prompt dismissed by user', {
@@ -87,12 +87,13 @@ async function execOpCliCommand(cmdArgs: Array<string>) {
 // typeof OnePasswordDmnoPlugin.inputSchema, typeof OnePasswordDmnoPlugin.INPUT_TYPES
 // > {
 
+
 /**
  * DMNO plugin to retrieve secrets from 1Password
  *
  * @see https://dmno.dev/docs/plugins/1password/
  */
-export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
+export class OnePasswordDmnoPlugin extends DmnoPlugin {
   icon = 'simple-icons:1password';
 
   // would be great to do this automatically as part of `DmnoPlugin` but I don't think it's possible
@@ -100,48 +101,60 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   static pluginPackageName = thisPackageName;
   static pluginPackageVersion = thisPackageVersion;
 
-  static readonly inputSchema = {
-    token: {
-      description: 'this service account token will be used via the CLI to communicate with 1password',
-      extends: OnePasswordTypes.serviceAccountToken,
-      // TODO: add validation, token must be set unless `fallbackToCliBasedAuth` is true
-      // required: true,
-    },
-    envItemLink: {
-      description: 'link to secure note item containing dotenv style values',
-      extends: OnePasswordTypes.itemLink,
-    },
-    fallbackToCliBasedAuth: {
-      description: "if token is empty, use system's `op` CLI to communicate with 1password",
-    },
-  } satisfies DmnoPluginInputSchema;
-  // ^^ note this explicit `satisfies` is needed to give us better typing on our inputSchema
-
   // this is likely the default for most plugins...
   // accept a mapping of how to fill inputs - each can be set to a
   // static value, config path, or use type-based injection
   // TODO: this is still not giving me types on the static input values... :(
+  // eslint-disable-next-line @typescript-eslint/no-useless-constructor
   constructor(
     instanceName: string,
-    inputs: DmnoPluginInputMap<typeof OnePasswordDmnoPlugin.inputSchema>,
+    inputValues?: {
+      token: PluginInputValue,
+      envItemLink?: string,
+      fallbackToCliBasedAuth?: boolean,
+    },
   ) {
-    super(instanceName);
-    this.setInputMap(inputs);
+    super(instanceName, {
+      inputSchema: {
+        token: {
+          description: 'this service account token will be used via the CLI to communicate with 1password',
+          extends: OnePasswordTypes.serviceAccountToken,
+          value: inputValues?.token,
+          // TODO: add validation, token must be set unless `fallbackToCliBasedAuth` is true
+          // required: true,
+        },
+        envItemLink: {
+          description: 'link to secure note item containing dotenv style values',
+          extends: OnePasswordTypes.itemLink,
+          value: inputValues?.envItemLink,
+        },
+        fallbackToCliBasedAuth: {
+          description: "if token is empty, use system's `op` CLI to communicate with 1password",
+          value: inputValues?.fallbackToCliBasedAuth,
+        },
+      },
+    });
   }
 
   private opClient: Client | undefined;
   private async initOpClientIfNeeded() {
-    if (!this.inputValues.token) return;
+    const opServiceAccountToken = this.inputValue('token');
+    if (!opServiceAccountToken) {
+      if (!this.inputValue('fallbackToCliBasedAuth')) {
+        throw new Error('Either a service account token must be provided, or you must enable `fallbackToCliBasedAuth`');
+      }
+      return;
+    }
     if (!this.opClient) {
       this.opClient = await createClient({
-        auth: this.inputValues.token,
-        integrationName: this.pluginPackageName.replaceAll('@', '').replaceAll('/', ' '),
-        integrationVersion: this.pluginPackageVersion,
+        auth: opServiceAccountToken as string, // TODO: figure out better way for this
+        integrationName: OnePasswordDmnoPlugin.pluginPackageName.replaceAll('@', '').replaceAll('/', ' '),
+        integrationVersion: OnePasswordDmnoPlugin.pluginPackageVersion,
       });
     }
   }
 
-  private async getOpItemById(ctx: ResolverContext, vaultId: VaultId, itemId: ItemId) {
+  private async getOpItemById(ctx: ResolverContext, vaultId: VaultId, itemId: ItemId): Promise<any> {
     await this.initOpClientIfNeeded();
     // using sdk
     if (this.opClient) {
@@ -207,7 +220,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
   private envItemsByService: Record<string, Record<string, string>> | undefined;
   private async loadEnvItems(ctx: ResolverContext) {
     // we've already validated the url is good and includes the query params
-    const url = new URL(this.inputValues.envItemLink!);
+    const url = new URL(this.inputValue('envItemLink')!);
     const vaultId = url.searchParams.get('v')!;
     const itemId = url.searchParams.get('i')!;
 
@@ -250,21 +263,22 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
      * */
     overrideLookupKey?: string,
   ) {
-    // make sure the user has mapped up an input for where the env data is stored
-    if (!this.inputItems.envItemLink.resolutionMethod) {
-      throw new SchemaError('You must set an `envItemLink` plugin input to use the .item() resolver');
-    }
-
     return this.createResolver({
       label: (ctx) => {
-        return `env blob item > ${ctx.serviceName} > ${overrideLookupKey || ctx.itemPath}`;
+        return `env blob item > ${ctx.entityId} > ${overrideLookupKey || ctx.nodePath}`;
       },
       resolve: async (ctx) => {
+        // make sure the user has mapped up an input for where the env data is stored
+        if (!(this.inputValue('envItemLink') as any)) {
+          throw new SchemaError('You must set an `envItemLink` plugin input to use the .item() resolver');
+        }
+
+
         if (!this.envItemsByService) await this.loadEnvItems(ctx);
 
-        const lookupKey = overrideLookupKey || ctx.itemPath;
+        const lookupKey = overrideLookupKey || ctx.nodePath;
 
-        const itemValue = this.envItemsByService?.[ctx.serviceName!]?.[lookupKey]
+        const itemValue = this.envItemsByService?.[ctx.entityId!]?.[lookupKey]
           // the label "_default" is used to signal a fallback / default to apply to all services
           || this.envItemsByService?._default?.[lookupKey];
 
@@ -272,8 +286,8 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
           throw new ResolutionError('Unable to find config item in 1password', {
             tip: [
               'Open the 1password item where your secrets are stored:',
-              kleur.gray(`🔗 ${this.inputValues.envItemLink}`),
-              `Find entry with label ${kleur.bold().cyan(ctx.serviceName!)} (or create it)`,
+              kleur.gray(`🔗 ${this.inputValue('envItemLink')}`),
+              `Find entry with label ${kleur.bold().cyan(ctx.entityId!)} (or create it)`,
               'Add this secret like you would add it to a .env file',
               `For example: \`${lookupKey}="your-secret-value"\``,
             ],
@@ -433,21 +447,3 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin<OnePasswordDmnoPlugin> {
     });
   }
 }
-
-
-// TODO: this should be autogenerated from the inputSchema and live in .dmno/.typegen folder
-export interface OnePasswordDmnoPlugin {
-  [_PluginInputTypesSymbol]: {
-    /** 1password service account token used to fetch secrets */
-    token: string,
-    /** private link to item containing dotenv style values (optional) */
-    envItemLink?: string;
-    /** rely on auth from system installed `op` cli instead of a service account */
-    fallbackToCliBasedAuth?: boolean,
-  }
-}
-
-// example of adding static stuff using a namespace
-// namespace OnePasswordDmnoPlugin {
-//   let newStatic: number;
-// }

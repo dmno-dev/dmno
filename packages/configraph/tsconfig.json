@@ -1,0 +1,23 @@
+{
+  // not sure if this should be browser or not?
+  "extends": "@dmno/tsconfig/tsconfig.node.json",
+  "compilerOptions": {
+    "declarationDir": "./dist",
+    "outDir": "./dist",
+    // this is needed for vite unfortunately...
+    // see https://github.com/vitejs/vite/issues/9813
+    "lib": [ "ES2023", "dom", "dom.iterable" ],
+    "paths": {
+      // make self-imports work - helpful for making tests/examples look right
+      "@dmno/configraph": [ "./src/index.ts" ],
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "examples/**/*.ts",
+    "test/**/*.ts",
+    "*.ts",
+    "vite.config.mts",
+  ]
+}

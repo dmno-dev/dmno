@@ -37,9 +37,8 @@ function buildRedactionRegex(lookup?: SensitiveValueLookup) {
 }
 
 
-let redactor: ReturnType<typeof buildRedactionRegex>;
 export function resetSensitiveConfigRedactor() {
-  redactor = buildRedactionRegex((globalThis as any)._DMNO_SENSITIVE_LOOKUP);
+  (globalThis as any)._dmnoRedactorData = buildRedactionRegex((globalThis as any)._DMNO_SENSITIVE_LOOKUP);
 }
 
 const LOG_METHODS = ['trace', 'debug', 'info', 'log', 'info', 'warn', 'error'];
@@ -48,6 +47,7 @@ const LOG_METHODS = ['trace', 'debug', 'info', 'log', 'info', 'warn', 'error'];
 export function patchGlobalConsoleToRedactSensitiveLogs() {
   /* eslint-disable no-console */
 
+  const redactor = (globalThis as any)._dmnoRedactorData as ReturnType<typeof buildRedactionRegex>;
   if (!redactor) return;
 
   // our method of patching involves replacing an internal node method which may not be called if console.log itself has also been patched
@@ -109,6 +109,7 @@ export function unpatchGlobalConsoleSensitiveLogRedaction() {
 }
 
 export function redactSensitiveConfig(o: any): any {
+  const redactor = (globalThis as any)._dmnoRedactorData as ReturnType<typeof buildRedactionRegex>;
   if (!redactor) return o;
   if (!o) return o;
 

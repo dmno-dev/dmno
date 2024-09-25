@@ -19,16 +19,16 @@ Run this in the root if you want the plugin to be shared, otherwise run it in th
 
 ## Initialize the plugin
 
-Initialize the plugin in the root, or service if not shared. Note the `vault/prod` alias, which we can refer to in other services or in the CLI. This is useful if you have multiple vaults.
+Initialize the plugin in the root, or service if not shared. Note the `vault/prod` id, which we can refer to in other services or in the CLI. This is useful if you have multiple vaults.
 
-Also, note the `configPath` function. This is a helper function that will look up the value of the key that contains the key used to encrypt/decrypt the vault. This is useful for keeping the key out of the codebase. It will need to live in your `.env.local` file, or in an environment variable.
+Also, note the `configPath` function. This is a helper to wire up the encryption key plugin input to the location of that value in your service's config. We obviously don't want to hardcode that key in this file, so this lets it live within the rest of our config, and pull in the value from a `.env.local` file or environment variable. The plugin has it's own internal config schema, so the first argument of `'..'` tells us to look in the plugin's parent - the service.
 
 ```typescript title="[root]/.dmno/config.mts"
 import { defineDmnoService, configPath } from 'dmno';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
-const MyProdVault = new EncryptedVaultDmnoPlugin('vault', {
-  key: configPath('DMNO_VAULT_KEY'),
+const MyProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
+  key: configPath('..', 'DMNO_VAULT_KEY'),
 });
 
 
@@ -51,17 +51,17 @@ const MyVault = EncryptedVaultDmnoPlugin.injectInstance('vault/prod'); // same "
 ```
 
 :::note
-Note that we're referencing the plugin by the alias we gave it (`'vault/prod'`) when we initialized it. This is useful if you have to reference multiple instances of a plugin. For example. if you're segmenting them by environment.
+Note that we're referencing the plugin by the id we gave it (`'vault/prod'`) when we initialized it. This is necessary when we have to reference multiple instances of a plugin. For example. if you're segmenting them by environment.
 :::
 
 -----
 
 ## Initialize the vault and key
 
-<TabbedCode command="dmno plugin -p vault -- setup" />
+<TabbedCode command="dmno plugin -p vault/prod -- setup" />
 
 :::tip
-If you prefer to use the CLI interactively, you can simply run `pnpm exec dmno plugin` and follow thue prompts.
+If you prefer to use the CLI interactively, you can simply run `pnpm exec dmno plugin` and follow the prompts.
 :::
 
 This will: 

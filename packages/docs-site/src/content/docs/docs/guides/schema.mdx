@@ -61,7 +61,9 @@ But as the root service is an ancestor of all other services, it is where any wo
 This file must include `export default defineDmnoService({ //...` and the config must be set as `isRoot: true`. Here is an example:
 
 ```typescript title=".dmno/config.mts" "defineDmnoService" "isRoot: true"
-import { DmnoBaseTypes, defineDmnoService, NodeEnvType } from 'dmno';
+import {
+  DmnoBaseTypes, defineDmnoService, switchBy, NodeEnvType,
+} from 'dmno';
 
 export default defineDmnoService({
   // you must mark the root as being the root service
@@ -84,7 +86,7 @@ export default defineDmnoService({
       extends: DmnoBaseTypes.email,
       description: 'The email address for customer service',
       // changes the value based on the environment
-      value: switchByNodeEnv({
+      value: switchBy('NODE_ENV', {
         _default: 'test@test.com',
         staging: 'staging@test.com',
         production: 'production@test.com',
@@ -225,7 +227,7 @@ export default defineDmnoService({
       extends: DmnoBaseTypes.url({ allowedDomains: ['github.com'] }),
       description: 'Github link to the main DMNO monorepo',
       required: true,
-      value: (ctx) => {
+      value: () => {
         return `${DMNO_CONFIG.GITHUB_ORG_URL}/${DMNO_CONFIG.GITHUB_REPO_NAME}`;
       },
     },
@@ -416,7 +418,7 @@ export default defineDmnoService({
 
     // use an inline function which references other item values
     INLINE_FN_VAL: {
-      value: (ctx) => `prefix_${DMNO_CONFIG.OTHER_ITEM}`,
+      value: () => `prefix_${DMNO_CONFIG.OTHER_ITEM}`,
     },
 
     // using an instance of a "resolver" from a plugin
@@ -427,7 +429,7 @@ export default defineDmnoService({
 });
 ```
 
-Internally, we even wrap the static values and inline functions into resolvers, so that we can always display some additional metadata about _how_ the value is being set - even without actually resolving it. Resolvers also have a notion of multiple branches built in, which can then use more resolvers. This enables some very powerful composition capabilities.
+Internally, we even wrap the static values and inline functions into resolvers, so that we can always display some additional metadata about _how_ the value will be resolved - even before attempting to perform the resolution. There is also a concept of branching to handle things like if-else and switch statements that point to more resolvers, leading to some very powerful composition capabilities.
 
 An quick example to illustrate using our built-in [`switchBy`](/docs/reference/helper-methods/#switchby) resolver which selects a value based on the current value of another within your config.
 
@@ -450,10 +452,4 @@ export default defineDmnoService({
 ```
 
 You can author your own reusable resolvers - but you likely won't need to for most use cases.
-
-:::caution[Item ordering matters]
-We resolve your items in the order they are defined in your schema, so if your config items depend on each other to resolve their values, you must define them in that dependency order.
-
-**This limitation will be removed very soon**
-:::
 

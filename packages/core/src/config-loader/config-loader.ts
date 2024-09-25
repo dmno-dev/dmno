@@ -1,9 +1,13 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
+import path from 'node:path';
+
 import kleur from 'kleur';
 import _ from 'lodash-es';
 
 import Debug from 'debug';
+
+import { ConfigLoadError, Configraph, CacheMode } from '@dmno/configraph';
 
 import { DeferredPromise, createDeferredPromise } from '@dmno/ts-lib';
 import { HmrContext } from 'vite';
@@ -13,11 +17,13 @@ import { createDebugTimer } from '../cli/lib/debug-timer';
 import { setupViteServer } from './vite-server';
 import { ScannedWorkspaceInfo, WorkspacePackagesListing, findDmnoServices } from './find-services';
 import {
-  DmnoService, DmnoWorkspace, DmnoServiceConfig, CacheMode,
+  DmnoService, DmnoWorkspace, DmnoServiceConfig,
 } from '../config-engine/config-engine';
-import { beginServiceLoadPlugins, beginWorkspaceLoadPlugins, finishServiceLoadPlugins } from '../config-engine/plugins';
-import { ConfigLoadError } from '../config-engine/errors';
 import { generateServiceTypes } from '../config-engine/type-generation';
+import {
+  beginServiceLoadPlugins, beginWorkspaceLoadPlugins, finishServiceLoadPlugins, InjectedPluginDoesNotExistError,
+} from '../config-engine/dmno-plugin';
+
 
 const debugTimer = createDebugTimer('dmno:config-loader');
 
@@ -35,14 +41,6 @@ export class ConfigLoader {
     this.isReady = this.finishInit();
     this.startAt = new Date();
   }
-
-  private cacheMode: CacheMode = true;
-  setCacheMode(cacheMode: typeof this.cacheMode) {
-    debug(`Config loader - setting cache mode = ${cacheMode}`);
-    if (this.dmnoWorkspace) this.dmnoWorkspace.setCacheMode(cacheMode);
-    this.cacheMode = cacheMode;
-  }
-
 
   viteRunner?: ViteNodeRunner;
 
@@ -91,6 +89,7 @@ export class ConfigLoader {
   devMode = false;
   schemaLoaded = false;
   dmnoWorkspace?: DmnoWorkspace;
+  cacheMode: CacheMode = true;
 
   async getWorkspace() {
     if (this.dmnoWorkspace) return this.dmnoWorkspace;
@@ -106,64 +105,94 @@ export class ConfigLoader {
 
     // TODO: if not first load, clean up previous workspace? or reuse it somehow?
     this.dmnoWorkspace = new DmnoWorkspace();
-    this.dmnoWorkspace.setCacheMode(this.cacheMode);
+
+    //! keep an eye on this, not sure if in the right place... we want to clear the cache _once_ and then go back to normal
+    if (this.cacheMode === 'clear') {
+      // normally the cache directory path gets set later, but we'll set it here so we can clear it
+      this.dmnoWorkspace.configraph.cacheProvider.cacheDirPath = path.join(this.workspaceRootPath, '.dmno');
+      await this.dmnoWorkspace.configraph.cacheProvider?.reset();
+      this.cacheMode = true;
+    }
+
+    this.dmnoWorkspace.configraph.setCacheMode(this.cacheMode);
+
+
     beginWorkspaceLoadPlugins(this.dmnoWorkspace);
 
-    // TODO: we may want to set up an initial sort of the services so at least root is first?
-    for (const w of this.workspacePackagesData) {
-      if (!w.dmnoFolder) continue;
-      // not sure yet about naming the root file differently?
-      // especially in the 1 service context, it may feel odd
-      // const configFilePath = `${w.path}/.dmno/${isRoot ? 'workspace-' : ''}config.mts`;
-      const configFilePath = `${w.path}/.dmno/config.mts`;
+    let servicesToLoad = [...this.workspacePackagesData];
+    let nextBatchServicesToLoad: typeof servicesToLoad = [];
+    do {
+      const toLoadCount = servicesToLoad.length;
+      for (const w of servicesToLoad) {
+        if (!w.dmnoFolder) continue;
+        // not sure yet about naming the root file differently?
+        // especially in the 1 service context, it may feel odd
+        // const configFilePath = `${w.path}/.dmno/${isRoot ? 'workspace-' : ''}config.mts`;
+        const configFilePath = `${w.path}/.dmno/config.mts`;
+
+        const serviceInitOpts = {
+          isRoot: w.isRoot,
+          packageName: w.name,
+          path: w.path,
+          workspace: this.dmnoWorkspace,
+        };
+
+        let service: DmnoService;
+        try {
+          beginServiceLoadPlugins();
+
+          // node-vite runs the file and returns the loaded module
 
 
-      const serviceInitOpts = {
-        isRoot: w.isRoot,
-        packageName: w.name,
-        path: w.path,
-        workspace: this.dmnoWorkspace,
-      };
+          // when dealing with hot reloads in dev mode, the files that are in the cache are not retriggered
+          // so we need to be aware that no side-effects would be re-triggered...
+          // for example the plugin loading trick of using a singleton to capture those plugins breaks :(
+          // the naive solution is to just clear the config files from the cache, but we may want to do something smarter
+          // we probably want to clear all user authored files (in the .dmno folder) rather than just the config files
 
-      let service: DmnoService;
-      try {
-        beginServiceLoadPlugins();
+          // CLEAR EACH CONFIG FILE FROM THE CACHE SO WE RELOAD THEM ALL
+          this.viteRunner.moduleCache.deleteByModuleId(configFilePath);
 
-        // node-vite runs the file and returns the loaded module
+          const importedConfig = await this.viteRunner.executeFile(configFilePath);
 
+          if (w.isRoot && !importedConfig.default.isRoot) {
+            throw new Error('Root service .dmno/config.mts must set `isRoot: true`');
+          }
 
-        // when dealing with hot reloads in dev mode, the files that are in the cache are not retriggered
-        // so we need to be aware that no side-effects would be re-triggered...
-        // for example the plugin loading trick of using a singleton to capture those plugins breaks :(
-        // the naive solution is to just clear the config files from the cache, but we may want to do something smarter
-        // we probably want to clear all user authored files (in the .dmno folder) rather than just the config files
+          service = new DmnoService({
+            ...serviceInitOpts,
+            // NOTE - could actually be a DmnoServiceConfig or DmnoWorkspaceConfig
+            rawConfig: importedConfig.default as DmnoServiceConfig,
+          });
 
-        // CLEAR EACH CONFIG FILE FROM THE CACHE SO WE RELOAD THEM ALL
-        this.viteRunner.moduleCache.deleteByModuleId(configFilePath);
+          finishServiceLoadPlugins(service);
+        } catch (err) {
+          // in injection failed, we put back onto the
+          if (err instanceof InjectedPluginDoesNotExistError) {
+            nextBatchServicesToLoad.push(w);
+          }
 
-        const importedConfig = await this.viteRunner.executeFile(configFilePath);
-
-        if (w.isRoot && !importedConfig.default.isRoot) {
-          throw new Error('Root service .dmno/config.mts must set `isRoot: true`');
+          debug('found error when loading config');
+          console.log(err);
+          service = new DmnoService({
+            ...serviceInitOpts,
+            rawConfig: new ConfigLoadError(err as Error),
+          });
         }
-
-        service = new DmnoService({
-          ...serviceInitOpts,
-          // NOTE - could actually be a DmnoServiceConfig or DmnoWorkspaceConfig
-          rawConfig: importedConfig.default as DmnoServiceConfig,
-        });
-
-        finishServiceLoadPlugins(service);
-      } catch (err) {
-        debug('found error when loading config');
-        service = new DmnoService({
-          ...serviceInitOpts,
-          rawConfig: new ConfigLoadError(err as Error),
-        });
+        this.dmnoWorkspace.addService(service);
+        debug('init service', service);
       }
-      this.dmnoWorkspace.addService(service);
-      debug('init service', service);
-    }
+
+      // if we went through a batch and made no progress, we're in an error state
+      if (toLoadCount === nextBatchServicesToLoad.length) {
+        // ERROR!
+        //! this needs to go into a mode where we stop retrying and save the errors
+      // otherwise we try again with the next batch
+      } else {
+        servicesToLoad = nextBatchServicesToLoad;
+        nextBatchServicesToLoad = [];
+      }
+    } while (servicesToLoad.length);
 
     this.dmnoWorkspace.initServicesDag();
     this.dmnoWorkspace.processConfig();
@@ -172,10 +201,6 @@ export class ConfigLoader {
     await this.regenerateAllTypeFiles();
     await this.dmnoWorkspace.resolveConfig();
 
-    // if (this.devMode) {
-    //   await this.regenerateAllTypeFiles();
-    //   await this.dmnoWorkspace.resolveConfig();
-    // }
     this.schemaLoaded = true;
   }
 

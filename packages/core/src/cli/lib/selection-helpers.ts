@@ -2,11 +2,9 @@ import { Command } from 'commander';
 import _ from 'lodash-es';
 import kleur from 'kleur';
 import { select } from '@inquirer/prompts';
-import { SerializedDmnoPlugin, SerializedService } from '../../config-loader/serialization-types';
-import { fallingDmnoLoader } from './loaders';
 import { getCliRunCtx } from './cli-ctx';
-import { DmnoService, DmnoWorkspace } from '../../config-engine/config-engine';
-import { DmnoPlugin } from '../../config-engine/plugins';
+import { DmnoService } from '../../config-engine/config-engine';
+import { DmnoPlugin } from '../../config-engine/dmno-plugin';
 import { getMaxLength } from './string-utils';
 import { joinAndCompact } from './formatting';
 import { CliExitError } from './cli-error';
@@ -141,9 +139,9 @@ export function addServiceSelection(program: Command, opts?: {
 
 function getPluginLabel(p: DmnoPlugin, padNameEnd: number) {
   return [
-    `- ${p.instanceName}`.padEnd(padNameEnd),
+    `- ${p.instanceId}`.padEnd(padNameEnd),
     kleur.gray(`${p.pluginType}`),
-    kleur.gray(`| ${p.initByService?.serviceName}`),
+    kleur.gray(`| ${p.parentEntityId}`),
   ].join(' ');
 }
 
@@ -158,7 +156,7 @@ export function addPluginSelection(program: Command) {
 
       const pluginsArray = _.values(workspace.plugins);
 
-      const namesMaxLen = getMaxLength(_.map(pluginsArray, (p) => p.instanceName));
+      const namesMaxLen = getMaxLength(_.map(pluginsArray, (p) => p.instanceId));
 
       const explicitSelection = thisCommand.opts().plugin;
       if (explicitSelection) {
@@ -179,7 +177,7 @@ export function addPluginSelection(program: Command) {
         choices: _.map(sortedPluginsArray, (plugin) => ({
           name: getPluginLabel(plugin, namesMaxLen),
           // description: getPluginDescription(plugin),
-          value: plugin.instanceName,
+          value: plugin.instanceId,
           disabled: !plugin.cliPath && '(no cli)',
         })),
         // default: autoSelectService?.serviceName,

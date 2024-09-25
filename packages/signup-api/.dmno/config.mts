@@ -1,8 +1,8 @@
-import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv, configPath, switchBy, NodeEnvType } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, configPath, switchBy } from 'dmno';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
 const EncryptedVault = new EncryptedVaultDmnoPlugin('vault', {
-  key: configPath('DMNO_VAULT_KEY'),
+  key: configPath('..', 'DMNO_VAULT_KEY'),
   name: 'prod',
 });
 
@@ -48,7 +48,7 @@ export default defineDmnoService({
       extends: 'url',
       value: switchBy('DMNO_ENV', {
         _default: 'http://localhost:8888',
-        staging: (ctx) => DMNO_CONFIG.DEPLOY_PRIME_URL,
+        staging: () => DMNO_CONFIG.DEPLOY_PRIME_URL,
         production: 'https://signup-api.dmno.dev',
       }),
       expose: true,
