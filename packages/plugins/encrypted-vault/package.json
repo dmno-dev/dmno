@@ -1,6 +1,6 @@
 {
   "name": "@dmno/encrypted-vault-plugin",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "dmno plugin to store secrets encrypted in your repo",
   "author": "dmno-dev",
   "license": "MIT",
@@ -59,7 +59,6 @@
     "base64-arraybuffer": "catalog:",
     "jsonc-parser": "^3.2.1",
     "lodash-es": "catalog:"
-
   },
   "peerDependencies": {
     "dmno": "^0"

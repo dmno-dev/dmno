@@ -1,6 +1,6 @@
 {
   "name": "@dmno/remix-integration",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "tools for integrating dmno into remix",
   "author": "dmno-dev",
   "license": "MIT",
