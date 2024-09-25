@@ -1,4 +1,5 @@
 ---
+"@dmno/configraph": patch
 "@dmno/encrypted-vault-plugin": patch
 "@dmno/nextjs-integration": patch
 "@dmno/astro-integration": patch

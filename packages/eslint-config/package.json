@@ -1,7 +1,7 @@
 {
   "name": "@dmno/eslint-config",
   "private": true,
-  "version": null,
+  "version": "0.0.0",
   "scripts": { },
   "exports": {
     "./base": "./.eslintrc.base.js",

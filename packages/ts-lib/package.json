@@ -1,7 +1,7 @@
 {
   "name": "@dmno/ts-lib",
   "private": true,
-  "version": null,
+  "version": "0.0.0",
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
