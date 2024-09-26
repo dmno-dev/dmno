@@ -1,6 +1,6 @@
 {
   "name": "@dmno/vercel-platform",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "tools to use dmno with vercel",
   "author": "dmno-dev",
   "license": "MIT",
