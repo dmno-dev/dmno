@@ -31,6 +31,7 @@ async function createSubscriber(signup: {
         opted_in_at: signup.signup_date.replace('T', ' ').replace(/\..*Z/, ''),
         optin_ip: signup.ip,
       },
+      groups: [DMNO_CONFIG.MAILERLITE_GROUP_ID],
     });
 
     console.log('ML result', result.data);

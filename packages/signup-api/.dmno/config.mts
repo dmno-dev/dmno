@@ -23,6 +23,14 @@ export default defineDmnoService({
       required: true,
       value: EncryptedVault.item(),
     },
+    MAILERLITE_GROUP_ID: {
+      value: '112994107484276105',
+      description: "The MailerLite group ID to add new subscribers to",
+      externalDocs: {
+        url: 'https://dashboard.mailerlite.com/subscribers?rules=W1t7Im9wZXJhdG9yIjoiaW5fYW55IiwiY29uZGl0aW9uIjoiZ3JvdXBzIiwiYXJncyI6WyJncm91cHMiLFsiMTEyOTk0MTA3NDg0Mjc2MTA1Il1dfV1d&group=112994107484276105&status=active',
+        description: 'Group: All Subs'
+      }
+    },
     SIGNUPS_GOOGLE_SHEET_ID: {
       value: EncryptedVault.item(),
     },
