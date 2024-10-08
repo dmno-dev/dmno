@@ -76,9 +76,8 @@ export function injectDmnoConfigVitePlugin(
       // inject rollup rewrites via config.define
       config.define = {
         ...config.define,
-        ...options?.injectSensitiveConfig
-          ? dmnoInjectionResult.staticReplacements
-          : _.pickBy(dmnoInjectionResult.staticReplacements, (val, key) => key.startsWith('DMNO_PUBLIC_CONFIG.')),
+        ...dmnoInjectionResult.staticReplacements.dmnoPublicConfig,
+        ...options?.injectSensitiveConfig && dmnoInjectionResult.staticReplacements.dmnoConfig,
       };
 
       if (!dmnoConfigValid) {

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "strict": true,
     "moduleResolution": "Bundler",
-    "module": "ESNext"
+    "module": "ESNext",
+    "lib": [ "ESNext" ]
   }
 }

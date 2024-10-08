@@ -488,6 +488,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     if (gitIgnore.includes('**/.dmno/cache.json')) {
       console.log(setupStepMessage('.gitignore already includes dmno files', { type: 'noop', path: gitIgnorePath }));
     } else {
+      gitIgnore += '\n';
       gitIgnore += outdent`
         # dmno files ###
         # local cache for resolved values
