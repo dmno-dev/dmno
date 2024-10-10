@@ -166,5 +166,8 @@ export function injectDmnoConfigVitePlugin(
     // handleHotUpdate({ file, server }) {
     //   console.log('hot update', file);
     // },
+    buildEnd() {
+      if (!isDevMode) dmnoConfigClient.shutdown();
+    },
   };
 }
