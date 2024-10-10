@@ -258,6 +258,20 @@ export default defineConfig({
             },
           ],
         },
+        {
+          label: 'About',
+          collapsed: true,
+          items: [
+            {
+              label: 'About',
+              link: '/docs/footer/about/',
+            },
+            {
+              label: 'Legal',
+              link: '/docs/footer/legal/',
+            },
+          ],
+        },
       ],
     }),
     vue({
