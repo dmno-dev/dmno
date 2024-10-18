@@ -3,7 +3,7 @@ import Debug from 'debug';
 
 import { ConfigraphDataTypeDefinitionOrShorthand } from './data-types';
 import {
-  ConfigValueResolver, createResolver,
+  ConfigValueResolver, ConfigValueResolverDef, createResolver,
   DependencyInvalidResolutionError, DependencyNotResolvedResolutionError,
   getResolverCtx,
   InlineValueResolverDef,
@@ -14,7 +14,20 @@ import { Configraph } from './graph';
 
 export type PluginInputValue = InlineValueResolverDef;
 
+export type PluginPackageMetadata = {
+  name: string,
+  version: string,
+  repositoryUrl?: string,
+  websiteUrl?: string,
+};
+
 const debug = Debug('configraph:plugins');
+
+
+function cleanGitUrl(repoUrl: string) {
+  if (!repoUrl) return;
+  return repoUrl.replace(/^git\+/, '').replace(/\.git$/, '');
+}
 
 export abstract class ConfigraphPlugin<
 NodeMetadata = unknown,
@@ -26,6 +39,7 @@ EntityClass extends ConfigraphEntity = ConfigraphEntity,
   icon?: string;
 
   get parentEntityId() { return this.internalEntity?.parentId!; }
+  injectedByEntityIds: Array<string> = [];
 
   readonly inputSchema: PluginInputSchema<NodeMetadata>;
 
@@ -34,11 +48,23 @@ EntityClass extends ConfigraphEntity = ConfigraphEntity,
     readonly instanceId: string,
     readonly opts: {
       inputSchema: PluginInputSchema<NodeMetadata>,
+      packageJson?: any,
     },
   ) {
     this.inputSchema = opts.inputSchema;
+
+    const PluginClass = this.constructor as typeof ConfigraphPlugin;
+    if (!PluginClass.packageMetadata && opts.packageJson) {
+      PluginClass.packageMetadata = {
+        name: opts.packageJson.name,
+        version: opts.packageJson.version,
+        repositoryUrl: cleanGitUrl(opts.packageJson.repository?.url),
+        websiteUrl: opts.packageJson.homepage,
+      };
+    }
   }
 
+  static packageMetadata?: PluginPackageMetadata;
 
   // @ts-ignore
   EntityClass: (new (...args: Array<any>) => N) = ConfigraphEntity;
@@ -54,11 +80,30 @@ EntityClass extends ConfigraphEntity = ConfigraphEntity,
 
 
   resolvers: Array<ConfigValueResolver> = [];
-  createResolver(def: Parameters<typeof createResolver>[0]): ReturnType<typeof createResolver> {
-    const r = createResolver({
-      createdByPluginId: this.instanceId,
-      ...def,
-    });
+  createResolver(
+    defOrFn: ConfigValueResolverDef | (() => ConfigValueResolverDef | ConfigValueResolver),
+  ): ConfigValueResolver {
+    // let def: ConfigValueResolverDef | ConfigValueResolver;
+
+    // if (_.isFunction(defOrFn)) {
+    //   def = defOrFn();
+    // } else {
+    //   def = defOrFn;
+    // }
+
+    // if (def instanceof ConfigValueResolver) return def;
+
+    // const r = createResolver({
+    //   createdByPluginId: this.instanceId,
+    //   ...def,
+    //   ...!def.icon && !!this.icon && { icon: this.icon },
+    // });
+
+    const r = createResolver(defOrFn);
+
+    r.def.createdByPluginId = this.instanceId;
+    if (this.icon) r.icon ||= this.icon;
+
     this.resolvers.push(r);
     return r;
   }
@@ -116,10 +161,14 @@ EntityClass extends ConfigraphEntity = ConfigraphEntity,
   get schemaErrors() { return this.internalEntity?.schemaErrors; }
 
 
+  get packageMetadata() { return (this.constructor as typeof ConfigraphPlugin).packageMetadata; }
+
   toCoreJSON(): SerializedConfigraphPlugin {
     return {
       instanceId: this.instanceId,
+      icon: this.icon,
       parentEntityId: this.parentEntityId,
+      injectedByEntityIds: this.injectedByEntityIds,
       pluginType: this.pluginType,
       isValid: this.isValid,
       isSchemaValid: this.isSchemaValid,
@@ -128,7 +177,10 @@ EntityClass extends ConfigraphEntity = ConfigraphEntity,
           ? _.map(this.schemaErrors, (err) => err.toJSON())
           : undefined,
       inputNodes: _.mapValues(this.internalEntity?.configNodes, (n) => n.toCoreJSON()),
-      usedByConfigItemResolverPaths: _.map(this.resolvers, (r) => r.fullPath),
+      usedByConfigItemResolverPaths: _.compact(
+        _.map(this.resolvers, (r) => (r.isAttachedToConfigNode ? r.fullPath : undefined)),
+      ),
+      packageMetadata: this.packageMetadata,
     };
   }
 }

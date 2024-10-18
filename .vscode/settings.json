@@ -1,6 +1,7 @@
 {
   // use the project's TS version rather than the VSCode's built-in one
-  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.tsdk": "./node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
   "files.associations": {
     // package.json needs to be "json" rather than "json with comments" so that the "version lens" plugin works
     "package.json": "json"
@@ -15,6 +16,7 @@
     "astro",
     "mdx",
     "markdown",
+    "vue",
   ],
   "eslint.format.enable": true,
   "editor.formatOnSave": true,
@@ -44,4 +46,5 @@
 
   // vscode's built-in json formatter is removing the extra newline at the end which conflicts with editorconfig
   "json.format.keepLines": true,
+
 }

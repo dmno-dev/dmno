@@ -1,0 +1,14 @@
+{
+  "name": "dmno-ui-demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+  },
+  "devDependencies": {
+    "@dmno/1password-plugin": "link:../../../packages/plugins/1password",
+    "dmno": "link:../../../packages/core"
+  }
+}

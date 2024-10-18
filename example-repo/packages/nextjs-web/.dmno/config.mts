@@ -6,6 +6,7 @@ const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
 export default defineDmnoService({
   name: 'nextweb',
   parent: 'group1',
+  icon: 'devicon-plain:nextjs',
   pick: [
     'NODE_ENV',
     'DMNO_ENV',

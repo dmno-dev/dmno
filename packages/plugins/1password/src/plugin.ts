@@ -11,7 +11,7 @@ import {
 
 import { Client, createClient } from '@1password/sdk';
 
-import { name as thisPackageName, version as thisPackageVersion } from '../package.json';
+import packageJson from '../package.json';
 import { OnePasswordTypes } from './data-types';
 
 type FieldId = string;
@@ -96,10 +96,10 @@ async function execOpCliCommand(cmdArgs: Array<string>) {
 export class OnePasswordDmnoPlugin extends DmnoPlugin {
   icon = 'simple-icons:1password';
 
-  // would be great to do this automatically as part of `DmnoPlugin` but I don't think it's possible
-  // so instead we add some runtime checks in DmnoPlugin
-  static pluginPackageName = thisPackageName;
-  static pluginPackageVersion = thisPackageVersion;
+  // // would be great to do this automatically as part of `DmnoPlugin` but I don't think it's possible
+  // // so instead we add some runtime checks in DmnoPlugin
+  // static pluginPackageName = thisPackageName;
+  // static pluginPackageVersion = thisPackageVersion;
 
   // this is likely the default for most plugins...
   // accept a mapping of how to fill inputs - each can be set to a
@@ -115,6 +115,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
     },
   ) {
     super(instanceName, {
+      packageJson,
       inputSchema: {
         token: {
           description: 'this service account token will be used via the CLI to communicate with 1password',
@@ -136,32 +137,34 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
     });
   }
 
-  private opClient: Client | undefined;
-  private async initOpClientIfNeeded() {
+  private get shouldUseSdk() {
     const opServiceAccountToken = this.inputValue('token');
-    if (!opServiceAccountToken) {
-      if (!this.inputValue('fallbackToCliBasedAuth')) {
-        throw new Error('Either a service account token must be provided, or you must enable `fallbackToCliBasedAuth`');
-      }
-      return;
+    if (!opServiceAccountToken && !this.inputValue('fallbackToCliBasedAuth')) {
+      throw new Error('Either a service account token must be provided, or you must enable `fallbackToCliBasedAuth`');
     }
+    return !!opServiceAccountToken;
+  }
+  private opClient: Client | undefined;
+  private async getSdkClient() {
+    if (!this.shouldUseSdk) throw new Error('sdk client not needed');
     if (!this.opClient) {
+      const opServiceAccountToken = this.inputValue('token');
       this.opClient = await createClient({
         auth: opServiceAccountToken as string, // TODO: figure out better way for this
-        integrationName: OnePasswordDmnoPlugin.pluginPackageName.replaceAll('@', '').replaceAll('/', ' '),
-        integrationVersion: OnePasswordDmnoPlugin.pluginPackageVersion,
+        integrationName: packageJson.name.replaceAll('@', '').replaceAll('/', ' '),
+        integrationVersion: packageJson.version,
       });
     }
+    return this.opClient!;
   }
 
   private async getOpItemById(ctx: ResolverContext, vaultId: VaultId, itemId: ItemId): Promise<any> {
-    await this.initOpClientIfNeeded();
-    // using sdk
-    if (this.opClient) {
+    if (this.shouldUseSdk) {
       return await ctx.getOrSetCacheItem(`1pass-sdk:V|${vaultId}/I|${itemId}`, async () => {
+        const opClient = await this.getSdkClient();
         // TODO: better error handling to tell you what went wrong? no access, non existant, etc
         try {
-          const opItem = await this.opClient!.items.get(vaultId, itemId);
+          const opItem = opClient.items.get(vaultId, itemId);
           return JSON.parse(JSON.stringify(opItem)); // convert to plain object
         } catch (err) {
           // 1pass sdk throws strings as errors...
@@ -191,13 +194,12 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
   }
 
   private async getOpItemByReference(ctx: ResolverContext, referenceUrl: ReferenceUrl) {
-    await this.initOpClientIfNeeded();
-    // using sdk
-    if (this.opClient) {
+    if (this.shouldUseSdk) {
       try {
         return await ctx.getOrSetCacheItem(`1pass-sdk:R|${referenceUrl}`, async () => {
+          const opClient = await this.getSdkClient();
           // TODO: better error handling to tell you what went wrong? no access, non existant, etc
-          return await this.opClient!.secrets.resolve(referenceUrl);
+          return opClient.secrets.resolve(referenceUrl);
         });
       } catch (err) {
         // 1pass sdk throws strings as errors...
@@ -318,18 +320,21 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
     /** 1password Item Field ID (or path) */
     fieldIdOrPath: FieldId | { path: string },
   ) {
-    const linkValidationResult = OnePasswordTypes.itemLink().validate(privateLink);
+    return this.createResolver(() => {
+      const linkValidationResult = OnePasswordTypes.itemLink().validate(privateLink);
 
-    if (linkValidationResult !== true) {
-      // TOOD: add link to plugin docs
-      throw new SchemaError(`Invalid item link - ${linkValidationResult[0].message}`);
-    }
+      if (linkValidationResult !== true) {
+      // TODO: add link to plugin docs
+      // TODO: throwing an error here causes problems, need a different pattern to pass along the error without exploding
+        throw new SchemaError(`Invalid item link - ${linkValidationResult[0].message}`);
+      }
 
-    const url = new URL(privateLink);
-    const vaultId = url.searchParams.get('v')!;
-    const itemId = url.searchParams.get('i')!;
+      const url = new URL(privateLink);
+      const vaultId = url.searchParams.get('v')!;
+      const itemId = url.searchParams.get('i')!;
 
-    return this.itemById(vaultId, itemId, fieldIdOrPath);
+      return this.itemById(vaultId, itemId, fieldIdOrPath);
+    });
   }
 
 
@@ -430,20 +435,21 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
      */
     referenceUrl: ReferenceUrl,
   ) {
-    // TODO: validate the reference url looks ok?
+    return this.createResolver(() => {
+      // TODO: validate the reference url looks ok?
+      return {
+        label: referenceUrl,
+        resolve: async (ctx) => {
+          const value = await this.getOpItemByReference(ctx, referenceUrl);
 
-    return this.createResolver({
-      label: referenceUrl,
-      resolve: async (ctx) => {
-        const value = await this.getOpItemByReference(ctx, referenceUrl);
+          // TODO: better error handling to tell you what went wrong? no access, non existant, etc
 
-        // TODO: better error handling to tell you what went wrong? no access, non existant, etc
-
-        if (value === undefined) {
-          throw new ResolutionError(`unable to resolve 1pass item - ${referenceUrl}`);
-        }
-        return value;
-      },
+          if (value === undefined) {
+            throw new ResolutionError(`unable to resolve 1pass item - ${referenceUrl}`);
+          }
+          return value;
+        },
+      };
     });
   }
 }

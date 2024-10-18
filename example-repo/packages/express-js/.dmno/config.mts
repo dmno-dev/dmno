@@ -2,6 +2,7 @@ import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv } from 'dmno';
 
 export default defineDmnoService({
   name: 'express-js',
+  icon: 'skill-icons:expressjs-light',
   pick: [
     'NODE_ENV',
   ],

@@ -51,7 +51,8 @@ export type SerializedConfigItem =
     // dmno specific
     isDynamic: boolean,
     isSensitive: boolean,
-
+    maskedResolvedValue?: string,
+    maskedResolvedRawValue?: string,
   };
 
 export type SerializedResolver =

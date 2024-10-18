@@ -2,6 +2,7 @@ import { HmrContext, Plugin, createServer } from 'vite';
 import { ViteNodeRunner } from 'vite-node/client';
 import { ViteNodeServer } from 'vite-node/server';
 import { installSourcemapsSupport } from 'vite-node/source-map';
+import MagicString from 'magic-string';
 
 export async function setupViteServer(
   workspaceRootPath: string,
@@ -34,11 +35,22 @@ export async function setupViteServer(
     transform(code, id, options) {
       // fairly naive way of doing this... but for now we are replacing `DMNO_CONFIG.SOME_KEY` with `getResolverCtx().get('SOME_KEY')`
       // TODO: we probably should limit which files this applies in
-      let fixedCode = code;
-      if (!code.includes("import { getResolverCtx } from 'dmno';")) {
-        fixedCode = `import { getResolverCtx } from 'dmno';\n${fixedCode}`;
+      const fixedCode = new MagicString(code);
+      if (!code.includes("import { getResolverCtx } from 'dmno'")) {
+        fixedCode.prepend('import { getResolverCtx } from \'dmno\';\n');
       }
-      return fixedCode.replaceAll(/DMNO_CONFIG\.([\w\d.]+)/g, 'getResolverCtx().get(\'$1\')');
+      fixedCode.replaceAll(/DMNO_CONFIG\.([\w\d.]+)/g, 'getResolverCtx().get(\'$1\')');
+
+      const map = fixedCode.generateMap({
+        source: id,
+        file: `${id}.map`,
+        includeContent: true,
+      }); // generates a v3 sourcemap
+
+      return {
+        code: fixedCode.toString(),
+        map,
+      };
     },
 
     async handleHotUpdate(ctx) {
@@ -92,15 +104,17 @@ export async function setupViteServer(
 
   // create vite-node server
   const node = new ViteNodeServer(server, {
-  // debug: {
-  //   dumpModules: true,
-  // },
+    debug: {
+      // dumpModules: true,
+    },
   });
 
 
   // fixes stacktraces in Errors
   installSourcemapsSupport({
-    getSourceMap: (source) => node.getSourceMap(source),
+    getSourceMap: (source) => {
+      return node.getSourceMap(source);
+    },
   });
 
   // create vite-node runner

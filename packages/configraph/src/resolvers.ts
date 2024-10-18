@@ -2,7 +2,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import _ from 'lodash-es';
 import { ConfigraphNode } from './config-node';
-import { ResolutionError } from './errors';
+import { ResolutionError, SchemaError } from './errors';
 import { SerializedResolver, SerializedResolverBranch } from '.';
 
 
@@ -30,7 +30,7 @@ export type InlineValueResolverDef =
 type ValueOrValueGetter<T> = T | ((ctx: ResolverContext) => T);
 type MaybePromise<T> = T | Promise<T>;
 
-type ResolverDefinition = {
+export type ConfigValueResolverDef = {
 
   // TODO-review: changed plugin reference to id, to help decouple?
   // /** reference back to the plugin which created the resolver (if applicable) */
@@ -62,8 +62,32 @@ type ResolverDefinition = {
   resolveBranches: Array<ResolverBranchDefinition>
 });
 
-export function createResolver(def: ResolverDefinition) {
-  return new ConfigValueResolver(def);
+export function createResolver(
+  defOrFn: ConfigValueResolverDef | (() => ConfigValueResolverDef | ConfigValueResolver),
+): ConfigValueResolver {
+  if (_.isFunction(defOrFn)) {
+    try {
+      const result = defOrFn();
+      if (result instanceof ConfigValueResolver) return result;
+      return new ConfigValueResolver(result);
+    } catch (err) {
+      return new ConfigValueResolver({
+        label: 'error',
+        process() {
+          if (err instanceof SchemaError) {
+            this.configNode.schemaErrors.push(err);
+          } else {
+            this.configNode.schemaErrors.push(new SchemaError(err as Error));
+          }
+        },
+        resolve() {
+          return false;
+        },
+      });
+    }
+  } else {
+    return new ConfigValueResolver(defOrFn);
+  }
 }
 
 //! maybe do this via a type/errorCode instead of custom class?
@@ -81,7 +105,7 @@ type ResolverBranchDefinition = {
 };
 
 export class ConfigValueResolver {
-  constructor(readonly def: ResolverDefinition) {
+  constructor(readonly def: ConfigValueResolverDef) {
     // TODO: figure out this pattern... we'll have several bits of setings that
     // are either static or need some basic resolution
     if (_.isString(this.def.icon)) this.icon = this.def.icon;
@@ -131,8 +155,12 @@ export class ConfigValueResolver {
     });
   }
   get configNode(): ConfigraphNode {
+    // this happens if the config parsing fails after some resolvers have been created
     if (!this._configNode) throw new Error('expected resolver configNode to be set');
     return this._configNode;
+  }
+  get isAttachedToConfigNode() {
+    return !!this._configNode;
   }
 
   get parentResolver() {
@@ -364,7 +392,7 @@ export function processInlineResolverDef(resolverDef: InlineValueResolverDef) {
     || resolverDef === undefined
   ) {
     return createResolver({
-      icon: 'material-symbols:check-circle',
+      icon: 'bi:dash',
       label: 'static',
       resolve: async () => resolverDef,
     });

@@ -46,6 +46,11 @@ export type DmnoServiceConfig = {
   settings?: DmnoServiceSettings,
   /** the config schema itself */
   schema: Record<string, ConfigraphDataTypeDefinitionOrShorthand<DmnoDataTypeMetadata>>,
+
+  /** iconify icon name */
+  icon?: string, // might want to pick from ConfigraphEntityDef?
+  /** custom color for this entity */
+  color?: string, // might want to pick from ConfigraphEntityDef?
 } & ({
   isRoot: true
 } | {
@@ -93,6 +98,7 @@ export class OverrideSource {
   constructor(
     readonly type: string,
     readonly label: string | undefined,
+    readonly icon: string,
     readonly values: NestedOverrideObj,
     readonly enabled = true,
   ) {}
@@ -112,7 +118,7 @@ export class DmnoWorkspace {
   get rootService() { return this.services[this.rootServiceName]; }
   get rootPath() { return this.rootService.path; }
 
-  readonly processEnvOverrides = new OverrideSource('process', undefined, getConfigFromEnvVars());
+  readonly processEnvOverrides = new OverrideSource('process', undefined, 'ri:terminal-box-fill', getConfigFromEnvVars());
 
   plugins: Record<string, DmnoPlugin> = {};
 
@@ -199,6 +205,9 @@ export class DmnoWorkspace {
         // plugins need some other service metadata, so we pass it in here
         path: service.path,
 
+        icon: service.rawConfig?.icon,
+        color: service.rawConfig?.color,
+
         // if we had a loading error, we dont add any actual info, just create the service
         ...!service.configLoadError && {
           // service settings are applied as additional entity metadata
@@ -221,10 +230,10 @@ export class DmnoWorkspace {
         },
       });
 
-      for (const pluginName of service.ownedPluginNames) {
+      for (const pluginName of service.ownedPluginIds) {
         service.configraphEntity.addOwnedPlugin(this.plugins[pluginName]);
       }
-      for (const pluginName of service.injectedPluginNames) {
+      for (const pluginName of service.injectedPluginIds) {
         service.configraphEntity.addInjectedPlugin(this.plugins[pluginName]);
       }
     }
@@ -253,6 +262,7 @@ export class DmnoWorkspace {
           node.overrides.push({
             sourceType: overrideSource.type,
             sourceLabel: overrideSource.label,
+            icon: overrideSource.icon,
             value: val,
           });
         });
@@ -310,8 +320,8 @@ export class DmnoService {
   /** error within the schema itself */
   get schemaErrors() { return this.configraphEntity.schemaErrors; }
 
-  injectedPluginNames: Array<string> = [];
-  ownedPluginNames: Array<string> = [];
+  injectedPluginIds: Array<string> = [];
+  ownedPluginIds: Array<string> = [];
 
   constructor(opts: {
     packageName: string,
@@ -358,6 +368,14 @@ export class DmnoService {
     return this.workspace.rootService;
   }
 
+  get icon() {
+    const cgIcon = this.configraphEntity.icon;
+    if (cgIcon) return cgIcon;
+    // adding some some default icons
+    if (this.isRoot) return 'tabler:stack-3-filled';
+    return 'octicon:container-24';
+  }
+
   get config() {
     return this.configraphEntity.configNodes;
   }
@@ -381,6 +399,7 @@ export class DmnoService {
       return new OverrideSource(
         '.env file',
         dotEnvFile.fileName,
+        'simple-icons:dotenv',
         dotEnvFile.envObj,
         // TODO: specific env overrides are being enabled based on process.env.NODE_ENV
         // we probably want to be smarter about how _that_ gets resolved first
@@ -428,9 +447,12 @@ export class DmnoService {
       // this contains all the interesting stuff...
       ...this.configraphEntity.toJSON(),
 
-      //! fix this
-      ownedPluginNames: [],
-      injectedPluginNames: [],
+      // overriding icon, which now includes some defaults
+      icon: this.icon,
+
+      // config loading errors do not exist in the entity core
+      isSchemaValid: this.isSchemaValid,
+      isValid: this.isValid,
     };
   }
 }

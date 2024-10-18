@@ -1,0 +1,71 @@
+{
+  "name": "@dmno/dev-ui",
+  "version": "0.0.0",
+  "private": "true",
+  "description": "Web UI to interact with DMNO during local dev",
+  "author": "dmno-dev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dmno-dev/dmno.git",
+    "directory": "packages/configraph-viewer"
+  },
+  "bugs": "https://github.com/dmno-dev/dmno/issues",
+  "homepage": "https://dmno.dev",
+  "keywords": [ ],
+  "scripts": {
+    "dev": "vite",
+    "build": "pnpm run build-only",
+    "build-only": "vite build",
+    "build-and-check": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "type-check": "vue-tsc --build --force",
+    "lint": "eslint src --ext .ts,.cjs",
+    "lint:fix": "pnpm run lint --fix",
+    "test": "vitest"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "dependencies": {
+    "@sindresorhus/is": "^7.0.1",
+    "@unhead/vue": "^1.11.10",
+    "@vue/language-plugin-pug": "^2.1.6",
+    "debug": "catalog:",
+    "es-toolkit": "^1.25.2",
+    "floating-vue": "^5.2.2",
+    "pinia": "^2.2.4",
+    "socket.io-client": "^4.8.0",
+    "vue": "^3.5.12",
+    "vue-router": "4.4.5"
+  },
+  "devDependencies": {
+    "@dmno/encryption-lib": "workspace:*",
+    "@dmno/eslint-config": "workspace:*",
+    "@dmno/ts-lib": "workspace:*",
+    "@dmno/tsconfig": "workspace:*",
+    "@dmno/ui-lib": "workspace: *",
+    "@dmno/vite-integration": "workspace:*",
+    "@iconify/vue": "^4.1.2",
+    "@tsconfig/node20": "^20.1.4",
+    "@types/debug": "catalog:",
+    "@types/node": "catalog:",
+    "@vitejs/plugin-basic-ssl": "^1.1.0",
+    "@vitejs/plugin-vue": "^5.1.4",
+    "@vue/tsconfig": "^0.5.1",
+    "dmno": "workspace:*",
+    "eslint-plugin-vue": "^9.29.0",
+    "eslint-plugin-vue-pug": "^0.6.2",
+    "npm-run-all2": "^6.2.3",
+    "pug": "^3.0.3",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-vue-devtools": "^7.5.2",
+    "vite-svg-loader": "^5.1.0",
+    "vue-tsc": "^2.1.6"
+  }
+}

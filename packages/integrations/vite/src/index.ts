@@ -103,7 +103,6 @@ export function injectDmnoConfigVitePlugin(
           dmnoHasTriggeredReload = true;
         });
       }
-
       // if (!dmnoConfigValid) {
       //   // triggers the built-in vite error overlay
       //   server.middlewares.use((req, res, next) => {

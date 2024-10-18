@@ -313,9 +313,17 @@ export class Configraph<
 
         this.nodesByFullPath[node.fullPath] = node;
         // calls process on each item's resolver, and collects "post-processing" functions to call if necessary
-        const nodePostProcessFns = node.valueResolver?.process(node);
-        postProcessFns.push(...nodePostProcessFns || []);
-        // TODO: handle errors - attach as schema errors to resolver / node?
+        try {
+          const nodePostProcessFns = node.valueResolver?.process(node);
+          postProcessFns.push(...nodePostProcessFns || []);
+          // TODO: handle errors - attach as schema errors to resolver / node?
+        } catch (err) {
+          if (err instanceof SchemaError) {
+            node.schemaErrors.push(err);
+          } else {
+            node.schemaErrors.push(new SchemaError(err as SchemaError));
+          }
+        }
       }
 
       entity.initOverrides();

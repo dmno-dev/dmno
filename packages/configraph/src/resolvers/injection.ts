@@ -1,6 +1,6 @@
-import { ConfigraphNode } from './config-node';
-import { SchemaError } from './errors';
-import { createResolver } from './resolvers';
+import { ConfigraphNode } from '../config-node';
+import { SchemaError } from '../errors';
+import { createResolver } from '../resolvers';
 
 export function inject(injectOpts?: {}) {
   return createResolver({
@@ -34,11 +34,11 @@ export function inject(injectOpts?: {}) {
 
       // if we didn't find anything to inject, we'll add a schema error
       if (!matchingNodes.length) {
-        this.configNode.schemaErrors.push(new SchemaError(`Injection failed - unable to find match for type ${this.configNode.type.typeLabel}`));
+        throw new SchemaError(`Injection failed - unable to find match for type ${this.configNode.type.typeLabel}`);
       // or if we found multiple matches in the same entity
       // (we could add some options around this?)
       } else if (matchingNodes.length > 1) {
-        this.configNode.schemaErrors.push(new SchemaError(`Injection failed - found multiple matches for type ${this.configNode.type.typeLabel}`));
+        throw new SchemaError(`Injection failed - found multiple matches for type ${this.configNode.type.typeLabel}`);
       } else {
         this.dependsOnPathsObj[matchingNodes[0].fullPath] = 'schema';
       }
@@ -58,8 +58,7 @@ export function collect(collectOpts?: {}) {
     icon: 'fluent:double-swipe-up-24-regular',
     process() {
       if (this.configNode.type.injectable === false) {
-        this.configNode.schemaErrors.push(new SchemaError(`Type ${this.configNode.type.typeLabel} is not injectable`));
-        return;
+        throw new SchemaError(`Type ${this.configNode.type.typeLabel} is not injectable`);
       }
 
       return () => {
@@ -87,12 +86,12 @@ export function collect(collectOpts?: {}) {
 
         // if we didn't find anything to inject, we'll add a schema error
         if (!matchingNodes.length) {
-          this.configNode.schemaErrors.push(new SchemaError(`Collect failed - unable to find match for type ${this.configNode.type.typeLabel}`));
+          throw new SchemaError(`Collect failed - unable to find match for type ${this.configNode.type.typeLabel}`);
           // or if we found multiple matches in the same entity
           // (we could add some options around this?)
         } else if (matchingNodes.length > 1) {
           // TODO: multiple mode will toggle this on/off
-          this.configNode.schemaErrors.push(new SchemaError(`Collect failed - found multiple matches for type ${this.configNode.type.typeLabel}`));
+          throw new SchemaError(`Collect failed - found multiple matches for type ${this.configNode.type.typeLabel}`);
         } else {
           this.dependsOnPathsObj[matchingNodes[0].fullPath] = 'schema';
         }

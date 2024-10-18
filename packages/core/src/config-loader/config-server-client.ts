@@ -58,7 +58,7 @@ export class ConfigServerClient {
     if (!execCommandRest.endsWith('--')) execCommandRest += ' --';
 
     // use `pnpm exec` or `npm exec` etc...
-    this.ownedDmnoConfigServerProcess = spawn(execCommandBaseCommand, `${execCommandRest} dmno dev --silent`.split(' '), {
+    this.ownedDmnoConfigServerProcess = spawn(execCommandBaseCommand, `${execCommandRest} dmno dev --silent --ipc-only`.split(' '), {
       stdio: 'inherit',
       env: {
         ...process.env,

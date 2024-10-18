@@ -34,15 +34,17 @@ export type SerializedConfigraphEntity =
     isResolved: boolean,
     configLoadError?: SerializedConfigraphError,
     schemaErrors?: Array<SerializedConfigraphError>,
-    ownedPluginNames: Array<string>,
-    injectedPluginNames: Array<string>,
+    ownedPluginIds: Array<string>,
+    injectedPluginIds: Array<string>,
+    icon?: string,
+    color?: string,
     // configNodes: Record<string, SerializedConfigraphNode>,
     // injectedEnv: InjectedDmnoEnv,
   };
 
 export type SerializedConfigraphPlugin = Pick<
 ConfigraphPlugin,
-'pluginType' | 'instanceId' | 'isValid' | 'isSchemaValid' | 'parentEntityId'
+'pluginType' | 'instanceId' | 'isValid' | 'isSchemaValid' | 'parentEntityId' | 'injectedByEntityIds' | 'icon' | 'packageMetadata'
 > & {
   usedByConfigItemResolverPaths?: Array<string>,
   schemaErrors?: Array<SerializedConfigraphError>,
@@ -50,8 +52,9 @@ ConfigraphPlugin,
 };
 
 export type SerializedConfigraphNode =
-  Pick<ConfigraphNode, 'key' | 'isValid' | 'isSchemaValid' | 'resolvedRawValue' | 'resolvedValue' | 'isResolved'>
+  Pick<ConfigraphNode, 'key' | 'isValid' | 'isSchemaValid' | 'resolvedValue' | 'resolvedRawValue' | 'isResolved'>
   & {
+    id: string,
     dataType: SerializedConfigraphDataType,
     children: Record<string, SerializedConfigraphNode>,
     coercionError?: SerializedConfigraphError,
@@ -60,6 +63,7 @@ export type SerializedConfigraphNode =
     // TODO: dedupe some items from the resolver
     resolutionError?: SerializedConfigraphError,
     resolver?: SerializedResolver,
+    isCoerced?: boolean,
 
     mappedToNodePath: string | undefined,
     overrides?: Array<ConfigValueOverride>,

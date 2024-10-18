@@ -77,6 +77,8 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin {
   static pluginPackageName = thisPackageName;
   static pluginPackageVersion = thisPackageVersion;
 
+  icon = 'mdi:archive-lock';
+
   // constructor(
   //   instanceName: string,
   //   inputs: DmnoPluginInputMap<typeof EncryptedVaultDmnoPlugin.inputSchema>,

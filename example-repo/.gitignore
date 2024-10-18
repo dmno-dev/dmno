@@ -6,3 +6,5 @@
 **/.dmno/.typegen
 # iconify cache used in generated types
 **/.dmno/.icon-cache
+# local ssl cert
+**/.dmno/certs

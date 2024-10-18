@@ -18,6 +18,7 @@ const program = new DmnoCommand('dev')
 Runs the service in dev mode, and watches for changes and updates as needed.
   `)
   .option('--silent', 'do not log anything, useful when using in conjunction with a ConfigServerClient which will do its own logging')
+  .option('--ipc-only', 'skip booting the local web server, and communicate over IPC only')
   .example('dmno dev', 'Runs the service in dev mode');
 
 addCacheFlags(program);
@@ -28,10 +29,13 @@ addServiceSelection(program, { allowNoSelection: true });
 program.action(async (opts: {
   silent?: boolean,
   service?: string,
+  ipcOnly?: boolean,
 }, more) => {
   const ctx = getCliRunCtx();
 
-  const configServer = new ConfigServer(ctx.configLoader);
+  const configServer = new ConfigServer(ctx.configLoader, {
+    ipcOnly: opts?.ipcOnly,
+  });
   ctx.configLoader.devMode = true;
 
   if (!opts.silent) {
@@ -65,7 +69,7 @@ program.action(async (opts: {
   }
 
   // calling reload will regenerate types and resolve the config
-  // TODO: we may want to chagne how the initial load in dev mode works so we dont need to reload here...
+  // TODO: we may want to change how the initial load in dev mode works so we dont need to reload here...
   await ctx.configLoader.reload();
 
   await logResult();

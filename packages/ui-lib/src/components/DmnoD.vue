@@ -1,31 +1,40 @@
 <template>
-  <div class="dmno-logo">
+  <div class="dmno-d-logo">
     <div class="d" />
   </div>
 </template>
 
-<style scoped lang="less">
-.dmno-d {
+<script setup lang="ts">
+
+
+</script>
+
+
+
+
+<style scoped>
+.dmno-d-logo {
+  --logo-color-1: #51FFC0;
+  --logo-color-2: #FC67FF;
+
   color: currentColor;
-  width: 100px;
-  height: 100px;
+  height: 100%;
+  aspect-ratio: 1;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  container-type: size;
+  background: black;
+  border-radius: 8%;
 
-  > div {
-    width: 40%;
-    height: 40%;
-    border-radius: 50%;
-    background: currentColor;
-    position: absolute;
-    transition: transform 1s;
-  }
   > .d {
-    border-radius: 0% 50% 50% 0%;
+    position: absolute;
+    width: 45%;
+    height: 45%;
+    border-radius: 5% 50% 50% 5%;
     margin-right: -5%;
+    /* background: red; */
+    background: linear-gradient(45deg, var(--logo-color-1), var(--logo-color-2));
   }
 }
 </style>

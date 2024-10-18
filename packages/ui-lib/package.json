@@ -9,6 +9,9 @@
     },
     "./brand-assets/": {
       "default": "./src/brand-assets/"
+    },
+    "./style/": {
+      "default": "./src/style/"
     }
   },
   "typesVersions": {

@@ -601,6 +601,7 @@ const StringDataType = createConfigraphDataType<StringDataTypeSettings>({
   typeLabel: 'dmno/string',
   extends: PrimitiveBaseType,
   injectable: false,
+  ui: { icon: 'carbon:string-text' },
 
   coerce(rawVal) {
     const settings = this.typeInstanceOptions;
@@ -684,6 +685,7 @@ const NumberDataType = createConfigraphDataType<NumberDataTypeSettings>({
   typeLabel: 'dmno/number',
   extends: PrimitiveBaseType,
   injectable: false,
+  ui: { icon: 'carbon:string-integer' },
   validate(val) {
     const settings = this.typeInstanceOptions || {};
     const errors = [] as Array<ValidationError>;
@@ -732,6 +734,7 @@ const BooleanDataType = createConfigraphDataType({
   typeLabel: 'dmno/boolean',
   extends: PrimitiveBaseType,
   injectable: false,
+  ui: { icon: 'carbon:boolean' },
   // TODO: add settings to be more strict, or to allow other values to coerce to true/false
   validate(val) {
     if (_.isBoolean(val)) return true;
@@ -771,6 +774,7 @@ const UrlDataType = createConfigraphDataType<{
     ...settings?.normalize && { toLowerCase: true },
   }),
   injectable: false,
+  ui: { icon: 'carbon:url' },
   typeDescription: 'standard URL',
   coerce(rawVal) {
     const settings = this.typeInstanceOptions;
@@ -802,6 +806,7 @@ const SimpleObjectDataType = createConfigraphDataType({
   typeLabel: 'dmno/simple-object',
   extends: PrimitiveBaseType,
   injectable: false,
+  ui: { icon: 'tabler:code-dots' }, // curly brackets with nothing inside
   validate(val) {
     if (_.isPlainObject(val)) return true;
     return new ValidationError('Value must be an object');
@@ -834,6 +839,7 @@ const _RawObjectDataType = createConfigraphDataType<ObjectDataTypeSettings>({
   typeLabel: 'dmno/object',
   extends: PrimitiveBaseType,
   injectable: false,
+  ui: { icon: 'tabler:code-dots' }, // this one has 3 dots inside brackets, vs simple object is only brackets
   coerce(val) {
     if (_.isPlainObject(val)) return val;
     if (!_.isString(val)) {
@@ -891,6 +897,7 @@ const ArrayDataType = createConfigraphDataType<ArrayDataTypeSettings>({
   typeLabel: 'dmno/array',
   extends: PrimitiveBaseType,
   injectable: false,
+  ui: { icon: 'tabler:brackets' }, // square brackets
   // TODO: validate checks if it's an array
   // helper to coerce csv string into array of strings
 });
@@ -935,6 +942,7 @@ const DictionaryDataType = createConfigraphDataType<DictionaryDataTypeSettings>(
   typeLabel: 'dmno/dictionary',
   extends: PrimitiveBaseType,
   injectable: false,
+  ui: { icon: 'tabler:code-asterisk' }, // curly brackets with an asterisk inside
   // TODO: validate checks if it's an object
 
 });
@@ -959,6 +967,7 @@ const EnumDataType = createConfigraphDataType<EnumDataTypeSettings>({
   typeLabel: 'dmno/enum',
   extends: PrimitiveBaseType,
   injectable: false,
+  ui: { icon: 'material-symbols-light:category' }, // a few shapes... not sure about this one
   validate(val) {
     const settings = this.typeInstanceOptions;
     let possibleValues: Array<any>;
@@ -989,6 +998,7 @@ const EmailDataType = createConfigraphDataType<{
     ...settings?.normalize && { toLowerCase: true },
   }),
   injectable: false,
+  ui: { icon: 'iconoir:at-sign' },
   typeDescription: 'standard email address',
   validate(val) {
     // check if it's a valid email
@@ -1009,6 +1019,7 @@ const ipAddressDataType = createConfigraphDataType<{
     ...settings?.normalize && { toLowerCase: true },
   }),
   injectable: false,
+  ui: { icon: 'iconoir:ip-address-tag' },
   typeDescription: 'ip v4 or v6 address',
   validate(val) {
     const settings = this.typeInstanceOptions;
@@ -1027,6 +1038,7 @@ const PortDataType = createConfigraphDataType({
     max: 65535,
   }),
   injectable: false,
+  ui: { icon: 'material-symbols:captive-portal' }, //! globe with arrow - not sure about this one
   typeDescription: 'valid port number between 0 and 65535',
   validate(val) {
     if (val >= 0 && val <= 65535) return true;
@@ -1044,6 +1056,7 @@ const SemverDataType = createConfigraphDataType<{
     ...settings?.normalize && { toLowerCase: true },
   }),
   injectable: false,
+  ui: { icon: 'simple-icons:semver' },
   typeDescription: 'semantic version string',
   validate(val) {
     const result = SEMVER_REGEX.test(val);
@@ -1058,6 +1071,7 @@ const IsoDateDataType = createConfigraphDataType({
   typeLabel: 'dmno/isoDate',
   extends: StringDataType,
   injectable: false,
+  ui: { icon: 'formkit:datetime' },
   typeDescription: 'ISO 8601 date string with optional time and milliseconds',
   validate(val) {
     const result = ISO_DATE_REGEX.test(val);
@@ -1072,6 +1086,7 @@ const UuidDataType = createConfigraphDataType({
   typeLabel: 'dmno/uuid',
   extends: StringDataType,
   injectable: false,
+  ui: { icon: 'mdi:identifier' },
   typeDescription: 'UUID string V1-V5 per RFC4122, including NIL',
   validate(val) {
     const result = UUID_REGEX.test(val);
