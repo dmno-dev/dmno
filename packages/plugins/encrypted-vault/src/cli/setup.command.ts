@@ -187,7 +187,7 @@ export const SetupCommand = createDmnoPluginCliCommand({
         kleur.bold('This file is safe/intended to be committed to source control!'),
         '',
         'To start adding items, run',
-        kleur.magenta(`pnpm exec dmno plugin -p ${ctx.plugin.instanceId} -- add-item`),
+        kleur.magenta(`pnpm exec dmno plugin -p ${ctx.plugin.instanceId} -- add`),
       ].join('\n'));
 
       process.exit(0);
