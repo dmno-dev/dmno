@@ -1,5 +1,11 @@
 # @dmno/encrypted-vault-plugin
 
+## 0.0.7
+
+### Patch Changes
+
+- [#143](https://github.com/dmno-dev/dmno/pull/143) [`47a90ac`](https://github.com/dmno-dev/dmno/commit/47a90ac9a7d3db97fb60d3e83ab3a0c8dfc9f2ba) Thanks [@mdp](https://github.com/mdp)! - Fix: Update add item example command
+
 ## 0.0.6
 
 ### Patch Changes
