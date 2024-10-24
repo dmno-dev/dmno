@@ -286,8 +286,7 @@ export class ConfigraphEntity<
 
   get flatConfigNodes() {
     return _.flatMapDeep(this.configNodes, (node) => {
-      if (node.children) return [node, ..._.values(node.children)];
-      return node;
+      return [node, node.flatChildren];
     });
   }
 
