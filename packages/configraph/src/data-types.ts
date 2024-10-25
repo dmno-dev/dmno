@@ -418,6 +418,16 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
     return coercedVal;
   }
 
+  /** helper to run coerce and validate - useful if using data types outside of dmno */
+  coerceAndValidate(val: any) {
+    const coercedVal = this.coerce(val);
+    const validationResult = this.validate(coercedVal);
+    if (validationResult !== true) {
+      throw validationResult[0];
+    }
+    return coercedVal;
+  }
+
 
   /** helper to unroll config schema using the type chain of parent "extends"  */
   private getDefItem<T extends keyof ConfigraphDataTypeDefinition<InstanceOptions, Metadata>>(

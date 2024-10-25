@@ -2,6 +2,7 @@ import kleur from 'kleur';
 import _ from 'lodash-es';
 import { outdent } from 'outdent';
 import gradient from 'gradient-string';
+import boxen from 'boxen';
 import { DmnoCommand } from '../lib/dmno-command';
 import { formatError, formattedValue, getItemSummary } from '../lib/formatting';
 import { getCliRunCtx } from '../lib/cli-ctx';
@@ -42,6 +43,17 @@ program.action(async (opts: {
     console.log(DMNO_DEV_BANNER);
     await fallingDmnosAnimation();
   }
+
+  await configServer.webServerListening;
+  console.log(boxen(
+    [
+      `Local DMNO UI running @ ${kleur.bold().magenta(configServer.webServerUrl || 'ERROR')}`,
+    ].join('\n'),
+    {
+      padding: 1, borderStyle: 'round', borderColor: 'blueBright',
+    },
+  ));
+
 
   let firstLoad = true;
   async function logResult() {

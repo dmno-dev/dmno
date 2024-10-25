@@ -40,7 +40,7 @@ async function execOpCliCommand(cmdArgs: Array<string>) {
   } else {
     let errMessage = cmd.stderr.toString();
     // get rid of "[ERROR] 2024/01/23 12:34:56 " before actual message
-    console.log('1pass cli error', errMessage);
+    // console.log('1pass cli error', errMessage);
     if (errMessage.startsWith('[ERROR]')) errMessage = errMessage.substring(28);
     if (errMessage.includes('authorization prompt dismissed')) {
       throw new ResolutionError('1password app authorization prompt dismissed by user', {

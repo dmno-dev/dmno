@@ -142,7 +142,7 @@ async function execOpCliCommand(cmdArgs) {
     }
   } else {
     let errMessage = cmd.stderr.toString();
-    console.log("1pass cli error", errMessage);
+    // console.log("1pass cli error", errMessage);
     if (errMessage.startsWith("[ERROR]")) errMessage = errMessage.substring(28);
     if (errMessage.includes("authorization prompt dismissed")) {
       throw new __vite_ssr_import_1__.ResolutionError("1password app authorization prompt dismissed by user", {

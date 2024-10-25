@@ -1,3 +1,8 @@
 projects:
   # all packages in direct subdirs of packages/
   - 'packages/*'
+
+# dev:
+#   host: dev.dmno.local
+#   port: 5666
+#   ssl: true

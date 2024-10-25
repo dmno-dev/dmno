@@ -190,7 +190,7 @@ export class DmnoConfigraphNode extends ConfigraphNode<DmnoDataTypeMetadata> {
   }
 
   toJSON(): SerializedConfigItem {
-    return {
+    const json = {
       ...super.toCoreJSON(),
       children: _.mapValues(this.children, (c) => c.toJSON()),
       isDynamic: this.isDynamic,
@@ -202,6 +202,14 @@ export class DmnoConfigraphNode extends ConfigraphNode<DmnoDataTypeMetadata> {
         resolvedRawValue: undefined,
       },
     };
+
+    // redacting override values - not sure if this is the right way to do this, but good enough for now
+    if (this.isSensitive) {
+      for (const override of json.overrides || []) {
+        override.value = redactString(override.value?.toString(), this.redactMode);
+      }
+    }
+    return json;
   }
   /** this is the shape that gets injected into an serialized json env var by `dmno run` */
   toInjectedJSON(): InjectedDmnoEnvItem {

@@ -1,10 +1,15 @@
-import {
-  createSecureServer, Http2Server, constants as HTTP2_CONSTANTS, createServer as createHttp2Server, Http2Stream,
-} from 'node:http2';
+// import {
+//   createSecureServer, Http2Server, constants as HTTP2_CONSTANTS, createServer as createHttp2Server, Http2Stream,
+// } from 'node:http2';
 import { createServer, Server } from 'node:http';
+import { createServer as createHttpsServer, Server as HttpsServer } from 'node:https';
+
 import fs from 'node:fs';
 import path, { dirname } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
+import { lookup as dnsLookup, Resolver as DnsResolver } from 'node:dns/promises'
+import { setTimeout as sleep } from 'node:timers/promises'
+
 import { Server as SocketIoServer } from 'socket.io';
 import ipc from 'node-ipc';
 import mitt, { Handler } from 'mitt';
@@ -19,6 +24,7 @@ import { ConfigLoaderRequestMap } from './ipc-requests';
 import { detectJsPackageManager } from '../lib/detect-package-manager';
 import { createLocalSslCert } from '../lib/certs';
 import { pathExists } from '../lib/fs-utils';
+import { DmnoBaseTypes } from '../config-engine/configraph-adapter';
 
 
 const debug = Debug('dmno');
@@ -27,9 +33,9 @@ const debugTimer = createDebugTimer('dmno:config-server');
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // TODO: these should probably be read from a workspace-level yaml file
-const DEV_PORT = 3666;
-const DEV_HOST = 'dev.dmno.local';
-const SSL_ENABLED = true;
+const DEFAULT_DEV_PORT = 3666;
+const DEFAULT_DEV_HOST = 'dev.dmno.local';
+const DEFAULT_DEV_SSL_ENABLED = false;
 
 const MIME_TYPES = {
   js: 'text/javascript',
@@ -68,10 +74,72 @@ export class ConfigServer {
   get workspace() { return this.configLoader.dmnoWorkspace!; }
 
 
-  private httpServer: Http2Server | Server | undefined;
+  private httpServer: HttpsServer | Server | undefined;
   private socketIoServer: SocketIoServer | undefined;
+  
+  private webServerListeningDeferred = createDeferredPromise();
+  public get webServerListening() { return this.webServerListeningDeferred.promise; }
+  private _webServerUrl?: string;
+  public get webServerUrl() {
+    return this._webServerUrl;
+  }
+
   private async initWebServer() {
+    const debugWeb = Debug('dmno:webserver');
+    
     await this.configLoader.isReady;
+
+    // TODO: this should probably be part of the initial workspace loading?
+    let devPort = DEFAULT_DEV_PORT;
+    let devHost = DEFAULT_DEV_HOST;
+    let devSsl = DEFAULT_DEV_SSL_ENABLED;
+    const workspaceSettings = this.configLoader.workspaceInfo.settings;
+    if (workspaceSettings?.dev?.port) {
+      try {
+        devPort = DmnoBaseTypes.port().coerceAndValidate(workspaceSettings?.dev?.port);
+      } catch (err) {
+        console.log(`Invalid devUi.port in workspace settings - defaulting to ${devPort}`);
+      }
+    }
+    if (workspaceSettings?.dev?.host) {
+      try {
+        // TODO: need a new "host" type and to validate it
+        devHost = DmnoBaseTypes.string().coerceAndValidate(workspaceSettings?.dev?.host);
+      } catch (err) {
+        console.log(`Invalid devUi.host in workspace settings - defaulting to ${devHost}`);
+      }
+    }
+    if (workspaceSettings?.dev?.ssl) {
+      try {
+        devSsl = DmnoBaseTypes.boolean().coerceAndValidate(workspaceSettings?.dev?.ssl);
+      } catch (err) {
+        console.log(`Invalid devUi.ssl in workspace settings - defaulting to ${devSsl}`);
+      }
+    }
+    debugWeb('dev settings', { host: devHost, port: devPort, ssl: devSsl });
+
+    try {
+      // node dns "Resolver" allows for timeout control, but does not use the OS dns stack
+      // node dns.lookup is actually a sync call wrapped to mimic async behaviour, with a long uneditable timeout
+      // so this is an ugly hack to fail quickly if the dns lookup does not resolve properly
+      // unfortunately, the process does hang, and the exit call is not immediate :(
+      // see https://github.com/nodejs/node/issues/55525
+      const raceResult = await Promise.race([
+        sleep(10, false),
+        dnsLookup(devHost),
+      ]);
+      if (raceResult === false) throw new Error('DNS LOOKUP FAILED');
+    } catch (err) {
+      // console.log(err);
+      console.log(kleur.bold().red(`\n🔍💥 DNS lookup failed for dev host - ${devHost}\n`));
+      console.log([
+        '> Please add "',
+        kleur.green(`${devHost} 127.0.0.1`),
+        '" to your /etc/hosts file',
+      ].join(''));
+      console.log('\n\n');
+      process.exit(1);
+    }
 
     const devUiPath = path.resolve(`${__dirname}/../../node_modules/@dmno/dev-ui/dist/`);
 
@@ -83,92 +151,45 @@ export class ConfigServer {
       throw new Error('dev ui dist files not found');
     }
 
-    if (SSL_ENABLED) {
+    if (devSsl) {
       const certDir = path.join(this.configLoader.workspaceRootPath, '.dmno', 'certs');
       const { key, cert } = await createLocalSslCert(certDir);
-      this.httpServer = createSecureServer({ key, cert, allowHTTP1: true });
-
-      this.httpServer.on('stream', (stream, headers) => {
-        let reqPath = headers[HTTP2_CONSTANTS.HTTP2_HEADER_PATH];
-        // const reqMethod = headers[HTTP2_CONSTANTS.HTTP2_HEADER_METHOD];
-
-
-
-        if (!reqPath || reqPath === '/') reqPath = '/index.html';
-        console.log('ssl+http2 request!', reqPath);
-
-        const fullPath = path.join(devUiPath, reqPath as string);
-        const extension = fullPath.split('.').pop();
-        // avoiding another dependency for a few mime-types
-        const responseMimeType = (MIME_TYPES as any)[extension || ''];
-
-        // zero dependency http2 web-server
-        stream.respondWithFile(
-          fullPath,
-          { 'content-type': responseMimeType },
-          {
-            onError: (err) => {
-              if (err.code === 'ENOENT') {
-                stream.respondWithFile(
-                  path.join(devUiPath, 'index.html'),
-                  { 'content-type': 'text/html' },
-                );
-              } else {
-              // console.log(err);
-                if (err.code === 'ENOENT') {
-                  stream.respond({ ':status': HTTP2_CONSTANTS.HTTP_STATUS_NOT_FOUND });
-                } else {
-                  stream.respond({ ':status': HTTP2_CONSTANTS.HTTP_STATUS_INTERNAL_SERVER_ERROR });
-                }
-                stream.end();
-              }
-            },
-          },
-        );
-      });
+      this.httpServer = createHttpsServer({ key, cert });
     } else {
       this.httpServer = createServer();
-      this.httpServer.on('request', async (request, response) => {
-        let filePath = request.url;
-        if (!filePath || filePath === '/') filePath = '/index.html';
-        console.log('http request!', filePath);
-        const fullPath = path.join(devUiPath, request.url as string);
-        try {
-          const fileContents = await fs.promises.readFile(fullPath, 'utf-8');
-          const extension = fullPath.split('.').pop();
-          const responseMimeType = (MIME_TYPES as any)[extension || ''];
-          response.writeHead(200, { 'content-type': responseMimeType });
-          response.end(fileContents, 'utf-8');
-        } catch (err) {
-          if ((err as any).code === 'ENOENT') {
-            response.writeHead(200, { 'content-type': 'text/html' });
-            response.end(devUiIndexHtml);
-          } else {
-            throw err;
-          }
-        }
-      });
     }
-
-
-
-
-
+    this.httpServer.on('request', async (request, response) => {
+      let reqPath = request.url;
+      if (!reqPath || reqPath === '/') reqPath = '/index.html';
+      debugWeb('http request', reqPath);
+      const fullPath = path.join(devUiPath, reqPath);
+      try {
+        const fileContents = await fs.promises.readFile(fullPath, 'utf-8');
+        const extension = fullPath.split('.').pop();
+        const responseMimeType = (MIME_TYPES as any)[extension || ''];
+        response.writeHead(200, { 'content-type': responseMimeType });
+        response.end(fileContents, 'utf-8');
+      } catch (err) {
+        if ((err as any).code === 'ENOENT') {
+          response.writeHead(200, { 'content-type': 'text/html' });
+          response.end(devUiIndexHtml);
+        } else {
+          throw err;
+        }
+      }
+    });
 
     this.socketIoServer = new SocketIoServer(this.httpServer, {
-      // options
       path: '/ws',
       serveClient: false,
       // allowRequest: (req, callback) => {
       //   console.log('checking', req);
       //   callback(null, true);
       // },
-      cors: {
-        origin: '*',
-      },
+      cors: { origin: '*' },
     });
     this.socketIoServer.on('connection', (socket) => {
-      console.log('socket connection');
+      debugWeb('socket connection');
       // let handshake = socket.handshake;
 
       socket.on('reload', async () => {
@@ -181,11 +202,11 @@ export class ConfigServer {
       });
 
       socket.onAny((event, args) => {
-        console.log('socket event!', event, args);
+        debugWeb('socket event!', event, args);
       });
 
       socket.on('request', async (message) => {
-        console.log('received request over websocket', message);
+        debugWeb('received request over websocket', message);
         const handler = (this.requestHandlers as any)[message.requestType];
         if (!handler) {
           throw new Error(`No handler for request type: ${message.requestType}`);
@@ -201,14 +222,15 @@ export class ConfigServer {
         });
       });
 
-      console.log('connected!');
+      debugWeb('connected!');
     });
 
-
-    this.httpServer.listen(DEV_PORT, DEV_HOST, () => {
-      console.log('dev ui web server available @', `${SSL_ENABLED ? 'https' : 'http'}://${DEV_HOST}:${DEV_PORT}`);
+    this._webServerUrl = `${devSsl ? 'https' : 'http'}://${devHost}:${devPort}`;
+    debugWeb('booting web server', this._webServerUrl);
+    this.httpServer.listen(devPort, devHost, () => {
+      this.webServerListeningDeferred.resolve();
     });
-
+  
     // this.httpsServer.listen(DEV_PORT);
   }
 
