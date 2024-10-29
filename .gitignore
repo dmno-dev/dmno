@@ -14,6 +14,8 @@ config.local.ts
 
 .turbo
 
+vite.config.ts.timestamp*
+
 tmp-package-registry
 
 changesets-summary.json

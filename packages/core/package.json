@@ -32,7 +32,7 @@
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix",
     "test": "vitest",
-    "prepack": "cp -r ../dev-ui/dist dev-ui-dist"
+    "prepack": "rm dev-ui-dist && cp -r ../dev-ui/dist ./dev-ui-dist"
   },
   "engines": {
     "node": ">=16"
@@ -78,12 +78,13 @@
     "./tsconfigs/*": "./tsconfigs/*.json"
   },
   "files": [
+    "/bin",
     "/dist",
     "/tsconfigs",
     "/dev-ui-dist"
   ],
   "bin": {
-    "dmno": "./dist/cli/cli-executable.js"
+    "dmno": "./bin/cli.js"
   },
   "devDependencies": {
     "@dmno/encryption-lib": "workspace:*",
