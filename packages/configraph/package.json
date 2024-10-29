@@ -1,6 +1,6 @@
 {
   "name": "@dmno/configraph",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "reactive configuration graph - core that powers DMNO",
   "author": "dmno-dev",
   "license": "MIT",
