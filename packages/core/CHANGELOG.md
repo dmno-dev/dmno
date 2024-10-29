@@ -1,5 +1,16 @@
 # dmno
 
+## 0.0.27
+
+### Patch Changes
+
+- [#147](https://github.com/dmno-dev/dmno/pull/147) [`c3141d7`](https://github.com/dmno-dev/dmno/commit/c3141d7113d0447830405fe4f01e17fc0072ca31) Thanks [@theoephraim](https://github.com/theoephraim)! - local dmno dev ui, and related refactoring
+
+- [#147](https://github.com/dmno-dev/dmno/pull/147) [`c3141d7`](https://github.com/dmno-dev/dmno/commit/c3141d7113d0447830405fe4f01e17fc0072ca31) Thanks [@theoephraim](https://github.com/theoephraim)! - change dmno workspace config file name to `.dmno/workspace.yaml`
+
+- Updated dependencies [[`c3141d7`](https://github.com/dmno-dev/dmno/commit/c3141d7113d0447830405fe4f01e17fc0072ca31), [`c36a074`](https://github.com/dmno-dev/dmno/commit/c36a074f3618daafecca540fb44c5199eeeb2de3)]:
+  - @dmno/configraph@0.0.2
+
 ## 0.0.26
 
 ### Patch Changes

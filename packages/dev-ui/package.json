@@ -12,7 +12,7 @@
   },
   "bugs": "https://github.com/dmno-dev/dmno/issues",
   "homepage": "https://dmno.dev",
-  "keywords": [ ],
+  "keywords": [],
   "scripts": {
     "dev": "vite",
     "build": "pnpm run build-only",

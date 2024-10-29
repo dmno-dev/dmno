@@ -1,5 +1,11 @@
 # @dmno/vite-integration
 
+## 0.0.11
+
+### Patch Changes
+
+- [#147](https://github.com/dmno-dev/dmno/pull/147) [`c3141d7`](https://github.com/dmno-dev/dmno/commit/c3141d7113d0447830405fe4f01e17fc0072ca31) Thanks [@theoephraim](https://github.com/theoephraim)! - local dmno dev ui, and related refactoring
+
 ## 0.0.10
 
 ### Patch Changes
