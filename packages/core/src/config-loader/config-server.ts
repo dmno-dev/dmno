@@ -1,15 +1,11 @@
-// import {
-//   createSecureServer, Http2Server, constants as HTTP2_CONSTANTS, createServer as createHttp2Server, Http2Stream,
-// } from 'node:http2';
 import { createServer, Server } from 'node:http';
 import { createServer as createHttpsServer, Server as HttpsServer } from 'node:https';
 
 import fs from 'node:fs';
 import path, { dirname } from 'node:path';
-import { fileURLToPath, URL } from 'node:url';
-import { lookup as dnsLookup, Resolver as DnsResolver } from 'node:dns/promises'
-import { setTimeout as sleep } from 'node:timers/promises'
+import { fileURLToPath } from 'node:url';
 
+import { execSync } from 'node:child_process';
 import { Server as SocketIoServer } from 'socket.io';
 import ipc from 'node-ipc';
 import mitt, { Handler } from 'mitt';
@@ -23,7 +19,6 @@ import { createDebugTimer } from '../cli/lib/debug-timer';
 import { ConfigLoaderRequestMap } from './ipc-requests';
 import { detectJsPackageManager } from '../lib/detect-package-manager';
 import { createLocalSslCert } from '../lib/certs';
-import { pathExists } from '../lib/fs-utils';
 import { DmnoBaseTypes } from '../config-engine/configraph-adapter';
 
 
@@ -34,7 +29,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // TODO: these should probably be read from a workspace-level yaml file
 const DEFAULT_DEV_PORT = 3666;
-const DEFAULT_DEV_HOST = 'dev.dmno.local';
+const DEFAULT_DEV_HOST = 'localhost';
 const DEFAULT_DEV_SSL_ENABLED = false;
 
 const MIME_TYPES = {
@@ -76,7 +71,7 @@ export class ConfigServer {
 
   private httpServer: HttpsServer | Server | undefined;
   private socketIoServer: SocketIoServer | undefined;
-  
+
   private webServerListeningDeferred = createDeferredPromise();
   public get webServerListening() { return this.webServerListeningDeferred.promise; }
   private _webServerUrl?: string;
@@ -86,7 +81,7 @@ export class ConfigServer {
 
   private async initWebServer() {
     const debugWeb = Debug('dmno:webserver');
-    
+
     await this.configLoader.isReady;
 
     // TODO: this should probably be part of the initial workspace loading?
@@ -118,30 +113,25 @@ export class ConfigServer {
     }
     debugWeb('dev settings', { host: devHost, port: devPort, ssl: devSsl });
 
+    // check if the host we are serving on will work
     try {
-      // node dns "Resolver" allows for timeout control, but does not use the OS dns stack
-      // node dns.lookup is actually a sync call wrapped to mimic async behaviour, with a long uneditable timeout
-      // so this is an ugly hack to fail quickly if the dns lookup does not resolve properly
-      // unfortunately, the process does hang, and the exit call is not immediate :(
+      // NOTE - trying to use node dns.lookup but there is no way to set the timeout so it's quite slow when it fails
       // see https://github.com/nodejs/node/issues/55525
-      const raceResult = await Promise.race([
-        sleep(10, false),
-        dnsLookup(devHost),
-      ]);
-      if (raceResult === false) throw new Error('DNS LOOKUP FAILED');
+
+      // copied from `getent` - just checking the hosts file for an entry
+      await execSync(`sed 's/#.*//' /etc/hosts | grep -w "${devHost}"`);
     } catch (err) {
-      // console.log(err);
-      console.log(kleur.bold().red(`\n🔍💥 DNS lookup failed for dev host - ${devHost}\n`));
+      console.log(kleur.bold().red(`\n🔍💥 /etc/hosts is missing ${devHost}\n`));
       console.log([
         '> Please add "',
-        kleur.green(`${devHost} 127.0.0.1`),
+        kleur.green(`127.0.0.1 ${devHost}`),
         '" to your /etc/hosts file',
       ].join(''));
       console.log('\n\n');
       process.exit(1);
     }
 
-    const devUiPath = path.resolve(`${__dirname}/../../node_modules/@dmno/dev-ui/dist/`);
+    const devUiPath = path.resolve(`${__dirname}/../../dev-ui-dist/`);
 
     // ensure the dev ui dist files actually exist (should only be a problem during local dev)
     let devUiIndexHtml: string;
@@ -152,8 +142,11 @@ export class ConfigServer {
     }
 
     if (devSsl) {
+      if (devSsl && devHost === 'localhost') {
+        throw new Error('To enable local ssl, dev host must not be localhost. Use something like "dmno.dev.local"');
+      }
       const certDir = path.join(this.configLoader.workspaceRootPath, '.dmno', 'certs');
-      const { key, cert } = await createLocalSslCert(certDir);
+      const { key, cert } = await createLocalSslCert(devHost, certDir);
       this.httpServer = createHttpsServer({ key, cert });
     } else {
       this.httpServer = createServer();
@@ -163,16 +156,21 @@ export class ConfigServer {
       if (!reqPath || reqPath === '/') reqPath = '/index.html';
       debugWeb('http request', reqPath);
       const fullPath = path.join(devUiPath, reqPath);
+      const extension = fullPath.split('.').pop();
       try {
         const fileContents = await fs.promises.readFile(fullPath, 'utf-8');
-        const extension = fullPath.split('.').pop();
         const responseMimeType = (MIME_TYPES as any)[extension || ''];
         response.writeHead(200, { 'content-type': responseMimeType });
         response.end(fileContents, 'utf-8');
       } catch (err) {
         if ((err as any).code === 'ENOENT') {
-          response.writeHead(200, { 'content-type': 'text/html' });
-          response.end(devUiIndexHtml);
+          if (reqPath.startsWith('/assets/')) {
+            response.writeHead(404, { 'content-type': 'text/html' });
+            response.end('Oops! File does not exist');
+          } else {
+            response.writeHead(200, { 'content-type': 'text/html' });
+            response.end(devUiIndexHtml);
+          }
         } else {
           throw err;
         }
@@ -230,8 +228,6 @@ export class ConfigServer {
     this.httpServer.listen(devPort, devHost, () => {
       this.webServerListeningDeferred.resolve();
     });
-  
-    // this.httpsServer.listen(DEV_PORT);
   }
 
 
@@ -327,9 +323,14 @@ export class ConfigServer {
     process.on('SIGINT', () => {
       // console.log('CONFIG SERVER PROCESS - SIGINT');
     });
+
     process.on('exit', (code) => {
-      ipc.server.stop();
-      // console.log('CONFIG SERVER PROCESS - EXIT');
+      // TODO: can be smarter about tracking what needs to be shut down
+      try {
+        ipc.server.stop();
+      } catch (err) {
+
+      }
     });
   }
 
@@ -392,7 +393,10 @@ export class ConfigServer {
         throw new Error(`Unable to select service - ${payload.serviceName || payload.packageName}`);
       }
 
-      return service.toJSON();
+      return {
+        serviceDetails: service.toJSON(),
+        injectedEnv: service.getInjectedEnvJSON(),
+      };
     });
 
 

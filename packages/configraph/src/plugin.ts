@@ -83,22 +83,6 @@ EntityClass extends ConfigraphEntity = ConfigraphEntity,
   createResolver(
     defOrFn: ConfigValueResolverDef | (() => ConfigValueResolverDef | ConfigValueResolver),
   ): ConfigValueResolver {
-    // let def: ConfigValueResolverDef | ConfigValueResolver;
-
-    // if (_.isFunction(defOrFn)) {
-    //   def = defOrFn();
-    // } else {
-    //   def = defOrFn;
-    // }
-
-    // if (def instanceof ConfigValueResolver) return def;
-
-    // const r = createResolver({
-    //   createdByPluginId: this.instanceId,
-    //   ...def,
-    //   ...!def.icon && !!this.icon && { icon: this.icon },
-    // });
-
     const r = createResolver(defOrFn);
 
     r.def.createdByPluginId = this.instanceId;

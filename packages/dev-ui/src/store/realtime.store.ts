@@ -25,8 +25,8 @@ export const useRealtimeStore = defineStore('realtime', () => {
   // while we are doing dev on the ui itself, we want to connect to a running config server
   // TODO: use config to detect if we running in vite dev mode or from built code
   if (window.location.host === 'localhost:4666') {
-    // we'll assume the local server is running w/ default settings
-    wsUrl = 'ws://dev.dmno.local:3666';
+    // we'll assume the local server is running w/ ssl and custom host of dev.dmno.local
+    wsUrl = 'wss://dev.dmno.local:3666';
     useSsl = true;
   }
 

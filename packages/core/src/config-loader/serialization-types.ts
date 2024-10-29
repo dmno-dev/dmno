@@ -15,7 +15,7 @@ import {
   SerializedConfigraphNode,
 } from '@dmno/configraph';
 import {
-  DmnoService, InjectedDmnoEnv,
+  DmnoService,
 } from '../config-engine/config-engine';
 import { DmnoDataTypeMetadata } from '../config-engine/configraph-adapter';
 
@@ -28,7 +28,6 @@ export type SerializedWorkspace = {
 export type SerializedService =
   Pick<DmnoService, 'packageName' | 'serviceName' | 'path' | 'settings'>
   & {
-    injectedEnv: InjectedDmnoEnv,
     configLoadError?: SerializedDmnoError,
     configNodes: Record<string, SerializedConfigItem>
   } & SerializedConfigraphEntity;

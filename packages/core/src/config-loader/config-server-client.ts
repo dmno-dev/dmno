@@ -218,8 +218,7 @@ export class ConfigServerClient {
     }
     // what to do if we can't figure out a package name?
 
-    const serviceConfig = await this.makeRequest('get-resolved-config', { packageName });
-    return serviceConfig;
+    return await this.makeRequest('get-resolved-config', { packageName });
   }
 
   static checkServiceIsValid(service: SerializedService, log = true) {

@@ -244,6 +244,11 @@ export class DmnoWorkspace {
 
   async resolveConfig() {
     for (const service of this.allServices) {
+      // reset overrides on all the individual nodes
+      for (const node of Object.values(service.config)) {
+        node.overrides = [];
+      }
+
       // we want to load all the override files, since we may want to display them in the UI
       // but they will not be all enabled
       await service.loadOverrideFiles();
@@ -436,13 +441,17 @@ export class DmnoService {
     };
   }
 
+  getInjectedEnvJSON() {
+    return this.configraphEntity.getInjectedEnvJSON();
+  }
+
+
   toJSON(): SerializedService {
     return {
       packageName: this.packageName,
       serviceName: this.serviceName,
       path: this.path,
       configLoadError: this.configLoadError?.toJSON(),
-      injectedEnv: this.configraphEntity.getInjectedEnvJSON(),
 
       // this contains all the interesting stuff...
       ...this.configraphEntity.toJSON(),

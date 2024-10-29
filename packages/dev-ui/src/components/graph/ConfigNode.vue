@@ -34,7 +34,6 @@
         StyledValue(:value="node.maskedResolvedValue || node.resolvedValue")
       .config-node__errors(v-if="nodeErrors.length")
         div(v-for="err in nodeErrors" :key="err.type") {{ err.icon }} {{ err.message }}
-      div {{ node.overrides }}
     .config-node__right
       //- Icon.config-node__resolver-icon(:full-name='node.resolver?.icon')
       //- Icon.config-node__status-icon(full-name='mdi:cancel-circle')

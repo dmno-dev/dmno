@@ -96,11 +96,6 @@ async function execOpCliCommand(cmdArgs: Array<string>) {
 export class OnePasswordDmnoPlugin extends DmnoPlugin {
   icon = 'simple-icons:1password';
 
-  // // would be great to do this automatically as part of `DmnoPlugin` but I don't think it's possible
-  // // so instead we add some runtime checks in DmnoPlugin
-  // static pluginPackageName = thisPackageName;
-  // static pluginPackageVersion = thisPackageVersion;
-
   // this is likely the default for most plugins...
   // accept a mapping of how to fill inputs - each can be set to a
   // static value, config path, or use type-based injection

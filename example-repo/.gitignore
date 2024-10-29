@@ -1,3 +1,5 @@
+.vite-node
+
 # local cache for resolved values
 **/.dmno/cache.json
 # encryption key used for cache

@@ -15,7 +15,7 @@ import {
 import {
   decrypt, encrypt, generateEncryptionKeyString, importDmnoEncryptionKeyString,
 } from '@dmno/encryption-lib';
-import { name as thisPackageName, version as thisPackageVersion } from '../package.json';
+import packageJson from '../package.json';
 
 import { EncryptedVaultTypes } from './data-types';
 
@@ -57,6 +57,7 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin {
     },
   ) {
     super(instanceId, {
+      packageJson,
       inputSchema: {
         key: {
           description: 'the key to use to encrypt/decrypt this vault file',
@@ -74,8 +75,6 @@ export class EncryptedVaultDmnoPlugin extends DmnoPlugin {
   }
 
   static cliPath = `${__dirname}/cli/cli`;
-  static pluginPackageName = thisPackageName;
-  static pluginPackageVersion = thisPackageVersion;
 
   icon = 'mdi:archive-lock';
 

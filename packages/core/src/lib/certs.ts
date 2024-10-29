@@ -3,7 +3,7 @@ import path from 'node:path';
 import { createCA, createCert } from 'mkcert';
 import { pathExists } from './fs-utils';
 
-export async function createLocalSslCert(certDirPath: string = '') {
+export async function createLocalSslCert(domain: string, certDirPath: string = '') {
   const certPath = path.join(certDirPath, 'local.crt');
   const keyPath = path.join(certDirPath, 'local.key');
 
@@ -30,8 +30,7 @@ export async function createLocalSslCert(certDirPath: string = '') {
 
     const certPair = await createCert({
       ca: { key: ca.key, cert: ca.cert },
-      // domains: ['local.dmno.dev'],
-      domains: ['dev.dmno.local'],
+      domains: [domain],
       validity: 365,
     });
     cert = certPair.cert;

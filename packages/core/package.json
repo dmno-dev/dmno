@@ -31,7 +31,8 @@
     "dev": "pnpm run clean && pnpm run build:injector && tsup",
     "lint": "eslint src --ext .ts,.cjs",
     "lint:fix": "pnpm run lint --fix",
-    "test": "vitest"
+    "test": "vitest",
+    "prepack": "cp -r ../dev-ui/dist dev-ui-dist"
   },
   "engines": {
     "node": ">=16"
@@ -78,7 +79,8 @@
   },
   "files": [
     "/dist",
-    "/tsconfigs"
+    "/tsconfigs",
+    "/dev-ui-dist"
   ],
   "bin": {
     "dmno": "./dist/cli/cli-executable.js"
@@ -104,8 +106,6 @@
   "dependencies": {
     "@dagrejs/graphlib": "catalog:",
     "@dmno/configraph": "workspace:*",
-    "@dmno/dev-ui": "workspace:*",
-    "@hono/node-server": "^1.13.1",
     "@inquirer/core": "^8.0.1",
     "@inquirer/prompts": "^5.0.1",
     "acorn": "^8.12.1",
@@ -121,13 +121,12 @@
     "execa": "^8.0.1",
     "fdir": "^6.1.1",
     "gradient-string": "^2.0.2",
-    "hono": "^4.6.3",
     "jsonc-parser": "^3.2.1",
     "kleur": "catalog:",
     "launch-editor": "^2.9.1",
     "lodash-es": "catalog:",
     "log-update": "^6.0.0",
-    "magic-string": "^0.30.11",
+    "magic-string": "^0.30.12",
     "mitt": "catalog:",
     "mkcert": "^3.2.0",
     "modern-async": "^2.0.0",

@@ -38,8 +38,6 @@ export type SerializedConfigraphEntity =
     injectedPluginIds: Array<string>,
     icon?: string,
     color?: string,
-    // configNodes: Record<string, SerializedConfigraphNode>,
-    // injectedEnv: InjectedDmnoEnv,
   };
 
 export type SerializedConfigraphPlugin = Pick<
