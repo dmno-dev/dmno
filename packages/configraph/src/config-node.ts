@@ -207,6 +207,16 @@ export class ConfigraphNode<NodeMetadata = any> {
   }
 
   children: Record<string, typeof this> = {};
+  get flatChildren(): Array<typeof this> {
+    if (_.isEmpty(this.children)) return [];
+    return _.flatMap(
+      _.values(this.children),
+      (c) => [
+        c,
+        ...c.flatChildren,
+      ],
+    );
+  }
 
   get parentNode(): ConfigraphNode | undefined {
     if (this.parent instanceof ConfigraphNode) {
@@ -282,13 +292,16 @@ export class ConfigraphNode<NodeMetadata = any> {
     const itemResolverCtx = new ResolverContext(this.valueResolver || this);
     resolverCtxAls.enterWith(itemResolverCtx);
 
+
     if (this.valueResolver) {
       if (!this.valueResolver.isFullyResolved) {
+        this.debug('running node resolver');
         await this.valueResolver.resolve(itemResolverCtx);
         this.isResolved = true;
         if (this.resolutionError) return;
       }
     } else {
+      this.debug('no resolver - marking as resolved');
       this.isResolved = true;
     }
 
@@ -368,7 +381,7 @@ export class ConfigraphNode<NodeMetadata = any> {
     this.isFullyResolved = true;
 
     debug(
-      `${this.parentEntity?.id}/${this.path} = `,
+      `${this.parentEntity?.id}/${this.path} =`,
       JSON.stringify(this.resolvedRawValue),
       JSON.stringify(this.resolvedValue),
       this.isValid ? '✅' : `❌ ${this.validationErrors?.[0]?.message}`,

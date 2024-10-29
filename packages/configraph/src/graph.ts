@@ -187,7 +187,10 @@ export class Configraph<
 
     this.initEntitiesDag();
 
-    const postProcessFns: Array<() => void> = [];
+    const postProcessFns: Array<{
+      node: ConfigraphNode,
+      fns: Array<() => void>,
+    }> = [];
     for (const entity of this.sortedEntities) {
       const ancestorIds = entity.ancestorIds;
 
@@ -315,7 +318,7 @@ export class Configraph<
         // calls process on each item's resolver, and collects "post-processing" functions to call if necessary
         try {
           const nodePostProcessFns = node.valueResolver?.process(node);
-          postProcessFns.push(...nodePostProcessFns || []);
+          postProcessFns.push({ node, fns: nodePostProcessFns || [] });
           // TODO: handle errors - attach as schema errors to resolver / node?
         } catch (err) {
           if (err instanceof SchemaError) {
@@ -331,8 +334,18 @@ export class Configraph<
 
     // after the entire graph of config nodes have been processed, we'll call post-processing functions
     // this is needed for `collect()` where we need child entities and their nodes to be initialized
-    postProcessFns.forEach((postProcessFn) => {
-      postProcessFn();
+    postProcessFns.forEach(({ node, fns }) => {
+      fns.forEach((fn) => {
+        try {
+          fn();
+        } catch (err) {
+          if (err instanceof SchemaError) {
+            node.schemaErrors.push(err);
+          } else {
+            node.schemaErrors.push(new SchemaError(err as SchemaError));
+          }
+        }
+      });
     });
 
     // add declared dependencies to the node graph
@@ -361,10 +374,12 @@ export class Configraph<
         const node = this.nodesByFullPath[nodeId];
         // currently this resolve fn will trigger resolve on nested items
         const nodeWasResolved = node.isResolved;
+        const nodeWasFullyResolved = node.isFullyResolved;
         await node.resolve();
         // for objects, the node first gets "resolved" but not "fully resolved" (where child values rolled back up)
-        // but this is still considered progress so we track it
+        // so we make progress (and therefore should continue) if a node transitions to resolved or fully resolved
         if (!nodeWasResolved && node.isResolved) resolvedCount++;
+        else if (!nodeWasFullyResolved && node.isFullyResolved) resolvedCount++;
         if (!node.isFullyResolved) {
           nextBatchNodeIds.push(nodeId);
         }
