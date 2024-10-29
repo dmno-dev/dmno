@@ -374,12 +374,6 @@ importers:
       dmno:
         specifier: workspace:*
         version: link:../core
-      eslint-plugin-vue:
-        specifier: ^9.29.0
-        version: 9.29.0(eslint@8.57.0)
-      eslint-plugin-vue-pug:
-        specifier: ^0.6.2
-        version: 0.6.2(eslint-plugin-vue@9.29.0(eslint@8.57.0))(vue-eslint-parser@9.4.3(eslint@8.57.0))
       npm-run-all2:
         specifier: ^6.2.3
         version: 6.2.3
@@ -525,7 +519,7 @@ importers:
         version: 7.7.1(eslint@8.57.0)(typescript@5.5.4)
       '@vue/eslint-config-typescript':
         specifier: ^12.0.0
-        version: 12.0.0(eslint-plugin-vue@9.25.0(eslint@8.57.0))(eslint@8.57.0)(typescript@5.5.4)
+        version: 12.0.0(eslint-plugin-vue@9.29.0(eslint@8.57.0))(eslint@8.57.0)(typescript@5.5.4)
       eslint:
         specifier: ^8.57.0
         version: 8.57.0
@@ -551,8 +545,11 @@ importers:
         specifier: ^1.2.3
         version: 1.2.3(eslint@8.57.0)
       eslint-plugin-vue:
-        specifier: ^9.22.0
-        version: 9.25.0(eslint@8.57.0)
+        specifier: ^9.29.0
+        version: 9.29.0(eslint@8.57.0)
+      eslint-plugin-vue-pug:
+        specifier: ^0.6.2
+        version: 0.6.2(eslint-plugin-vue@9.29.0(eslint@8.57.0))(vue-eslint-parser@9.4.3(eslint@8.57.0))
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -6115,12 +6112,6 @@ packages:
     resolution: {integrity: sha512-jZt5f8FtRcNncHiWIfZDvzGlu2Y3XLj7OshpH8y2KHtCXjGBsyvUzKayHsFgTf8yN4ZOh8k5uOwMstgY2vUHsA==}
     peerDependencies:
       eslint-plugin-vue: ^9.8.0
-
-  eslint-plugin-vue@9.25.0:
-    resolution: {integrity: sha512-tDWlx14bVe6Bs+Nnh3IGrD+hb11kf2nukfm6jLsmJIhmiRQ1SUaksvwY9U5MvPB0pcrg0QK0xapQkfITs3RKOA==}
-    engines: {node: ^14.17.0 || >=16.0.0}
-    peerDependencies:
-      eslint: ^6.2.0 || ^7.0.0 || ^8.0.0 || ^9.0.0
 
   eslint-plugin-vue@9.29.0:
     resolution: {integrity: sha512-hamyjrBhNH6Li6R1h1VF9KHfshJlKgKEg3ARbGTn72CMNDSMhWbgC7NdkRDEh25AFW+4SDATzyNM+3gWuZii8g==}
@@ -15272,7 +15263,7 @@ snapshots:
       graphemer: 1.4.0
       ignore: 5.3.1
       natural-compare: 1.4.0
-      semver: 7.6.0
+      semver: 7.6.3
       ts-api-utils: 1.3.0(typescript@5.5.4)
     optionalDependencies:
       typescript: 5.5.4
@@ -15946,12 +15937,12 @@ snapshots:
     dependencies:
       rfdc: 1.4.1
 
-  '@vue/eslint-config-typescript@12.0.0(eslint-plugin-vue@9.25.0(eslint@8.57.0))(eslint@8.57.0)(typescript@5.5.4)':
+  '@vue/eslint-config-typescript@12.0.0(eslint-plugin-vue@9.29.0(eslint@8.57.0))(eslint@8.57.0)(typescript@5.5.4)':
     dependencies:
       '@typescript-eslint/eslint-plugin': 6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.5.4))(eslint@8.57.0)(typescript@5.5.4)
       '@typescript-eslint/parser': 6.21.0(eslint@8.57.0)(typescript@5.5.4)
       eslint: 8.57.0
-      eslint-plugin-vue: 9.25.0(eslint@8.57.0)
+      eslint-plugin-vue: 9.29.0(eslint@8.57.0)
       vue-eslint-parser: 9.4.2(eslint@8.57.0)
     optionalDependencies:
       typescript: 5.5.4
@@ -18230,20 +18221,6 @@ snapshots:
       vue-eslint-parser-template-tokenizer-pug: 0.4.11(vue-eslint-parser@9.4.3(eslint@8.57.0))
     transitivePeerDependencies:
       - vue-eslint-parser
-
-  eslint-plugin-vue@9.25.0(eslint@8.57.0):
-    dependencies:
-      '@eslint-community/eslint-utils': 4.4.0(eslint@8.57.0)
-      eslint: 8.57.0
-      globals: 13.24.0
-      natural-compare: 1.4.0
-      nth-check: 2.1.1
-      postcss-selector-parser: 6.0.16
-      semver: 7.6.0
-      vue-eslint-parser: 9.4.2(eslint@8.57.0)
-      xml-name-validator: 4.0.0
-    transitivePeerDependencies:
-      - supports-color
 
   eslint-plugin-vue@9.29.0(eslint@8.57.0):
     dependencies:
@@ -25313,7 +25290,7 @@ snapshots:
       espree: 9.6.1
       esquery: 1.5.0
       lodash: 4.17.21
-      semver: 7.6.0
+      semver: 7.6.3
     transitivePeerDependencies:
       - supports-color
 

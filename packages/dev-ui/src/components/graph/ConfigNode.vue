@@ -174,7 +174,7 @@ function onClick() {
   grid-template-columns: min-content 1fr min-content;
   gap: 12px;
   padding: 8px 10px;
-  cursor: pointer;
+  /* cursor: pointer; */
   /* align-items: start; */
 
   min-height: 30px;

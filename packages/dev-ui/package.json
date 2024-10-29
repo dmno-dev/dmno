@@ -58,8 +58,6 @@
     "@vitejs/plugin-vue": "^5.1.4",
     "@vue/tsconfig": "^0.5.1",
     "dmno": "workspace:*",
-    "eslint-plugin-vue": "^9.29.0",
-    "eslint-plugin-vue-pug": "^0.6.2",
     "npm-run-all2": "^6.2.3",
     "pug": "^3.0.3",
     "typescript": "catalog:",

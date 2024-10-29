@@ -1,9 +1,7 @@
 <template lang="pug">
 .error-message
   h3.error-message__title
-    Icon.error-message__icon(
-full-name="mdi:alert"
-size="l")
+    Icon.error-message__icon(full-name="mdi:alert" size="l")
     slot(name="title") {{ props.title }}
   .error-message__message
     slot {{ props.message }}
@@ -14,10 +12,7 @@ size="l")
       )
         | at {{ stackLine.name }}
         =' '
-        a(
-href="#"
-@click.prevent="openEditorToFile(stackLine.file)") {{ stackLine.file }}
-
+        a(href="#" @click.prevent="openEditorToFile(stackLine.file)") {{ stackLine.file }}
 </template>
 
 <script setup lang="ts">
