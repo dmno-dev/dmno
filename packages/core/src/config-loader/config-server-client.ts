@@ -58,7 +58,7 @@ export class ConfigServerClient {
     if (!execCommandRest.endsWith('--')) execCommandRest += ' --';
 
     // use `pnpm exec` or `npm exec` etc...
-    this.ownedDmnoConfigServerProcess = spawn(execCommandBaseCommand, `${execCommandRest} dmno dev --silent`.split(' '), {
+    this.ownedDmnoConfigServerProcess = spawn(execCommandBaseCommand, `${execCommandRest} dmno dev --silent --ipc-only`.split(' '), {
       stdio: 'inherit',
       env: {
         ...process.env,
@@ -218,8 +218,7 @@ export class ConfigServerClient {
     }
     // what to do if we can't figure out a package name?
 
-    const serviceConfig = await this.makeRequest('get-resolved-config', { packageName });
-    return serviceConfig;
+    return await this.makeRequest('get-resolved-config', { packageName });
   }
 
   static checkServiceIsValid(service: SerializedService, log = true) {

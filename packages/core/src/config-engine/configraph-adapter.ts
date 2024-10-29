@@ -6,7 +6,7 @@ import {
   ConfigraphNode,
 } from '@dmno/configraph';
 
-import { RedactMode } from '../lib/redaction-helpers';
+import { RedactMode, redactString } from '../lib/redaction-helpers';
 import { SerializedConfigItem } from '../config-loader/serialization-types';
 import {
   InjectedDmnoEnv, InjectedDmnoEnvItem,
@@ -182,13 +182,34 @@ export class DmnoConfigraphNode extends ConfigraphNode<DmnoDataTypeMetadata> {
   }
 
 
+  get redactMode(): RedactMode | undefined {
+    const sensitiveSettings = this.type.getMetadata('sensitive');
+    if (!sensitiveSettings) return;
+    if (sensitiveSettings === true) return 'show_first_2';
+    return sensitiveSettings.redactMode;
+  }
+
   toJSON(): SerializedConfigItem {
-    return {
+    const json = {
       ...super.toCoreJSON(),
       children: _.mapValues(this.children, (c) => c.toJSON()),
       isDynamic: this.isDynamic,
       isSensitive: this.isSensitive,
+      ...this.isSensitive && {
+        maskedResolvedValue: redactString(this.resolvedValue?.toString(), this.redactMode),
+        maskedResolvedRawValue: redactString(this.resolvedRawValue?.toString(), this.redactMode),
+        resolvedValue: undefined,
+        resolvedRawValue: undefined,
+      },
     };
+
+    // redacting override values - not sure if this is the right way to do this, but good enough for now
+    if (this.isSensitive) {
+      for (const override of json.overrides || []) {
+        override.value = redactString(override.value?.toString(), this.redactMode);
+      }
+    }
+    return json;
   }
   /** this is the shape that gets injected into an serialized json env var by `dmno run` */
   toInjectedJSON(): InjectedDmnoEnvItem {

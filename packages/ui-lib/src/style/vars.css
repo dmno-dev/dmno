@@ -1,0 +1,82 @@
+:root {
+  /* fonts */
+  --body-font: 'Inter', ui-sans-serif, Arial, 'Noto Sans', sans-serif;
+  --logo-font: 'Days One', sans-serif;
+  --code-font: 'Fira Mono', ui-monospace, monospace;
+
+  /* custom color palette */
+  --cp-s: 89%;
+  --cp-l: 65%;
+  --cp-l2: 55%;
+  --cp-s-dark: 65%;
+  --cp-l-dark: 10%;
+  --cp-t1: 50%;
+  --cp-t2: 15%;
+
+  --brand-white: #FFF;
+  --brand-black: #000;
+
+  /* todo - generate these programatically... */
+  --brand-red: hsl(0, var(--cp-s), var(--cp-l));
+  --brand-orange: hsl(25, var(--cp-s), var(--cp-l));
+  --brand-yellow: hsl(57, var(--cp-s), var(--cp-l));
+  --brand-green: hsl(119, var(--cp-s), var(--cp-l));
+  --brand-cyan: hsl(184, var(--cp-s), var(--cp-l));
+  --brand-blue: hsl(230, var(--cp-s), var(--cp-l));
+  --brand-purple: hsl(266, var(--cp-s), var(--cp-l));
+  --brand-pink: hsl(299, var(--cp-s), var(--cp-l));
+
+  --brand-red--text: hsl(0, var(--cp-s), var(--cp-l));
+  --brand-orange--text: hsl(25, var(--cp-s), var(--cp-l));
+  --brand-yellow--text: hsl(57, var(--cp-s), var(--cp-l));
+  --brand-green--text: hsl(119, var(--cp-s), var(--cp-l));
+  --brand-cyan--text: hsl(184, var(--cp-s), var(--cp-l));
+  --brand-blue--text: hsl(230, var(--cp-s), var(--cp-l));
+  --brand-purple--text: hsl(266, var(--cp-s), var(--cp-l));
+  --brand-pink--text: hsl(299, var(--cp-s), var(--cp-l));
+
+  --brand-red--dark: hsl(0, var(--cp-s-dark), var(--cp-l-dark));
+  --brand-orange--dark: hsl(25, var(--cp-s-dark), var(--cp-l-dark));
+  --brand-yellow--dark: hsl(57, var(--cp-s-dark), var(--cp-l-dark));
+  --brand-green--dark: hsl(119, var(--cp-s-dark), var(--cp-l-dark));
+  --brand-cyan--dark: hsl(184, var(--cp-s-dark), var(--cp-l-dark));
+  --brand-blue--dark: hsl(230, var(--cp-s-dark), var(--cp-l-dark));
+  --brand-purple--dark: hsl(266, var(--cp-s-dark), var(--cp-l-dark));
+  --brand-pink--dark: hsl(299, var(--cp-s-dark), var(--cp-l-dark));
+
+  --brand-red--t1: hsla(0, var(--cp-s), var(--cp-l), var(--cp-t1));
+  --brand-orange--t1: hsla(25, var(--cp-s), var(--cp-l), var(--cp-t1));
+  --brand-yellow--t1: hsla(57, var(--cp-s), var(--cp-l), var(--cp-t1));
+  --brand-green--t1: hsla(119, var(--cp-s), var(--cp-l), var(--cp-t1));
+  --brand-cyan--t1: hsla(184, var(--cp-s), var(--cp-l), var(--cp-t1));
+  --brand-blue--t1: hsla(230, var(--cp-s), var(--cp-l), var(--cp-t1));
+  --brand-purple--t1: hsla(266, var(--cp-s), var(--cp-l), var(--cp-t1));
+  --brand-pink--t1: hsla(299, var(--cp-s), var(--cp-l), var(--cp-t1));
+
+  --brand-red--t2: hsla(0, var(--cp-s), var(--cp-l), var(--cp-t2));
+  --brand-orange--t2: hsla(25, var(--cp-s), var(--cp-l), var(--cp-t2));
+  --brand-yellow--t2: hsla(57, var(--cp-s), var(--cp-l), var(--cp-t2));
+  --brand-green--t2: hsla(119, var(--cp-s), var(--cp-l), var(--cp-t2));
+  --brand-cyan--t2: hsla(184, var(--cp-s), var(--cp-l), var(--cp-t2));
+  --brand-blue--t2: hsla(230, var(--cp-s), var(--cp-l), var(--cp-t2));
+  --brand-purple--t2: hsla(266, var(--cp-s), var(--cp-l), var(--cp-t2));
+  --brand-pink--t2: hsla(299, var(--cp-s), var(--cp-l), var(--cp-t2));
+}
+
+
+:root {
+  color-scheme: light dark;
+
+  --bg-0: light-dark(#FFF, #000);
+  --bg-1: light-dark(#EEE, #222);
+  --bg-2: light-dark(#DDD, #333);
+  --bg-3: light-dark(#CCC, #444);
+
+  --error-red-text: #F00;
+  --error-red-border: #F00;
+  --error-red-bg: #F00;
+
+  --success-green-text: rgb(14, 182, 14);
+  --success-green-border: #0F0;
+  --success-green-bg: #0F0;
+}

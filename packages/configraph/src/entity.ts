@@ -85,18 +85,16 @@ export type ConfigraphEntityDef<EntityMetadata, NodeMetadata> = EntityMetadata &
   summary?: string, // short description
   description?: string, // longer description, supports markdown
   externalDocs?: ExternalDocsEntry | Array<ExternalDocsEntry>,
-  /** dmno config ui specific options */
-  ui?: {
-    /** icon to use, see https://icones.js.org/ for available options
-    * @example mdi:aws
-    */
-    icon?: string;
 
-    /** color (any valid css color)
-    * @example FF0000
-    */
-    color?: string;
-  };
+  /** icon to use, see https://icones.js.org/ for available options
+  * @example mdi:aws
+  */
+  icon?: string;
+
+  /** color (any valid css color)
+  * @example FF0000
+  */
+  color?: string;
 };
 
 
@@ -188,7 +186,7 @@ export class ConfigraphEntity<
     this.ownedPlugins.push(plugin);
   }
   addInjectedPlugin(plugin: ConfigraphPlugin) {
-    // plugin.injectedByEntityIds?.push(this.id);
+    plugin.injectedByEntityIds?.push(this.id);
     this.injectedPlugins.push(plugin);
   }
 
@@ -212,7 +210,11 @@ export class ConfigraphEntity<
     return this.getDefItem(key);
   }
 
+  //! these should probably not inherit from parents, but should inherit from a template
   get label() { return this.getDefItem('label'); }
+  get color() { return this.getDefItem('color'); }
+  get icon() { return this.getDefItem('icon'); }
+
 
   get isRoot() {
     return this.graphRoot.rootEntity === this;
@@ -297,8 +299,11 @@ export class ConfigraphEntity<
       const entityOverridesFromTemplate = this.def.extends.entities[0].overrides;
       for (const overrideItem of getEntityOverridesDefs(entityOverridesFromTemplate)) {
         const node = this.getConfigNodeByPath(overrideItem.path);
+
+        //! are these actually overrides? something different?
         node.overrides.unshift({
           sourceType: 'entity template',
+          icon: '',
           value: overrideItem.value,
         });
       }
@@ -310,6 +315,7 @@ export class ConfigraphEntity<
         const node = this.getConfigNodeByPath(overrideItem.path);
         node.overrides.unshift({
           sourceType: 'entity definition',
+          icon: '',
           value: overrideItem.value,
         });
       }
@@ -329,6 +335,8 @@ export class ConfigraphEntity<
           : undefined,
       ownedPluginIds: _.map(this.ownedPlugins, (p) => p.instanceId),
       injectedPluginIds: _.map(this.injectedPlugins, (p) => p.instanceId),
+      color: this.color,
+      icon: this.icon,
       // configNodes: _.mapValues(this.configNodes, (item, _key) => item.toJSON()),
     };
   }

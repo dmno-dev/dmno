@@ -23,6 +23,7 @@ const debug = Debug('configraph:node');
 //! this might be in the wrong place?
 export type ConfigValueOverride = {
   sourceType: string;
+  icon: string;
   sourceLabel?: string;
 
   /** the value of the override */
@@ -383,6 +384,7 @@ export class ConfigraphNode<NodeMetadata = any> {
 
   toCoreJSON(): SerializedConfigraphNode {
     return {
+      id: this.fullPath,
       key: this.key,
       isSchemaValid: this.isSchemaValid,
       isValid: this.isValid,
@@ -390,6 +392,8 @@ export class ConfigraphNode<NodeMetadata = any> {
 
       resolvedRawValue: this.resolvedRawValue,
       resolvedValue: this.resolvedValue,
+      isCoerced: this.resolvedRawValue !== this.resolvedValue,
+
       isResolved: this.isResolved,
       children: _.mapValues(this.children, (c) => c.toCoreJSON()),
 

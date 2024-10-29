@@ -1,0 +1,5 @@
+body {
+  /* allows animating unknown height! see https://developer.chrome.com/docs/css-ui/animate-to-height-auto#why_not_allow_animation_to_and_from_sizing_keywords_by_default */
+  interpolate-size: allow-keywords;
+  font-family: var(--body-font);
+}

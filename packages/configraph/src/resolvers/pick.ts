@@ -6,7 +6,7 @@ export function createdPickedValueResolver(
   valueTransform?: ((val: any) => any),
 ) {
   return createResolver({
-    icon: 'material-symbols:content-copy-outline-sharp',
+    icon: 'mdi:content-duplicate',
     label: 'picked value',
     process() {
       this.dependsOnPathsObj[sourceNode.fullPath] = 'schema';

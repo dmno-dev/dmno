@@ -9,14 +9,16 @@ module.exports = {
     "vue/setup-compiler-macros": true,
   },
   extends: [
-    __dirname + '/.eslintrc.base.js',
-    "plugin:vue/vue3-recommended",
-    "@vue/eslint-config-typescript/recommended",
+    __dirname + '/.eslintrc.base.cjs',
+    // "@vue/eslint-config-typescript/recommended",
+    'plugin:vue/vue3-recommended',
+    'plugin:vue-pug/vue3-recommended',
   ],
   parser: "vue-eslint-parser",
   parserOptions: {
     parser: "@typescript-eslint/parser",
-    project: [`${actualProjectDir}/tsconfig.json`, `${actualProjectDir}/tsconfig.node.json`],
+    project: [`${actualProjectDir}/tsconfig.json`, `${actualProjectDir}/tsconfig.node.json`, `${actualProjectDir}/tsconfig.app.json`],
+    extraFileExtensions: ['.vue'],
     // parserOptions: {
     //   ecmaVersion: "latest",
     //   sourceType: "module",
@@ -26,21 +28,39 @@ module.exports = {
     // },
   },
   plugins: ["vue"],
+  settings: {
+    'import/resolver': {
+      "eslint-import-resolver-custom-alias": {
+        "alias": {
+          "@": `${actualProjectDir}/src`,
+        },
+        "extensions": [".js", ".ts", ".vue"],
+      },
+    },
+  },
   rules: {
     // some customizations of vue rules ------------------
     // standard order of sections in vue SFCs
-    "vue/component-tags-order": [
-      "error",
-      {
-        order: [
-          "template",
-          "script[setup]",
-          "script:not([setup])", // necessary for default exports to not get hoisted below imports in setup block
-          "style:not([scoped])",
-          "style[scoped]",
-        ],
-      },
-    ],
+    "vue/block-order": ["error", {
+      'order': [
+        'template',
+        'script:not([setup])', 'script[setup]',
+        "style:not([scoped])", "style[scoped]",
+      ]
+    }],
+
+    // "vue/component-tags-order": [
+    //   "error",
+    //   {
+    //     order: [
+    //       "template",
+    //       "script[setup]",
+    //       "script:not([setup])", // necessary for default exports to not get hoisted below imports in setup block
+    //       "style:not([scoped])",
+    //       "style[scoped]",
+    //     ],
+    //   },
+    // ],
     "vue/no-undef-components": [
       "error",
       {
@@ -57,5 +77,7 @@ module.exports = {
     "vue/prefer-true-attribute-shorthand": "error",
     "vue/eqeqeq": "error",
     "vue/no-multiple-template-root": "error",
+    "vue/max-attributes-per-line": 0,
+    
   },
 }

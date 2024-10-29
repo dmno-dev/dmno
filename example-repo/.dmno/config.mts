@@ -38,6 +38,12 @@ export default defineDmnoService({
       typeDescription: 'standardized environment flag set by DMNO',
       value: (ctx) => ctx.get('NODE_ENV'),
     },
+    
+    REDACT_TEST: {
+      sensitive: true,
+      value: 'a a a a b b b b c c c c d d d',
+      coerce: (val) => val.replaceAll(' ', ''),
+    },
 
     OP_TOKEN: {
       extends: OnePasswordTypes.serviceAccountToken,
@@ -45,7 +51,6 @@ export default defineDmnoService({
     // OP_TOKEN_PROD: {
     //   extends: OnePasswordTypes.serviceAccountToken,
     // },
-
     OP_ITEM_1: {
       value: switchBy('DMNO_ENV', {
         _default: OnePassSecretsDev.item(),

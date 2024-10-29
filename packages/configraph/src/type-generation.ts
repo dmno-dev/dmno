@@ -22,27 +22,34 @@ async function fetchIconSvg(
 
   const iconPath = `${iconCacheFolder}/${iconifyName}-${ICON_SIZE}.svg`;
 
-  let svgSrc: string;
+  let svgSrc: string | undefined;
   if (fs.existsSync(iconPath)) {
     const svgFileBuffer = await fs.promises.readFile(iconPath, 'utf-8');
     svgSrc = svgFileBuffer.toString();
   } else {
-    const iconSvg = await fetch(`https://api.iconify.design/${iconifyName.replace(':', '/')}.svg?height=${ICON_SIZE}`);
-    svgSrc = await iconSvg.text();
+    try {
+      const iconSvg = await fetch(`https://api.iconify.design/${iconifyName.replace(':', '/')}.svg?height=${ICON_SIZE}`);
+      svgSrc = await iconSvg.text();
+    } catch (err) {
+      return;
+    }
 
-    // run it through svgo to try to shrink it down a little
-    const optimizedSvgResult = optimize(svgSrc, {
-      multipass: true,
-    });
-
-    await fs.promises.writeFile(iconPath, optimizedSvgResult.data, 'utf-8');
+    if (svgSrc) {
+      // run it through svgo to try to shrink it down a little
+      const optimizedSvgResult = optimize(svgSrc, {
+        multipass: true,
+      });
+      await fs.promises.writeFile(iconPath, optimizedSvgResult.data, 'utf-8');
+    }
   }
 
-  const hexColor = color.startsWith('#') ? color : `#${color}`;
+  if (svgSrc) {
+    const hexColor = color.startsWith('#') ? color : `#${color}`;
 
-  const colorizedSvg = svgSrc.replaceAll('currentColor', hexColor);
+    const colorizedSvg = svgSrc.replaceAll('currentColor', hexColor);
 
-  return colorizedSvg;
+    return colorizedSvg;
+  }
 }
 
 

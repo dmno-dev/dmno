@@ -1,3 +1,4 @@
+import { InjectedDmnoEnv } from '../config-engine/config-engine';
 import { SerializedService, SerializedWorkspace } from './serialization-types';
 
 export type ConfigLoaderRequestMap = {
@@ -10,7 +11,7 @@ export type ConfigLoaderRequestMap = {
       serviceName?: string,
       packageName?: string,
     },
-    response: SerializedService,
+    response: { serviceDetails: SerializedService, injectedEnv: InjectedDmnoEnv },
   },
   'generate-types': {
     payload: { serviceName?: string },
