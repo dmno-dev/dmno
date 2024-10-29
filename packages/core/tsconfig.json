@@ -11,7 +11,7 @@
     "paths": {
       // make our self-imports work in our separate exports / entry points
       "dmno": [ "./src/index.ts" ],
-    }
+    },
   },
   "include": [
     "src/**/*.ts", "src/**/*.d.ts",

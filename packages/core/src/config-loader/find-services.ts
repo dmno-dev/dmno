@@ -24,24 +24,33 @@ export type WorkspacePackagesListing = {
   isRoot: boolean,
   dmnoFolder: boolean,
 };
+export type WorkspaceSettings = {
+  dev?: {
+    host?: string;
+    port?: number;
+    ssl?: boolean;
+  }
+};
+
 export type ScannedWorkspaceInfo = {
   gitRootPath?: string,
   isMonorepo: boolean,
   workspacePackages: Array<WorkspacePackagesListing>,
-  autoSelectedPackage?: WorkspacePackagesListing;
+  autoSelectedPackage?: WorkspacePackagesListing,
+  settings?: WorkspaceSettings,
 };
 
 // list of locations to look for workspace project globs
 // TODO: we could add extra conditions so we dont waste time looking for all the files?
-const PACKAGE_GLOB_LOCATIONS = [
+const WORKSPACE_SETTINGS_LOCATIONS = [
   // explicit dmno workspace config - this overrides everything else
-  { file: '.dmno/dmno-workspace.yaml', path: 'projects', final: true },
+  { file: '.dmno/workspace.yaml', globsPath: 'projects' },
   // pnpm config file
-  { file: 'pnpm-workspace.yaml', path: 'packages' },
+  { file: 'pnpm-workspace.yaml', globsPath: 'packages' },
   // moonrepo config file
-  { file: '.moon/workspace.yml', path: 'projects' },
+  { file: '.moon/workspace.yml', globsPath: 'projects' },
   // npm, yarn, bun, deno (supported)
-  { file: 'package.json', path: 'workspaces', optional: true },
+  { file: 'package.json', globsPath: 'workspaces' },
   // deno also has a deno-specific config file to look in
   // { file: 'deno.json', path: 'workspace', optional: true },
   // { file: 'deno.jsonc', path: 'workspace', optional: true },
@@ -56,6 +65,7 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
   let isMonorepo = false;
   let packagePatterns: Array<string> | undefined;
 
+  let otherSettings: WorkspaceSettings | undefined;
 
   // we'll scan upwards from cwd until the git root (or we hit `/`)
   let cwd = process.cwd();
@@ -63,18 +73,18 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
   while (cwd) {
     debug('scanning CWD = ', cwdParts, cwd);
     // look for workspace package globs in a few locations (see above)
-    // and we'll keep scanning upwards, unless we found a `.dmno/dmno-workspace.yaml`
+    // and we'll keep scanning upwards, unless we found a `.dmno/workspace.yaml`
     if (!dmnoWorkspaceFinal) {
-      for (const globLocation of PACKAGE_GLOB_LOCATIONS) {
-        const filePath = path.join(cwd, globLocation.file);
+      for (const settingsLocation of WORKSPACE_SETTINGS_LOCATIONS) {
+        const filePath = path.join(cwd, settingsLocation.file);
         if (!await pathExists(filePath)) continue;
 
         // assume first package.json file found is root until we find evidence otherwise
-        if (globLocation.file === 'package.json' && !dmnoWorkspaceRootPath) {
+        if (settingsLocation.file === 'package.json' && !dmnoWorkspaceRootPath) {
           dmnoWorkspaceRootPath = cwd;
         }
 
-        debug(`looking for workspace globs in ${filePath} > ${globLocation.path}`);
+        debug(`looking for workspace globs in ${filePath} > ${settingsLocation.globsPath}`);
         const fileType = path.extname(filePath);
         let fileContents: any;
         if (fileType === '.yaml' || fileType === '.yml') {
@@ -82,16 +92,18 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
         } else if (fileType === '.json') {
           fileContents = await readJsonFile(filePath);
         }
-        const possiblePackagePatterns = _.get(fileContents, globLocation.path);
+        const possiblePackagePatterns = _.get(fileContents, settingsLocation.globsPath);
         if (possiblePackagePatterns) {
           packagePatterns = possiblePackagePatterns;
           dmnoWorkspaceRootPath = cwd;
           isMonorepo = true;
-        } else if (!globLocation.optional) {
-          throw new Error(`Expected to find monorepo project glob patterns in file ${fileURLToPath} > ${globLocation.path}`);
         }
-        if (globLocation.final) {
+
+        // if this is our dmno-specific file, we'll consider this "final" and stop scanning upwards
+        if (settingsLocation.file === '.dmno/workspace.yaml') {
           dmnoWorkspaceFinal = true;
+          // everything else in the yaml file is additional settings
+          otherSettings = _.omit(fileContents, settingsLocation.globsPath);
           break; // breaks from for loop - will still continue looking for git root
         }
       }
@@ -186,5 +198,6 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
     isMonorepo,
     workspacePackages: includeUnitialized ? workspacePackages : _.filter(workspacePackages, (p) => p.dmnoFolder),
     autoSelectedPackage: packageFromPwd || packageFromCurrentPackageName,
+    settings: otherSettings,
   };
 }

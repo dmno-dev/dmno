@@ -35,13 +35,13 @@ async function reloadDmnoConfig() {
     debug('using injected dmno config server');
     (process as any).dmnoConfigClient ||= new ConfigServerClient();
     dmnoConfigClient = (process as any).dmnoConfigClient;
-    const serializedService = await dmnoConfigClient.getServiceConfig();
-    const injectedConfig = serializedService.injectedEnv;
-    dmnoConfigValid = serializedService.isValid;
+    const resolvedService = await dmnoConfigClient.getServiceConfig();
+    const injectedConfig = resolvedService.injectedEnv;
+    dmnoConfigValid = resolvedService.serviceDetails.isValid;
     configItemKeysAccessed = {};
 
     // shows nicely formatted errors in the terminal
-    ConfigServerClient.checkServiceIsValid(serializedService);
+    ConfigServerClient.checkServiceIsValid(resolvedService.serviceDetails);
 
     dmnoInjectionResult = injectDmnoGlobals({
       injectedConfig,

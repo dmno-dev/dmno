@@ -3,7 +3,7 @@ export {
   ExternalDocsEntry,
 } from './common';
 export {
-  ConfigraphEntity,
+  ConfigraphEntity, ConfigraphEntityDef,
   ConfigraphPickSchemaEntryOrShorthand,
 } from './entity';
 export { ConfigraphEntityTemplate } from './entity-template';
@@ -21,10 +21,10 @@ export {
   TypeValidationResult,
 } from './data-types';
 
-export { inject, collect } from './injection';
+export { inject, collect } from './resolvers/injection';
 export {
   createResolver,
-  ConfigValueResolver,
+  ConfigValueResolver, ConfigValueResolverDef,
   ResolverContext, InlineValueResolverDef,
   ConfigValue, getResolverCtx,
 } from './resolvers';

@@ -4,6 +4,7 @@ import { createDmnoDataType, DmnoBaseTypes } from './configraph-adapter';
 export const NodeEnvType = createDmnoDataType({
   // TODO: might want to split the base types from these? (both in "dmno/" for now)
   typeLabel: 'dmno/nodeEnv',
+  ui: { icon: 'solar:flag-bold' },
 
   typeDescription: 'standard environment flag for Node.js',
   extends: DmnoBaseTypes.enum({

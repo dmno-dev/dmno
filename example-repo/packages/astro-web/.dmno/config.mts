@@ -9,6 +9,7 @@ export default defineDmnoService({
   settings: {
     dynamicConfig: 'default_static',
   },
+  icon: 'devicon-plain:astro',
   pick: [
     'NODE_ENV',
     'DMNO_ENV',

@@ -1,0 +1,30 @@
+/*
+  CUSTOM UTILITY CLASSES
+
+  giving them all a prefix of `_`
+  not quite sure about this yet... we'll see
+  
+*/
+
+
+._truncate {
+  line-height: 1cap;
+  /* extra padding and negative margin helps reveal otherwise cut off ascenders/descenders  */
+  padding-top: 0.3cap;
+  padding-bottom: 0.3cap;
+  margin-top: -0.3cap;
+  margin-bottom: -0.3cap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  text-wrap: nowrap;
+}
+
+/* flex/grid parents of truncated text must have min-width: 0 */
+*:has(>._truncate) {
+  min-width: 0;
+}
+
+
+._cap {
+  line-height: 1cap;
+}

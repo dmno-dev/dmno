@@ -7,5 +7,7 @@ export * from './config-engine/data-types';
 export * from './config-loader/config-server-client';
 export * from './globals-injector/injector';
 
+export * from './config-loader/serialization-types';
+
 // used by 1pass plugin - will likely extract eventually
 export * from './lib/dotenv-utils';

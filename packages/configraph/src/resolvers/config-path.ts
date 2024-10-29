@@ -29,26 +29,23 @@ export function configPath(entityPathOrPath: string, pathOnly?: string): ConfigV
             entity = entity.parentEntity;
 
             if (!entity) {
-              this.configNode.schemaErrors.push(new SchemaError(`Invalid entity path "${nodePath}" - reached the root`));
-              return;
+              throw new SchemaError(`Invalid entity path "${nodePath}" - reached the root`);
             }
           } else {
             // TODO: will need to support using relative paths within templates where IDs are not final
-            this.configNode.schemaErrors.push(new SchemaError('Only ".." is supported for now'));
-            return;
+            throw new SchemaError('Only ".." is supported for now');
           }
         }
       } else {
         entity = graph.entitiesById[nodePath];
         if (!entity) {
-          this.configNode.schemaErrors.push(new SchemaError(`Invalid entity id "${nodePath}"`));
-          return;
+          throw new SchemaError(`Invalid entity id "${nodePath}"`);
         }
       }
 
       const nodeAtPath = entity.getConfigNodeByPath(nodePath);
       if (!nodeAtPath) {
-        this.configNode.schemaErrors.push(new SchemaError(`Invalid configPath within node ${entity.id} - ${nodePath}`));
+        throw new SchemaError(`Invalid configPath within node ${entity.id} - ${nodePath}`);
       } else {
         this.dependsOnPathsObj[nodeAtPath.fullPath] = 'schema';
       }

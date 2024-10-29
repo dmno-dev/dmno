@@ -15,6 +15,7 @@ const customUrlType = createDmnoDataType<{ newSetting: boolean }>({
 export default defineDmnoService({
   name: 'web',
   parent: 'group1',
+  icon: 'file-icons:vite',
   settings: {
     dynamicConfig: 'only_static',
   },
@@ -87,10 +88,6 @@ export default defineDmnoService({
       description: 'this is a required boolean config item',
       required: true,
       value: false,
-      ui: {
-        icon: 'mdi:minus-circle',
-        color: '00FF00'
-      }
     },
     BOOLEAN_OPPOSITE: {
       extends: 'boolean',

@@ -1,3 +1,5 @@
+.vite-node
+
 # local cache for resolved values
 **/.dmno/cache.json
 # encryption key used for cache
@@ -6,3 +8,5 @@
 **/.dmno/.typegen
 # iconify cache used in generated types
 **/.dmno/.icon-cache
+# local ssl cert
+**/.dmno/certs

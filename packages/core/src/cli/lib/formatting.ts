@@ -96,15 +96,11 @@ export function getItemSummary(item: SerializedConfigItem) {
 
   summary.push(joinAndCompact([
     kleur.gray('   └'),
-    isSensitive && item.resolvedValue
-      // TODO: this logic should probably not live here...
-      ? `"${item.resolvedValue.toString().substring(0, 2)}${kleur.bold('▒'.repeat(10))}"` // ░▒▓
-      : formattedValue(item.resolvedValue, false),
-    // item.resolvedRawValue !== item.resolvedValue && kleur.gray().italic('(coerced)'),
-
-    // TODO: redact rawValue if sensitive?
-    !_.isEqual(item.resolvedRawValue, item.resolvedValue)
-      && (kleur.gray().italic('< coerced from ') + formattedValue(item.resolvedRawValue, false)),
+    isSensitive ? formattedValue(item.maskedResolvedValue) : formattedValue(item.resolvedValue, false),
+    item.isCoerced && (
+      kleur.gray().italic('< coerced from ')
+      + (isSensitive ? formattedValue(item.maskedResolvedRawValue) : formattedValue(item.resolvedRawValue, false))
+    ),
   ]));
   // if (item.resolvedRawValue !== item.resolvedValue) {
   //   summary.push(kleur.gray().italic('   > coerced from ') + formattedValue(item.resolvedRawValue, false));

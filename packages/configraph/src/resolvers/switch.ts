@@ -14,8 +14,7 @@ export function switchBy(switchByKey: string, branches: SwitchByResolverOptions)
       const containingEntity = this.configNode.parentEntity!;
       const switchFromNode = containingEntity.getConfigNodeByPath(switchByKey);
       if (!switchFromNode) {
-        this.configNode.schemaErrors.push(new SchemaError(`switchBy referencing invalid path - ${switchByKey}`));
-        return;
+        throw new SchemaError(`switchBy referencing invalid path - ${switchByKey}`);
       }
       this.dependsOnPathsObj[switchFromNode.fullPath] = 'schema';
     },

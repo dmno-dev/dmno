@@ -120,7 +120,7 @@ export function injectDmnoGlobals(
         const valStr = injectedItem.value.toString();
         sensitiveValueLookup[itemKey] = {
           value: valStr,
-          redacted: redactString(valStr, injectedItem.redactMode),
+          redacted: redactString(valStr, injectedItem.redactMode) || '',
           allowedDomains: injectedItem.allowedDomains,
         };
       }
