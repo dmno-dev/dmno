@@ -1,6 +1,6 @@
 {
   "name": "@dmno/bitwarden-plugin",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "dmno plugin to pull secrets from Bitwarden",
   "author": "dmno-dev",
   "license": "MIT",
