@@ -1,22 +1,21 @@
 import { DmnoBaseTypes, defineDmnoService, configPath, NodeEnvType, switchBy, inject } from 'dmno';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
+import { BitwardenSecretsManagerDmnoPlugin, BitwardenSecretsManagerTypes } from '@dmno/bitwarden-plugin';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
 
 
 const OnePassSecretsProd = new OnePasswordDmnoPlugin('1pass/prod', {
-  token: inject(),
+  // token: configPath('..', 'OP_TOKEN_PROD'),
   envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=n4wmgfq77mydg5lebtroa3ykvm&h=dmnoinc.1password.com',
   fallbackToCliBasedAuth: true,
 });
 const OnePassSecretsDev = new OnePasswordDmnoPlugin('1pass', {
-  token: inject(),
   envItemLink: 'https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=4u4klfhpldobgdxrcjwb2bqsta&h=dmnoinc.1password.com',
   fallbackToCliBasedAuth: true,
-  // token: InjectPluginInputByType,
-  // token: 'asdf',
 });
 
+const BitwardenPlugin = new BitwardenSecretsManagerDmnoPlugin('bitwarden');
 
 const EncryptedVaultSecrets = new EncryptedVaultDmnoPlugin('vault/prod', { name: 'prod', key: inject() });
 // const NonProdVault = new EncryptedVaultDmnoPlugin('vault/dev', {
@@ -66,6 +65,14 @@ export default defineDmnoService({
     OP_ITEM_BY_REFERENCE: {
       value: OnePassSecretsDev.itemByReference("op://dev test/example/username"),
     },
+
+    BWS_TOKEN: {
+      extends: BitwardenSecretsManagerTypes.machineAccountAccessToken,
+    },
+    BWS_ITEM: {
+      value: BitwardenPlugin.secretById('df2246f1-7889-4d1b-a18e-b219001ee3b3'),
+    },
+
 
     SOME_API_KEY: {
       value: switchBy('DMNO_ENV', {

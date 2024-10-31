@@ -23,10 +23,12 @@ export type PluginPackageMetadata = {
 
 const debug = Debug('configraph:plugins');
 
-
-function cleanGitUrl(repoUrl: string) {
+function cleanGitUrl(repoUrl: string, directoryPath?: string) {
   if (!repoUrl) return;
-  return repoUrl.replace(/^git\+/, '').replace(/\.git$/, '');
+  let url = repoUrl.replace(/^git\+/, '').replace(/\.git$/, '');
+  // TODO: check if this works for non public github repos
+  if (directoryPath) url += `/tree/main/${directoryPath}`;
+  return url;
 }
 
 export abstract class ConfigraphPlugin<
@@ -58,7 +60,7 @@ EntityClass extends ConfigraphEntity = ConfigraphEntity,
       PluginClass.packageMetadata = {
         name: opts.packageJson.name,
         version: opts.packageJson.version,
-        repositoryUrl: cleanGitUrl(opts.packageJson.repository?.url),
+        repositoryUrl: cleanGitUrl(opts.packageJson.repository?.url, opts.packageJson.repository?.directory),
         websiteUrl: opts.packageJson.homepage,
       };
     }

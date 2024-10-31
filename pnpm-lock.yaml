@@ -125,7 +125,7 @@ importers:
         version: 20.14.12
       tsup:
         specifier: 'catalog:'
-        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1)
+        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.2)(typescript@5.5.4)(yaml@2.5.1)
       vite-node:
         specifier: 'catalog:'
         version: 2.1.2(@types/node@20.14.12)(less@4.2.0)
@@ -294,7 +294,7 @@ importers:
         version: 3.0.3
       tsup:
         specifier: 'catalog:'
-        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1)
+        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.2)(typescript@5.5.4)(yaml@2.5.1)
       vitest:
         specifier: 'catalog:'
         version: 2.1.2(@types/node@20.14.12)(less@4.2.0)
@@ -592,7 +592,7 @@ importers:
         version: link:../../core
       tsup:
         specifier: 'catalog:'
-        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1)
+        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.2)(typescript@5.5.4)(yaml@2.5.1)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -617,7 +617,7 @@ importers:
         version: link:../../core
       tsup:
         specifier: 'catalog:'
-        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1)
+        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.2)(typescript@5.5.4)(yaml@2.5.1)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -663,7 +663,7 @@ importers:
         version: link:../../core
       tsup:
         specifier: 'catalog:'
-        version: 8.2.4(jiti@1.21.0)(postcss@8.4.38)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1)
+        version: 8.2.4(jiti@1.21.0)(postcss@8.4.38)(tsx@4.19.2)(typescript@5.5.4)(yaml@2.5.1)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -706,7 +706,7 @@ importers:
         version: link:../../core
       tsup:
         specifier: 'catalog:'
-        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1)
+        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.2)(typescript@5.5.4)(yaml@2.5.1)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -743,7 +743,7 @@ importers:
         version: link:../../core
       tsup:
         specifier: 'catalog:'
-        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1)
+        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.2)(typescript@5.5.4)(yaml@2.5.1)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -777,7 +777,7 @@ importers:
         version: link:../../core
       tsup:
         specifier: 'catalog:'
-        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1)
+        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.2)(typescript@5.5.4)(yaml@2.5.1)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -787,18 +787,12 @@ importers:
       '@1password/sdk':
         specifier: ^0.1.1
         version: 0.1.1
-      async:
-        specifier: ^3.2.5
-        version: 3.2.5
       kleur:
         specifier: ^4.1.5
         version: 4.1.5
       lodash-es:
         specifier: 'catalog:'
         version: 4.17.21
-      unzip-stream:
-        specifier: ^0.3.1
-        version: 0.3.4
     devDependencies:
       '@dmno/eslint-config':
         specifier: workspace:*
@@ -806,24 +800,43 @@ importers:
       '@dmno/tsconfig':
         specifier: workspace:*
         version: link:../../tsconfig
-      '@types/async':
-        specifier: ^3.2.24
-        version: 3.2.24
       '@types/lodash-es':
         specifier: 'catalog:'
         version: 4.17.12
       '@types/node':
         specifier: 'catalog:'
         version: 20.14.12
-      '@types/unzip-stream':
-        specifier: ^0.3.4
-        version: 0.3.4
       dmno:
         specifier: workspace:*
         version: link:../../core
       tsup:
         specifier: 'catalog:'
-        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1)
+        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.2)(typescript@5.5.4)(yaml@2.5.1)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.5.4
+
+  packages/plugins/bitwarden:
+    dependencies:
+      '@bitwarden/sdk-napi':
+        specifier: ^1.0.0
+        version: 1.0.0
+    devDependencies:
+      '@dmno/eslint-config':
+        specifier: workspace:*
+        version: link:../../eslint-config
+      '@dmno/tsconfig':
+        specifier: workspace:*
+        version: link:../../tsconfig
+      '@types/node':
+        specifier: 'catalog:'
+        version: 20.14.12
+      dmno:
+        specifier: workspace:*
+        version: link:../../core
+      tsup:
+        specifier: 'catalog:'
+        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.2)(typescript@5.5.4)(yaml@2.5.1)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -872,7 +885,7 @@ importers:
         version: link:../../core
       tsup:
         specifier: 'catalog:'
-        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1)
+        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.2)(typescript@5.5.4)(yaml@2.5.1)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -921,7 +934,7 @@ importers:
         version: 17.23.0(@types/node@20.14.12)(picomatch@3.0.1)
       tsup:
         specifier: 'catalog:'
-        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1)
+        version: 8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.2)(typescript@5.5.4)(yaml@2.5.1)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -1357,6 +1370,34 @@ packages:
   '@babel/types@7.25.6':
     resolution: {integrity: sha512-/l42B1qxpG6RdfYf343Uw1vmDjeNhneUXtzhojE7pDgfpEypmRhI6j1kr17XCVv4Cgl9HdAiQY2x0GwKm7rWCw==}
     engines: {node: '>=6.9.0'}
+
+  '@bitwarden/sdk-napi-darwin-arm64@1.0.0':
+    resolution: {integrity: sha512-0W6P2VByGFqYIf6bkI7qKWlXPGhG9KFibrN14pvllFIkbNRaz3hktMOLJ/JdWZVmdHrz0R5xmAVldbIWNMjFOA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@bitwarden/sdk-napi-darwin-x64@1.0.0':
+    resolution: {integrity: sha512-Esyg8sktE50U+g12lL/xe68hgc5y78jPPV9maNcKTO9EWdde4RIx9u3xEpbYk5fyHaeMFXdo3TK8A8qLD34X5w==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@bitwarden/sdk-napi-linux-x64-gnu@1.0.0':
+    resolution: {integrity: sha512-PBGEOq9saYuBBthCq5jAr7eQSyEmQylB+kwsuT0j666VXT124a3YjDGgobPYaR9KN/IRDQ5h2Tysuy1pojx10A==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@bitwarden/sdk-napi-win32-x64-msvc@1.0.0':
+    resolution: {integrity: sha512-cu92XYjsOWEVECyohGtLxiXcMJMVui+nDJtyNg52iGDeAzWQ7QZh0/bcjkymTCuGoqRD3sT0cCs+5PbW66K2XQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
+  '@bitwarden/sdk-napi@1.0.0':
+    resolution: {integrity: sha512-KrOXiuuQdVBvIM4l7XGrKl8otA9tSEKHjRQr0nF71eyCmIDzOV2kt/gchgLK42exGGuD/JcmmgnXx/j+U6W/+g==}
+    engines: {node: '>= 10'}
 
   '@bugsnag/browser@7.22.7':
     resolution: {integrity: sha512-70jFkWKscK2osm7bnFbPLevrzHClrygM3UcKetKs/l81Xuzlxnu1SS3onN5OUl9kd9RN4XMFr46Pv5jSqWqImQ==}
@@ -3900,9 +3941,6 @@ packages:
   '@types/unist@3.0.2':
     resolution: {integrity: sha512-dqId9J8K/vGi5Zr7oo212BGii5m3q5Hxlkwy3WpYuKPklmBEvsbMYYyLxAQpSffdLl/gdW0XUpKWFvYmyoWCoQ==}
 
-  '@types/unzip-stream@0.3.4':
-    resolution: {integrity: sha512-ud0vtsNRF+joUCyvNMyo0j5DKX2Lh/im+xVgRzBEsfHhQYZ+i4fKTveova9XxLzt6Jl6G0e/0mM4aC0gqZYSnA==}
-
   '@types/validate-npm-package-name@4.0.2':
     resolution: {integrity: sha512-lrpDziQipxCEeK5kWxvljWYhUvOiB2A9izZd9B2AFarYAkqZshb4lPbRs7zKEic6eGtH8V/2qJW+dPp9OtF6bw==}
 
@@ -4829,9 +4867,6 @@ packages:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
     engines: {node: '>=8'}
 
-  binary@0.3.0:
-    resolution: {integrity: sha512-D4H1y5KYwpJgK8wk1Cue5LLPgmwHKYSChkbspQg5JtVuR5ulGckxfR62H3AE9UDkdMC8yyXlqYihuz3Aqg2XZg==}
-
   bindings@1.5.0:
     resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
 
@@ -4910,10 +4945,6 @@ packages:
 
   buffer@6.0.3:
     resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
-
-  buffers@0.1.1:
-    resolution: {integrity: sha512-9q/rDEGSb/Qsvv2qvzIzdluL5k7AaJOTrw23z9reQthrbF7is4CtlT0DXyO1oei2DCp4uojjzQ7igaSHp1kAEQ==}
-    engines: {node: '>=0.2.0'}
 
   builtin-modules@3.3.0:
     resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}
@@ -5007,9 +5038,6 @@ packages:
   chai@5.1.1:
     resolution: {integrity: sha512-pT1ZgP8rPNqUgieVaEY+ryQr6Q4HXNg8Ei9UnLUrjN4IA7dvQC5JB+/kxVcPNDHyBcc/26CXPkbNzq3qwrOEKA==}
     engines: {node: '>=12'}
-
-  chainsaw@0.1.0:
-    resolution: {integrity: sha512-75kWfWt6MEKNC8xYXIdRpDehRYY/tNSgwKaJq+dbbDcxORuVrrQ+SEHoWsniVn9XPYfP4gmdWIeDk/4YNp1rNQ==}
 
   chalk@2.4.2:
     resolution: {integrity: sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==}
@@ -6142,6 +6170,7 @@ packages:
   eslint@8.57.0:
     resolution: {integrity: sha512-dZ6+mexnaTIbSBZWgou51U6OmzIhYM2VcNdtiTtI7qPNZm35Akpr0f6vtw3w1Kmn5PYo+tZVfh13WrhpS6oLqQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
 
   esm-resolve@1.0.11:
@@ -10665,9 +10694,6 @@ packages:
   tr46@1.0.1:
     resolution: {integrity: sha512-dTpowEjclQ7Kgx5SdBkqRzVhERQXov8/l9Ft9dVM9fmg0W0KQSVaXX9T4i6twCPNtYiZM53lpSSUAwJbFPOHxA==}
 
-  traverse@0.3.9:
-    resolution: {integrity: sha512-iawgk0hLP3SxGKDfnDJf8wTz4p2qImnyihM5Hh/sGvQ3K37dPi/w8sRhdNIxYA1TwFwc5mDhIJq+O0RsvXBKdQ==}
-
   tree-kill@1.2.2:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
     hasBin: true
@@ -10771,8 +10797,8 @@ packages:
     peerDependencies:
       typescript: '>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta'
 
-  tsx@4.19.1:
-    resolution: {integrity: sha512-0flMz1lh74BR4wOvBjuh9olbnwqCPc35OOlfyzHba0Dc+QNUeWX/Gq2YTbnwcWPO3BMd8fkzRVrHcsR+a7z7rA==}
+  tsx@4.19.2:
+    resolution: {integrity: sha512-pOUl6Vo2LUq/bSa8S5q7b91cgNSjctn9ugq/+Mvow99qW6x/UZYwzxy/3NmqoT66eHYfCVvFvACC58UBPFf28g==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
@@ -11150,9 +11176,6 @@ packages:
   untun@0.1.3:
     resolution: {integrity: sha512-4luGP9LMYszMRZwsvyUd9MrxgEGZdZuZgpVQHEEX0lCYFESasVRvZd0EYpCkOIbJKHMuv0LskpXc/8Un+MJzEQ==}
     hasBin: true
-
-  unzip-stream@0.3.4:
-    resolution: {integrity: sha512-PyofABPVv+d7fL7GOpusx7eRT9YETY2X04PhwbSipdj6bMxVCFJrr+nm0Mxqbf9hUiTin/UsnuFWBXlDZFy0Cw==}
 
   update-browserslist-db@1.0.13:
     resolution: {integrity: sha512-xebP81SNcPuNpPP3uzeW1NYXxI3rxyJzF3pD6sH4jE7o/IX+WtSpwnVU+qIsDPyk0d3hmFQ7mjqc6AtV604hbg==}
@@ -12612,6 +12635,25 @@ snapshots:
       '@babel/helper-string-parser': 7.24.8
       '@babel/helper-validator-identifier': 7.24.7
       to-fast-properties: 2.0.0
+
+  '@bitwarden/sdk-napi-darwin-arm64@1.0.0':
+    optional: true
+
+  '@bitwarden/sdk-napi-darwin-x64@1.0.0':
+    optional: true
+
+  '@bitwarden/sdk-napi-linux-x64-gnu@1.0.0':
+    optional: true
+
+  '@bitwarden/sdk-napi-win32-x64-msvc@1.0.0':
+    optional: true
+
+  '@bitwarden/sdk-napi@1.0.0':
+    optionalDependencies:
+      '@bitwarden/sdk-napi-darwin-arm64': 1.0.0
+      '@bitwarden/sdk-napi-darwin-x64': 1.0.0
+      '@bitwarden/sdk-napi-linux-x64-gnu': 1.0.0
+      '@bitwarden/sdk-napi-win32-x64-msvc': 1.0.0
 
   '@bugsnag/browser@7.22.7':
     dependencies:
@@ -15229,10 +15271,6 @@ snapshots:
 
   '@types/unist@3.0.2': {}
 
-  '@types/unzip-stream@0.3.4':
-    dependencies:
-      '@types/node': 20.14.12
-
   '@types/validate-npm-package-name@4.0.2': {}
 
   '@types/which@3.0.3': {}
@@ -16662,11 +16700,6 @@ snapshots:
 
   binary-extensions@2.3.0: {}
 
-  binary@0.3.0:
-    dependencies:
-      buffers: 0.1.1
-      chainsaw: 0.1.0
-
   bindings@1.5.0:
     dependencies:
       file-uri-to-path: 1.0.0
@@ -16789,8 +16822,6 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
-  buffers@0.1.1: {}
-
   builtin-modules@3.3.0: {}
 
   builtins@5.1.0:
@@ -16895,10 +16926,6 @@ snapshots:
       loupe: 3.1.1
       pathval: 2.0.0
 
-  chainsaw@0.1.0:
-    dependencies:
-      traverse: 0.3.9
-
   chalk@2.4.2:
     dependencies:
       ansi-styles: 3.2.1
@@ -16974,7 +17001,7 @@ snapshots:
   chokidar@3.6.0:
     dependencies:
       anymatch: 3.1.3
-      braces: 3.0.2
+      braces: 3.0.3
       glob-parent: 5.1.2
       is-binary-path: 2.1.0
       is-glob: 4.0.3
@@ -22522,22 +22549,22 @@ snapshots:
       postcss: 8.4.38
       ts-node: 10.9.2(@types/node@20.14.12)(typescript@5.5.4)
 
-  postcss-load-config@6.0.1(jiti@1.21.0)(postcss@8.4.38)(tsx@4.19.1)(yaml@2.5.1):
+  postcss-load-config@6.0.1(jiti@1.21.0)(postcss@8.4.38)(tsx@4.19.2)(yaml@2.5.1):
     dependencies:
       lilconfig: 3.1.1
     optionalDependencies:
       jiti: 1.21.0
       postcss: 8.4.38
-      tsx: 4.19.1
+      tsx: 4.19.2
       yaml: 2.5.1
 
-  postcss-load-config@6.0.1(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.1)(yaml@2.5.1):
+  postcss-load-config@6.0.1(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.2)(yaml@2.5.1):
     dependencies:
       lilconfig: 3.1.1
     optionalDependencies:
       jiti: 1.21.0
       postcss: 8.4.47
-      tsx: 4.19.1
+      tsx: 4.19.2
       yaml: 2.5.1
 
   postcss-modules-extract-imports@3.1.0(postcss@8.4.38):
@@ -24255,8 +24282,6 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  traverse@0.3.9: {}
-
   tree-kill@1.2.2: {}
 
   trim-lines@3.0.1: {}
@@ -24320,7 +24345,7 @@ snapshots:
 
   tslib@2.6.2: {}
 
-  tsup@8.2.4(jiti@1.21.0)(postcss@8.4.38)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1):
+  tsup@8.2.4(jiti@1.21.0)(postcss@8.4.38)(tsx@4.19.2)(typescript@5.5.4)(yaml@2.5.1):
     dependencies:
       bundle-require: 5.0.0(esbuild@0.23.0)
       cac: 6.7.14
@@ -24332,7 +24357,7 @@ snapshots:
       globby: 11.1.0
       joycon: 3.1.1
       picocolors: 1.1.0
-      postcss-load-config: 6.0.1(jiti@1.21.0)(postcss@8.4.38)(tsx@4.19.1)(yaml@2.5.1)
+      postcss-load-config: 6.0.1(jiti@1.21.0)(postcss@8.4.38)(tsx@4.19.2)(yaml@2.5.1)
       resolve-from: 5.0.0
       rollup: 4.21.3
       source-map: 0.8.0-beta.0
@@ -24347,7 +24372,7 @@ snapshots:
       - tsx
       - yaml
 
-  tsup@8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1):
+  tsup@8.2.4(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.2)(typescript@5.5.4)(yaml@2.5.1):
     dependencies:
       bundle-require: 5.0.0(esbuild@0.23.0)
       cac: 6.7.14
@@ -24359,7 +24384,7 @@ snapshots:
       globby: 11.1.0
       joycon: 3.1.1
       picocolors: 1.1.0
-      postcss-load-config: 6.0.1(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.1)(yaml@2.5.1)
+      postcss-load-config: 6.0.1(jiti@1.21.0)(postcss@8.4.47)(tsx@4.19.2)(yaml@2.5.1)
       resolve-from: 5.0.0
       rollup: 4.21.3
       source-map: 0.8.0-beta.0
@@ -24379,7 +24404,7 @@ snapshots:
       tslib: 1.14.1
       typescript: 5.5.4
 
-  tsx@4.19.1:
+  tsx@4.19.2:
     dependencies:
       esbuild: 0.23.0
       get-tsconfig: 4.8.1
@@ -24799,11 +24824,6 @@ snapshots:
       citty: 0.1.6
       consola: 3.2.3
       pathe: 1.1.2
-
-  unzip-stream@0.3.4:
-    dependencies:
-      binary: 0.3.0
-      mkdirp: 0.5.6
 
   update-browserslist-db@1.0.13(browserslist@4.23.0):
     dependencies:

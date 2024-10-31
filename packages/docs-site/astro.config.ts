@@ -156,18 +156,24 @@ export default defineConfig({
         }, {
           label: 'Plugins',
           badge: 'New',
-          items: [{
-            label: 'Overview',
-            link: '/docs/plugins/overview/',
-          },
-          {
-            label: 'Encrypted Vaults',
-            link: '/docs/plugins/encrypted-vault/',
-          },
-          {
-            label: '1Password',
-            link: '/docs/plugins/1password/',
-          }],
+          items: [
+            {
+              label: 'Overview',
+              link: '/docs/plugins/overview/',
+            },
+            {
+              label: 'Encrypted Vaults',
+              link: '/docs/plugins/encrypted-vault/',
+            },
+            {
+              label: '1Password',
+              link: '/docs/plugins/1password/',
+            },
+            {
+              label: 'Bitwarden',
+              link: '/docs/plugins/bitwarden/',
+            },
+          ],
         }, {
           label: 'Integrations',
           badge: 'New',
