@@ -1,5 +1,6 @@
 ---
 "@dmno/1password-plugin": patch
+"@dmno/bitwarden-plugin": patch
 "@dmno/configraph": patch
 "dmno": patch
 ---
