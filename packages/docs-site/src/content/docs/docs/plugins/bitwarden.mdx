@@ -17,7 +17,7 @@ Install the package in the service(s) that will use secrets from Bitwarden.
 
 -----
 
-After installation, you'll need to initialize the plugin in your dmno config and add a config item to hold your machine account access token. You can explicitly wire the plugin up to the service account token if using multiple tokens at once, or it will be injected by default. It's ok if you have not created the machine account or access token - we'll do that in the next section.
+After installation, you'll need to initialize the plugin in your `config.mts` and add a config item to hold your machine account access token. You can explicitly wire the plugin up to the service account token if using multiple tokens at once, or it will be injected by default based on the `BitwardenSecretsManagerTypes.machineAccountAccessToken` type. It's ok if you have not created the machine account or access token - we'll do that in the next section.
 
 ```diff lang="ts" title='.dmno/config.mts'
 +import { BitwardenSecretsManagerDmnoPlugin, BitwardenSecretsManagerTypes } from '@dmno/bitwarden-plugin';
@@ -47,7 +47,7 @@ In this case we used `bitwarden`, but you can imagine splitting vaults and acces
 :::
 
 ### Injecting the plugin in monorepo services
-In a monorepo, you are likely managing secrets for multiple services. If you will be using the same service account(s) to access those secrets, you can initialize a plugin instance once in your root service as seen above, and then _inject_ it in child services. Note we must use that same id we set during initialization.
+In a monorepo, you are likely managing secrets for multiple services. If you will be using the same service account(s) to access those secrets, you can initialize a plugin instance once in your root service as seen above, and then inject it in child services. Note we must use that same id we set during initialization.
 
 ```typescript title='apps/some-service/.dmno/config.mts'
 import { BitwardenSecretsManagerDmnoPlugin } from '@dmno/bitwarden-plugin';
@@ -61,10 +61,10 @@ const bitwardenPlugin = BitwardenSecretsManagerDmnoPlugin.injectInstance('bitwar
 
 ## Setup Project & Secrets
 
-If you are already using Bitwarden Secrets Manager, you likely aleady have existing [projects](https://bitwarden.com/help/projects/) that contain [secrets](https://bitwarden.com/help/secrets/). If so, now would be a good time to review how they are all organized. If not, you should create at least one project, as each secret can have a parent project it belongs to, and access can be granted to projects rather than managing each secret individually.
+If you are already using Bitwarden Secrets Manager, you likely already have existing [projects](https://bitwarden.com/help/projects/) that contain [secrets](https://bitwarden.com/help/secrets/). If so, now would be a good time to review how they are all organized. If not, you should create at least one project, as each secret can have a parent project it belongs to, and access can be granted to projects rather than managing each secret individually.
 
 :::tip[Use projects to segment access]
-You should use multiple projects to segment your secrets following the Principle of Least Privilege. This means at the very least, you should have one project for ultra-sensitive production secrets, and another for everything else. How much more you want to break things up is up to you and will depend on your security requirements.
+You should use multiple projects to segment your secrets following the [Principle of Least Privilege](https://en.wikipedia.org/wiki/Principle_of_least_privilege). This means at minimum, you should have one project for ultra-sensitive production secrets, and another for everything else. How much more you want to break things up is up to you and will depend on your security requirements.
 
 It is technically possible to create secrets without using projects and/or to assign permissions at the individual secret level, but we do not recommend it.
 :::
@@ -80,12 +80,12 @@ Machine accounts can be granted access to projects, and each machine account can
 - Dev machine account has access to secrets needed for local dev
   - each developer could have a unique access token
 
-Expiring tokens are obviously more secure, but require overhead of rolling those tokens, which must be done manually. Not wanting to cause an outage, you may want to roll them manually without the pressure of a potentially forgotten expiry date. To roll without downtime, create a new token, redeploy, and then decommission the previous token.
+Expiring tokens are more secure, but require the overhead of rolling those tokens, which must be done manually. Not wanting to cause an outage, you may want to roll them manually without the pressure of a potentially forgotten expiry date. To roll without downtime, create a new token, redeploy, and then decommission the previous token.
 
 ### 
 
 
-Machine account access token(s) now serve as your "secret-zero" - which grants access to the rest of your sensitive config stored in Bitwarden. It must be set locally and in deployed environments, but it is sensitive so we must pass in the value as an _override_ rather than storing it within the config. Locally this usually means storing it in your [`.env.local` file](/docs/guides/env-files/) and on a deployed environment you'll usually set it within some kind of UI, wherever you would normally pass in environment variables.
+Machine account access tokens now serve as your _secret-zero_ - which grants access to the rest of your sensitive config stored in Bitwarden. It must be set locally and in deployed environments, but it is sensitive so we must pass in the value as an _override_ rather than storing it within the config. Locally, this usually means storing it in your [`.env.local` file](/docs/guides/env-files/) and on a deployed environment you'll usually set it within some kind of UI, wherever you would normally pass in environment variables.
 
 ```diff title=".dmno/.env.local"
 +BWS_TOKEN=0.abc123...
@@ -130,7 +130,7 @@ In order to avoid rate limits and keep dev server restarts extremely fast, we he
 :::tip[Active config iteration]
 While you are actively working on the config itself, `dmno resolve -w --skip-cache` will combine watch mode with skipping cache logic.
 
-Once you are satisfied, _clear_ the cache once more and you are good to go.
+Once you are satisfied, clear the cache once more and you are good to go.
 :::
 
 
