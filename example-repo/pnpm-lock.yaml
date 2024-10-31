@@ -11,6 +11,9 @@ importers:
       '@dmno/1password-plugin':
         specifier: link:../packages/plugins/1password
         version: link:../packages/plugins/1password
+      '@dmno/bitwarden-plugin':
+        specifier: link:../packages/plugins/bitwarden
+        version: link:../packages/plugins/bitwarden
       '@dmno/encrypted-vault-plugin':
         specifier: link:../packages/plugins/encrypted-vault
         version: link:../packages/plugins/encrypted-vault

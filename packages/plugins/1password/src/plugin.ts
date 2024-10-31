@@ -1,4 +1,4 @@
-import { spawnSync } from 'child_process';
+import { spawnSync } from 'node:child_process';
 import _ from 'lodash-es';
 import kleur from 'kleur';
 import {
@@ -7,6 +7,7 @@ import {
   SchemaError,
   loadDotEnvIntoObject,
   PluginInputValue,
+  inject,
 } from 'dmno';
 
 import { Client, createClient } from '@1password/sdk';
@@ -104,7 +105,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
   constructor(
     instanceName: string,
     inputValues?: {
-      token: PluginInputValue,
+      token?: PluginInputValue,
       envItemLink?: string,
       fallbackToCliBasedAuth?: boolean,
     },
@@ -115,7 +116,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
         token: {
           description: 'this service account token will be used via the CLI to communicate with 1password',
           extends: OnePasswordTypes.serviceAccountToken,
-          value: inputValues?.token,
+          value: inputValues?.token || inject(),
           // TODO: add validation, token must be set unless `fallbackToCliBasedAuth` is true
           // required: true,
         },

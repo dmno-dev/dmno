@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@dmno/1password-plugin": "link:../packages/plugins/1password",
+    "@dmno/bitwarden-plugin": "link:../packages/plugins/bitwarden",
     "dmno": "link:../packages/core",
     "@dmno/encrypted-vault-plugin": "link:../packages/plugins/encrypted-vault"
   }

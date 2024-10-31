@@ -8,6 +8,7 @@ import {
 
 import { tryCatch } from '@dmno/ts-lib';
 
+import Debug from 'debug';
 import { findDmnoServices } from '../../config-loader/find-services';
 import { DmnoCommand } from '../lib/dmno-command';
 
@@ -21,6 +22,8 @@ import { DISCORD_INVITE_URL, GITHUB_REPO_URL } from '../../lib/constants';
 import { CliExitError } from '../lib/cli-error';
 import { detectJsPackageManager } from '../../lib/detect-package-manager';
 import { pathExists } from '../../lib/fs-utils';
+
+const debug = Debug('dmno:init');
 
 const program = new DmnoCommand('init')
   .summary('Sets up dmno')
@@ -60,7 +63,7 @@ program.action(async (opts: {
   // console.log('');
 
   const rootPackage = workspaceInfo.workspacePackages[0];
-  console.log(workspaceInfo.workspacePackages);
+  debug(workspaceInfo.workspacePackages);
 
   if (!workspaceInfo.autoSelectedPackage) {
     throw new Error('unable to detect which package you are in... whats happening?');
