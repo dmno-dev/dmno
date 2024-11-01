@@ -1,6 +1,6 @@
 {
   "name": "@dmno/1password-plugin",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "dmno plugin to pull secrets from 1password",
   "author": "dmno-dev",
   "license": "MIT",
