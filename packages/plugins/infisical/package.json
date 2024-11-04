@@ -1,0 +1,55 @@
+{
+  "name": "@dmno/infisical-plugin",
+  "version": "0.0.1",
+  "description": "dmno plugin to pull secrets from Infisical",
+  "author": "dmno-dev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmno-dev/dmno.git",
+    "directory": "packages/plugins/infisical"
+  },
+  "bugs": "https://github.com/dmno-dev/dmno/issues",
+  "homepage": "https://dmno.dev/docs/plugins/infisical",
+  "keywords": [
+    "dmno",
+    "infisical",
+    "config",
+    "env vars",
+    "environment variables",
+    "secrets",
+    "dmno-plugin"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "ts-src": "./src/index.ts",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
+    "dev": "pnpm run build --watch",
+    "lint": "eslint src --ext .ts,.cjs,.mjs",
+    "lint:fix": "pnpm run lint --fix"
+  },
+  "devDependencies": {
+    "@dmno/eslint-config": "workspace:*",
+    "@dmno/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "dmno": "workspace:*",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  },
+  "dependencies": {
+    "@infisical/sdk": "^3.0.3"
+  },
+  "peerDependencies": {
+    "dmno": "^0"
+  }
+}

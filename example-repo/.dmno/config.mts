@@ -1,6 +1,7 @@
 import { DmnoBaseTypes, defineDmnoService, configPath, NodeEnvType, switchBy, inject } from 'dmno';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 import { BitwardenSecretsManagerDmnoPlugin, BitwardenSecretsManagerTypes } from '@dmno/bitwarden-plugin';
+import { InfisicalDmnoPlugin, InfisicalTypes } from '@dmno/infisical-plugin';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
 
@@ -16,6 +17,10 @@ const OnePassSecretsDev = new OnePasswordDmnoPlugin('1pass', {
 });
 
 const BitwardenPlugin = new BitwardenSecretsManagerDmnoPlugin('bitwarden');
+
+const InfisicalPlugin = new InfisicalDmnoPlugin('infisical', {
+  environment: 'dev',
+});
 
 const EncryptedVaultSecrets = new EncryptedVaultDmnoPlugin('vault/prod', { name: 'prod', key: inject() });
 // const NonProdVault = new EncryptedVaultDmnoPlugin('vault/dev', {
@@ -37,7 +42,24 @@ export default defineDmnoService({
       typeDescription: 'standardized environment flag set by DMNO',
       value: (ctx) => ctx.get('NODE_ENV'),
     },
-    
+    INFISICAL_CLIENT_ID: {
+      extends: InfisicalTypes.clientId,
+    },
+    INFISICAL_CLIENT_SECRET: {
+      extends: InfisicalTypes.clientSecret,
+    },
+    INFISICAL_PROJECT_ID: {
+      extends: InfisicalTypes.projectId,
+    },
+    TEST_KEY_ALL_ENVS: {
+      value: InfisicalPlugin.secret(),
+    },
+    DEV_ONLY: {
+      value: InfisicalPlugin.secret(),
+    },
+    // PROD_ONLY: {
+    //   value: InfisicalPlugin.secret(),
+    // },
     REDACT_TEST: {
       sensitive: true,
       value: 'a a a a b b b b c c c c d d d',
