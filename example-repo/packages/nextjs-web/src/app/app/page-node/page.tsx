@@ -1,9 +1,8 @@
-import '../helper';
+export const runtime = 'nodejs';
 
 console.log('server top of file', DMNO_CONFIG.SECRET_STATIC);
 
-export default function ServerPage() {
-
+export default function ServerPage(req: any) {
   console.log('server handler fn --', DMNO_CONFIG.SECRET_STATIC);
   console.log('server handler fn --', DMNO_CONFIG.SECRET_DYNAMIC);
 
@@ -29,6 +28,9 @@ export default function ServerPage() {
 
         {/* does not cause an error because the item exists, even though it is empty */}
         <li>DMNO_PUBLIC_CONFIG.EMPTY = {DMNO_PUBLIC_CONFIG.EMPTY}</li>
+
+
+        {req.searchParams.leak && <li>DMNO_CONFIG.SECRET_DYNAMIC = { DMNO_CONFIG.SECRET_DYNAMIC }</li>}
 
         {/* error because item does not exist! */}
         {/* <li>DMNO_PUBLIC_CONFIG.ASDF = {DMNO_PUBLIC_CONFIG.ASDF}</li> */}
