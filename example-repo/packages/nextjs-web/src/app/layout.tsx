@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+// import { Inter } from "next/font/google";
 import "./globals.css";
-import '@dmno/nextjs-integration/inject';
 
-const inter = Inter({ subsets: ["latin"] });
+export const runtime = 'nodejs';
+
+// const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -17,15 +18,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-
-      <body className={`${inter.className} p-6`}>
+      <body className={`p-6`}>
         <h1>DMNO + nextjs example</h1>
-        <nav>
-          <a href="/client-page">client rendered page</a>
-          <a href="/server-page">server rendered page</a>
-          <a href="/api">json api endpoint</a>
-          <a href="/leak-test">Leak test</a>
-          <a href="/intercept-test">Http interceptor test</a>
+        <nav id="main-nav">
+          <a href="/app/page-node">N page</a>
+          <a href="/app/page-edge">E page</a>
+          <a href="/app/page-node?leak=1">N page w/leak</a>
+          <a href="/app/page-edge?leak=1">E page w/leak</a>
+          <a href="/app/api-node">N api</a>
+          <a href="/app/api-edge">E api</a>
+          <a href="/app/api-node?leak=1">N api w/leak</a>
+          <a href="/app/api-edge?leak=1">E api w/leak</a>
+          <a href="/app/server-action">server action</a>
+          <a href="/app/client-page">client</a>
+          <a href="/app/intercept">intercept test</a>
+          <a href="/app/intercept-allow">intercept (allow)</a>
+          <a href="/app/leak-client">leak test (client)</a>
+          
         </nav>
         <hr className="my-4" />
 
@@ -33,4 +42,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
+} 

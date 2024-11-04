@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, DmnoDataType, DmnoDataTypeFactoryFn, ExtractSettingsSchema, cacheFunctionResult, createDmnoDataType, defineDmnoService, dmnoFormula, switchByDmnoEnv, switchByNodeEnv, } from 'dmno';
+import { defineDmnoService } from 'dmno';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
@@ -7,6 +7,13 @@ export default defineDmnoService({
   name: 'nextweb',
   parent: 'group1',
   icon: 'devicon-plain:nextjs',
+  settings: {
+    dynamicConfig: 'default_static',
+    // dynamicConfig: 'only_static',
+    redactSensitiveLogs: true,
+    interceptSensitiveLeakRequests: true,
+    preventClientLeaks: true,
+  },
   pick: [
     'NODE_ENV',
     'DMNO_ENV',
@@ -32,6 +39,7 @@ export default defineDmnoService({
     SECRET_FOO: {
       value: 'secret-foo',
       sensitive: true,
+      required: true,
       description: 'test of a sensitive env var',
     },
 
@@ -57,7 +65,6 @@ export default defineDmnoService({
     SECRET_STATIC: {
       value: 'secret-static-default',
       sensitive: true,
-      required: true,
     },
     SECRET_DYNAMIC: {
       value: 'secret-dynamic-default',
@@ -65,10 +72,24 @@ export default defineDmnoService({
       sensitive: true,
       required: true,
     },
+
+    STRIPE_SECRET_KEY: {
+      value: 'stripe-secret-key',
+      dynamic: true,
+      required: true,
+      sensitive: {
+        allowedDomains: ['api.stripe.com'],
+      }
+    },
     
     NEXT_PUBLIC_STATIC: {
       value: () => DMNO_CONFIG.PUBLIC_STATIC,
     },
 
+    SECRET_MIDDLEWARE_TEST: {
+      // this is in the output of a page that will be stopped by our secret leak detector
+      value: 'Cappuccino',
+      sensitive: true,
+    }
   },
-})
+});

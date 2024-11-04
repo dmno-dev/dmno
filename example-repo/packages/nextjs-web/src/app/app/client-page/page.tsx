@@ -1,7 +1,5 @@
 'use client'
 
-// import '../helper';
-
 // 🚨 leak
 // console.log(DMNO_CONFIG.SECRET_STATIC);
 
@@ -9,6 +7,7 @@ export default function ClientPage() {
 
   // 🚨 leak
   // console.log(DMNO_CONFIG.SECRET_STATIC);
+  console.log('client page! js');
 
   return (
     <main>
