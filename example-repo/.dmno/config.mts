@@ -35,6 +35,10 @@ export default defineDmnoService({
     preventClientLeaks: true,
   },
   schema: {
+    ITEM_X: { 
+      value: 'should-be-required',
+    },
+
     NODE_ENV: NodeEnvType,
     DMNO_ENV: {
       typeDescription: 'standardized environment flag set by DMNO',
