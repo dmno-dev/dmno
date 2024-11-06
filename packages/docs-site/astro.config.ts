@@ -141,6 +141,10 @@ export default defineConfig({
               link: '/docs/guides/multi-env/',
             },
             {
+              label: 'Secret Segmentation',
+              link: '/docs/guides/secret-segmentation/',
+            },
+            {
               label: 'Dynamic vs Static Config',
               link: '/docs/guides/dynamic-config/',
             },
@@ -172,6 +176,10 @@ export default defineConfig({
             {
               label: 'Bitwarden',
               link: '/docs/plugins/bitwarden/',
+            },
+            {
+              label: 'Infisical',
+              link: '/docs/plugins/infisical/',
             },
           ],
         }, {

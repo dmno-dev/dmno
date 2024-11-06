@@ -12,6 +12,96 @@ Our first set of plugins are designed to help you manage secrets:
 - [**DMNO Encrypted Secrets Plugin**](/docs/plugins/encrypted-vault/): Store secrets securely in an encrypted vault file that you check in to your git repo. 
 - [**DMNO 1Password Plugin**](/docs/plugins/1password/): Securely pull secrets from [1Password](https://1password.com/)
 - [**DMNO Bitwarden Secrets Manager Plugin**](/docs/plugins/bitwarden/): Securely pull secrets from [Bitwarden Secrets Manager](https://bitwarden.com/products/secrets-manager/)
+- [**DMNO Infisical Plugin**](/docs/plugins/infisical/): Securely pull secrets from [Infisical](https://infisical.com/)
+
+## General plugin guidelines
+
+### Plugin inputs
+
+In general, plugins are initialized with a set of inputs that are used to configure the plugin. These inputs usually live in the `schema` of the DMNO service where the plugin is initialized. While the exact inputs will vary by plugin, they will often include some combination of:
+
+- Sensitive values that are needed to access the plugin's service
+- Non-sensitive values that are needed to configure the plugin
+
+Because plugins are typically used to access sensitive items themselves, this introduces a slight chicken-and-egg problem. In this case, DMNO allows you to define the plugin inputs in the `schema` but not provide a value. The sensitive value is then set via an _override_. 
+
+:::tip[More on overrides]
+For more on how overrides work and how to use them, see the [Setting overrides via `.env` files](https://dmno.dev/docs/guides/env-files/#setting-overrides-via-env-files).
+:::
+
+### Wiring up the inputs
+
+Because DMNO provides plugin-specific types, we can automatically inject the correct type for the plugin input. This means you don't need to manually wire up the inputs when you initialize the plugin. Our config engine will do this for you. 
+
+For example: 
+
+```ts
+import { SomePlugin, SomePluginTypes } from '@dmno/some-plugin';
+
+// by default, access token will be injected using types
+const somePluginInstance = new SomePlugin('some-plugin');
+
+// or you can explicitly wire it up by path
+const somePluginInstance2 = new SomePlugin('some-plugin', {
+  someToken: configPath('..', 'SOME_TOKEN'),
+  someOtherToken: configPath('..', 'SOME_OTHER_TOKEN'),
+});
+
+export default defineDmnoService({
+  schema: {
+    SOME_TOKEN: {
+      // this type allows us to inject the correct value from the config item
+      extends: SomePluginTypes.someToken,
+    },
+    SOME_OTHER_TOKEN: {
+      extends: SomePluginTypes.someOtherToken,
+    },
+  },
+});
+```
+
+:::caution[Be careful]
+Because of the nature of type-based injection, you can only do this for a single config item of a given type. If you have multiple config items of the same type, like two of the same type of token for two different plugin instances, you'll need to explicitly wire them up.
+:::
+
+
+
+### Multiple plugin instances
+
+Plugins support multiple instances allowing you to compose your configuration in a flexible way. For example, with the 1Password plugin you could create separate instances for your production and non-production vaults. Each instance can have its own settings, allowing you to manage per-environment or per-service secrets.
+
+When defining a plugin instance, you provide an `id` which will be used to identify the instance in various places, such as the CLI, UI, and when injecting it into other services.
+
+### Injecting plugin instances in monorepo services
+
+In a monorepo, you might want to use the same plugin instance across multiple services. If you will be using the same settings for each service, you can initialize a plugin instance once in a parent service as seen above, and then inject it in child services. Note that the injected plugin instance must use the same id we set during initialization.
+
+```typescript title='apps/some-service/.dmno/config.mts'
+import { SomePlugin } from '@dmno/some-plugin';
+
+// 💉 inject the already initialized plugin instead of re-initializing it
+const someInjectedPluginInstance = SomePlugin.injectInstance('some-plugin');
+```
+
+:::tip[Plugin instances are great for secret segmentation]
+
+To read more about secret segmentation, see the [Secrets guide](/docs/guides/secret-segmentation/).
+
+:::
+
+## Caching
+In order to avoid rate limits and keep dev server restarts extremely fast, we heavily cache data fetched from external sources. After updating secrets from any plugin that stores them externally, if the item has been cached, you'll need to clear the cache to see it take effect.
+
+- Use the [`dmno clear-cache` command](/docs/reference/cli/clear-cache/) to clear the cache once
+- The [`dmno resolve`](/docs/reference/cli/resolve/) and [`dmno run`](/docs/reference/cli/run/) commands have cache related flags:
+  - `--skip-cache` - skips caching logic altogether
+  - `--clear-cache` - clears the cache once before continuing as normal
+
+:::tip[Active config iteration]
+While you are actively working on the config itself, `dmno resolve -w --skip-cache` will combine watch mode with skipping cache logic.
+
+Once you are satisfied, clear the cache once more and you are good to go.
+:::
 
 
 :::note
