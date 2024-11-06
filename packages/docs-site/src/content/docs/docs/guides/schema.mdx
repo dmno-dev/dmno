@@ -288,7 +288,7 @@ export default defineDmnoService({
 
 Validating your config _BEFORE_ build/run/deploy is a huge part of what makes DMNO so powerful.
 
-You can mark items as `required: true` and they will be considered invalid if the value is empty when we load your config. Additional validations will be skipped if this is the case.
+You can mark items as `required: true` and they will be considered invalid if the value is empty when we load your config. Additional validations will be skipped if this is the case. Note that if the config item has a static value set, for example `value: 'some-val'` then we will infer that the item is required. In the rare case that you plan on sometimes overriding the value to undefined, you can add `required: false`. Note that this `required` setting affects dmno's generated types as to whether the value might be undefined.
 
 You can also attach custom validation functions, although most of your validation needs will likely be handled by reusable types.
 
@@ -299,9 +299,7 @@ export default defineDmnoService({
       extends: DmnoBaseTypes.number({ min: 0, max: 100 }),
       required: true,
       validate: (val) => {
-        if (!isPrimeNumber(val)) {
-          throw new ValidationError('Number must be prime');
-        }
+        if (!isPrimeNumber(val)) throw new ValidationError('Number must be prime');
       },
     },
   },

@@ -31,6 +31,11 @@ type ValueOrValueGetter<T> = T | ((ctx: ResolverContext) => T);
 type MaybePromise<T> = T | Promise<T>;
 
 export type ConfigValueResolverDef = {
+  /**
+   * internal id used for the type of the resolver
+   * @internal
+   */
+  _typeId?: string,
 
   // TODO-review: changed plugin reference to id, to help decouple?
   // /** reference back to the plugin which created the resolver (if applicable) */
@@ -72,6 +77,7 @@ export function createResolver(
       return new ConfigValueResolver(result);
     } catch (err) {
       return new ConfigValueResolver({
+        _typeId: '$error',
         label: 'error',
         process() {
           if (err instanceof SchemaError) {
@@ -376,6 +382,7 @@ export function processInlineResolverDef(resolverDef: InlineValueResolverDef) {
   // inline function case
   if (_.isFunction(resolverDef)) {
     return createResolver({
+      _typeId: '$fn',
       icon: 'f7:function',
       label: 'fn',
       resolve: resolverDef,
@@ -392,6 +399,7 @@ export function processInlineResolverDef(resolverDef: InlineValueResolverDef) {
     || resolverDef === undefined
   ) {
     return createResolver({
+      _typeId: '$static',
       icon: 'bi:dash',
       label: 'static',
       resolve: async () => resolverDef,
