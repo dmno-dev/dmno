@@ -49,6 +49,11 @@
       "import": "./dist/vendor-types/index.js",
       "types": "./dist/vendor-types/index.d.ts"
     },
+    "./utils": {
+      "ts-src": "./src/utils.ts",
+      "import": "./dist/utils.js",
+      "types": "./dist/utils.d.ts"
+    },
     "./cli-lib": {
       "ts-src": "./src/cli/plugin-cli-lib.ts",
       "import": "./dist/cli/plugin-cli-lib.js",

@@ -6,21 +6,18 @@ import graphlib from '@dagrejs/graphlib';
 import {
   ConfigLoadError, ConfigraphDataTypeDefinitionOrShorthand, SchemaError,
 } from '@dmno/configraph';
-import { getConfigFromEnvVars } from '../lib/env-vars';
 import { SerializedService, SerializedWorkspace } from '../config-loader/serialization-types';
-import { loadServiceDotEnvFiles } from '../lib/dotenv-utils';
 import { RedactMode } from '../lib/redaction-helpers';
 import {
   DmnoConfigraph, DmnoConfigraphNode, DmnoConfigraphServiceEntity, DmnoDataTypeMetadata, DmnoServiceSettings,
   UseAtPhases,
 } from './configraph-adapter';
 import { DmnoPlugin } from './dmno-plugin';
+import {
+  DmnoOverrideLoader, dotEnvFileOverrideLoader, processEnvOverrideLoader, OverrideSource,
+} from './overrides';
 
 const debug = Debug('dmno');
-
-// we call this _immediately_ rather than when we need it because vite-node is injecting process.env.NODE_ENV
-// TODO: we may need to respect some settings or something, so may need to do it later, but probably want to do it ASAP
-const processEnvOverrides = getConfigFromEnvVars();
 
 type PickConfigItemDefinition = {
   /** which service to pick from, defaults to "root" */
@@ -49,6 +46,10 @@ export type DmnoServiceConfig = {
   name?: string,
   /** settings for this service - each item will be inherited from parent(s) if unspecified */
   settings?: DmnoServiceSettings,
+
+  // ? Should this be part of settings? if inherited from parent, it probably should
+  /** override loading plugins - if not specified, will default to loading process env vars and dotenv files */
+  overrides?: Array<DmnoOverrideLoader | false>,
   /** the config schema itself */
   schema: Record<string, ConfigraphDataTypeDefinitionOrShorthand<DmnoDataTypeMetadata>>,
 
@@ -94,25 +95,7 @@ export function defineDmnoService(opts: DmnoServiceConfig) {
   return opts;
 }
 
-//! need to clean up overrrides
-type NestedOverrideObj<T = string> = {
-  [key: string]: NestedOverrideObj<T> | T;
-};
 
-export class OverrideSource {
-  constructor(
-    readonly type: string,
-    readonly label: string | undefined,
-    readonly icon: string,
-    readonly values: NestedOverrideObj,
-    readonly enabled = true,
-  ) {}
-
-  /** get an env var override value using a dot notation path */
-  getOverrideForPath(path: string) {
-    return _.get(this.values, path);
-  }
-}
 
 export class DmnoWorkspace {
   private services: Record<string, DmnoService> = {};
@@ -122,8 +105,6 @@ export class DmnoWorkspace {
   private rootServiceName = 'root';
   get rootService() { return this.services[this.rootServiceName]; }
   get rootPath() { return this.rootService.path; }
-
-  readonly processEnvOverrides = new OverrideSource('process', undefined, 'ri:terminal-box-fill', processEnvOverrides);
 
   plugins: Record<string, DmnoPlugin> = {};
 
@@ -244,13 +225,7 @@ export class DmnoWorkspace {
         node.overrides = [];
       }
 
-      // we want to load all the override files, since we may want to display them in the UI
-      // but they will not be all enabled
-      await service.loadOverrideFiles();
-
-      // for now we'll apply the process.env level overrides to every service
-      // TODO: think through how we can allow targeting specific services, and nested object nodes
-      service.overrideSources.unshift(this.processEnvOverrides);
+      await service.loadOverrides();
 
       // TODO: clean all of this up - just wanted to get basic overrides applied again
       // this currently does not support anything nested!
@@ -405,32 +380,22 @@ export class DmnoService {
   }
 
   overrideSources: Array<OverrideSource> = [];
-  async loadOverrideFiles() {
-    // TODO: this is not at all optimized for speed...
-    // particularly it is doing a check on if the file is gitignored
-    // and if we are loading not in dev mode, we may just want to load files that will be applied
-    const dotEnvFiles = await loadServiceDotEnvFiles(this.path, { onlyLoadDmnoFolder: true });
+  async loadOverrides() {
+    this.overrideSources = [];
 
-    // TODO: support other formats (yaml, toml, json) - probably should all be through a plugin system
-
-    // loads multiple override files, in order from more specific to least
-    // .env.{ENV}.local
-    // .env.local
-    // .env.{ENV}
-    // .env
-
-    this.overrideSources = _.map(dotEnvFiles, (dotEnvFile) => {
-      return new OverrideSource(
-        '.env file',
-        dotEnvFile.fileName,
-        'simple-icons:dotenv',
-        dotEnvFile.envObj,
-        // TODO: specific env overrides are being enabled based on process.env.NODE_ENV
-        // we probably want to be smarter about how _that_ gets resolved first
-        // and store it at the workspace level or something...?
-        !dotEnvFile.applyForEnv || dotEnvFile.applyForEnv === process.env.NODE_ENV,
-      );
-    });
+    const overridePlugins = this.rawConfig?.overrides
+      ? _.compact(this.rawConfig?.overrides)
+      // default behaviour is to load overrides from process.env and dotenv files
+      : [processEnvOverrideLoader(), dotEnvFileOverrideLoader()];
+    for (const overridePlugin of overridePlugins) {
+      // config lets you toggle behaviour using `SOME_CONDITION && somePlugin()` so we must filter out `false`
+      if (!overridePlugin) return;
+      const overrideSources = await overridePlugin.load({
+        serviceId: this.serviceName,
+        servicePath: this.path,
+      });
+      this.overrideSources.push(...overrideSources);
+    }
   }
 
   get isSchemaValid() {

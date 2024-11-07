@@ -13,6 +13,7 @@ export default defineConfig({
 
     'src/cli/cli-executable.ts', // cli that gets run via `dmno` command
     'src/cli/plugin-cli-lib.ts', // helpers used to create clis for dmno plugins
+    'src/utils.ts', // general helpers for use within plugins
   ], 
 
   // imported as TS directly, so we have to tell tsup to compile it instead of leaving it external

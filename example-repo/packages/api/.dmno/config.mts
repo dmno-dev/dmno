@@ -1,5 +1,5 @@
-import { defineDmnoService, DmnoBaseTypes, switchBy } from 'dmno';
-import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
+import { defineDmnoService, DmnoBaseTypes, switchBy, processEnvOverrideLoader } from 'dmno';
+import { OnePasswordDmnoPlugin, onePasswordOverrideLoader } from '@dmno/1password-plugin';
 import { EncryptedVaultDmnoPlugin } from '@dmno/encrypted-vault-plugin';
 
 const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
@@ -8,11 +8,22 @@ const VaultPlugin = EncryptedVaultDmnoPlugin.injectInstance('vault/prod');
 export default defineDmnoService({
   name: 'api',
   parent: 'group1',
+  overrides: [
+    processEnvOverrideLoader(),
+    // personal overrides, create item in "Employee" vault with this name, item label must match 
+    onePasswordOverrideLoader({ name: 'dmno-local-dev-overrides' }), // defaults to field matching service name ("api")
+    // shared overrides
+    onePasswordOverrideLoader({ reference: 'op://dev test/rznyyjrwcv5sgc4ykjhzpkoevm/api' }),
+  ],
   pick: [
     'NODE_ENV',
     'DMNO_ENV',
   ],
   schema: {
+    OVERRIDE_ME: {
+      value: 'default'
+    },
+
     OP_ITEM_1: {
       value: OnePassBackend.item(),
     },

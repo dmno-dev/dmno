@@ -1,18 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import _ from 'lodash-es';
-
-
-// original from dotenv
-// const DOTENV_LINE = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(#.*)?(?:$|$)/mg;
-
 import { fdir } from 'fdir';
 import { asyncMap } from 'modern-async';
 import { checkIsFileGitIgnored } from './git-utils';
 
+// original from dotenv
+// const DOTENV_LINE = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(#.*)?(?:$|$)/mg;
+
 // altered slightly from dotenv to capture trailing comments and handle newlines differently
 const DOTENV_LINE = /(?:^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?[^\S\r\n]*(#.*)?(?:$)/mg;
-
 
 
 export type DotEnvSchemaItem = {
@@ -103,7 +100,14 @@ export function loadDotEnvIntoObject(dotEnvStr: string) {
 
 
 
-
+export function parsedDotEnvToObj(parsedContents: Array<DotEnvSchemaItem>) {
+  // TODO: here we may want to support nested items using a special separator like "__"
+  const envObj: Record<string, string> = {};
+  for (const i of parsedContents) {
+    envObj[i.key] = i.value;
+  }
+  return envObj;
+}
 
 async function loadDotEnvFile(basePath: string, relativePath: string, checkGitIgnored?: boolean) {
   const fileName = relativePath.split('/').pop();
@@ -131,11 +135,8 @@ async function loadDotEnvFile(basePath: string, relativePath: string, checkGitIg
 
   const rawContents = await fs.promises.readFile(filePath, 'utf8');
   const parsedContents = parseDotEnvContents(rawContents);
+  const envObj = parsedDotEnvToObj(parsedContents);
 
-  const envObj: Record<string, string> = {};
-  for (const i of parsedContents) {
-    envObj[i.key] = i.value;
-  }
   return {
     path: filePath,
     relativePath,
@@ -165,14 +166,14 @@ export async function loadServiceDotEnvFiles(
   const dotEnvFilePaths = await new fdir() // eslint-disable-line new-cap
     .withRelativePaths()
     .glob(...globs)
-    .exclude((excludeDirName, exdlueDirPath) => {
+    .exclude((excludeDirName, excludeDirPath) => {
       // skip .XXX folders (other than .dmno)
       if (excludeDirName !== '.dmno' && excludeDirName.startsWith('.')) return true;
       // skip node_modules
       if (excludeDirName === 'node_modules') return true;
       // exclude directories - note as passed in, they do not have trailing slashes)
       // but the dirPath does, so we must trailing slash
-      if (opts?.excludeDirs?.includes(exdlueDirPath.replace(/\/$/, ''))) return true;
+      if (opts?.excludeDirs?.includes(excludeDirPath.replace(/\/$/, ''))) return true;
       return false;
     })
     .crawl(servicePath)
