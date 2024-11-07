@@ -124,6 +124,11 @@ export class ConfigValueResolver {
       this.branches = this.def.resolveBranches.map((branchDef) => {
         return new ConfigValueResolverBranch(branchDef, this);
       });
+    } else {
+      if (!this.def.resolve) {
+        // should be protect by TS, but this is an extra check
+        throw new Error('expected `resolve` fn in resolver definition');
+      }
     }
   }
 
@@ -294,7 +299,8 @@ export class ConfigValueResolver {
 
       // TODO: might be able to force a default to be defined?
       if (!matchingBranch) {
-        throw new ResolutionError('no matching resolver branch found and no default');
+        this.resolutionError = new ResolutionError('no matching resolver branch found and no default');
+        return false;
       }
       // resolutionResult is now a child resolver which must be resolved itself
       // NOTE we have to call this recursively so that caching can be triggered on each resolver
@@ -309,7 +315,8 @@ export class ConfigValueResolver {
     } else {
       // should always be the case, since resolvers must have branches or a resolve fn
       if (!('resolve' in this.def)) {
-        throw new Error('expected `resolve` fn in resolver definition');
+        this.resolutionError = new ResolutionError('expected `resolve` fn in resolver definition');
+        return;
       }
 
       // actually call the resolver

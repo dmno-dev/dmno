@@ -45,16 +45,13 @@ describe('graph resolution', () => {
         a: { value: 1 },
         b: {
           extends: 'number',
-          value: () => 2 + getResolverCtx().get('a')
+          value: () => 2 + getResolverCtx().get('a'),
         },
       },
     });
     await g.resolveConfig();
     expect(e.configNodes.b.resolvedValue).toEqual(3);
   });
-
-
-  getResolverCtx
 
   test('resolver failures always result in a ResolutionError', async () => {
     const g = new Configraph();
@@ -143,6 +140,22 @@ describe('graph resolution', () => {
       });
       await g.resolveConfig();
       expect(e.configNodes.switchTest.schemaErrors).toHaveLength(1);
+    });
+
+    test('we get a ResolutionError if no _deafult defined and no matching branch found', async () => {
+      const g = new Configraph();
+      const e = g.createEntity({
+        configSchema: {
+          env: { value: 'other' },
+          switchTest: {
+            value: switchBy('env', {
+              staging: 'staging-val',
+            }),
+          },
+        },
+      });
+      await g.resolveConfig();
+      expect(e.configNodes.switchTest.resolutionError).not.toBeUndefined();
     });
   });
 });

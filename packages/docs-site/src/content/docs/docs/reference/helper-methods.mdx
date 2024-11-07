@@ -379,80 +379,50 @@ export default defineDmnoService({
 
 ### `switchBy`
 
-`switchBy('SWITCH_BY_KEY': string, { opts })`
+`switchBy('SWITCH_BY_KEY': string, { branches })`
 
 This method is used to define different configurations for different values of a particular config item. Its arguments are a string (i.e., the key name) and an object with the following properties:
 
 ```typescript
-type opts = {
-  _default: any;
+type branches = {
+  _default?: any;
   [key: string]: any;
 };
 ```
 
-Note: `_default` is a reserved key that will be used if the current value is not found. All the other keys should match the possible values of the `SWITCH_BY_KEY` config item. **You must set `_default` value in the switch object, even if it is `_default: undefined`.**
+Note: `_default` is a reserved key to represent the default branch. This default will be selected if the current value of the switch is not found on any other branch. All the other keys should match the possible values of the `SWITCH_BY_KEY` config item.
 
-
-
-Example: 
+A real example using an enviroment flag:
 ```javascript
 import { switchBy } from 'dmno';
 
 export default defineDmnoService({
   schema: {
-    SWITCH_BY_KEY: {
-      value: 'val1',
+    APP_ENV: {
+      value: 'development',
     },
-    // MY_CONFIG_ITEM will be 'first value'
     MY_CONFIG_ITEM: {
-      value: switchBy('SWITCH_BY_KEY', {
-        _default: 'default value',
-        val1: 'first value',
-        val2: 'second value',
-        val3: 'third value',
+      value: switchBy('APP_ENV', {
+        _default: 'dev/default value', // <- matches
+        test: 'test value',
+        staging: 'staging value',
+        production: 'prod value',
       }),
     },
   },
 });
 ```
+
+:::caution[Default branch is optional]
+Having a `_default` branch is not required, but if there is no default branch and an unknown value is passed to the switch, you will get a `ResolutionError`. If this is not what you want, you must add `_default: undefined` or add branches for all expected switch values, even if they are set to resolve to `undefined`.
+:::
 
 ### `switchByNodeEnv`
 
-`switchByNodeEnv({ opts })`
+`switchByNodeEnv({ branches })`
 
-This method is used to define different configurations for different environments. It takes an object as an argument with the following properties:
+This method is just a simple helper equivalent to `switchBy('NODE_ENV', ...)`.
 
-```typescript
-type SwitchByNodeEnvOpts = {
-  _default: any;
-  development?: any;
-  staging?: any;
-  production?: any;
-  [key: string]: any;
-};
-```
-Note: `_default` is a reserved key that will be used if the current environment is not defined in the object. All the other keys should match the possible values of the `NODE_ENV` environment variable.
+While switching based on an environment flag (e.g., dev/staging/prod) is definitely the most common use case for branching logic in your config, we do not recommend using `NODE_ENV` as that flag. Package managers alter their behavior based on `NODE_ENV`, and while it is not the best practice, so do some 3rd party modules.
 
-Example: 
-```javascript
-import { switchByNodeEnv } from 'dmno';
-
-export default defineDmnoService({
-  schema: {
-    MY_CONFIG_ITEM: {
-      value: switchByNodeEnv({
-        _default: 'default value',
-        development: 'development value',
-        staging: 'staging value',
-        production: 'production value',
-      }),
-    },
-  },
-});
-```
-
-:::note[Fun fact!]
-`switchByNodeEnv` is built using `switchBy` under the hood.
-:::
-
-
+Instead we recommend defining your own env flag, for example `APP_ENV`, `ACME_ENV`, etc.  This allows you to have more control and be more specific. For example, you may want to have `development`, `test`, `test-ci`, `preview`, `staging`, `production`. Being more specific and toggling the rest of your config using that flag fits very naturally with using DMNO.
