@@ -57,9 +57,6 @@ export default defineDmnoService({
     DEV_ONLY: {
       value: InfisicalPlugin.secret(),
     },
-    // PROD_ONLY: {
-    //   value: InfisicalPlugin.secret(),
-    // },
     REDACT_TEST: {
       sensitive: true,
       value: 'a a a a b b b b c c c c d d d',

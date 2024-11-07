@@ -74,7 +74,7 @@ When defining a plugin instance, you provide an `id` which will be used to ident
 
 ### Injecting plugin instances in monorepo services
 
-In a monorepo, you might want to use the same plugin instance across multiple services. If you will be using the same settings for each service, you can initialize a plugin instance once in a parent service as seen above, and then inject it in child services. Note that the injected plugin instance must use the same id we set during initialization.
+In a monorepo, you might want to use the same plugin instance across multiple services. If you will be using the same settings for each service, you can initialize a plugin instance once in a parent service as seen above, and then inject it in child services. This alleviates the need to have the necessary config in each additional service. Note that the injected plugin instance must use the same id we set during initialization.
 
 ```typescript title='apps/some-service/.dmno/config.mts'
 import { SomePlugin } from '@dmno/some-plugin';
