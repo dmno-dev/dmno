@@ -20,10 +20,10 @@ Install the package in the service(s) that will use secrets from Infisical.
 After installation, you'll need to initialize the plugin in your `config.mts` and add a few config items that are necessary to authenticate with Infisical and fetch secrets. It's ok if you have not created the machine identity or client keys - we'll do that in the next section.
 
 ```diff lang="ts" title='.dmno/config.mts'
-import { InfisicalSecretsManagerDmnoPlugin, InfisicalSecretsManagerTypes } from '@dmno/infisical-plugin';
+import { InfisicalDmnoPlugin, InfisicalTypes } from '@dmno/infisical-plugin';
 
 // explicitly wire the plugin instance to the config path
-const infisicalPlugin = new InfisicalSecretsManagerDmnoPlugin('infisical/dev', {
+const infisicalPlugin = new InfisicalDmnoPlugin('infisical/dev', {
   environment: 'development',
   clientId: configPath('..', 'INFISICAL_CLIENT_ID'),
   clientSecret: configPath('..', 'INFISICAL_CLIENT_SECRET'),
@@ -31,7 +31,7 @@ const infisicalPlugin = new InfisicalSecretsManagerDmnoPlugin('infisical/dev', {
 });
 
 // or you can inject by default
-const infisicalPlugin2 = new InfisicalSecretsManagerDmnoPlugin('infisical/prod', {
+const infisicalPlugin2 = new InfisicalDmnoPlugin('infisical/prod', {
   environment: 'production',
 }); 
 
@@ -58,7 +58,7 @@ See our [General plugin guidelines](/docs/plugins/overview/#general-plugin-guide
 
 ### Project & secrets
 
-If you are already using Infisical, you probably already have existing projects and secrets. If not, you should create at least one [project](https://infisical.com/docs/documentation/platform/project). Infisical uses the concept of [environments](https://infisical.com/docs/documentation/platform/project#project-environments) to group secrets. Make sure to make your secrets available in the same environment configuration as each plugin instance.
+If you are an existing Infisical user, you probably already have projects and secrets. If not, you should create at least one [project](https://infisical.com/docs/documentation/platform/project). Infisical uses the concept of [environments](https://infisical.com/docs/documentation/platform/project#project-environments) to group secrets. Make sure to make your secrets available in the same environment configuration as each plugin instance.
 
 ### Machine identity & client keys
 
@@ -75,9 +75,9 @@ Also note that the **Client Secret** is highly sensitive and should be treated a
 The Infisical plugin provides one method for fetching secrets, based on the name of the secret. The name itself will be inferred from the config item name. You can optionally pass a name if you wish to override the default.
 
 ```typescript title='.dmno/config.mts'
-import { InfisicalSecretsManagerDmnoPlugin, InfisicalSecretsManagerTypes } from '@dmno/infisical-plugin';
+import { InfisicalDmnoPlugin, InfisicalTypes } from '@dmno/infisical-plugin';
 
-const infisicalPlugin = new InfisicalSecretsManagerDmnoPlugin('infisical/dev', {
+const infisicalPlugin = new InfisicalDmnoPlugin('infisical/dev', {
   environment: 'development',
 });
 
@@ -85,12 +85,25 @@ export default defineDmnoService({
   schema: {
     SOME_SECRET: {
       // this will fetch the secret with the name 'SOME_SECRET' from the project specified in the plugin instance
-      value: InfisicalPlugin.secret(),
+      value: infisicalPlugin.secret(),
     },
     SOME_NEW_SECRET: {
       // this will fetch the secret with the name 'SOME_OTHER_SECRET' and make it available as SOME_NEW_SECRET in your DMNO_CONFIG
-      value: InfisicalPlugin.secret('SOME_OTHER_SECRET'),
+      value: infisicalPlugin.secret('SOME_OTHER_SECRET'),
     },
   },
+});
+```
+
+### Self-hosted Infisical
+
+If you are using a self-hosted version of Infisical, the `InfisicalDmnoPlugin` takes an optional `siteUrl` parameter. For example:
+
+```typescript title='.dmno/config.mts'
+import { InfisicalDmnoPlugin, InfisicalTypes } from '@dmno/infisical-plugin';
+
+const infisicalPlugin = new InfisicalDmnoPlugin('infisical/dev', {
+  environment: 'development',
+  siteUrl: 'https://infisical.mycompany.com',
 });
 ```
