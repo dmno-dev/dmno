@@ -31,6 +31,11 @@ type ValueOrValueGetter<T> = T | ((ctx: ResolverContext) => T);
 type MaybePromise<T> = T | Promise<T>;
 
 export type ConfigValueResolverDef = {
+  /**
+   * internal id used for the type of the resolver
+   * @internal
+   */
+  _typeId?: string,
 
   // TODO-review: changed plugin reference to id, to help decouple?
   // /** reference back to the plugin which created the resolver (if applicable) */
@@ -72,6 +77,7 @@ export function createResolver(
       return new ConfigValueResolver(result);
     } catch (err) {
       return new ConfigValueResolver({
+        _typeId: '$error',
         label: 'error',
         process() {
           if (err instanceof SchemaError) {
@@ -118,6 +124,11 @@ export class ConfigValueResolver {
       this.branches = this.def.resolveBranches.map((branchDef) => {
         return new ConfigValueResolverBranch(branchDef, this);
       });
+    } else {
+      if (!this.def.resolve) {
+        // should be protect by TS, but this is an extra check
+        throw new Error('expected `resolve` fn in resolver definition');
+      }
     }
   }
 
@@ -288,7 +299,8 @@ export class ConfigValueResolver {
 
       // TODO: might be able to force a default to be defined?
       if (!matchingBranch) {
-        throw new ResolutionError('no matching resolver branch found and no default');
+        this.resolutionError = new ResolutionError('no matching resolver branch found and no default');
+        return false;
       }
       // resolutionResult is now a child resolver which must be resolved itself
       // NOTE we have to call this recursively so that caching can be triggered on each resolver
@@ -303,7 +315,8 @@ export class ConfigValueResolver {
     } else {
       // should always be the case, since resolvers must have branches or a resolve fn
       if (!('resolve' in this.def)) {
-        throw new Error('expected `resolve` fn in resolver definition');
+        this.resolutionError = new ResolutionError('expected `resolve` fn in resolver definition');
+        return;
       }
 
       // actually call the resolver
@@ -376,6 +389,7 @@ export function processInlineResolverDef(resolverDef: InlineValueResolverDef) {
   // inline function case
   if (_.isFunction(resolverDef)) {
     return createResolver({
+      _typeId: '$fn',
       icon: 'f7:function',
       label: 'fn',
       resolve: resolverDef,
@@ -392,6 +406,7 @@ export function processInlineResolverDef(resolverDef: InlineValueResolverDef) {
     || resolverDef === undefined
   ) {
     return createResolver({
+      _typeId: '$static',
       icon: 'bi:dash',
       label: 'static',
       resolve: async () => resolverDef,

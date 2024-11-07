@@ -25,6 +25,20 @@ function runValidationChecks(
 }
 
 describe('data types', () => {
+  test('`required` should be inferred if static value set and not specified', () => {
+    const t1 = createConfigraphDataType({ value: 'asdf' })();
+    expect(t1.required).to.eq(true);
+
+    const t2 = createConfigraphDataType({ value: 123 })();
+    expect(t2.required).to.eq(true);
+
+    const t3 = createConfigraphDataType({ value: 'asdf', required: false })();
+    expect(t3.required).to.eq(false);
+
+    const t4 = createConfigraphDataType({ required: true })();
+    expect(t4.required).to.eq(true);
+  });
+
   test('validation using settings works', () => {
     const StringStartCheck = createConfigraphDataType({
       extends: ConfigraphBaseTypes.string({

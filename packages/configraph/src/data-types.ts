@@ -475,7 +475,12 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
     return this.getDefItem('externalDocs', { mergeArray: true }) as Array<ExternalDocsEntry> | undefined;
   }
   get ui() { return this.getDefItem('ui'); }
-  get required() { return this.getDefItem('required'); }
+  get required() {
+    const explicitRequired = this.getDefItem('required');
+    if (explicitRequired !== undefined) return explicitRequired;
+    // if `value` is set to a static value, we'll infer `required: true` unless explicitly set
+    if (this.valueResolver?.def._typeId === '$static') return true;
+  }
 
   getMetadata<K extends keyof Metadata>(key: K): Metadata[K] | undefined {
     return this.getDefItem(key);

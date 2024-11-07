@@ -23,8 +23,8 @@ export async function generateServiceTypes(service: DmnoService, writeToFile = f
     const typeGenFolderPath = `${service.path}/.dmno/.typegen`;
     await fs.promises.mkdir(typeGenFolderPath, { recursive: true });
 
-    // write schema.ts which has the config schema turned into TS in it
-    await fs.promises.writeFile(`${typeGenFolderPath}/schema.ts`, dtsSrc, 'utf-8');
+    // write schema.d.ts which has the config schema turned into TS in it
+    await fs.promises.writeFile(`${typeGenFolderPath}/schema.d.ts`, dtsSrc, 'utf-8');
 
     // write global file which defines a DMNO_CONFIG global
     // this used in our config.mts files and in front-end apps where we inject rollup rewrites
