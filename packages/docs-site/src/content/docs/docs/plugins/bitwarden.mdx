@@ -46,16 +46,6 @@ You must give each plugin instance a unique id so we can refer to it in other se
 In this case we used `bitwarden`, but you can imagine splitting vaults and access, and having multiple plugin instances - for example `bitwarden/prod` for highly sensitive production secrets and `bitwarden/dev` for everything else.
 :::
 
-### Injecting the plugin in monorepo services
-In a monorepo, you are likely managing secrets for multiple services. If you will be using the same service account(s) to access those secrets, you can initialize a plugin instance once in your root service as seen above, and then inject it in child services. Note we must use that same id we set during initialization.
-
-```typescript title='apps/some-service/.dmno/config.mts'
-import { BitwardenSecretsManagerDmnoPlugin } from '@dmno/bitwarden-plugin';
-
-// 💉 inject the already initialized plugin instead of re-initializing it
-const bitwardenPlugin = BitwardenSecretsManagerDmnoPlugin.injectInstance('bitwarden');
-```
-
 
 ------------
 
@@ -64,34 +54,12 @@ const bitwardenPlugin = BitwardenSecretsManagerDmnoPlugin.injectInstance('bitwar
 If you are already using Bitwarden Secrets Manager, you likely already have existing [projects](https://bitwarden.com/help/projects/) that contain [secrets](https://bitwarden.com/help/secrets/). If so, now would be a good time to review how they are all organized. If not, you should create at least one project, as each secret can have a parent project it belongs to, and access can be granted to projects rather than managing each secret individually.
 
 :::tip[Use projects to segment access]
-You should use multiple projects to segment your secrets following the [Principle of Least Privilege](https://en.wikipedia.org/wiki/Principle_of_least_privilege). This means at minimum, you should have one project for ultra-sensitive production secrets, and another for everything else. How much more you want to break things up is up to you and will depend on your security requirements.
-
-It is technically possible to create secrets without using projects and/or to assign permissions at the individual secret level, but we do not recommend it.
+You should use multiple projects to segment your secrets following the [Principle of Least Privilege](https://en.wikipedia.org/wiki/Principle_of_least_privilege). See more in our [Secret segmentation](/docs/guides/secret-segmentation/) guide.
 :::
 
-## Setup Machine Account & Access Tokens
 
-Machine accounts can be granted access to projects, and each machine account can have multiple access tokens with optional expiration. How you want to manage this is up to you, but a sensible approach could be:
+Machine account access tokens now serve as your _secret-zero_ - which grants access to the rest of your sensitive config stored in Bitwarden. It must be set locally and in deployed environments, but it is sensitive so we must pass in the value as an _override_ rather than storing it within the config. Locally, this usually means storing it in your [`.env.local` file](/docs/guides/env-files/) and on a deployed environment you'll usually set it wherever you would normally pass in environment variables. DMNO will handle the rest. See [Setting overrides](/docs/guides/env-files/#setting-overrides-via-env-files) for more details.
 
-- Production machine account has access to all projects
-  - single access token is used at a time
-- Staging/CI machine account has access to all projects except ultra-sensitive prod secrets
-  - each environment/CI/external tool could have a unique access token
-- Dev machine account has access to secrets needed for local dev
-  - each developer could have a unique access token
-
-Expiring tokens are more secure, but require the overhead of rolling those tokens, which must be done manually. Not wanting to cause an outage, you may want to roll them manually without the pressure of a potentially forgotten expiry date. To roll without downtime, create a new token, redeploy, and then decommission the previous token.
-
-### 
-
-
-Machine account access tokens now serve as your _secret-zero_ - which grants access to the rest of your sensitive config stored in Bitwarden. It must be set locally and in deployed environments, but it is sensitive so we must pass in the value as an _override_ rather than storing it within the config. Locally, this usually means storing it in your [`.env.local` file](/docs/guides/env-files/) and on a deployed environment you'll usually set it within some kind of UI, wherever you would normally pass in environment variables.
-
-```diff title=".dmno/.env.local"
-+BWS_TOKEN=0.abc123...
-```
-
-Note that the config path of `BWS_TOKEN` is arbitrary and you can see how it was wired up from your config schema to the plugin input in the example above.
 
 ------
 
@@ -118,21 +86,6 @@ export default defineDmnoService({
   },
 });
 ```
-
-## Caching
-In order to avoid rate limits and keep dev server restarts extremely fast, we heavily cache data fetched from external sources. After updating secrets in Bitwarden, if the item has been cached, you'll need to clear the cache to see it take effect.
-
-- Use the [`dmno clear-cache` command](/docs/reference/cli/clear-cache/) to clear the cache once
-- The [`dmno resolve`](/docs/reference/cli/resolve/) and [`dmno run`](/docs/reference/cli/run/) commands have cache related flags:
-  - `--skip-cache` - skips caching logic altogether
-  - `--clear-cache` - clears the cache once before continuing as normal
-
-:::tip[Active config iteration]
-While you are actively working on the config itself, `dmno resolve -w --skip-cache` will combine watch mode with skipping cache logic.
-
-Once you are satisfied, clear the cache once more and you are good to go.
-:::
-
 
 ## Self-hosted
 In case you are self-hosting Bitwarden Secrets Manager, the `BitwardenSecretsManagerDmnoPlugin` also takes additional inputs for `apiServerUrl` and `identityServerUrl`. The values for this can be found in the Bitwarden UI under `Machine Accounts` > `Config`. See the [Bitwarden docs](https://bitwarden.com/help/machine-accounts/#configuration-information) for more details.

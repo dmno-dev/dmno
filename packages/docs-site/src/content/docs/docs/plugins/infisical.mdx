@@ -1,0 +1,109 @@
+---
+title: Infisical plugin
+description: DMNO's Infisical plugin allows you to securely access your secrets stored in Infisical.
+npmPackage: "@dmno/infisical-plugin"
+---
+
+import { Steps, Icon } from '@astrojs/starlight/components';
+import TabbedCode from '@/components/TabbedCode.astro';
+
+This DMNO plugin allows you to securely access your secrets stored in [Infisical](https://infisical.com/). The current implementation uses [Machine Identities](https://infisical.com/docs/documentation/platform/identities/machine-identities#machine-identities) and [Universal Auth](https://infisical.com/docs/documentation/platform/identities/universal-auth#universal-auth). If you need to use a different authentication method, please [open an issue](https://github.com/dmnojs/dmno/issues) and we can discuss options.
+
+## DMNO installation & setup
+
+Install the package in the service(s) that will use secrets from Infisical.
+
+<TabbedCode packageName="@dmno/infisical-plugin" />
+
+-----
+
+After installation, you'll need to initialize the plugin in your `config.mts` and add a few config items that are necessary to authenticate with Infisical and fetch secrets. It's ok if you have not created the machine identity or client keys - we'll do that in the next section.
+
+```diff lang="ts" title='.dmno/config.mts'
+import { InfisicalDmnoPlugin, InfisicalTypes } from '@dmno/infisical-plugin';
+
+// explicitly wire the plugin instance to the config path
+const infisicalPlugin = new InfisicalDmnoPlugin('infisical/dev', {
+  environment: 'development',
+  clientId: configPath('..', 'INFISICAL_CLIENT_ID'),
+  clientSecret: configPath('..', 'INFISICAL_CLIENT_SECRET'),
+  projectId: configPath('..', 'INFISICAL_PROJECT_ID'),
+});
+
+// or you can inject by default
+const infisicalPlugin2 = new InfisicalDmnoPlugin('infisical/prod', {
+  environment: 'production',
+}); 
+
+export default defineDmnoService({
+  schema: {
+    // ...
+    INFISICAL_CLIENT_ID: { extends: InfisicalTypes.clientId },
+    INFISICAL_CLIENT_SECRET: { extends: InfisicalTypes.clientSecret },
+    INFISICAL_PROJECT_ID: { extends: InfisicalTypes.projectId },
+    // ...
+  },
+});
+```
+
+:::tip[Wiring up plugin instances]
+
+See our [General plugin guidelines](/docs/plugins/overview/#general-plugin-guidelines) for more information on how to wire up plugin instances.
+
+:::
+
+------------
+
+## Infisical setup 
+
+### Project & secrets
+
+If you are an existing Infisical user, you probably already have projects and secrets. If not, you should create at least one [project](https://infisical.com/docs/documentation/platform/project). Infisical uses the concept of [environments](https://infisical.com/docs/documentation/platform/project#project-environments) to group secrets. Make sure to make your secrets available in the same environment configuration as each plugin instance.
+
+### Machine identity & client keys
+
+Next, you'll need to create a [Machine Identity](https://infisical.com/docs/documentation/platform/identities/machine-identities#concept) in your **Organization** under **Access Control**.  Make note of the **Client ID** and create a new **Client Secret**. Then in your project, make sure the identity you created has the necessary access. This is configured in the project settings under the **Access Control** -> **Machine Identities** tab.
+
+How you want to segment your identities and secrets is up to you. You could create a separate identity and secrets for each environment, or each service, or each project. At minimum, we recommend segmenting your production and non-production secrets. See [Secret Segmentation](/docs/guides/secret-segmentation/) for more details.
+
+Also note that the **Client Secret** is highly sensitive and should be treated as your _secret zero_. It will need to be set locally and passed in as an override. Locally, it can be set in your `.env.local` file, and in any deployed environments it can be set however you normally set environment variables for that platform. DMNO will handle the rest. See [Setting overrides](/docs/guides/env-files/#setting-overrides-via-env-files) for more details.
+
+------------
+
+## Adding items to your schema
+
+The Infisical plugin provides one method for fetching secrets, based on the name of the secret. The name itself will be inferred from the config item name. You can optionally pass a name if you wish to override the default.
+
+```typescript title='.dmno/config.mts'
+import { InfisicalDmnoPlugin, InfisicalTypes } from '@dmno/infisical-plugin';
+
+const infisicalPlugin = new InfisicalDmnoPlugin('infisical/dev', {
+  environment: 'development',
+});
+
+export default defineDmnoService({
+  schema: {
+    SOME_SECRET: {
+      // this will fetch the secret with the name 'SOME_SECRET' from the project specified in the plugin instance
+      value: infisicalPlugin.secret(),
+    },
+    SOME_NEW_SECRET: {
+      // this will fetch the secret with the name 'SOME_OTHER_SECRET' and make it available as SOME_NEW_SECRET in your DMNO_CONFIG
+      value: infisicalPlugin.secret('SOME_OTHER_SECRET'),
+    },
+  },
+});
+```
+
+### Self-hosted Infisical
+
+If you are using a self-hosted version of Infisical, the `InfisicalDmnoPlugin` takes an optional `siteUrl` parameter. For example:
+
+```typescript title='.dmno/config.mts'
+import { InfisicalDmnoPlugin, InfisicalTypes } from '@dmno/infisical-plugin';
+
+const infisicalPlugin = new InfisicalDmnoPlugin('infisical/dev', {
+  environment: 'development',
+  siteUrl: 'https://infisical.mycompany.com',
+});
+```
