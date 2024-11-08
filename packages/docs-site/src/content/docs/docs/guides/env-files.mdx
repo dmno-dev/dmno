@@ -16,7 +16,7 @@ When you run `dmno init`, DMNO will look for all `.env` files in your project an
 We try to infer as much about each config item as possible by:
 - Including related comments as a `description`
 - Infer the type (`extends`) based on the value for basic types like `boolean`, `number`, `email`, `url`
-- Set the `value` and not mark it as `sensitive` if the file was checked into source control. This includes using `value: switchByNodeEnv(...)` if values were found in multiple environment specific files
+- Set the `value` and not mark it as `sensitive` if the file was checked into source control. This includes using `value: switchBy('NODE_ENV', ...)` if values were found in multiple environment specific files
 - Set an `exampleValue` from a value from a `.env.sample`
 
 This automatic scaffolding of your config `schema` is meant to be a good starting point, but you should review it and make adjustments as necessary.

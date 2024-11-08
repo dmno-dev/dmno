@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, defineDmnoService, switchByNodeEnv } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService } from 'dmno';
 
 export default defineDmnoService({
   name: 'nuxt',

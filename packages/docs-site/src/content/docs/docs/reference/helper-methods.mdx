@@ -417,12 +417,6 @@ export default defineDmnoService({
 Having a `_default` branch is not required, but if there is no default branch and an unknown value is passed to the switch, you will get a `ResolutionError`. If this is not what you want, you must add `_default: undefined` or add branches for all expected switch values, even if they are set to resolve to `undefined`.
 :::
 
-### `switchByNodeEnv`
-
-`switchByNodeEnv({ branches })`
-
-This method is just a simple helper equivalent to `switchBy('NODE_ENV', ...)`.
-
-While switching based on an environment flag (e.g., dev/staging/prod) is definitely the most common use case for branching logic in your config, we do not recommend using `NODE_ENV` as that flag. Package managers alter their behavior based on `NODE_ENV`, and while it is not the best practice, so do some 3rd party modules.
-
-Instead we recommend defining your own env flag, for example `APP_ENV`, `ACME_ENV`, etc.  This allows you to have more control and be more specific. For example, you may want to have `development`, `test`, `test-ci`, `preview`, `staging`, `production`. Being more specific and toggling the rest of your config using that flag fits very naturally with using DMNO.
+:::note[Switching based on environment]
+While switching based on an environment flag (e.g., dev/staging/prod) is definitely the most common use case for branching logic in your config, we do not recommend using `NODE_ENV` as that flag for most projects. See our [Multiple Environments guide](/docs/guides/multi-env/) for more details.
+:::

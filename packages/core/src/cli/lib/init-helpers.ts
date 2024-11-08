@@ -6,8 +6,7 @@ import { parse as parseJSONC, modify as modifyJSONC, applyEdits as applyEditsJSO
 import buildEsmResolver from 'esm-resolve';
 import kleur from 'kleur';
 import { outdent } from 'outdent';
-import { input, confirm } from '@inquirer/prompts';
-import validatePackageName from 'validate-npm-package-name';
+import { confirm } from '@inquirer/prompts';
 import boxen from 'boxen';
 import { tryCatch, promiseDelay } from '@dmno/ts-lib';
 import { ScannedWorkspaceInfo } from '../../config-loader/find-services';

@@ -1,5 +1,5 @@
 import {
-  defineDmnoService, DmnoBaseTypes, configPath, dmnoFormula,switchByNodeEnv,
+  defineDmnoService, DmnoBaseTypes, configPath, dmnoFormula, switchBy,
   createDmnoDataType, ValidationError,
   EncryptedFileStorePlugin
 } from 'dmno';
@@ -132,7 +132,7 @@ export default defineDmnoService({
     // and a "value resolver" can always return another resolver, which lets you easily compose functionality 
     // NOTE - it's easy to author your own reusable resolvers to create whatever functionality you need
     SWITCHED_ENV_EXAMPLE: {
-      value: switchByNodeEnv({
+      value: switchBy('NODE_ENV', {
         _default: 'default-value',
         staging: (ctx) => `${ctx.get('NODE_ENV')}-value`,
         production: onePassSync.item("https://start.1password.com/open/i?a=I3GUA2KU6BD3FBHA47QNBIVEV4&v=ut2dftalm3ugmxc6klavms6tfq&i=bphvvrqjegfmd5yoz4buw2aequ&h=dmnoinc.1password.com"),
