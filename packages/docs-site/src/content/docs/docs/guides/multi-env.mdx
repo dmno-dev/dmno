@@ -5,11 +5,11 @@ description: Use DMNO to simplify multi-environment configuration.
 
 DMNO supports multiple environments (e.g., dev/staging/prod) out of the box, allowing you to toggle config values based on the current environment. Many other config tools base their entire model around this concept, and you must redefine the entire set of config for each environment - resulting in copy pasted values, or awkward re-use mechanisms.
 
-In DMNO, your config is composed of a reactive graph of data and functions. One of those built-in functions is [`switchBy`](/docs/reference/helper-methods/#switchby), which allows you to introduce branching logic based on the current value of another item. Using `switchBy` with an environment flag is definitely the most common use-case, but there are many other useful applications as well.
+In DMNO, your config is composed of a reactive graph of data and functions. One of those built-in functions is [`switchBy`](/docs/reference/helper-methods/#switchby), which allows you to introduce branching logic based on the current value of another item. Using `switchBy` with an environment flag is the most common use-case, but there are many other useful applications as well.
 
 ## Values per environment using `switchBy`
 
-The [`switchBy`](/docs/reference/helper-methods/#switchby) helper method selects a resolver branch based on the current value of another config item. In this case we toggle based on an environment flag, like `NODE_ENV`, or better yet a custom env flag that you have more control over.
+The [`switchBy`](/docs/reference/helper-methods/#switchby) helper method selects a resolver branch based on the current value of another config item. In this case, we toggle based on an environment flag, like `NODE_ENV`, or, better yet, a custom env flag that you have more control over.
 
 To use `switchBy`, we select another item by name to use as the switch condition, and provide a key-value object to define the different branches that might be selected. The keys are the possible expected values, with `_default` being a special reserved key that is selected if no match is found.
 
@@ -44,7 +44,7 @@ export default defineDmnoService({
 
 ## Which environment flag should you use?
 
-While `NODE_ENV` is a common env flag that you are probably familiar with, we do not recommend using it! Historically, some 3rd party modules have altered their own behaviour based on this flag, so it's best to avoid it and leave `NODE_ENV=production`, especially in a staging environment where we want to run production-like code. It is common that other platforms inject their own env flag for the same reason.
+While `NODE_ENV` is a common env flag that you are probably familiar with, **we do not recommend using it**. Historically, some 3rd party modules have altered their own behaviour based on this flag, so it's best to avoid it and leave `NODE_ENV=production`, especially in a staging environment where we want to run production-like code. It is common that other platforms inject their own env flag for the same reason.
 
 Even in those cases, we recommend creating your own more specific env flag, for example `APP_ENV`, that you have total control over. Here is an example of building our own env flag based on the env vars injected by Vercel. In this example, we'd like to differentiate between PR previews, branch previews, and a special staging branch.
 
@@ -81,4 +81,4 @@ APP_ENV=production pnpm exec dmno run -- your-build-command
 
 Keep in mind that DMNO loads in process environment variables in as _overrides_, so there are many cases where your schema does not have a value defined for a certain environment flag, because you are expecting to receive it as an override. Sometimes this could be contextual information injected by the hosting platform, like `VERCEL_GIT_PULL_REQUEST_ID`, or it could be env vars that have been set via the platform's env var management UI. This will be especially true if you are migrating an existing project to DMNO.
 
-Over time, you may find it helpful to migrate more of your config into the schema and to a centralized secret store (like 1password). This reduces "secret sprawl", keeping things more secure and easier to reason about. In this case, you may still inject your "secret-zero" as an override, but everything else will be defined via the schema.
+Over time, you may find it helpful to migrate more of your config into the schema and to a centralized secret store (like 1Password). This reduces secret sprawl, keeping things more secure and easier to reason about. In this case, you may still inject your _secret-zero_ as an override, but everything else will be defined via the schema.
