@@ -1,5 +1,20 @@
 # dmno
 
+## 0.0.29
+
+### Patch Changes
+
+- [#153](https://github.com/dmno-dev/dmno/pull/153) [`bd44871`](https://github.com/dmno-dev/dmno/commit/bd44871de2988cf4fa0936550ed0a86337b3694c) Thanks [@theoephraim](https://github.com/theoephraim)! - infer required:true if static value is set
+
+- [#153](https://github.com/dmno-dev/dmno/pull/153) [`bd44871`](https://github.com/dmno-dev/dmno/commit/bd44871de2988cf4fa0936550ed0a86337b3694c) Thanks [@theoephraim](https://github.com/theoephraim)! - adjust tsconfig to make schema use .d.ts
+
+- [#155](https://github.com/dmno-dev/dmno/pull/155) [`4ac18c6`](https://github.com/dmno-dev/dmno/commit/4ac18c640dc17473c1e190d7501d838e39e840ca) Thanks [@theoephraim](https://github.com/theoephraim)! - deprecate switchByNodeEnv and clarify docs
+
+- [#153](https://github.com/dmno-dev/dmno/pull/153) [`bd44871`](https://github.com/dmno-dev/dmno/commit/bd44871de2988cf4fa0936550ed0a86337b3694c) Thanks [@theoephraim](https://github.com/theoephraim)! - bugfix on switchBy handling when no matching branch is found
+
+- Updated dependencies [[`bd44871`](https://github.com/dmno-dev/dmno/commit/bd44871de2988cf4fa0936550ed0a86337b3694c), [`bd44871`](https://github.com/dmno-dev/dmno/commit/bd44871de2988cf4fa0936550ed0a86337b3694c)]:
+  - @dmno/configraph@0.0.4
+
 ## 0.0.28
 
 ### Patch Changes
