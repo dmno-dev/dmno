@@ -1,5 +1,13 @@
 # @dmno/configraph
 
+## 0.0.4
+
+### Patch Changes
+
+- [#153](https://github.com/dmno-dev/dmno/pull/153) [`bd44871`](https://github.com/dmno-dev/dmno/commit/bd44871de2988cf4fa0936550ed0a86337b3694c) Thanks [@theoephraim](https://github.com/theoephraim)! - infer required:true if static value is set
+
+- [#153](https://github.com/dmno-dev/dmno/pull/153) [`bd44871`](https://github.com/dmno-dev/dmno/commit/bd44871de2988cf4fa0936550ed0a86337b3694c) Thanks [@theoephraim](https://github.com/theoephraim)! - bugfix on switchBy handling when no matching branch is found
+
 ## 0.0.3
 
 ### Patch Changes
