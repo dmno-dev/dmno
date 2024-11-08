@@ -142,7 +142,7 @@ describe('graph resolution', () => {
       expect(e.configNodes.switchTest.schemaErrors).toHaveLength(1);
     });
 
-    test('we get a ResolutionError if no _deafult defined and no matching branch found', async () => {
+    test('we get a ResolutionError if no _default defined and no matching branch found', async () => {
       const g = new Configraph();
       const e = g.createEntity({
         configSchema: {

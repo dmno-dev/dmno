@@ -29,6 +29,11 @@ export function switchBy(switchByKey: string, branches: SwitchByResolverOptions)
   });
 }
 
+/**
+ * @deprecated better to use switchBy with a custom env flag
+ *
+ * @see https://dmno.dev/docs/guides/multi-env/
+ * */
 export const switchByNodeEnv = (branches: SwitchByResolverOptions) => switchBy('NODE_ENV', branches);
 export const switchByDmnoEnv = (branches: SwitchByResolverOptions) => switchBy('DMNO_ENV', branches);
 

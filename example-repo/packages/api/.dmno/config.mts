@@ -1,4 +1,4 @@
-import { defineDmnoService, DmnoBaseTypes, switchByNodeEnv } from 'dmno';
+import { defineDmnoService, DmnoBaseTypes, switchBy } from 'dmno';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 import { EncryptedVaultDmnoPlugin } from '@dmno/encrypted-vault-plugin';
 
@@ -50,7 +50,7 @@ export default defineDmnoService({
       sensitive: true,
     },
     SWITCHED_EXAMPLE: {
-      value: switchByNodeEnv({
+      value: switchBy('NODE_ENV', {
         _default: OnePassBackend.itemByReference("op://dev test/example/username"),
         staging: OnePassBackend.itemByReference("op://dev test/example/username"),
         production: OnePassBackend.itemByReference("op://dev test/example/username"),
@@ -79,7 +79,7 @@ export default defineDmnoService({
       description: 'public url of this service',
       extends: DmnoBaseTypes.string({}),
       expose: true,
-      value: switchByNodeEnv({
+      value: switchBy('NODE_ENV', {
         _default: () => `http://localhost:${DMNO_CONFIG.PORT}`,
         // staging: valueCreatedDuringDeployment(),
         production: 'https://api.dmnoexampleapp.com',
