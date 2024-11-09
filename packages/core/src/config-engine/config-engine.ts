@@ -161,31 +161,19 @@ export class DmnoWorkspace {
       }
     }
 
-    // add graph edges based on "pick"
-    // we will not process individual items yet, but this will give us a DAG of service dependencies
-    for (const service of this.servicesArray) {
-      if (service.rawConfig?.isRoot) continue;
-      // eslint-disable-next-line @typescript-eslint/no-loop-func
-      _.each(service.rawConfig?.pick, (rawPick) => {
-      // pick defaults to picking from "root" unless otherwise specified
-        const pickFromServiceName = _.isString(rawPick)
-          ? this.rootServiceName
-          : (rawPick.source || this.rootServiceName);
-        if (this.services[pickFromServiceName] && pickFromServiceName !== service.serviceName) {
-          // create directed edge from service output feeding into this one (ex: database feeeds DB_URL into api )
-          this.servicesDag.setEdge(pickFromServiceName, service.serviceName, { type: 'pick' });
-        }
-      });
-    }
+    // we dont care about pick-based cycles here, since they will be found later by configraph
+    // and what we need to protect against is initializing the services in an impossible order
+    // due to a parent-cycle
 
     // look for cycles in the services graph, add schema errors if present
     const graphCycles = graphlib.alg.findCycles(this.servicesDag);
     _.each(graphCycles, (cycleMemberNames) => {
     // each cycle is just an array of node names in the cycle
       _.each(cycleMemberNames, (name) => {
-        //! not sure if we want to allow adding errors from here?
-        // but in configraph, it will not give a "cycle" error, it will give one that the parent was not found since it doesnt exist yet
-        this.services[name].schemaErrors.push(new SchemaError(`Detected service dependency cycle - ${cycleMemberNames.join(' + ')}`));
+        // little odd to put the SchemaError on service.configLoadError
+        // but the configraph entity does not exist yet and the fact that we
+        // have a parent cycle means we can't actually initialize it at all
+        this.services[name].configLoadError = new SchemaError(`Detected service parent cycle - ${cycleMemberNames.join(' + ')}`);
       });
     });
 
@@ -348,7 +336,7 @@ export class DmnoService {
   readonly rawConfig?: DmnoServiceConfig;
 
   /** error encountered while _loading_ the config schema */
-  readonly configLoadError?: ConfigLoadError;
+  configLoadError?: ConfigLoadError | SchemaError;
 
   readonly workspace: DmnoWorkspace;
   configraphEntity!: DmnoConfigraphServiceEntity;
