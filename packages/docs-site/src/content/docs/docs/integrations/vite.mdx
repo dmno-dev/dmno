@@ -6,7 +6,14 @@ npmPackage: "@dmno/vite-integration"
 
 import TabbedCode from '@/components/TabbedCode.astro';
 
-At DMNO we're big fans of [Vite](https://vitejs.dev/), which is why we offer first class integration between Vite and DMNO. 
+At DMNO we're big fans of [Vite](https://vitejs.dev/), and we use it under the hood to parse your `.dmno/config.mts` files. But our internal instance of Vite is decoupled from yours, so this plugins provides first class support between your use of Vite and DMNO.
+
+This plugin enables:
+- automatic loading of dmno resolved config (no `dmno run` needed)
+- build-time replacement of [static](/docs/guides/dynamic-config/) config items in your code and [html template](https://vite.dev/guide/env-and-mode#html-env-replacement)
+- ability to use config items within `vite.config.ts` file
+- automatic restart of the vite server on config changes
+- config validation during development and build with helpful error messages
 
 ## Initialize your Vite integration
 
@@ -51,42 +58,30 @@ The order of `injectDmnoConfigVitePlugin()` in the plugins does not matter.
 
 ## Accessing config
 
-Now in your application code you'll have access to a global object with all of your _public_ config items (i.e., those which aren't marked `sensitive`) called `DMNO_PUBLIC_CONFIG`. 
+Most vanilla Vite setups are for building static front-end apps. Therefore we are mostly concerned with injecting non-sensitive static config into our built code. Use `DMNO_PUBLIC_CONFIG` instead of `process.env` or `import.meta.env`, and you'll get all the benefits of dmno, and no longer have to rely on special `PUBLIC_` prefixes. By default, **only static items referenced via `DMNO_PUBLIC_CONFIG` items will be replaced**.
 
-```js
-const publicItem = DMNO_PUBLIC_CONFIG.MY_ITEM;
+```ts title='src/some-file.ts'
+if (DMNO_PUBLIC_CONFIG.SERVICE_X_ENABLED) {
+  const client = new ServiceXClient(DMNO_PUBLIC_CONFIG.SERVICE_X_PUBLIC_KEY);
+}
 ```
 
-And in any server code like your `vite.config.ts` file you can access all of your config via `DMNO_CONFIG`.
+If you are building for a server/hybrid environment, you can toggle on the `injectSensitiveConfig` option to also replace static items accessed via `DMNO_CONFIG`, which will include sensitive items as well.
 
-```js
-const secretItem = DMNO_CONFIG.MY_SECRET_ITEM;
+```ts title="vite.config.ts" ins="injectSensitiveConfig: true"
+import { defineConfig } from 'vite'
+import { injectDmnoConfigVitePlugin } from '@dmno/vite-integration';
+
+export default defineConfig({
+  plugins: [
+    injectDmnoConfigVitePlugin({ injectSensitiveConfig: true })
+  ],
+  //...
 ```
 
-
-:::tip[FYI]
-Under the hood, for your client code, vite replaces the references to your config with actual values at build time.
+:::note[Static config replacement]
+Only "static" items will be replaced at build time. The default handling is controlled by a service-level `dynamicConfig` setting, and can be overrideen using the `dynamic` property on each item. See the [dynamic config guide](/docs/guides/dynamic-config/) for more info.
 :::
-
-### HTML Env Replacement
-Vite [natively supports](https://vitejs.dev/guide/env-and-mode#html-env-replacement) injecting env vars into HTML files using a special syntax like `%SOME_VAR%`.
-
-This plugin injects additional replacements for strings like `%DMNO_PUBLIC_CONFIG.SOME_VAR%`.
-
-Note that unlike the native functionality which does not replace missing/non-existant items, we will try to replace all items, and will throw helpful errors if something goes wrong.
-
-:::tip[HTML comments]
-Note that replacements anywhere in the file, including HTML comments, are still attempted and can cause errors. For example `<!-- %DMNO_PUBLIC_CONFIG.BAD_ITEM_KEY% -->` will still fail!
-:::
-
-
-### SSR + dynamic config
-
-Currently our vite integration assumes you are doing _static_ builds, and not SSR. Therefore all config items are treated as static.
-
-Deeper support for ssr should be coming soon!
-
-## Common recipes
 
 ### Using env vars within `vite.config.*`
 It's often useful to be able to access configuration / env vars within your vite config. Without DMNO, it's a bit awkward, but DMNO makes it dead simple - in fact it's already available! Just reference config vars via `DMNO_CONFIG.SOME_ITEM` like you do everywhere else.
@@ -100,3 +95,39 @@ import { defineConfig } from 'vite';
 ```
 See our [TypeScript guide](/docs/guides/typescript/) for more details.
 
+### Using config within other scripts
+
+Even in a static front-end project, you may have other scripts in your project that rely on sensitive config.
+
+You can use [`dmno run`](/docs/reference/cli/run/) to inject resolved config into other scripts as regular environment vars.
+
+### HTML Env Replacement
+Vite [natively supports](https://vitejs.dev/guide/env-and-mode#html-env-replacement) injecting env vars into HTML files using a special syntax like `%SOME_VAR%`.
+
+This plugin injects additional replacements for strings like `%DMNO_PUBLIC_CONFIG.SOME_VAR%`.
+
+Note that unlike the native functionality which does not replace missing/non-existant items, we will try to replace all items, and will throw helpful errors if something goes wrong.
+
+:::tip[HTML comments]
+Note that replacements anywhere in the file, including HTML comments, are still attempted and can cause errors. For example `<!-- %DMNO_PUBLIC_CONFIG.BAD_ITEM_KEY% -->` will still fail!
+:::
+
+### SSR and server-side code
+
+Unlike our [Astro](/docs/integrations/astro/) and [Remix](/docs/integrations/remix/) integrations, if you are using vanilla Vite to do SSR or build backend code, we cannot automatically infer the right way to inject dmno. In this case you may need to include an additional import that initializes the DMNO globals and security features, and run your script via `dmno run` - similar to the [Node.js integration](/docs/integrations/node/).
+
+In fact, if you don't need build-time replacements or dev server reloading, you may not need this plugin at all.
+
+```diff lang="ts" title="src/main.ts"
++import 'dmno/auto-inject-globals'; // should be imported first!
+
+// rest of your code...
+```
+
+```diff lang="json" title="package.json" ins="dmno run -- "
+{
+  // ...
+  "scripts": {
+    "start": "dmno run -- node dist/main.js",
+  },
+```
