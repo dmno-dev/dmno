@@ -50,4 +50,24 @@ If you're using [plugins](/docs/plugins/overview/) to handle your sensitive conf
 When running `dmno init`, we prompt you to move any gitignored `.env` files we find into your `.dmno` folder. This means that other tools that may be looking for will not find them - which is on purpose. Instead, you should pass resolved config to those external tools via `dmno run`, whether `.env` files are being used or not.
 :::
 
+## Resolving config and outputting to .env format
+
+You can use the [`dmno resolve` command](/docs/reference/cli/resolve/) to load the resolved config for a service and output it in `.env` file format. This is useful for quickly exporting all your config values to a file for use in other systems, especially in some serverless environments where you may need to set a lot of environment variables at once and you don't have as much control over the running process as you do locally.
+
+Consider the following example where we want to load an `.env` file for use in Supabase Edge Functions.
+
+You can run the following command to load the resolved config for your `api` service and output it to a file.
+
+```bash
+pnpm exec dmno resolve --service api --format env >> .env.production
+supabase secrets set --env-file .env.production
+```
+
+If you want to do this with a single command, you can combine them like this:
+
+```bash
+supabase secrets set --env-file <(pnpm exec dmno resolve --service api --format env)
+```
+This has the added benefit of writing no file, so you don't need to worry about deleting it later or accidentally checking it into source control.
+
 {/* Will need to add a note about nested config and special `__` separator (ie PARENT__CHILD) */}
