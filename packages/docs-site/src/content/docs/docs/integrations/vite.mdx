@@ -12,7 +12,7 @@ This plugin enables:
 - automatic loading of dmno resolved config (no `dmno run` needed)
 - build-time replacement of [static](/docs/guides/dynamic-config/) config items in your code and [html template](https://vite.dev/guide/env-and-mode#html-env-replacement)
 - ability to use config items within `vite.config.ts` file
-- automatic restart of the vite server on config changes
+- automatic restart of the Vite server on config changes
 - config validation during development and build with helpful error messages
 
 ## Initialize your Vite integration
@@ -80,13 +80,13 @@ export default defineConfig({
 ```
 
 :::note[Static config replacement]
-Only "static" items will be replaced at build time. The default handling is controlled by a service-level `dynamicConfig` setting, and can be overrideen using the `dynamic` property on each item. See the [dynamic config guide](/docs/guides/dynamic-config/) for more info.
+Only static items will be replaced at build time. The default handling is controlled by a service-level `dynamicConfig` setting, and can be overridden using the `dynamic` property on each item. See the [dynamic config guide](/docs/guides/dynamic-config/) for more info.
 :::
 
 ### Using env vars within `vite.config.*`
-It's often useful to be able to access configuration / env vars within your vite config. Without DMNO, it's a bit awkward, but DMNO makes it dead simple - in fact it's already available! Just reference config vars via `DMNO_CONFIG.SOME_ITEM` like you do everywhere else.
+It's often useful to be able to access env vars in your vite config. Without DMNO, it's a bit awkward, but DMNO makes it dead simple - in fact it's already available! Just reference config vars via `DMNO_CONFIG.SOME_ITEM` like you do everywhere else.
 
-In many vite projects, your `vite.config.*` file is not included in the same tsconfig as the rest of your code. If this is the case and you are seeing type errors about `DMNO_CONFIG` not existing, you can add a triple slash reference to the generated types. For example:
+In many Vite projects, your `vite.config.*` file is not included in the same `tsconfig` as the rest of your code. If this is the case, and you are seeing type errors about `DMNO_CONFIG` not existing, you can add a triple slash reference to the generated types. For example:
 
 ```diff lang="ts" title="vite.config.ts"
 +/// <reference types="./.dmno/.typegen/global.d.ts" />
