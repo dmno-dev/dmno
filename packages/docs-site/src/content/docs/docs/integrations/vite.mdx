@@ -11,7 +11,7 @@ At DMNO we're big fans of [Vite](https://vitejs.dev/), and we use it under the h
 This plugin enables:
 - automatic loading of dmno resolved config (no `dmno run` needed)
 - build-time replacement of [static](/docs/guides/dynamic-config/) config items in your code and [html template](https://vite.dev/guide/env-and-mode#html-env-replacement)
-- ability to use config items within `vite.config.ts` file
+- ability to use config items within `vite.config.*` file
 - automatic restart of the Vite server on config changes
 - config validation during development and build with helpful error messages
 
@@ -32,7 +32,7 @@ If you prefer, you can install `dmno` itself and the `vite-integration` package 
 <TabbedCode packageName="@dmno/vite-integration dmno" />
 
 
-### Configure the dmno vite plugin
+### Configure the dmno Vite plugin
 
 Update your `vite.config.ts` - import the plugin, and add to `defineConfig`:
 
@@ -84,7 +84,7 @@ Only static items will be replaced at build time. The default handling is contro
 :::
 
 ### Using env vars within `vite.config.*`
-It's often useful to be able to access env vars in your vite config. Without DMNO, it's a bit awkward, but DMNO makes it dead simple - in fact it's already available! Just reference config vars via `DMNO_CONFIG.SOME_ITEM` like you do everywhere else.
+It's often useful to be able to access env vars in your Vite config. Without DMNO, it's a bit awkward, but DMNO makes it dead simple - in fact it's already available! Just reference config vars via `DMNO_CONFIG.SOME_ITEM` like you do everywhere else.
 
 In many Vite projects, your `vite.config.*` file is not included in the same `tsconfig` as the rest of your code. If this is the case, and you are seeing type errors about `DMNO_CONFIG` not existing, you can add a triple slash reference to the generated types. For example:
 
