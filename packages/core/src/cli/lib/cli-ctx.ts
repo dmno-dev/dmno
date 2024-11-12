@@ -40,11 +40,9 @@ const ctxHelpers = {
 
 export const cliRunContext = new AsyncLocalStorage<CliRunCtx>();
 
-export function initCliRunCtx() {
+export function initCliRunCtx(enableWatch = false) {
   cliRunContext.enterWith({
-    // not sure about this...
-    // configLoader: new ConfigLoaderProcess(),
-    configLoader: new ConfigLoader(),
+    configLoader: new ConfigLoader(enableWatch),
     ...ctxHelpers,
   });
 }

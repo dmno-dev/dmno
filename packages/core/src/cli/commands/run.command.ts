@@ -1,11 +1,8 @@
-import kleur from 'kleur';
 import _ from 'lodash-es';
 import { ExecaChildProcess, execa } from 'execa';
 import which from 'which';
 
-import { tryCatch } from '@dmno/ts-lib';
 import { DmnoCommand } from '../lib/dmno-command';
-import { formatError, formattedValue, getItemSummary } from '../lib/formatting';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 import { addCacheFlags } from '../lib/cache-helpers';
@@ -75,6 +72,7 @@ program.action(async (_command, opts: {
     }
   }
   fullInjectedEnv.DMNO_INJECTED_ENV = JSON.stringify(service.configraphEntity.getInjectedEnvJSON());
+  fullInjectedEnv.DMNO_PROCESS_UUID = 'abc123';
 
   commandProcess = execa(pathAwareCommand || rawCommand, commandArgsOnly, {
     stdio: 'inherit',

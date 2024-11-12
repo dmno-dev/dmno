@@ -33,7 +33,6 @@ addWatchMode(program); // must be first
 addCacheFlags(program);
 addServiceSelection(program, { disablePrompt: isSubshell() });
 
-
 program.action(async (opts: {
   // these args should be handled already by the helpers
   // service?: string,

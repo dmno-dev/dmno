@@ -44,14 +44,17 @@ program.addCommand(ClearCacheCommand);
 program.addCommand(PluginCommand);
 program.addCommand(PrintEnvCommand);
 
-
-
 // have to pass through the root program for this one so we can access all the subcommands
 addDocsCommand(program);
-
 customizeHelp(program);
 
-initCliRunCtx();
+program
+  .hook('preAction', (thisCommand, actionCommand) => {
+    // we need to know up front whether to enable the file watchers when initializing the vite server
+    const enableWatch = actionCommand.name() === 'dev' || actionCommand.opts().watch;
+    initCliRunCtx(enableWatch);
+  });
+
 debug(`finish loading - begin parse ${+new Date() - startBoot}ms`);
 try {
   await program.parseAsync();

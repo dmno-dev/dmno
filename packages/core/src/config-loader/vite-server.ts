@@ -4,10 +4,11 @@ import { ViteNodeServer } from 'vite-node/server';
 import { installSourcemapsSupport } from 'vite-node/source-map';
 import MagicString from 'magic-string';
 
-export async function setupViteServer(
+export async function setupViteServer(opts: {
   workspaceRootPath: string,
   hotReloadHandler: (ctx: HmrContext) => Promise<void>,
-) {
+  enableWatch: boolean
+}) {
   const customPlugin: Plugin = {
     name: 'dmno-config-loader-plugin',
 
@@ -26,7 +27,7 @@ export async function setupViteServer(
         return {
           // pointing at dist/index is hard-coded...
           // we could extract the main entry point from the resolution instead?
-          id: `${workspaceRootPath}/node_modules/dmno/dist/index.js`,
+          id: `${opts.workspaceRootPath}/node_modules/dmno/dist/index.js`,
           external: 'absolute',
         };
       }
@@ -68,14 +69,13 @@ export async function setupViteServer(
         if (m.id) viteRunner.moduleCache.deleteByModuleId(m.id);
       });
 
-      await hotReloadHandler(ctx);
+      await opts.hotReloadHandler(ctx);
     },
   };
 
-
   // create vite server
   const server = await createServer({
-    root: workspaceRootPath,
+    root: opts.workspaceRootPath,
     appType: 'custom',
     clearScreen: false,
     logLevel: 'warn',
@@ -95,7 +95,7 @@ export async function setupViteServer(
     //   },
     // ssr: true,
     },
-
+    ...!opts.enableWatch && { server: { watch: null } },
   });
   // console.log(server.config);
 

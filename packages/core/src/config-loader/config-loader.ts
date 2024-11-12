@@ -37,7 +37,7 @@ export class ConfigLoader {
   // get isReady() { return this.isReadyDeferred.promise; }
   isReady: Promise<void>;
 
-  constructor() {
+  constructor(private enableWatch: boolean) {
     this.isReady = this.finishInit();
     this.startAt = new Date();
   }
@@ -67,7 +67,11 @@ export class ConfigLoader {
 
     // TODO: we may want to do this on demand
     // so it does not slow down `dmno init` or other commands that don't need it
-    const { viteRunner } = await setupViteServer(this.workspaceRootPath, (ctx) => this.viteHotReloadHandler(ctx));
+    const { viteRunner } = await setupViteServer({
+      workspaceRootPath: this.workspaceRootPath,
+      enableWatch: this.enableWatch,
+      hotReloadHandler: (ctx) => this.viteHotReloadHandler(ctx),
+    });
     this.viteRunner = viteRunner;
   }
 
