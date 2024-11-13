@@ -1,1 +1,1 @@
-export const isSubshell = () => (process.env.BASH_SUBSHELL && process.env.BASH_SUBSHELL !== '0') || false;
+export const isSubshell = () => !process.stdin.isTTY;
