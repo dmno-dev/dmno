@@ -21,10 +21,12 @@ function getServiceLabel(s: DmnoService, padNameEnd: number) {
 export function addServiceSelection(program: Command, opts?: {
   disableAutoSelect?: boolean,
   disableMenuSelect?: boolean,
-  allowNoSelection?: boolean
+  allowNoSelection?: boolean,
+  disablePrompt?: boolean,
 }) {
   return program
     .option('-s, --service [service]', 'which service to load')
+    .option('-np, --no-prompt', 'do not prompt for service selection')
     .hook('preAction', async (thisCommand, actionCommand) => {
       const ctx = getCliRunCtx();
 
@@ -32,6 +34,7 @@ export function addServiceSelection(program: Command, opts?: {
       ctx.workspace = workspace;
 
       const namesMaxLen = getMaxLength(_.map(workspace.allServices, (s) => s.serviceName));
+      const disablePrompt = thisCommand.opts().noPrompt || opts?.disablePrompt;
 
       // // first display loading errors (which would likely cascade into schema errors)
       // if (_.some(_.values(workspace.allServices), (s) => s.configLoadError)) {
@@ -83,7 +86,7 @@ export function addServiceSelection(program: Command, opts?: {
       }
 
       // handle auto-selection based on what package manager has passed in as the current package when running scripts via the package manager
-      if (!explicitMenuOptIn && !opts?.disableAutoSelect) {
+      if (!explicitMenuOptIn && !disablePrompt && !opts?.disableAutoSelect) {
         // filled by package manager with package name if running an package.json script
         const packageName = process.env.npm_package_name || process.env.PNPM_PACKAGE_NAME;
         if (packageName) {
@@ -94,7 +97,7 @@ export function addServiceSelection(program: Command, opts?: {
 
           // This fully selects it and moves on
           // TODO: not totally sure, so we should see how this feels...
-          if (autoServiceFromPackageManager) {
+          if (autoServiceFromPackageManager && !disablePrompt) {
             ctx.selectedService = autoServiceFromPackageManager;
             ctx.autoSelectedService = true;
             return;
