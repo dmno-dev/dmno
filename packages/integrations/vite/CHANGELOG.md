@@ -1,5 +1,11 @@
 # @dmno/vite-integration
 
+## 0.0.12
+
+### Patch Changes
+
+- [#157](https://github.com/dmno-dev/dmno/pull/157) [`ccd00ce`](https://github.com/dmno-dev/dmno/commit/ccd00cef720732b7898def31b6d311fdbc7cbfef) Thanks [@theoephraim](https://github.com/theoephraim)! - update vite peer dep version to just "^5"
+
 ## 0.0.11
 
 ### Patch Changes
