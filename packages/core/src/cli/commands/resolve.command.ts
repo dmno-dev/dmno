@@ -50,8 +50,6 @@ program.action(async (opts: {
   const ctx = getCliRunCtx();
 
   const isSilent = !!opts.silent || isSubshell();
-  // console.log('isSilent', isSilent);
-  // console.log('subshell', isSubshell());
 
   if (opts.format) ctx.expectingOutput = true;
 
