@@ -1,5 +1,11 @@
 # dmno
 
+## 0.0.30
+
+### Patch Changes
+
+- [#159](https://github.com/dmno-dev/dmno/pull/159) [`8549dbe`](https://github.com/dmno-dev/dmno/commit/8549dbe2ddb4009fb191f47d044b5f2136cc5f60) Thanks [@philmillman](https://github.com/philmillman)! - adds env as an output format option for dmno resolve
+
 ## 0.0.29
 
 ### Patch Changes
