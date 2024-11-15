@@ -19,6 +19,7 @@
     "google-spreadsheet": "^4.1.1"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241112.0",
     "@dmno/encrypted-vault-plugin": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
