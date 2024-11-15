@@ -26,7 +26,7 @@ export default defineConfig({
   
   sourcemap: true, // Generate sourcemaps
   treeshake: true, // Remove unused code
-  clean: true, // Clean output directory before building
+  // clean: true, // Clean output directory before building
   outDir: "functions", // Output directory
   format: ['esm'], // Output format(s)
 
