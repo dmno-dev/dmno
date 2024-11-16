@@ -7,7 +7,7 @@ import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 import { addCacheFlags } from '../lib/cache-helpers';
 import { addWatchMode } from '../lib/watch-mode-helpers';
-import { checkForConfigErrors, checkForSchemaErrors } from '../lib/check-errors-helpers';
+import { checkForConfigErrors, checkForSchemaErrors } from '../../config-engine/check-errors-helpers';
 
 
 const program = new DmnoCommand('run')
@@ -56,24 +56,34 @@ program.action(async (_command, opts: {
   const workspace = ctx.workspace!;
   const service = ctx.selectedService;
   checkForSchemaErrors(workspace);
-  await workspace.resolveConfig();
+  //! await workspace.resolveConfig();
   checkForConfigErrors(service);
 
-  const serviceEnv = service.getEnv();
+  console.log(ctx.selectedService.serviceName);
+
+  const injectedJson = await ctx.dmnoServer.makeRequest('getInjectedJson', ctx.selectedService.serviceName);
 
   const fullInjectedEnv = {
     ...process.env,
   };
   // we need to add any config items that are defined in dmno config, but we dont want to modify existing items
-  for (const key in serviceEnv) {
+  for (const key in injectedJson) {
+    // must skip $SETTINGS
+    if (key.startsWith('$')) continue;
+
+    // TODO: need to think about how we deal with nested items
+    // TODO: let config nodes expose themselves in inject env vars with aliases
     if (!Object.hasOwn(process.env, key)) {
-      const strVal = serviceEnv[key]?.toString();
+      const strVal = injectedJson[key]?.toString();
       if (strVal !== undefined) fullInjectedEnv[key] = strVal;
     }
   }
-  fullInjectedEnv.DMNO_INJECTED_ENV = JSON.stringify(service.configraphEntity.getInjectedEnvJSON());
-  fullInjectedEnv.DMNO_PROCESS_UUID = 'abc123';
 
+  fullInjectedEnv.DMNO_INJECTED_ENV = JSON.stringify(injectedJson);
+  // this is what signals to the child process that is has a parent dmno server to use
+  fullInjectedEnv.DMNO_CONFIG_SERVER_UUID = ctx.dmnoServer.serverId;
+
+  console.time('execa');
   commandProcess = execa(pathAwareCommand || rawCommand, commandArgsOnly, {
     stdio: 'inherit',
     env: fullInjectedEnv,
@@ -84,6 +94,7 @@ program.action(async (_command, opts: {
   let exitCode: number;
   try {
     const commandResult = await commandProcess;
+    console.timeEnd('execa');
     // console.log(commandResult);
     exitCode = commandResult.exitCode;
   } catch (error) {

@@ -1,14 +1,15 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { ConfigLoader } from '../../config-loader/config-loader';
-import { DmnoService, DmnoWorkspace } from '../../config-engine/config-engine';
 import { DmnoPlugin } from '../../config-engine/dmno-plugin';
+import { SerializedDmnoPlugin, SerializedService, SerializedWorkspace } from '../../config-loader/serialization-types';
+import { DmnoServer } from '../../config-loader/dmno-server';
 
 export type CliRunCtx = {
-  configLoader: ConfigLoader;
-  workspace?: DmnoWorkspace;
-  selectedService?: DmnoService,
+
+  dmnoServer: DmnoServer,
+  workspace?: SerializedWorkspace;
+  selectedService?: SerializedService,
   autoSelectedService?: boolean,
-  selectedPlugin?: DmnoPlugin,
+  selectedPlugin?: SerializedDmnoPlugin,
 
   /** true if watch mode is enabled */
   watchEnabled?: boolean,
@@ -40,9 +41,9 @@ const ctxHelpers = {
 
 export const cliRunContext = new AsyncLocalStorage<CliRunCtx>();
 
-export function initCliRunCtx(enableWatch = false) {
+export function initCliRunCtx(dmnoServerOptions?: ConstructorParameters<typeof DmnoServer>[0]) {
   cliRunContext.enterWith({
-    configLoader: new ConfigLoader(enableWatch),
+    dmnoServer: new DmnoServer(dmnoServerOptions),
     ...ctxHelpers,
   });
 }

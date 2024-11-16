@@ -5,6 +5,9 @@
 // import first - we add global exception handler here
 const startBoot = new Date().getTime();
 
+const cliExecId = new Date().toISOString();
+console.time(`cli ${cliExecId}`);
+
 import './lib/init-process';
 
 import _ from 'lodash-es';
@@ -51,9 +54,15 @@ customizeHelp(program);
 program
   .hook('preAction', (thisCommand, actionCommand) => {
     // we need to know up front whether to enable the file watchers when initializing the vite server
-    const enableWatch = actionCommand.name() === 'dev' || actionCommand.opts().watch;
-    initCliRunCtx(enableWatch);
+    initCliRunCtx({
+      enableWebUi: actionCommand.name() === 'dev',
+      watch: actionCommand.name() === 'dev' || actionCommand.opts().watch,
+    });
   });
+
+process.on('exit', () => {
+  console.timeEnd(`cli ${cliExecId}`);
+});
 
 debug(`finish loading - begin parse ${+new Date() - startBoot}ms`);
 try {

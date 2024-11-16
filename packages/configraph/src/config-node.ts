@@ -110,8 +110,7 @@ export class ConfigraphNode<NodeMetadata = any> {
         typeDef = { extends: shorthandFnResult };
       }
     } else if (ConfigraphDataType.checkInstanceOf(defOrShorthand)) {
-      // TODO: without proper instanceof check, we must resort to `as any`
-      typeDef = { extends: defOrShorthand as any };
+      typeDef = { extends: defOrShorthand };
     } else if (_.isObject(defOrShorthand)) {
       typeDef = defOrShorthand;
     } else {

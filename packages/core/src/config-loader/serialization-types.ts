@@ -83,6 +83,7 @@ ConfigraphDataTypeDefinition<any, DmnoDataTypeMetadata>,
 
 export type SerializedDmnoPlugin =
 Omit<SerializedConfigraphPlugin, 'inputNodes'> & {
+  cliPath?: string,
   inputNodes: Record<string, SerializedConfigItem>
 };
 

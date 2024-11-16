@@ -1,3 +1,4 @@
+import { createReadStream } from 'fs';
 import { Command } from 'commander';
 import kleur from 'kleur';
 import { CliRunCtx, getCliRunCtx } from './cli-ctx';
@@ -16,7 +17,7 @@ let enqueueRerun = false;
 async function rerunCliAction(ctx: CliRunCtx, thisCommand: Command) {
   console.log(kleur.blue().italic('reloading due to config change'));
 
-  ctx.workspace = await ctx.configLoader.getWorkspace();
+  ctx.workspace = await ctx.dmnoServer.getWorkspace();
 
   // going to try to re-execute the command's action handler
   // probably a bad idea... but let's try it?
@@ -62,8 +63,8 @@ export function addWatchMode(program: Command) {
       if (!ctx.watchEnabled) return;
 
       // enable dev-mode and attach reload handler that re-runs the command's action
-      ctx.configLoader.devMode = true;
-      ctx.configLoader.onReload = async () => {
+      ctx.dmnoServer.enableWatchMode(async () => {
+        console.log('watch mode reload handler!');
         try {
           await rerunCliAction(ctx, thisCommand);
         } catch (err) {
@@ -80,7 +81,7 @@ export function addWatchMode(program: Command) {
           // print "watching your files..."
           console.log(WATCHING_FILES_MESSAGE);
         }
-      };
+      });
     })
     .hook('postAction', async (thisCommand, actionCommand) => {
       const ctx = getCliRunCtx();
@@ -96,6 +97,7 @@ export function addWatchMode(program: Command) {
       } else {
         console.log(WATCHING_FILES_MESSAGE);
       }
+      console.log('post action complete');
     });
 }
 

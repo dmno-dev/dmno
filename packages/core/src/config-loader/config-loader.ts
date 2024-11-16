@@ -1,21 +1,17 @@
-import crypto from 'node:crypto';
-import fs from 'node:fs';
 import path from 'node:path';
 
-import kleur from 'kleur';
 import _ from 'lodash-es';
 
 import Debug from 'debug';
 
-import { ConfigLoadError, Configraph, CacheMode } from '@dmno/configraph';
+import { ConfigLoadError, CacheMode } from '@dmno/configraph';
 
-import { DeferredPromise, createDeferredPromise } from '@dmno/ts-lib';
-import { HmrContext } from 'vite';
+import { HmrContext, ViteDevServer } from 'vite';
 import { ViteNodeRunner } from 'vite-node/client';
-import { ConfigLoaderRequestMap } from './ipc-requests';
+import { ViteNodeServer } from 'vite-node/server';
 import { createDebugTimer } from '../cli/lib/debug-timer';
 import { setupViteServer } from './vite-server';
-import { ScannedWorkspaceInfo, WorkspacePackagesListing, findDmnoServices } from './find-services';
+import { ScannedWorkspaceInfo, findDmnoServices } from './find-services';
 import {
   DmnoService, DmnoWorkspace, DmnoServiceConfig,
 } from '../config-engine/config-engine';
@@ -27,7 +23,7 @@ import {
 
 const debugTimer = createDebugTimer('dmno:config-loader');
 
-const debug = Debug('dmno');
+const debug = Debug('dmno:config-loader');
 
 export class ConfigLoader {
   startAt: Date;
@@ -38,11 +34,12 @@ export class ConfigLoader {
   isReady: Promise<void>;
 
   constructor(private enableWatch: boolean) {
-    this.isReady = this.finishInit();
     this.startAt = new Date();
+    this.isReady = this.finishInit();
   }
 
   viteRunner?: ViteNodeRunner;
+  viteServer?: ViteDevServer;
 
   workspaceInfo!: ScannedWorkspaceInfo;
   get workspacePackagesData() {
@@ -56,23 +53,25 @@ export class ConfigLoader {
   }
 
   private async finishInit() {
-    // console.time('find-services');
     this.workspaceInfo = await findDmnoServices();
-    const dmnoServicePackages = this.workspaceInfo.workspacePackages.filter((p) => p.dmnoFolder);
+    // already filtered to only services with a .dmno folder
+    const dmnoServicePackages = this.workspaceInfo.workspacePackages;
+
 
     // during init there may be no services at all
     if (!dmnoServicePackages.length) return;
 
-    // console.timeEnd('find-services');
+
 
     // TODO: we may want to do this on demand
     // so it does not slow down `dmno init` or other commands that don't need it
-    const { viteRunner } = await setupViteServer({
+    const { viteRunner, viteServer } = await setupViteServer({
       workspaceRootPath: this.workspaceRootPath,
       enableWatch: this.enableWatch,
       hotReloadHandler: (ctx) => this.viteHotReloadHandler(ctx),
     });
     this.viteRunner = viteRunner;
+    this.viteServer = viteServer;
   }
 
   onReload?: () => void | Promise<void>;
@@ -88,6 +87,10 @@ export class ConfigLoader {
       await this.reload();
       if (this.onReload) await this.onReload();
     }
+  }
+
+  async shutdown() {
+    await this.viteServer?.close();
   }
 
   devMode = false;
@@ -120,7 +123,6 @@ export class ConfigLoader {
 
     this.dmnoWorkspace.configraph.setCacheMode(this.cacheMode);
 
-
     beginWorkspaceLoadPlugins(this.dmnoWorkspace);
 
     let servicesToLoad = [...this.workspacePackagesData];
@@ -129,9 +131,6 @@ export class ConfigLoader {
       const toLoadCount = servicesToLoad.length;
       for (const w of servicesToLoad) {
         if (!w.dmnoFolder) continue;
-        // not sure yet about naming the root file differently?
-        // especially in the 1 service context, it may feel odd
-        // const configFilePath = `${w.path}/.dmno/${isRoot ? 'workspace-' : ''}config.mts`;
         const configFilePath = `${w.path}/.dmno/config.mts`;
 
         const serviceInitOpts = {

@@ -20,20 +20,20 @@ const program = new DmnoCommand('clear-cache')
 
 program.action(async (opts, more) => {
   const ctx = getCliRunCtx();
-  const workspace = await ctx.configLoader.getWorkspace();
 
-  const cacheFilePath = workspace.configraph.cacheProvider.cacheFilePath;
+  const {
+    wasDeleted,
+    cacheFilePath,
+  } = await ctx.dmnoServer.makeRequest('clearCache');
 
-  if (!await pathExists(cacheFilePath)) {
+  if (wasDeleted) {
+    console.log('🧲💾 Workspace cache file erased');
+    console.log(kleur.italic().gray(cacheFilePath));
+    console.log();
+  } else {
     console.log('👻 Workspace cache file already gone!\n');
     process.exit(0);
   }
-
-  await workspace.configraph.cacheProvider.reset();
-
-  console.log('🧲💾 Workspace cache file erased');
-  console.log(kleur.italic().gray(cacheFilePath));
-  console.log();
 
   process.exit(0);
 });

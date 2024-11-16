@@ -1,8 +1,18 @@
+import { fileURLToPath } from 'url';
 import { HmrContext, Plugin, createServer } from 'vite';
 import { ViteNodeRunner } from 'vite-node/client';
 import { ViteNodeServer } from 'vite-node/server';
 import { installSourcemapsSupport } from 'vite-node/source-map';
 import MagicString from 'magic-string';
+import buildEsmResolver from 'esm-resolve';
+
+// this lets us detect what is the current executing dmno
+// const esmResolver = buildEsmResolver(process.cwd(), {
+//   isDir: true,
+//   constraints: 'node',
+//   resolveToAbsolute: true,
+// });
+// const currentDmnoPath = esmResolver('dmno');
 
 export async function setupViteServer(opts: {
   workspaceRootPath: string,
@@ -28,6 +38,7 @@ export async function setupViteServer(opts: {
           // pointing at dist/index is hard-coded...
           // we could extract the main entry point from the resolution instead?
           id: `${opts.workspaceRootPath}/node_modules/dmno/dist/index.js`,
+          // id: currentDmnoPath,
           external: 'absolute',
         };
       }
@@ -38,7 +49,7 @@ export async function setupViteServer(opts: {
       // TODO: we probably should limit which files this applies in
       const fixedCode = new MagicString(code);
       if (!code.includes("import { getResolverCtx } from 'dmno'")) {
-        fixedCode.prepend('import { getResolverCtx } from \'dmno\';\n');
+        fixedCode.prepend("import { getResolverCtx } from 'dmno';\n");
       }
       fixedCode.replaceAll(/DMNO_CONFIG\.([\w\d.]+)/g, 'getResolverCtx().get(\'$1\')');
 
@@ -58,8 +69,9 @@ export async function setupViteServer(opts: {
       // ignore updates to the generated type files
       if (ctx.file.includes('/.dmno/.typegen/')) return;
 
-      // TODO: not too sure about this, but we shouldn't be reloading the config when the user's app code is updated
       // ignore files outside of the .dmno folder(s)?
+      // generally, we shouldn't be reloading the config when the user's app code is updated
+      // maybe there are exceptions (package.json? something else?)
       if (!ctx.file.includes('/.dmno/')) return;
 
       // console.log('hot reload in vite plugin', ctx);
@@ -95,11 +107,12 @@ export async function setupViteServer(opts: {
     //   },
     // ssr: true,
     },
+    // TODO: when watch is enabled, maybe we can we narrow down which files?
     ...!opts.enableWatch && { server: { watch: null } },
   });
   // console.log(server.config);
 
-  // this is need to initialize the plugins
+  // required for plugins
   await server.pluginContainer.buildStart({});
 
   // create vite-node server
@@ -122,18 +135,17 @@ export async function setupViteServer(opts: {
     debug: true,
     root: server.config.root,
     base: server.config.base,
-    // when having the server and runner in a different context,
-    // you will need to handle the communication between them
-    // and pass to this function
+    // when having the server and runner in a different context
+    // you will need to handle the communication between them and pass to this function
     async fetchModule(id) {
-    // console.log('fetch module', id);
+      // console.log('fetch module', id);
       return node.fetchModule(id);
     },
     async resolveId(id, importer) {
-    // console.log('resolve id', id, importer);
+      // console.log('resolve id', id, importer);
       return node.resolveId(id, importer);
     },
   });
 
-  return { viteRunner };
+  return { viteRunner, viteServer: server };
 }

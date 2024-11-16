@@ -1,11 +1,11 @@
 import _ from 'lodash-es';
 import Debug from 'debug';
-import { ConfigServerClient, injectDmnoGlobals } from 'dmno';
+import { checkServiceIsValid, DmnoServer, injectDmnoGlobals } from 'dmno';
 import type { Plugin } from 'vite';
 
 const debug = Debug('dmno:vite-integration');
 
-let firstLoad = !(process as any).dmnoConfigClient;
+let firstLoad = !(process as any).dmnoServer;
 
 debug('dmno vite plugin loaded. first load = ', firstLoad);
 
@@ -13,7 +13,7 @@ let isDevMode: boolean;
 let dmnoHasTriggeredReload = false;
 let configItemKeysAccessed: Record<string, boolean> = {};
 let dmnoConfigValid = true;
-let dmnoConfigClient: ConfigServerClient;
+let dmnoServer: DmnoServer;
 let dmnoInjectionResult: ReturnType<typeof injectDmnoGlobals>;
 
 async function reloadDmnoConfig() {
@@ -24,15 +24,15 @@ async function reloadDmnoConfig() {
     dmnoInjectionResult = injectDmnoGlobals();
   } else {
     debug('using injected dmno config server');
-    (process as any).dmnoConfigClient ||= new ConfigServerClient();
-    dmnoConfigClient = (process as any).dmnoConfigClient;
-    const resolvedService = await dmnoConfigClient.getServiceConfig();
+    (process as any).dmnoServer ||= new DmnoServer({ watch: true });
+    dmnoServer = (process as any).dmnoServer;
+    const resolvedService = await dmnoServer.getCurrentPackageConfig();
     const injectedConfig = resolvedService.injectedEnv;
     dmnoConfigValid = resolvedService.serviceDetails.isValid;
     configItemKeysAccessed = {};
 
     // shows nicely formatted errors in the terminal
-    ConfigServerClient.checkServiceIsValid(resolvedService.serviceDetails);
+    checkServiceIsValid(resolvedService.serviceDetails);
 
     dmnoInjectionResult = injectDmnoGlobals({
       injectedConfig,
@@ -56,7 +56,7 @@ export function injectDmnoConfigVitePlugin(
     injectSensitiveConfig: boolean,
   },
 ): Plugin {
-  const dmnoConfigClient: ConfigServerClient = (process as any).dmnoConfigClient;
+  const dmnoServer: DmnoServer = (process as any).dmnoServer;
 
   return {
     name: 'inject-dmno-config',
@@ -85,7 +85,7 @@ export function injectDmnoConfigVitePlugin(
           // adjust vite's setting so it doesnt bury the error messages
           config.clearScreen = false;
         } else {
-          dmnoConfigClient.shutdown();
+          dmnoServer.shutdown();
           console.log('💥 DMNO config validation failed 💥');
           // throwing an error spits out a big useless stack trace... so better to just exit?
           process.exit(1);
@@ -96,7 +96,7 @@ export function injectDmnoConfigVitePlugin(
       // not sure about this...
       if (firstLoad && server.config.command === 'serve') {
         firstLoad = false;
-        dmnoConfigClient.eventBus.on('reload', () => {
+        dmnoServer.enableWatchMode(() => {
           // console.log('vite config received reload event');
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
           server.restart();
@@ -166,7 +166,7 @@ export function injectDmnoConfigVitePlugin(
     //   console.log('hot update', file);
     // },
     buildEnd() {
-      if (!isDevMode) dmnoConfigClient.shutdown();
+      if (!isDevMode) dmnoServer.shutdown();
     },
   };
 }

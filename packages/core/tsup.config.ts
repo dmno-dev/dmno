@@ -16,10 +16,6 @@ export default defineConfig({
   // imported as TS directly, so we have to tell tsup to compile it instead of leaving it external
   noExternal: [
     '@dmno/ts-lib', '@dmno/encryption-lib',
-    
-    // yarn was having issues with finding the strong-type package for some reason
-    // so we'll just bundle them in as a short term solution
-    'node-ipc', '@achrinza/node-ipc', '@achrinza/event-pubsub', '@achrinza/strong-type'
   ],
   external: [
      // mark self-imports as external so it will leave them as-is

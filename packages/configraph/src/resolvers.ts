@@ -73,7 +73,7 @@ export function createResolver(
   if (_.isFunction(defOrFn)) {
     try {
       const result = defOrFn();
-      if (result instanceof ConfigValueResolver) return result;
+      if (ConfigValueResolver.checkInstanceOf(result)) return result;
       return new ConfigValueResolver(result);
     } catch (err) {
       return new ConfigValueResolver({
@@ -111,6 +111,16 @@ type ResolverBranchDefinition = {
 };
 
 export class ConfigValueResolver {
+  /** use instead of `instanceof ConfigValueResolver`
+   * because there can be a different copy of dmno being used within vite from the dmno config loading process
+   * */
+  static checkInstanceOf(other: any): other is ConfigValueResolver {
+    // return other instanceof ConfigValueResolver
+    return other?._dmnoInstanceType === this.name;
+  }
+  readonly _dmnoInstanceType = this.constructor.name;
+
+
   constructor(readonly def: ConfigValueResolverDef) {
     // TODO: figure out this pattern... we'll have several bits of setings that
     // are either static or need some basic resolution
@@ -396,7 +406,7 @@ export function processInlineResolverDef(resolverDef: InlineValueResolverDef) {
     });
 
   // already a resolver case
-  } else if (resolverDef instanceof ConfigValueResolver) {
+  } else if (ConfigValueResolver.checkInstanceOf(resolverDef)) {
     return resolverDef;
 
   // static value case - including explicitly setting to `undefined
@@ -412,6 +422,7 @@ export function processInlineResolverDef(resolverDef: InlineValueResolverDef) {
       resolve: async () => resolverDef,
     });
   } else {
+    console.log(resolverDef);
     throw new Error('invalid resolver definition');
   }
 }
@@ -425,7 +436,7 @@ export class ResolverContext {
     // private configItem: DmnoConfigItemBase,
     resolverOrNode: ConfigValueResolver | ConfigraphNode,
   ) {
-    if (resolverOrNode instanceof ConfigValueResolver) {
+    if (ConfigValueResolver.checkInstanceOf(resolverOrNode)) {
       this.resolver = resolverOrNode;
       this.configNode = this.resolver.configNode!;
     } else {
@@ -523,7 +534,12 @@ export class ResolverContext {
   }
 }
 
-export const resolverCtxAls = new AsyncLocalStorage<ResolverContext>();
+//! Temporary workaround for the fact that ALS does not work when where are multiple copies of dmno being loaded
+// currently when vite-node loads the config files, it loads a new copy of `dmno`, breaking things like ALS and instanceof checks
+// we'll work on a deeper fix, but using a global here works for now\
+(globalThis as any).resolverCtxAls ||= new AsyncLocalStorage<ResolverContext>();
+export const resolverCtxAls = (globalThis as any).resolverCtxAls as AsyncLocalStorage<ResolverContext>;
+// export const resolverCtxAls = new AsyncLocalStorage<ResolverContext>();
 export function getResolverCtx() {
   const ctx = resolverCtxAls.getStore();
   if (!ctx) throw new Error('unable to find resolver ctx in ALS');
