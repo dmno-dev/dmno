@@ -9,6 +9,7 @@ import { ConfigLoadError, CacheMode } from '@dmno/configraph';
 import { HmrContext, ViteDevServer } from 'vite';
 import { ViteNodeRunner } from 'vite-node/client';
 import { ViteNodeServer } from 'vite-node/server';
+import { createDeferredPromise } from '@dmno/ts-lib';
 import { createDebugTimer } from '../cli/lib/debug-timer';
 import { setupViteServer } from './vite-server';
 import { ScannedWorkspaceInfo, findDmnoServices } from './find-services';
@@ -99,12 +100,27 @@ export class ConfigLoader {
   cacheMode: CacheMode = true;
 
   async getWorkspace() {
+    if (this.isReloadInProgress) await this.reloadCompleted;
     if (this.dmnoWorkspace) return this.dmnoWorkspace;
     await this.reload();
     return this.dmnoWorkspace!;
   }
 
+  private isReloadInProgress = false;
+  private reloadCompleted?: Promise<unknown>;
   async reload() {
+    console.log('RELOAD!', this.workspacePackagesData);
+
+    if (this.isReloadInProgress) {
+      await this.reloadCompleted;
+      return;
+    }
+
+    this.isReloadInProgress = true;
+
+    const deferredCompleted = createDeferredPromise();
+    this.reloadCompleted = deferredCompleted.promise;
+
     // make sure everything is initialized
     await this.isReady;
 
@@ -162,6 +178,7 @@ export class ConfigLoader {
             throw new Error('Root service .dmno/config.mts must set `isRoot: true`');
           }
 
+          console.log('adding service', importedConfig.default.serviceName);
           service = new DmnoService({
             ...serviceInitOpts,
             // NOTE - could actually be a DmnoServiceConfig or DmnoWorkspaceConfig
@@ -205,6 +222,9 @@ export class ConfigLoader {
     await this.dmnoWorkspace.resolveConfig();
 
     this.schemaLoaded = true;
+
+    this.isReloadInProgress = false;
+    deferredCompleted.resolve();
   }
 
   private async regenerateAllTypeFiles() {
