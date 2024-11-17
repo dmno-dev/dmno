@@ -20,7 +20,7 @@ import { MIME_TYPES_BY_EXT, uwsBodyParser, uwsValidateClientCert } from '../lib/
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // TODO: read port from workspace yaml file, or just pick an available one?
-const STATIC_PORT = 3666;
+const STATIC_PORT = 0;
 
 // TODO: do we want to allow changing the host? or just always use localhost?
 // see old config-server.ts for details
