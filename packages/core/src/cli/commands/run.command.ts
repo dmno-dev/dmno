@@ -1,6 +1,7 @@
 import _ from 'lodash-es';
 import { ExecaChildProcess, execa } from 'execa';
 import which from 'which';
+import Debug from 'debug';
 
 import kleur from 'kleur';
 import { DmnoCommand } from '../lib/dmno-command';
@@ -9,7 +10,6 @@ import { getCliRunCtx } from '../lib/cli-ctx';
 import { addCacheFlags } from '../lib/cache-helpers';
 import { addWatchMode } from '../lib/watch-mode-helpers';
 import { checkForConfigErrors, checkForSchemaErrors } from '../../config-engine/check-errors-helpers';
-
 
 const program = new DmnoCommand('run')
   .summary('Injects loaded config into an external command')
@@ -60,8 +60,6 @@ program.action(async (_command, opts: {
   //! await workspace.resolveConfig();
   checkForConfigErrors(service);
 
-  console.log(ctx.selectedService.serviceName);
-
   const injectedJson = await ctx.dmnoServer.makeRequest('getInjectedJson', ctx.selectedService.serviceName);
 
   const fullInjectedEnv = {
@@ -75,7 +73,7 @@ program.action(async (_command, opts: {
     // TODO: need to think about how we deal with nested items
     // TODO: let config nodes expose themselves in inject env vars with aliases
     if (!Object.hasOwn(process.env, key)) {
-      const strVal = injectedJson[key]?.toString();
+      const strVal = injectedJson[key]?.value?.toString();
       if (strVal !== undefined) fullInjectedEnv[key] = strVal;
     }
   }
@@ -83,9 +81,8 @@ program.action(async (_command, opts: {
   fullInjectedEnv.DMNO_INJECTED_ENV = JSON.stringify(injectedJson);
   // this is what signals to the child process that is has a parent dmno server to use
   fullInjectedEnv.DMNO_CONFIG_SERVER_UUID = ctx.dmnoServer.serverId;
-  console.log(kleur.magenta(`>>> injecting server UUID ${ctx.dmnoServer.serverId}`));
 
-  console.time('execa');
+
   commandProcess = execa(pathAwareCommand || rawCommand, commandArgsOnly, {
     stdio: 'inherit',
     env: fullInjectedEnv,
@@ -119,8 +116,6 @@ program.action(async (_command, opts: {
   let exitCode: number;
   try {
     const commandResult = await commandProcess;
-    console.timeEnd('execa');
-    // console.log(commandResult);
     exitCode = commandResult.exitCode;
   } catch (error) {
     // console.log('child command error!', error);
