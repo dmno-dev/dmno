@@ -2,6 +2,7 @@ import _ from 'lodash-es';
 import { ExecaChildProcess, execa } from 'execa';
 import which from 'which';
 
+import kleur from 'kleur';
 import { DmnoCommand } from '../lib/dmno-command';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
@@ -82,6 +83,7 @@ program.action(async (_command, opts: {
   fullInjectedEnv.DMNO_INJECTED_ENV = JSON.stringify(injectedJson);
   // this is what signals to the child process that is has a parent dmno server to use
   fullInjectedEnv.DMNO_CONFIG_SERVER_UUID = ctx.dmnoServer.serverId;
+  console.log(kleur.magenta(`>>> injecting server UUID ${ctx.dmnoServer.serverId}`));
 
   console.time('execa');
   commandProcess = execa(pathAwareCommand || rawCommand, commandArgsOnly, {
@@ -90,6 +92,29 @@ program.action(async (_command, opts: {
   });
   // console.log('PARENT PID = ', process.pid);
   // console.log('CHILD PID = ', commandProcess.pid);
+
+  // if first run, we need to attach some extra exit handling
+  if (!ctx.isWatchModeRestart) {
+    // try to make sure we shut down cleanly and kill the child process
+    process.on('exit', (code: any, signal: any) => {
+      // if (childCommandKilledFromRestart) {
+      //   childCommandKilledFromRestart = false;
+      //   return;
+      // }
+      // console.log('exit!', code, signal);
+      commandProcess?.kill(9);
+    });
+
+    ['SIGTERM', 'SIGINT'].forEach((signal) => {
+      process.on(signal, () => {
+        // console.log('SIGNAL = ', signal);
+        commandProcess?.kill(9);
+        process.exit(1);
+      });
+    });
+    // TODO: handle other signals?
+  }
+
 
   let exitCode: number;
   try {
@@ -128,27 +153,8 @@ program.action(async (_command, opts: {
     }
   }
 
-  // if first run, we need to attach some extra exit handling
-  if (!ctx.isWatchModeRestart) {
-    // try to make sure we shut down cleanly and kill the child process
-    process.on('exit', (code: any, signal: any) => {
-      // if (childCommandKilledFromRestart) {
-      //   childCommandKilledFromRestart = false;
-      //   return;
-      // }
-      // console.log('exit!', code, signal);
-      commandProcess?.kill(9);
-    });
-
-
-    ['SIGTERM', 'SIGINT'].forEach((signal) => {
-      process.on(signal, () => {
-        // console.log('SIGNAL = ', signal);
-        commandProcess?.kill(9);
-        process.exit(1);
-      });
-    });
-    // TODO: handle other signals?
+  if (!ctx.watchEnabled) {
+    process.exit(exitCode);
   }
 });
 
