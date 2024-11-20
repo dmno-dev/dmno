@@ -1,15 +1,9 @@
 /* eslint-disable prefer-rest-params */
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
-
 import { injectDmnoGlobals } from 'dmno/injector-standalone';
-
-import next from 'next';
+import { resolve } from 'import-meta-resolve';
 import type { NextConfig } from 'next';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
 
 const {
   staticReplacements, dynamicKeys, injectedDmnoEnv, serviceSettings,
@@ -49,7 +43,7 @@ function patchFsWriteFileToPreventClientLeaks() {
 const WEBPACK_PLUGIN_NAME = 'DmnoNextWebpackPlugin';
 
 function getCjsModuleSource(moduleName: string) {
-  const modulePath = fileURLToPath(import.meta.resolve(moduleName)).replace('.js', '.cjs');
+  const modulePath = fileURLToPath(resolve(moduleName, import.meta.url)).replace('.js', '.cjs');
   const moduleSrc = fs.readFileSync(modulePath, 'utf8');
   return moduleSrc;
 }
@@ -73,7 +67,7 @@ export function dmnoNextConfigPlugin(dmnoOptions?: DmnoPluginOptions) {
   );
 
   // nextjs doesnt have a proper plugin system, so we write a function which takes in a config object and returns an augmented one
-  return (nextConfig: NextConfig | NextConfigFunction): NextConfigFunction => {
+  return (nextConfig: any | NextConfig | NextConfigFunction): NextConfigFunction => {
     return async (phase: string, defaults: { defaultConfig: NextConfig }) => {
       let resolvedNextConfig: NextConfig;
       if (typeof nextConfig === 'function') {
