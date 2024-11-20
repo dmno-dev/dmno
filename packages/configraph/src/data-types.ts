@@ -155,7 +155,7 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
    * because there can be a different copy of dmno being used within vite from the dmno config loading process
    * */
   static checkInstanceOf(other: any): other is ConfigraphDataType {
-    return other?._dmnoInstanceType === this.name;
+    return other instanceof ConfigraphDataType;
   }
   readonly _dmnoInstanceType = this.constructor.name;
 

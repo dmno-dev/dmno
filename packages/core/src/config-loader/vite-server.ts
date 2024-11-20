@@ -6,6 +6,9 @@ import { installSourcemapsSupport } from 'vite-node/source-map';
 import MagicString from 'magic-string';
 import buildEsmResolver from 'esm-resolve';
 
+// we will load the local copy of dmno so we can inject it directly into the vite node module cache
+import * as thisDmno from '../index';
+
 // this lets us detect what is the current executing dmno
 // const esmResolver = buildEsmResolver(process.cwd(), {
 //   isDir: true,
@@ -35,13 +38,17 @@ export async function setupViteServer(opts: {
         // if (!resolution) return;
 
         return {
+          id: '\0dmno',
           // pointing at dist/index is hard-coded...
           // we could extract the main entry point from the resolution instead?
-          id: `${opts.workspaceRootPath}/node_modules/dmno/dist/index.js`,
+          // id: `${opts.workspaceRootPath}/node_modules/dmno/dist/index.js`,
           // id: currentDmnoPath,
-          external: 'absolute',
+          // external: 'absolute',
         };
       }
+    },
+    async load(id) {
+      if (id === '\0dmno') return 'console.log("injected dmno");';
     },
 
     transform(code, id, options) {
@@ -145,6 +152,10 @@ export async function setupViteServer(opts: {
       // console.log('resolve id', id, importer);
       return node.resolveId(id, importer);
     },
+  });
+
+  viteRunner.moduleCache.setByModuleId('\0dmno', {
+    promise: thisDmno as any,
   });
 
   return { viteRunner, viteServer: server };
