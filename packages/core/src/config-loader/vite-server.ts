@@ -17,6 +17,8 @@ import * as thisDmno from '../index';
 // });
 // const currentDmnoPath = esmResolver('dmno');
 
+const WATCH_IGNORE_DIRS = ['.turbo', '.next', '.output', '.astro', '.nuxt', '.github', 'dist'];
+
 export async function setupViteServer(opts: {
   workspaceRootPath: string,
   hotReloadHandler: (ctx: HmrContext) => Promise<void>,
@@ -115,8 +117,18 @@ export async function setupViteServer(opts: {
     //   },
     // ssr: true,
     },
-    // TODO: when watch is enabled, maybe we can we narrow down which files?
-    ...!opts.enableWatch && { server: { watch: null } },
+    server: {
+      watch: opts.enableWatch ? {
+        ignored: (path: any, stats?: any) => {
+          const isDir = stats?.isDirectory();
+          // ignore some common folders, just to help with perf
+          if (isDir && WATCH_IGNORE_DIRS.includes(path.split('/').pop())) return true;
+          // only watch directories (since we need to descend into them) and files within .dmno folders
+          if (isDir || path.includes('/.dmno/')) return false;
+          return true;
+        },
+      } : null,
+    },
   });
   // see https://github.com/vitejs/vite/issues/18712
   if (!originalNodeEnv) delete process.env.NODE_ENV;
