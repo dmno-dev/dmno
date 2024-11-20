@@ -66,7 +66,7 @@ export function dmnoNextConfigPlugin(dmnoOptions?: DmnoPluginOptions) {
   // detect if we need to build the resolved config into the output
   // which is needed when running on external platforms where we dont have ability to use `dmno run`
   const injectResolvedConfigAtBuildTime = (
-    process.env.__VERCEL_BUILD_RUNNING // build running via `vercel` cli
+    (process.env.__VERCEL_BUILD_RUNNING || process.env.VERCEL) // build running via `vercel` cli or on vercel
     || process.env.NETLIFY // build running remotely on netlify
     || (process.env.NETLIFY_LOCAL && !process.env.NETLIFY_DEV) // build running locally via `netlify` cli
     || dmnoOptions?.injectResolvedConfigAtBuildTime // explicit opt-in
