@@ -31,7 +31,6 @@ export function addServiceSelection(program: Command, opts?: {
     .hook('preAction', async (thisCommand, actionCommand) => {
       const ctx = getCliRunCtx();
 
-
       const workspace = await ctx.dmnoServer.makeRequest('loadFullSchema');
       ctx.workspace = workspace;
 

@@ -196,13 +196,21 @@ export class ConfigraphNode<NodeMetadata = any> {
     return true;
   }
 
+  /** resolved value validation state (error/warning) */
+  get validationState(): 'warn' | 'error' | 'valid' {
+    if (!this.isSchemaValid) return 'error';
+    const errors = _.compact([
+      this.coercionError,
+      this.resolutionError,
+      ...this.validationErrors || [],
+    ]);
+    if (!errors.length) return 'valid';
+    return _.some(errors, (e) => !e.isWarning) ? 'error' : 'warn';
+  }
+
   /** whether the final resolved value is valid or not */
-  get isValid(): boolean | undefined {
-    if (!this.isSchemaValid) return false;
-    if (this.coercionError) return false;
-    if (this.validationErrors && this.validationErrors?.length > 0) return false;
-    if (this.resolutionError) return false;
-    return true;
+  get isValid() {
+    return this.validationState === 'valid';
   }
 
   children: Record<string, typeof this> = {};
@@ -400,6 +408,7 @@ export class ConfigraphNode<NodeMetadata = any> {
       key: this.key,
       isSchemaValid: this.isSchemaValid,
       isValid: this.isValid,
+      validationState: this.validationState,
       dataType: this.type.toJSON(),
 
       resolvedRawValue: this.resolvedRawValue,

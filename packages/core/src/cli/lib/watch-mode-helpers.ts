@@ -97,7 +97,6 @@ export function addWatchMode(program: Command) {
       } else {
         console.log(WATCHING_FILES_MESSAGE);
       }
-      console.log('post action complete');
     });
 }
 

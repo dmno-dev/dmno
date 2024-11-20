@@ -30,9 +30,6 @@ import { InitCommand } from './commands/init.command';
 import { ClearCacheCommand } from './commands/clear-cache.command';
 import { PrintEnvCommand } from './commands/printenv.command';
 
-
-
-
 const debug = Debug('dmno:cli');
 
 const program = new DmnoCommand('dmno')

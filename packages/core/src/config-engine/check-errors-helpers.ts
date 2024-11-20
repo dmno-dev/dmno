@@ -85,7 +85,7 @@ export function checkForSchemaErrors(workspace: SerializedWorkspace) {
 export function checkForConfigErrors(service: SerializedService, opts?: {
   showAll?: boolean
 }) {
-  const failingItems = _.filter(service.configNodes, (item) => !item.isValid);
+  const failingItems = _.filter(service.configNodes, (item) => item.validationState === 'error');
 
   // TODO: make isValid flag on service to work
   if (failingItems.length > 0) {

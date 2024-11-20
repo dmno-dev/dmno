@@ -11,7 +11,8 @@ import { SerializedService, SerializedWorkspace } from '../config-loader/seriali
 import { loadServiceDotEnvFiles } from '../lib/dotenv-utils';
 import { RedactMode } from '../lib/redaction-helpers';
 import {
-  DmnoConfigraph, DmnoConfigraphServiceEntity, DmnoDataTypeMetadata, DmnoServiceSettings,
+  DmnoConfigraph, DmnoConfigraphNode, DmnoConfigraphServiceEntity, DmnoDataTypeMetadata, DmnoServiceSettings,
+  UseAtPhases,
 } from './configraph-adapter';
 import { DmnoPlugin } from './dmno-plugin';
 
@@ -246,7 +247,9 @@ export class DmnoWorkspace {
     this.configraph.processConfig();
   }
 
-  async resolveConfig() {
+  async resolveConfig(opts?: {
+    resolutionPhase?: UseAtPhases,
+  }) {
     for (const service of this.allServices) {
       // reset overrides on all the individual nodes
       for (const node of Object.values(service.config)) {
@@ -284,6 +287,30 @@ export class DmnoWorkspace {
     }
     this.configraph.cacheProvider.cacheDirPath = path.join(this.rootService.path, '.dmno');
     await this.configraph.resolveConfig();
+
+
+    // here we set errors to warnings if the item is not used in the current "phase" (build/boot)
+    // but this is very naive, we probably dont want to be more specific about when we do this
+    if (opts?.resolutionPhase) {
+      for (const node of Object.values(this.configraph.nodesByFullPath)) {
+        if (node instanceof DmnoConfigraphNode) {
+          const useNodeAt = node.useAt;
+          if (useNodeAt && !useNodeAt.includes(opts.resolutionPhase)) {
+            console.log(node.schemaError);
+            console.log(node.validationErrors);
+            console.log(node.coercionError);
+
+            if (node.validationErrors?.[0]) {
+              node.validationErrors[0].isWarning = true;
+            }
+            if (node.resolutionError) {
+              node.resolutionError.isWarning = true;
+              console.log('updating node resolution error!');
+            }
+          }
+        }
+      }
+    }
   }
 
   get allServices() {

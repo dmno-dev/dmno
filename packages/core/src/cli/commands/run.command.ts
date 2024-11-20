@@ -10,6 +10,7 @@ import { getCliRunCtx } from '../lib/cli-ctx';
 import { addCacheFlags } from '../lib/cache-helpers';
 import { addWatchMode } from '../lib/watch-mode-helpers';
 import { checkForConfigErrors, checkForSchemaErrors } from '../../config-engine/check-errors-helpers';
+import { addResolutionPhaseFlags } from '../lib/resolution-context-helpers';
 
 const program = new DmnoCommand('run')
   .summary('Injects loaded config into an external command')
@@ -20,6 +21,7 @@ const program = new DmnoCommand('run')
   .example('dmno run —-service service1 -- somecommand --some-option=(printenv SOME_VAR)', 'Runs the somecommand with the resolved config using SOME_VAR via printenv');
 
 addWatchMode(program);
+addResolutionPhaseFlags(program);
 addCacheFlags(program);
 addServiceSelection(program);
 

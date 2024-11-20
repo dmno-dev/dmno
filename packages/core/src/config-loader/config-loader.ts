@@ -20,6 +20,7 @@ import { generateServiceTypes } from '../config-engine/type-generation';
 import {
   beginServiceLoadPlugins, beginWorkspaceLoadPlugins, finishServiceLoadPlugins, InjectedPluginDoesNotExistError,
 } from '../config-engine/dmno-plugin';
+import { UseAtPhases } from '../config-engine/configraph-adapter';
 
 
 const debugTimer = createDebugTimer('dmno:config-loader');
@@ -57,7 +58,6 @@ export class ConfigLoader {
     this.workspaceInfo = await findDmnoServices();
     // already filtered to only services with a .dmno folder
     const dmnoServicePackages = this.workspaceInfo.workspacePackages;
-
 
     // during init there may be no services at all
     if (!dmnoServicePackages.length) return;
@@ -98,6 +98,7 @@ export class ConfigLoader {
   schemaLoaded = false;
   dmnoWorkspace?: DmnoWorkspace;
   cacheMode: CacheMode = true;
+  resolutionPhase?: UseAtPhases;
 
   async getWorkspace() {
     if (this.isReloadInProgress) await this.reloadCompleted;
@@ -109,8 +110,6 @@ export class ConfigLoader {
   private isReloadInProgress = false;
   private reloadCompleted?: Promise<unknown>;
   async reload() {
-    console.log('RELOAD!', this.workspacePackagesData);
-
     if (this.isReloadInProgress) {
       await this.reloadCompleted;
       return;
@@ -219,7 +218,9 @@ export class ConfigLoader {
 
     // TODO: currently this reloads EVERYTHING always. We need to be smarter about it
     await this.regenerateAllTypeFiles();
-    await this.dmnoWorkspace.resolveConfig();
+    await this.dmnoWorkspace.resolveConfig({
+      resolutionPhase: this.resolutionPhase,
+    });
 
     this.schemaLoaded = true;
 

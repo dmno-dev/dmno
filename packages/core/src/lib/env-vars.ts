@@ -15,7 +15,9 @@ export function getConfigFromEnvVars(
 ) {
   // when we are reloading within the same process
   // we must ignore any _new_ process.env vars that dmno injected
-  if (_originalProcessEnv) return _originalProcessEnv;
+  if (_originalProcessEnv) {
+    return _originalProcessEnv;
+  }
 
   const configFromProcessEnv = {} as Record<string, any>;
   _.each(process.env, (val, key) => {

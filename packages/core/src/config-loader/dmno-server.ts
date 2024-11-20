@@ -15,6 +15,7 @@ import { loadOrCreateTlsCerts } from '../lib/certs';
 import { pathExists } from '../lib/fs-utils';
 import { findDmnoServices } from './find-services';
 import { MIME_TYPES_BY_EXT, uwsBodyParser, uwsValidateClientCert } from '../lib/uws-utils';
+import { UseAtPhases } from '../config-engine/configraph-adapter';
 
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -50,7 +51,6 @@ export class DmnoServer {
       this.webServerReady = this.initChildServer();
     } else {
       this.serverId = crypto.randomUUID();
-      console.time('init configloader');
       this.configLoader = new ConfigLoader(!!opts?.watch);
       this.webServerReady = this.bootWsServer();
     }
@@ -306,7 +306,6 @@ export class DmnoServer {
     // if not a child, we will wait for the config loader to finish loading
     if (!this.isChildServer) {
       await this.configLoader?.isReady;
-      console.timeEnd('init configloader');
 
       // we can bypass the http request if this is not a child server
       // but the overhead is very minimal, so we will re-enable this later
@@ -371,6 +370,11 @@ export class DmnoServer {
       this.configLoader.cacheMode = cacheMode;
     }
   }
+  setResolutionPhase(phase: UseAtPhases) {
+    if (this.configLoader) {
+      this.configLoader.resolutionPhase = phase;
+    }
+  }
   enableWatchMode(onReload: () => void | Promise<void>) {
     if (this.configLoader) {
       console.log('enable watch mode');
@@ -393,13 +397,9 @@ export class DmnoServer {
       return { pong: true };
     },
     loadFullSchema: async () => {
-      console.time('get workspace');
       const workspace = await this.configLoader?.getWorkspace()!;
-      console.timeEnd('get workspace');
-
-      console.time('resolve');
-      await workspace.resolveConfig();
-      console.timeEnd('resolve');
+      // currently this fetches the full workspace and it is already resolved
+      // TODO: ideally resolution would be a second step that we could trigger as needed
       return workspace.toJSON();
     },
     getInjectedJson: async (serviceId: string) => {

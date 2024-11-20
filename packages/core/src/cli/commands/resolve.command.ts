@@ -16,6 +16,7 @@ import { CliExitError } from '../lib/cli-error';
 import { checkForConfigErrors, checkForSchemaErrors } from '../../config-engine/check-errors-helpers';
 import { stringifyObjectAsEnvFile } from '../lib/env-file-helpers';
 import { isSubshell } from '../lib/shell-helpers';
+import { addResolutionPhaseFlags } from '../lib/resolution-context-helpers';
 
 const program = new DmnoCommand('resolve')
   .summary('Loads config schema and resolves config values')
@@ -30,6 +31,7 @@ const program = new DmnoCommand('resolve')
   .example('dmno resolve --service service1 --format env >> .env.local', 'Loads the resolved config for service1 and outputs it in .env file format and writes to .env.local');
 
 addWatchMode(program); // must be first
+addResolutionPhaseFlags(program);
 addCacheFlags(program);
 addServiceSelection(program, { disablePrompt: isSubshell() });
 
