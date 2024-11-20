@@ -50,6 +50,10 @@ customizeHelp(program);
 
 program
   .hook('preAction', (thisCommand, actionCommand) => {
+    // init command does not need a dmno server
+    // might want to opt-in on each command instead of skipping here?
+    if (actionCommand.name() === 'init') return;
+
     // we need to know up front whether to enable the file watchers when initializing the vite server
     initCliRunCtx({
       enableWebUi: actionCommand.name() === 'dev',

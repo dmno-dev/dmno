@@ -93,6 +93,7 @@ export async function setupViteServer(opts: {
   };
 
   // create vite server
+  const originalNodeEnv = process.env.NODE_ENV;
   const server = await createServer({
     root: opts.workspaceRootPath,
     appType: 'custom',
@@ -117,6 +118,9 @@ export async function setupViteServer(opts: {
     // TODO: when watch is enabled, maybe we can we narrow down which files?
     ...!opts.enableWatch && { server: { watch: null } },
   });
+  // see https://github.com/vitejs/vite/issues/18712
+  if (!originalNodeEnv) delete process.env.NODE_ENV;
+
   // console.log(server.config);
 
   // required for plugins
