@@ -2,6 +2,8 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: [ // Entry point(s)
+    'src/cli/lib/init-process.ts', // not actually used, but this helps make esbuild hoist this import to the top when it is used
+    
     'src/index.ts', // main lib, users will import from here
     
     'src/vendor-types/index.ts', // reusable types for very common things

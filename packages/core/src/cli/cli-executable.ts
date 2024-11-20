@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // hashbang needed to get npm generated ".bin/dmno" to work with esm imports
 
+import './lib/init-process';
+
 /* eslint-disable import/first */
 // import first - we add global exception handler here
 const startBoot = new Date().getTime();
@@ -8,7 +10,7 @@ const startBoot = new Date().getTime();
 const cliExecId = new Date().toISOString();
 console.time(`cli ${cliExecId}`);
 
-import './lib/init-process';
+
 
 import _ from 'lodash-es';
 import kleur from 'kleur';
