@@ -116,7 +116,6 @@ export class ConfigLoader {
 
     this.dmnoWorkspace.configraph.setCacheMode(this.cacheMode);
 
-
     beginWorkspaceLoadPlugins(this.dmnoWorkspace);
 
     let servicesToLoad = [...this.workspacePackagesData];
@@ -125,9 +124,6 @@ export class ConfigLoader {
       const toLoadCount = servicesToLoad.length;
       for (const w of servicesToLoad) {
         if (!w.dmnoFolder) continue;
-        // not sure yet about naming the root file differently?
-        // especially in the 1 service context, it may feel odd
-        // const configFilePath = `${w.path}/.dmno/${isRoot ? 'workspace-' : ''}config.mts`;
         const configFilePath = `${w.path}/.dmno/config.mts`;
 
         const serviceInitOpts = {

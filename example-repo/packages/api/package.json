@@ -25,7 +25,6 @@
     "chalk": "^5.2.0",
     "debug": "^4.3.4",
     "dmno": "link:../../../packages/core",
-    "dotenv": "^16.0.3",
     "exit-hook": "^3.2.0",
     "glob": "^10.2.2",
     "ioredis": "^5.3.1",
