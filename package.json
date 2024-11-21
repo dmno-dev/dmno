@@ -24,7 +24,7 @@
     "dmno": "workspace:*",
     "only-allow": "^1.2.1",
     "read-yaml-file": "^2.1.0",
-    "turbo": "^1.13.3",
+    "turbo": "^2.2.3",
     "typescript": "catalog:"
   },
   "engines": {
