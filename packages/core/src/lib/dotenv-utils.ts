@@ -105,7 +105,7 @@ export function loadDotEnvIntoObject(dotEnvStr: string) {
 
 
 
-async function loadDotEnvFile(basePath: string, relativePath: string) {
+async function loadDotEnvFile(basePath: string, relativePath: string, checkGitIgnored?: boolean) {
   const fileName = relativePath.split('/').pop();
   const filePath = path.resolve(basePath, relativePath);
   if (!fileName) throw new Error(`Invalid filePath - ${filePath}`);
@@ -127,7 +127,7 @@ async function loadDotEnvFile(basePath: string, relativePath: string) {
   if (applyForEnv === 'dev') applyForEnv = 'development';
   if (applyForEnv === 'prod') applyForEnv = 'production';
 
-  const isGitIgnored = await checkIsFileGitIgnored(filePath);
+  const isGitIgnored = checkGitIgnored ? await checkIsFileGitIgnored(filePath) : undefined;
 
   const rawContents = await fs.promises.readFile(filePath, 'utf8');
   const parsedContents = parseDotEnvContents(rawContents);
@@ -157,6 +157,7 @@ export async function loadServiceDotEnvFiles(
   opts?: {
     onlyLoadDmnoFolder?: boolean,
     excludeDirs?: Array<string>,
+    checkGitIgnored?: boolean,
   },
 ): Promise<Array<LoadedDotEnvFile>> {
   let globs = ['**/.env', '**/.env.*', '**/.env.*.local'];
@@ -178,7 +179,7 @@ export async function loadServiceDotEnvFiles(
     .withPromise();
 
   const dotEnvFiles = await asyncMap(dotEnvFilePaths, async (relativePath) => {
-    return await loadDotEnvFile(servicePath, relativePath);
+    return await loadDotEnvFile(servicePath, relativePath, opts?.checkGitIgnored);
   });
 
   const sortedDotEnvFiles = _.sortBy(dotEnvFiles, (d) => {
