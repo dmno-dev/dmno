@@ -107,7 +107,7 @@ program.action(async (opts: {
             kleur.bold('Which of your workspace packages would like to initialize as "DMNO services"?'),
             '',
             'You should select everything except shared libs that do not use any env vars.',
-            kleur.italic(`See ${kleur.gray('https://dmno.dev/docs/get-started/concepts/#service')} for more info`),
+            kleur.italic(`See ${kleur.gray('https://dmno.dev/docs/get-started/concepts/#dmno-service')} for more info`),
             '',
             '💡 You can also always run `dmno init` in those folders later!',
 

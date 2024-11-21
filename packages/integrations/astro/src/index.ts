@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'url';
 import Debug from 'debug';
 import {
-  ConfigServerClient, injectDmnoGlobals,
+  checkServiceIsValid,
+  DmnoServer, injectDmnoGlobals,
 } from 'dmno';
 import type { AstroIntegration } from 'astro';
 
@@ -19,7 +20,7 @@ let dmnoHasTriggeredReload = false;
 let enableDynamicPublicClientLoading = false;
 let configItemKeysAccessed: Record<string, boolean> = {};
 let dmnoConfigValid = true;
-let dmnoConfigClient: ConfigServerClient;
+let dmnoServer: DmnoServer;
 let dmnoInjectionResult: ReturnType<typeof injectDmnoGlobals>;
 
 let ssrOutputDirPath: string;
@@ -33,15 +34,15 @@ async function reloadDmnoConfig() {
     dmnoInjectionResult = injectDmnoGlobals();
   } else {
     debug('using injected dmno config server');
-    (process as any).dmnoConfigClient ||= new ConfigServerClient();
-    dmnoConfigClient = (process as any).dmnoConfigClient;
-    const resolvedService = await dmnoConfigClient.getServiceConfig();
+    (process as any).dmnoServer ||= new DmnoServer({ watch: true });
+    dmnoServer = (process as any).dmnoServer;
+    const resolvedService = await dmnoServer.getCurrentPackageConfig();
     const injectedConfig = resolvedService.injectedEnv;
     dmnoConfigValid = resolvedService.serviceDetails.isValid;
     configItemKeysAccessed = {};
 
     // shows nicely formatted errors in the terminal
-    ConfigServerClient.checkServiceIsValid(resolvedService.serviceDetails);
+    checkServiceIsValid(resolvedService.serviceDetails);
 
     dmnoInjectionResult = injectDmnoGlobals({
       injectedConfig,
@@ -127,9 +128,9 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
 
               ...astroCommand === 'dev' && {
                 async configureServer(server) {
-                  if (!isRestart && !!dmnoConfigClient) {
+                  if (!isRestart && !!dmnoServer) {
                     debug('initializing dmno reload > astro restart trigger');
-                    dmnoConfigClient.eventBus.on('reload', () => {
+                    dmnoServer.enableWatchMode(() => {
                       opts.logger.info('💫 dmno config updated - restarting astro server');
                       // eslint-disable-next-line @typescript-eslint/no-floating-promises
                       server.restart();

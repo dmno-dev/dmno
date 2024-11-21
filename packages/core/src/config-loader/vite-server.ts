@@ -4,10 +4,16 @@ import { ViteNodeServer } from 'vite-node/server';
 import { installSourcemapsSupport } from 'vite-node/source-map';
 import MagicString from 'magic-string';
 
-export async function setupViteServer(
+// we will load the local copy of dmno so we can inject it directly into the vite node module cache
+import * as thisDmno from '../index';
+
+const WATCH_IGNORE_DIRS = ['.turbo', '.next', '.output', '.astro', '.nuxt', '.github', 'dist'];
+
+export async function setupViteServer(opts: {
   workspaceRootPath: string,
   hotReloadHandler: (ctx: HmrContext) => Promise<void>,
-) {
+  enableWatch: boolean
+}) {
   const customPlugin: Plugin = {
     name: 'dmno-config-loader-plugin',
 
@@ -15,21 +21,16 @@ export async function setupViteServer(
     // otherwise we end up not loading the same code here in this file as within the config files
     // meaning we have 2 copies of classes and `instanceof` stops working
     enforce: 'pre', // Run before the builtin 'vite:resolve' of Vite
-    async resolveId(source, importer, options) {
+    async resolveId(source, _importer, _options) {
       // console.log('PLUGIN RESOLVE!', source, importer, options);
 
       if (source === 'dmno') {
-        // const resolution = await this.resolve(source, importer, options);
-        // console.log('dmno resolution', resolution);
-        // if (!resolution) return;
-
-        return {
-          // pointing at dist/index is hard-coded...
-          // we could extract the main entry point from the resolution instead?
-          id: `${workspaceRootPath}/node_modules/dmno/dist/index.js`,
-          external: 'absolute',
-        };
+        // return a virtual module, which we will populate with the dmno server's already loaded instance of dmno
+        return { id: '\0dmno' };
       }
+    },
+    async load(id) {
+      if (id === '\0dmno') return 'console.log("injected dmno");';
     },
 
     transform(code, id, options) {
@@ -37,7 +38,7 @@ export async function setupViteServer(
       // TODO: we probably should limit which files this applies in
       const fixedCode = new MagicString(code);
       if (!code.includes("import { getResolverCtx } from 'dmno'")) {
-        fixedCode.prepend('import { getResolverCtx } from \'dmno\';\n');
+        fixedCode.prepend("import { getResolverCtx } from 'dmno';\n");
       }
       fixedCode.replaceAll(/DMNO_CONFIG\.([\w\d.]+)/g, 'getResolverCtx().get(\'$1\')');
 
@@ -57,8 +58,9 @@ export async function setupViteServer(
       // ignore updates to the generated type files
       if (ctx.file.includes('/.dmno/.typegen/')) return;
 
-      // TODO: not too sure about this, but we shouldn't be reloading the config when the user's app code is updated
       // ignore files outside of the .dmno folder(s)?
+      // generally, we shouldn't be reloading the config when the user's app code is updated
+      // maybe there are exceptions (package.json? something else?)
       if (!ctx.file.includes('/.dmno/')) return;
 
       // console.log('hot reload in vite plugin', ctx);
@@ -68,38 +70,41 @@ export async function setupViteServer(
         if (m.id) viteRunner.moduleCache.deleteByModuleId(m.id);
       });
 
-      await hotReloadHandler(ctx);
+      await opts.hotReloadHandler(ctx);
     },
   };
 
-
   // create vite server
+  const originalNodeEnv = process.env.NODE_ENV;
   const server = await createServer({
-    root: workspaceRootPath,
+    root: opts.workspaceRootPath,
     appType: 'custom',
     clearScreen: false,
     logLevel: 'warn',
     plugins: [
       customPlugin,
     ],
-
-    // if the folder we are running in has its own vite.config file, it will try to use it
-    // passing false here tells it to skip that process
+    // passing false disables auto-detection and use of an existing vite.config file
     configFile: false,
-    build: {
-    // target: 'esnext',
-    // rollupOptions: {
-    //   external: 'dmno',
-    // },
-    //     // external: [...builtinModules, ...builtinModules.map((m) => `node:${m}`)],
-    //   },
-    // ssr: true,
+    server: {
+      watch: opts.enableWatch ? {
+        ignored: (path: any, stats?: any) => {
+          const isDir = stats?.isDirectory();
+          // ignore some common folders, just to help with perf
+          if (isDir && WATCH_IGNORE_DIRS.includes(path.split('/').pop())) return true;
+          // only watch directories (since we need to descend into them) and files within .dmno folders
+          if (isDir || path.includes('/.dmno/')) return false;
+          return true;
+        },
+      } : null,
     },
-
   });
+  // see https://github.com/vitejs/vite/issues/18712
+  if (!originalNodeEnv) delete process.env.NODE_ENV;
+
   // console.log(server.config);
 
-  // this is need to initialize the plugins
+  // required for plugins
   await server.pluginContainer.buildStart({});
 
   // create vite-node server
@@ -122,18 +127,19 @@ export async function setupViteServer(
     debug: true,
     root: server.config.root,
     base: server.config.base,
-    // when having the server and runner in a different context,
-    // you will need to handle the communication between them
-    // and pass to this function
     async fetchModule(id) {
-    // console.log('fetch module', id);
+      // console.log('fetch module', id);
       return node.fetchModule(id);
     },
     async resolveId(id, importer) {
-    // console.log('resolve id', id, importer);
+      // console.log('resolve id', id, importer);
       return node.resolveId(id, importer);
     },
   });
 
-  return { viteRunner };
+  viteRunner.moduleCache.setByModuleId('\0dmno', {
+    promise: thisDmno as any,
+  });
+
+  return { viteRunner, viteServer: server };
 }

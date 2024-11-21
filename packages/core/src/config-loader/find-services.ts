@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import _ from 'lodash-es';
 import readYamlFile from 'read-yaml-file';
 import { fdir } from 'fdir';
@@ -11,8 +10,12 @@ import { pathExists } from '../lib/fs-utils';
 
 const debug = Debug('dmno:find-services');
 
+const jsonFileCache: Record<string, any> = {};
 export async function readJsonFile(path: string) {
-  return JSON.parse(await fs.promises.readFile(path, 'utf8'));
+  if (jsonFileCache[path]) return jsonFileCache[path];
+  const packageJsonObj = JSON.parse(await fs.promises.readFile(path, 'utf8'));
+  jsonFileCache[path] = packageJsonObj;
+  return packageJsonObj;
 }
 
 
@@ -56,7 +59,7 @@ const WORKSPACE_SETTINGS_LOCATIONS = [
   // { file: 'deno.jsonc', path: 'workspace', optional: true },
 ];
 
-export async function findDmnoServices(includeUnitialized = true): Promise<ScannedWorkspaceInfo> {
+export async function findDmnoServices(includeUnitialized = false): Promise<ScannedWorkspaceInfo> {
   const startAt = new Date();
 
   let gitRootPath: string | undefined;
@@ -134,14 +137,17 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
   let packagePaths = [dmnoWorkspaceRootPath];
   if (isMonorepo && packagePatterns?.length) {
     const fullPackagePatterns = packagePatterns.map((gi) => path.join(dmnoWorkspaceRootPath, gi));
-    const packageGlobs = fullPackagePatterns.filter((s) => s.includes('*'));
-    const packageDirs = fullPackagePatterns.filter((s) => !s.includes('*'));
+    const patternsByType = _.groupBy(
+      fullPackagePatterns,
+      (s) => (s.includes('*') ? 'globs' : 'dirs'),
+    );
+
     const expandedPathsFromGlobs = await (
       // tried a few different libs here (tiny-glob being the other main contender) and this is WAY faster especially with some tuning :)
       new fdir() // eslint-disable-line new-cap
         .withBasePath()
         .onlyDirs()
-        .glob(...packageGlobs)
+        .glob(...patternsByType.globs || [])
         .exclude((dirName, _dirPath) => {
           // this helps speed things up since it stops recursing into these directories
           return (
@@ -156,7 +162,7 @@ export async function findDmnoServices(includeUnitialized = true): Promise<Scann
         .crawl(dmnoWorkspaceRootPath)
         .withPromise()
     );
-    packagePaths.push(...packageDirs);
+    packagePaths.push(...patternsByType.dirs || []);
     packagePaths.push(...expandedPathsFromGlobs);
     packagePaths = packagePaths.map((p) => p.replace(/\/$/, '')); // remove trailing slash
     packagePaths = _.uniq(packagePaths);

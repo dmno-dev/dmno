@@ -1,17 +1,16 @@
-import kleur from 'kleur';
 import _ from 'lodash-es';
 import { ExecaChildProcess, execa } from 'execa';
 import which from 'which';
+import Debug from 'debug';
 
-import { tryCatch } from '@dmno/ts-lib';
+import kleur from 'kleur';
 import { DmnoCommand } from '../lib/dmno-command';
-import { formatError, formattedValue, getItemSummary } from '../lib/formatting';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 import { addCacheFlags } from '../lib/cache-helpers';
 import { addWatchMode } from '../lib/watch-mode-helpers';
-import { checkForConfigErrors, checkForSchemaErrors } from '../lib/check-errors-helpers';
-
+import { checkForConfigErrors, checkForSchemaErrors } from '../../config-engine/check-errors-helpers';
+import { addResolutionPhaseFlags } from '../lib/resolution-context-helpers';
 
 const program = new DmnoCommand('run')
   .summary('Injects loaded config into an external command')
@@ -22,6 +21,7 @@ const program = new DmnoCommand('run')
   .example('dmno run —-service service1 -- somecommand --some-option=(printenv SOME_VAR)', 'Runs the somecommand with the resolved config using SOME_VAR via printenv');
 
 addWatchMode(program);
+addResolutionPhaseFlags(program);
 addCacheFlags(program);
 addServiceSelection(program);
 
@@ -59,22 +59,30 @@ program.action(async (_command, opts: {
   const workspace = ctx.workspace!;
   const service = ctx.selectedService;
   checkForSchemaErrors(workspace);
-  await workspace.resolveConfig();
+  //! await workspace.resolveConfig();
   checkForConfigErrors(service);
 
-  const serviceEnv = service.getEnv();
+  const injectedJson = await ctx.dmnoServer.makeRequest('getInjectedJson', ctx.selectedService.serviceName);
 
   const fullInjectedEnv = {
     ...process.env,
   };
   // we need to add any config items that are defined in dmno config, but we dont want to modify existing items
-  for (const key in serviceEnv) {
+  for (const key in injectedJson) {
+    // must skip $SETTINGS
+    if (key.startsWith('$')) continue;
+
+    // TODO: need to think about how we deal with nested items
+    // TODO: let config nodes expose themselves in inject env vars with aliases
     if (!Object.hasOwn(process.env, key)) {
-      const strVal = serviceEnv[key]?.toString();
+      const strVal = injectedJson[key]?.value?.toString();
       if (strVal !== undefined) fullInjectedEnv[key] = strVal;
     }
   }
-  fullInjectedEnv.DMNO_INJECTED_ENV = JSON.stringify(service.configraphEntity.getInjectedEnvJSON());
+
+  fullInjectedEnv.DMNO_INJECTED_ENV = JSON.stringify(injectedJson);
+  // this is what signals to the child process that is has a parent dmno server to use
+  fullInjectedEnv.DMNO_PARENT_SERVER = ctx.dmnoServer.parentServerInfo;
 
   commandProcess = execa(pathAwareCommand || rawCommand, commandArgsOnly, {
     stdio: 'inherit',
@@ -83,10 +91,32 @@ program.action(async (_command, opts: {
   // console.log('PARENT PID = ', process.pid);
   // console.log('CHILD PID = ', commandProcess.pid);
 
+  // if first run, we need to attach some extra exit handling
+  if (!ctx.isWatchModeRestart) {
+    // try to make sure we shut down cleanly and kill the child process
+    process.on('exit', (code: any, signal: any) => {
+      // if (childCommandKilledFromRestart) {
+      //   childCommandKilledFromRestart = false;
+      //   return;
+      // }
+      // console.log('exit!', code, signal);
+      commandProcess?.kill(9);
+    });
+
+    ['SIGTERM', 'SIGINT'].forEach((signal) => {
+      process.on(signal, () => {
+        // console.log('SIGNAL = ', signal);
+        commandProcess?.kill(9);
+        process.exit(1);
+      });
+    });
+    // TODO: handle other signals?
+  }
+
+
   let exitCode: number;
   try {
     const commandResult = await commandProcess;
-    // console.log(commandResult);
     exitCode = commandResult.exitCode;
   } catch (error) {
     // console.log('child command error!', error);
@@ -119,27 +149,8 @@ program.action(async (_command, opts: {
     }
   }
 
-  // if first run, we need to attach some extra exit handling
-  if (!ctx.isWatchModeRestart) {
-    // try to make sure we shut down cleanly and kill the child process
-    process.on('exit', (code: any, signal: any) => {
-      // if (childCommandKilledFromRestart) {
-      //   childCommandKilledFromRestart = false;
-      //   return;
-      // }
-      // console.log('exit!', code, signal);
-      commandProcess?.kill(9);
-    });
-
-
-    ['SIGTERM', 'SIGINT'].forEach((signal) => {
-      process.on(signal, () => {
-        // console.log('SIGNAL = ', signal);
-        commandProcess?.kill(9);
-        process.exit(1);
-      });
-    });
-    // TODO: handle other signals?
+  if (!ctx.watchEnabled) {
+    process.exit(exitCode);
   }
 });
 

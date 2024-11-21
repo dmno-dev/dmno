@@ -1,21 +1,21 @@
 import kleur from 'kleur';
 import _ from 'lodash-es';
-import { DmnoService, DmnoWorkspace } from '../../config-engine/config-engine';
-import { CliExitError } from './cli-error';
+import { CliExitError } from '../cli/lib/cli-error';
 import {
   formatError, formattedValue, getItemSummary, joinAndCompact,
-} from './formatting';
+} from '../cli/lib/formatting';
+import { SerializedService, SerializedWorkspace } from '../config-loader/serialization-types';
 
-export function checkForSchemaErrors(workspace: DmnoWorkspace) {
+export function checkForSchemaErrors(workspace: SerializedWorkspace) {
   // first display loading errors (which would likely cascade into schema errors)
-  if (_.some(_.values(workspace.allServices), (s) => s.configLoadError)) {
+  if (_.some(_.values(workspace.services), (s) => s.configLoadError)) {
     console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('We were unable to load all of your config')}  🚨 🚨 🚨\n`);
     console.log(kleur.gray('The following services are failing to load:\n'));
 
     // NOTE - we dont use a table here because word wrapping within the table
     // breaks clicking/linking into your code
 
-    _.each(workspace.allServices, (service) => {
+    _.each(workspace.services, (service) => {
       if (!service.configLoadError) return;
       console.log(kleur.bold().red(`💥 Service ${kleur.underline(service.serviceName)} failed to load 💥\n`));
 
@@ -47,7 +47,7 @@ export function checkForSchemaErrors(workspace: DmnoWorkspace) {
         const errors = _.compact([
           item.coercionError,
           ...item.validationErrors || [],
-          item.schemaError,
+          ...item.schemaErrors || [],
         ]);
         console.log(`\n${kleur.underline('Error(s)')}:`);
         console.log(errors?.map((err) => `- ${err.message}`).join('\n'));
@@ -59,8 +59,8 @@ export function checkForSchemaErrors(workspace: DmnoWorkspace) {
   }
 
   // now show schema errors
-  const servicesWithSchemaErrors = _.values(workspace.allServices).filter(
-    (s) => s.schemaErrors?.length || _.some(_.values(s.config), (i) => !i.isSchemaValid),
+  const servicesWithSchemaErrors = _.values(workspace.services).filter(
+    (s) => s.schemaErrors?.length || _.some(_.values(s.configNodes), (i) => !i.isSchemaValid),
   );
   if (servicesWithSchemaErrors.length) {
     console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('Your config schema is invalid')}  🚨 🚨 🚨\n`);
@@ -72,20 +72,20 @@ export function checkForSchemaErrors(workspace: DmnoWorkspace) {
       _.each(service.schemaErrors, (err) => {
         console.log(formatError(err));
       });
-      const invalidSchemaItems = _.values(service.config).filter((i) => !i.isSchemaValid);
+      const invalidSchemaItems = _.values(service.configNodes).filter((i) => !i.isSchemaValid);
       _.each(invalidSchemaItems, (item) => {
         console.log(`> ${item.key}`);
-        console.log(item.schemaErrors.map(formatError).join('\n'));
+        console.log(item.schemaErrors?.map(formatError).join('\n'));
       });
     });
     throw new CliExitError('Config schema errors');
   }
 }
 
-export function checkForConfigErrors(service: DmnoService, opts?: {
+export function checkForConfigErrors(service: SerializedService, opts?: {
   showAll?: boolean
 }) {
-  const failingItems = _.filter(service.config, (item) => !item.isValid);
+  const failingItems = _.filter(service.configNodes, (item) => item.validationState === 'error');
 
   // TODO: make isValid flag on service to work
   if (failingItems.length > 0) {
@@ -93,7 +93,7 @@ export function checkForConfigErrors(service: DmnoService, opts?: {
     console.log('Invalid items:\n');
 
     _.each(failingItems, (item) => {
-      console.log(getItemSummary(item.toJSON()));
+      console.log(getItemSummary(item));
       console.log();
     });
     if (opts?.showAll) {
@@ -103,12 +103,42 @@ export function checkForConfigErrors(service: DmnoService, opts?: {
         kleur.italic().gray('(remove `--show-all` flag to hide)'),
       ]));
       console.log();
-      const validItems = _.filter(service.config, (i) => !!i.isValid);
+      const validItems = _.filter(service.configNodes, (i) => !!i.isValid);
       _.each(validItems, (item) => {
-        console.log(getItemSummary(item.toJSON()));
+        console.log(getItemSummary(item));
       });
     }
 
     throw new CliExitError('Resolved config did not pass validation');
   }
+}
+
+
+export function checkServiceIsValid(service: SerializedService, log = true) {
+  if (service.configLoadError) {
+    console.log('🚨 🚨 🚨  unable to load config schema  🚨 🚨 🚨');
+    console.log(formatError(service.configLoadError));
+    return false;
+  }
+  // plugins!
+
+  if (service.schemaErrors?.length) {
+    console.log('🚨 🚨 🚨  config schema is invalid  🚨 🚨 🚨');
+    console.log(service.schemaErrors.forEach((err) => {
+      console.log(formatError(err));
+    }));
+    return false;
+  }
+
+  const failingItems = Object.values(service.configNodes).filter((c) => !c.isValid);
+  if (failingItems.length) {
+    console.log('🚨 🚨 🚨  config is invalid  🚨 🚨 🚨');
+    failingItems.forEach((item) => {
+      console.log(getItemSummary(item));
+      console.log();
+    });
+    return false;
+  }
+
+  return true;
 }

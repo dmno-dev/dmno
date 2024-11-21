@@ -11,11 +11,16 @@ import { SerializedService, SerializedWorkspace } from '../config-loader/seriali
 import { loadServiceDotEnvFiles } from '../lib/dotenv-utils';
 import { RedactMode } from '../lib/redaction-helpers';
 import {
-  DmnoConfigraph, DmnoConfigraphServiceEntity, DmnoDataTypeMetadata, DmnoServiceSettings,
+  DmnoConfigraph, DmnoConfigraphNode, DmnoConfigraphServiceEntity, DmnoDataTypeMetadata, DmnoServiceSettings,
+  UseAtPhases,
 } from './configraph-adapter';
 import { DmnoPlugin } from './dmno-plugin';
 
 const debug = Debug('dmno');
+
+// we call this _immediately_ rather than when we need it because vite-node is injecting process.env.NODE_ENV
+// TODO: we may need to respect some settings or something, so may need to do it later, but probably want to do it ASAP
+const processEnvOverrides = getConfigFromEnvVars();
 
 type PickConfigItemDefinition = {
   /** which service to pick from, defaults to "root" */
@@ -118,7 +123,7 @@ export class DmnoWorkspace {
   get rootService() { return this.services[this.rootServiceName]; }
   get rootPath() { return this.rootService.path; }
 
-  readonly processEnvOverrides = new OverrideSource('process', undefined, 'ri:terminal-box-fill', getConfigFromEnvVars());
+  readonly processEnvOverrides = new OverrideSource('process', undefined, 'ri:terminal-box-fill', processEnvOverrides);
 
   plugins: Record<string, DmnoPlugin> = {};
 
@@ -242,7 +247,9 @@ export class DmnoWorkspace {
     this.configraph.processConfig();
   }
 
-  async resolveConfig() {
+  async resolveConfig(opts?: {
+    resolutionPhase?: UseAtPhases,
+  }) {
     for (const service of this.allServices) {
       // reset overrides on all the individual nodes
       for (const node of Object.values(service.config)) {
@@ -274,8 +281,32 @@ export class DmnoWorkspace {
       });
     }
 
+    if (!this.rootService) {
+      console.log('root service name', this.rootServiceName);
+      console.log(Object.keys(this.services));
+    }
     this.configraph.cacheProvider.cacheDirPath = path.join(this.rootService.path, '.dmno');
     await this.configraph.resolveConfig();
+
+
+    // here we set errors to warnings if the item is not used in the current "phase" (build/boot)
+    // but this is very naive, we probably dont want to be more specific about when we do this
+    if (opts?.resolutionPhase) {
+      for (const node of Object.values(this.configraph.nodesByFullPath)) {
+        if (node instanceof DmnoConfigraphNode) {
+          const useNodeAt = node.useAt;
+          if (useNodeAt && !useNodeAt.includes(opts.resolutionPhase)) {
+            if (node.validationErrors?.[0]) {
+              node.validationErrors[0].isWarning = true;
+            }
+            if (node.resolutionError) {
+              node.resolutionError.isWarning = true;
+              console.log('updating node resolution error!');
+            }
+          }
+        }
+      }
+    }
   }
 
   get allServices() {

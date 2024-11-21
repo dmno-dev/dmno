@@ -36,11 +36,16 @@ export class ConfigraphError extends Error {
 
   get type() { return this.name; }
 
-  icon = '❌';
+
+  static defaultIcon = '❌';
+  icon: string;
+
+  _isWarning = false;
 
   constructor(errOrMessage: string | Error, readonly more?: {
     tip?: string | Array<string>,
     err?: Error,
+    isWarning?: boolean,
   }) {
     if (_.isError(errOrMessage)) {
       super(errOrMessage.message);
@@ -52,6 +57,9 @@ export class ConfigraphError extends Error {
     }
     if (Array.isArray(more?.tip)) more.tip = more.tip.join('\n');
     this.name = this.constructor.name;
+    if (more?.isWarning) this.isWarning = true;
+
+    this.icon ||= (this.constructor as any).defaultIcon;
   }
 
   get tip() {
@@ -59,6 +67,15 @@ export class ConfigraphError extends Error {
     if (Array.isArray(this.more.tip)) return this.more.tip.join('\n');
     return this.more.tip;
   }
+
+
+  set isWarning(w: boolean) {
+    this._isWarning = w;
+    if (this._isWarning) {
+      this.icon = '🧐';
+    }
+  }
+  get isWarning() { return this._isWarning; }
 
   toJSON() {
     return {
@@ -68,6 +85,7 @@ export class ConfigraphError extends Error {
       message: this.message,
       isUnexpected: this.isUnexpected,
       ...this.tip && { tip: this.tip },
+      ...this.isWarning && { isWarning: this.isWarning },
     };
   }
 }
@@ -103,16 +121,16 @@ export class ConfigLoadError extends ConfigraphError {
   }
 }
 export class SchemaError extends ConfigraphError {
-  icon = '🧰';
+  static defaultIcon = '🧰';
 }
 export class ValidationError extends ConfigraphError {
-  icon = '❌';
+  static defaultIcon = '❌';
 }
 export class CoercionError extends ConfigraphError {
-  icon = '🛑';
+  static defaultIcon = '🛑';
 }
 export class ResolutionError extends ConfigraphError {
-  icon = '⛔';
+  static defaultIcon = '⛔';
   retryable?: boolean = false;
 }
 

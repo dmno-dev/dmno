@@ -7,7 +7,7 @@ import { getCliRunCtx } from '../lib/cli-ctx';
 import { addCacheFlags } from '../lib/cache-helpers';
 import { addWatchMode } from '../lib/watch-mode-helpers';
 import { CliExitError } from '../lib/cli-error';
-import { checkForConfigErrors, checkForSchemaErrors } from '../lib/check-errors-helpers';
+import { checkForConfigErrors, checkForSchemaErrors } from '../../config-engine/check-errors-helpers';
 
 
 const program = new DmnoCommand('printenv')
@@ -20,7 +20,6 @@ addWatchMode(program); // must be first
 addCacheFlags(program);
 addServiceSelection(program);
 
-
 program.action(async (itemPath: string, opts: {}, thisCommand) => {
   const ctx = getCliRunCtx();
 
@@ -30,19 +29,22 @@ program.action(async (itemPath: string, opts: {}, thisCommand) => {
 
   const workspace = ctx.workspace!;
   const service = ctx.selectedService;
+  const resolvedConfig = service.configNodes;
+
   checkForSchemaErrors(workspace);
-  await workspace.resolveConfig();
   checkForConfigErrors(service);
 
+
+  const injectedEnv = await ctx.dmnoServer.makeRequest('getInjectedJson', service.serviceName);
   // TODO: could be smarter about not caring about errors unless they affect the item(s) being printed
   // TODO: support nested paths
   // TODO: do we want to support multiple items?
 
-  if (!service.config[itemPath]) {
+  if (!injectedEnv[itemPath]) {
     throw new CliExitError(`Config item ${itemPath} not found in config schema`, {
       details: [
         'Perhaps you meant one of:',
-        ..._.map(service.config, (val, key) => `${kleur.gray('-')} ${key}`),
+        ..._.map(resolvedConfig, (val, key) => `${kleur.gray('-')} ${key}`),
       ],
     });
   }
@@ -50,7 +52,7 @@ program.action(async (itemPath: string, opts: {}, thisCommand) => {
 
   // TODO: what to do about formatting of arrays/objects/etc
   // now just print the resolved value
-  ctx.logOutput(service.config[itemPath].resolvedValue);
+  ctx.logOutput(injectedEnv[itemPath].value);
 });
 
 export const PrintEnvCommand = program;

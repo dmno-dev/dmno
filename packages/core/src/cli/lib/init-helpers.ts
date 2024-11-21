@@ -345,6 +345,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
 
   const dotEnvFiles = await loadServiceDotEnvFiles(service.path, {
     excludeDirs: service.isRoot ? nonRootPaths : [],
+    checkGitIgnored: true,
   });
 
   // CREATE .dmno/config.mts

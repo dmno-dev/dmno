@@ -2,6 +2,8 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: [ // Entry point(s)
+    'src/cli/lib/init-process.ts', // not actually used, but this helps make esbuild hoist this import to the top when it is used
+    
     'src/index.ts', // main lib, users will import from here
     
     'src/vendor-types/index.ts', // reusable types for very common things
@@ -16,10 +18,6 @@ export default defineConfig({
   // imported as TS directly, so we have to tell tsup to compile it instead of leaving it external
   noExternal: [
     '@dmno/ts-lib', '@dmno/encryption-lib',
-    
-    // yarn was having issues with finding the strong-type package for some reason
-    // so we'll just bundle them in as a short term solution
-    'node-ipc', '@achrinza/node-ipc', '@achrinza/event-pubsub', '@achrinza/strong-type'
   ],
   external: [
      // mark self-imports as external so it will leave them as-is

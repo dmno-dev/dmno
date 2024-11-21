@@ -29,9 +29,9 @@
       )
         //- Icon.config-node__coerced-icon(full-name="game-icons:transform" size="xs")
         | Raw Value:&nbsp;
-        StyledValue(:value="node.maskedResolvedRawValue || node.resolvedRawValue")
+        StyledValue(:value="node._resolvedRawValue || node.resolvedRawValue")
       .config-node__value._truncate
-        StyledValue(:value="node.maskedResolvedValue || node.resolvedValue")
+        StyledValue(:value="node._resolvedValue || node.resolvedValue")
       .config-node__errors(v-if="nodeErrors.length")
         div(v-for="err in nodeErrors" :key="err.type") {{ err.icon }} {{ err.message }}
     .config-node__right

@@ -28,6 +28,8 @@ export type ConfigValueOverride = {
 
   /** the value of the override */
   value: ConfigValue;
+  /** redacted stringified copy of value */
+  _value?: string
 
   /** comments about the item from the file */
   comments?: string
@@ -103,15 +105,14 @@ export class ConfigraphNode<NodeMetadata = any> {
     } else if (_.isFunction(defOrShorthand)) {
       // in this case, we have no settings to pass through, so we pass an empty object
       const shorthandFnResult = defOrShorthand({});
-      if (!ConfigraphDataType.checkInstanceOf(shorthandFnResult)) {
+      if (!(shorthandFnResult instanceof ConfigraphDataType)) {
         // TODO: put this in schema error instead?
         throw new Error('invalid schema as result of fn shorthand');
       } else {
         typeDef = { extends: shorthandFnResult };
       }
-    } else if (ConfigraphDataType.checkInstanceOf(defOrShorthand)) {
-      // TODO: without proper instanceof check, we must resort to `as any`
-      typeDef = { extends: defOrShorthand as any };
+    } else if (defOrShorthand instanceof ConfigraphDataType) {
+      typeDef = { extends: defOrShorthand };
     } else if (_.isObject(defOrShorthand)) {
       typeDef = defOrShorthand;
     } else {
@@ -197,13 +198,21 @@ export class ConfigraphNode<NodeMetadata = any> {
     return true;
   }
 
+  /** resolved value validation state (error/warning) */
+  get validationState(): 'warn' | 'error' | 'valid' {
+    if (!this.isSchemaValid) return 'error';
+    const errors = _.compact([
+      this.coercionError,
+      this.resolutionError,
+      ...this.validationErrors || [],
+    ]);
+    if (!errors.length) return 'valid';
+    return _.some(errors, (e) => !e.isWarning) ? 'error' : 'warn';
+  }
+
   /** whether the final resolved value is valid or not */
-  get isValid(): boolean | undefined {
-    if (!this.isSchemaValid) return false;
-    if (this.coercionError) return false;
-    if (this.validationErrors && this.validationErrors?.length > 0) return false;
-    if (this.resolutionError) return false;
-    return true;
+  get isValid() {
+    return this.validationState === 'valid';
   }
 
   children: Record<string, typeof this> = {};
@@ -401,6 +410,7 @@ export class ConfigraphNode<NodeMetadata = any> {
       key: this.key,
       isSchemaValid: this.isSchemaValid,
       isValid: this.isValid,
+      validationState: this.validationState,
       dataType: this.type.toJSON(),
 
       resolvedRawValue: this.resolvedRawValue,

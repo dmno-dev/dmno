@@ -14,10 +14,10 @@ export function addCacheFlags(program: Command) {
         });
       }
       const ctx = getCliRunCtx();
-      ctx.configLoader.cacheMode = (
+      ctx.dmnoServer.setCacheMode(
         (thisCommand.opts().skipCache && 'skip')
         || (thisCommand.opts().clearCache && 'clear')
-        || true
+        || true,
       );
     });
 }

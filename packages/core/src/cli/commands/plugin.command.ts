@@ -90,19 +90,19 @@ program.action(async (opts: {
 
   // reload the workspace and resolve values
   const workspace = await tryCatch(async () => {
-    return await ctx.configLoader.getWorkspace();
+    return await ctx.dmnoServer.getWorkspace();
   }, (err) => {
     console.log(kleur.red().bold('Loading config failed'));
     console.log(err.message);
     process.exit(1);
   });
 
-  await workspace.resolveConfig();
+  //! await workspace.resolveConfig();
   const resolvedPlugin = workspace.plugins[opts.plugin!];
 
   pluginCliProcess.send(['init', {
-    workspace: workspace.toJSON(),
-    plugin: resolvedPlugin.toJSON(),
+    workspace,
+    plugin: resolvedPlugin,
     selectedServiceName: opts.service,
   }]);
 });

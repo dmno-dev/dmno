@@ -1,11 +1,10 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
+  "tasks": {
     "build": {
       "dependsOn": [ "^build" ],
       "inputs": [ "tsconfig.json", "tsconfig.*.json", "tsup.config.ts", "src/**" ],
-      "outputs": [ "dist/**" ],
-      "outputMode": "new-only"
+      "outputs": [ "dist/**" ]
     },
     "build:tarball": {
       "dependsOn": [ "^build" ],

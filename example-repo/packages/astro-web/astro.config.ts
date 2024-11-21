@@ -1,5 +1,4 @@
 import dmnoAstroIntegration from '@dmno/astro-integration';
-import { unredact } from 'dmno';
 import { defineConfig } from 'astro/config';
 import vue from "@astrojs/vue";
 import node from "@astrojs/node";
