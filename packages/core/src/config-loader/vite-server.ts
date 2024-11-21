@@ -1,21 +1,11 @@
-import { fileURLToPath } from 'url';
 import { HmrContext, Plugin, createServer } from 'vite';
 import { ViteNodeRunner } from 'vite-node/client';
 import { ViteNodeServer } from 'vite-node/server';
 import { installSourcemapsSupport } from 'vite-node/source-map';
 import MagicString from 'magic-string';
-import buildEsmResolver from 'esm-resolve';
 
 // we will load the local copy of dmno so we can inject it directly into the vite node module cache
 import * as thisDmno from '../index';
-
-// this lets us detect what is the current executing dmno
-// const esmResolver = buildEsmResolver(process.cwd(), {
-//   isDir: true,
-//   constraints: 'node',
-//   resolveToAbsolute: true,
-// });
-// const currentDmnoPath = esmResolver('dmno');
 
 const WATCH_IGNORE_DIRS = ['.turbo', '.next', '.output', '.astro', '.nuxt', '.github', 'dist'];
 
@@ -31,22 +21,12 @@ export async function setupViteServer(opts: {
     // otherwise we end up not loading the same code here in this file as within the config files
     // meaning we have 2 copies of classes and `instanceof` stops working
     enforce: 'pre', // Run before the builtin 'vite:resolve' of Vite
-    async resolveId(source, importer, options) {
+    async resolveId(source, _importer, _options) {
       // console.log('PLUGIN RESOLVE!', source, importer, options);
 
       if (source === 'dmno') {
-        // const resolution = await this.resolve(source, importer, options);
-        // console.log('dmno resolution', resolution);
-        // if (!resolution) return;
-
-        return {
-          id: '\0dmno',
-          // pointing at dist/index is hard-coded...
-          // we could extract the main entry point from the resolution instead?
-          // id: `${opts.workspaceRootPath}/node_modules/dmno/dist/index.js`,
-          // id: currentDmnoPath,
-          // external: 'absolute',
-        };
+        // return a virtual module, which we will populate with the dmno server's already loaded instance of dmno
+        return { id: '\0dmno' };
       }
     },
     async load(id) {
@@ -104,19 +84,8 @@ export async function setupViteServer(opts: {
     plugins: [
       customPlugin,
     ],
-
-    // if the folder we are running in has its own vite.config file, it will try to use it
-    // passing false here tells it to skip that process
+    // passing false disables auto-detection and use of an existing vite.config file
     configFile: false,
-    build: {
-    // target: 'esnext',
-    // rollupOptions: {
-    //   external: 'dmno',
-    // },
-    //     // external: [...builtinModules, ...builtinModules.map((m) => `node:${m}`)],
-    //   },
-    // ssr: true,
-    },
     server: {
       watch: opts.enableWatch ? {
         ignored: (path: any, stats?: any) => {
@@ -158,8 +127,6 @@ export async function setupViteServer(opts: {
     debug: true,
     root: server.config.root,
     base: server.config.base,
-    // when having the server and runner in a different context
-    // you will need to handle the communication between them and pass to this function
     async fetchModule(id) {
       // console.log('fetch module', id);
       return node.fetchModule(id);
