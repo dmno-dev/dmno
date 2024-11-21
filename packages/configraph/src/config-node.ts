@@ -28,6 +28,8 @@ export type ConfigValueOverride = {
 
   /** the value of the override */
   value: ConfigValue;
+  /** redacted stringified copy of value */
+  _value?: string
 
   /** comments about the item from the file */
   comments?: string

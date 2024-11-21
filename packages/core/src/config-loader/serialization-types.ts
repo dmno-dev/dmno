@@ -51,8 +51,8 @@ export type SerializedConfigItem =
     isDynamic: boolean,
     isSensitive: boolean,
     useAt?: Array<UseAtPhases>,
-    maskedResolvedValue?: string,
-    maskedResolvedRawValue?: string,
+    _resolvedValue?: string,
+    _resolvedRawValue?: string,
   };
 
 export type SerializedResolver =

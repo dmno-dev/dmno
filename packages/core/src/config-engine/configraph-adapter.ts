@@ -70,8 +70,6 @@ class DmnoDataTypesRegistry extends ConfigraphDataTypesRegistry<DmnoDataTypeMeta
 const dmnoDataTypesRegistry = new DmnoDataTypesRegistry();
 export const createDmnoDataType = dmnoDataTypesRegistry.create;
 
-
-
 export type DynamicConfigModes =
   /* non-sensitive = static, sensitive = dynamic (this is the default) */
   'public_static' |
@@ -208,17 +206,15 @@ export class DmnoConfigraphNode extends ConfigraphNode<DmnoDataTypeMetadata> {
       isSensitive: this.isSensitive,
       useAt: this.useAt,
       ...this.isSensitive && {
-        maskedResolvedValue: redactString(this.resolvedValue?.toString(), this.redactMode),
-        maskedResolvedRawValue: redactString(this.resolvedRawValue?.toString(), this.redactMode),
-        resolvedValue: undefined,
-        resolvedRawValue: undefined,
+        _resolvedValue: redactString(this.resolvedValue?.toString(), this.redactMode),
+        _resolvedRawValue: redactString(this.resolvedRawValue?.toString(), this.redactMode),
       },
     };
 
     // redacting override values - not sure if this is the right way to do this, but good enough for now
     if (this.isSensitive) {
       for (const override of json.overrides || []) {
-        override.value = redactString(override.value?.toString(), this.redactMode);
+        override._value = redactString(override.value?.toString(), this.redactMode);
       }
     }
     return json;

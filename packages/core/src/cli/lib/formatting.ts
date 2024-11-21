@@ -104,10 +104,10 @@ export function getItemSummary(item: SerializedConfigItem) {
 
   summary.push(joinAndCompact([
     kleur.gray('   └'),
-    isSensitive ? formattedValue(item.maskedResolvedValue) : formattedValue(item.resolvedValue, false),
+    isSensitive ? formattedValue(item._resolvedValue) : formattedValue(item.resolvedValue, false),
     item.isCoerced && (
       kleur.gray().italic('< coerced from ')
-      + (isSensitive ? formattedValue(item.maskedResolvedRawValue) : formattedValue(item.resolvedRawValue, false))
+      + (isSensitive ? formattedValue(item._resolvedRawValue) : formattedValue(item.resolvedRawValue, false))
     ),
   ]));
   // if (item.resolvedRawValue !== item.resolvedValue) {

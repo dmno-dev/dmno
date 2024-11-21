@@ -67,7 +67,7 @@ program.action(async (opts: {
         console.log(getItemSummary(item));
       });
     } else {
-      console.log('config loaded!');
+      // console.log('config loaded!');
     }
 
     console.log(
