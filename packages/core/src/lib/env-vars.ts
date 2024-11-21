@@ -1,5 +1,7 @@
 import _ from 'lodash-es';
 
+let _originalProcessEnv: NodeJS.ProcessEnv;
+
 /**
  * parse env vars into an object, using a special separator to denote nesting.
  * This idea comes from https://www.npmjs.com/package/nconf
@@ -11,11 +13,18 @@ export function getConfigFromEnvVars(
   /** separator to interpret as nesting, defaults to "__" */
   separator = '__',
 ) {
-  const config = {} as Record<string, any>;
+  // when we are reloading within the same process
+  // we must ignore any _new_ process.env vars that dmno injected
+  if (_originalProcessEnv) {
+    return _originalProcessEnv;
+  }
+
+  const configFromProcessEnv = {} as Record<string, any>;
   _.each(process.env, (val, key) => {
     const path = key.replaceAll(separator, '.');
     // _.set deals with initializing objects when necessary
-    _.set(config, path, val);
+    _.set(configFromProcessEnv, path, val);
   });
-  return config;
+  _originalProcessEnv = configFromProcessEnv;
+  return configFromProcessEnv;
 }

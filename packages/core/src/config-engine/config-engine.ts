@@ -11,11 +11,16 @@ import { SerializedService, SerializedWorkspace } from '../config-loader/seriali
 import { loadServiceDotEnvFiles } from '../lib/dotenv-utils';
 import { RedactMode } from '../lib/redaction-helpers';
 import {
-  DmnoConfigraph, DmnoConfigraphServiceEntity, DmnoDataTypeMetadata, DmnoServiceSettings,
+  DmnoConfigraph, DmnoConfigraphNode, DmnoConfigraphServiceEntity, DmnoDataTypeMetadata, DmnoServiceSettings,
+  UseAtPhases,
 } from './configraph-adapter';
 import { DmnoPlugin } from './dmno-plugin';
 
 const debug = Debug('dmno');
+
+// we call this _immediately_ rather than when we need it because vite-node is injecting process.env.NODE_ENV
+// TODO: we may need to respect some settings or something, so may need to do it later, but probably want to do it ASAP
+const processEnvOverrides = getConfigFromEnvVars();
 
 type PickConfigItemDefinition = {
   /** which service to pick from, defaults to "root" */
@@ -118,7 +123,7 @@ export class DmnoWorkspace {
   get rootService() { return this.services[this.rootServiceName]; }
   get rootPath() { return this.rootService.path; }
 
-  readonly processEnvOverrides = new OverrideSource('process', undefined, 'ri:terminal-box-fill', getConfigFromEnvVars());
+  readonly processEnvOverrides = new OverrideSource('process', undefined, 'ri:terminal-box-fill', processEnvOverrides);
 
   plugins: Record<string, DmnoPlugin> = {};
 
