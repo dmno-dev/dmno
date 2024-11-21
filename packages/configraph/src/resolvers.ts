@@ -73,7 +73,7 @@ export function createResolver(
   if (_.isFunction(defOrFn)) {
     try {
       const result = defOrFn();
-      if (ConfigValueResolver.checkInstanceOf(result)) return result;
+      if (result instanceof ConfigValueResolver) return result;
       return new ConfigValueResolver(result);
     } catch (err) {
       return new ConfigValueResolver({
@@ -111,15 +111,6 @@ type ResolverBranchDefinition = {
 };
 
 export class ConfigValueResolver {
-  /** use instead of `instanceof ConfigValueResolver`
-   * because there can be a different copy of dmno being used within vite from the dmno config loading process
-   * */
-  static checkInstanceOf(other: any): other is ConfigValueResolver {
-    return other instanceof ConfigValueResolver;
-  }
-  readonly _dmnoInstanceType = this.constructor.name;
-
-
   constructor(readonly def: ConfigValueResolverDef) {
     // TODO: figure out this pattern... we'll have several bits of setings that
     // are either static or need some basic resolution
@@ -405,7 +396,7 @@ export function processInlineResolverDef(resolverDef: InlineValueResolverDef) {
     });
 
   // already a resolver case
-  } else if (ConfigValueResolver.checkInstanceOf(resolverDef)) {
+  } else if (resolverDef instanceof ConfigValueResolver) {
     return resolverDef;
 
   // static value case - including explicitly setting to `undefined
@@ -435,7 +426,7 @@ export class ResolverContext {
     // private configItem: DmnoConfigItemBase,
     resolverOrNode: ConfigValueResolver | ConfigraphNode,
   ) {
-    if (ConfigValueResolver.checkInstanceOf(resolverOrNode)) {
+    if (resolverOrNode instanceof ConfigValueResolver) {
       this.resolver = resolverOrNode;
       this.configNode = this.resolver.configNode!;
     } else {

@@ -177,7 +177,6 @@ export class ConfigLoader {
             throw new Error('Root service .dmno/config.mts must set `isRoot: true`');
           }
 
-          console.log('adding service', importedConfig.default.serviceName);
           service = new DmnoService({
             ...serviceInitOpts,
             // NOTE - could actually be a DmnoServiceConfig or DmnoWorkspaceConfig

@@ -23,7 +23,7 @@ export function createVendorSchema(
 ) {
   if (!commonTraits) return schema;
   return _.mapValues(schema, (item, _itemKey) => {
-    if (ConfigraphDataType.checkInstanceOf(item) || _.isString(item) || _.isFunction(item)) {
+    if (item instanceof ConfigraphDataType || _.isString(item) || _.isFunction(item)) {
       return {
         extends: item,
         ...commonTraits,

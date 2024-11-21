@@ -151,16 +151,6 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
   // while providing transparent access to the rest. This is so the ConfigItem can just walk up the chain of types
   // without having to understand the details... The other option is to revert that change and
 
-  /** use instead of `instanceof ConfigraphDataType`
-   * because there can be a different copy of dmno being used within vite from the dmno config loading process
-   * */
-  static checkInstanceOf(other: any): other is ConfigraphDataType {
-    return other instanceof ConfigraphDataType;
-  }
-  readonly _dmnoInstanceType = this.constructor.name;
-
-
-
   parentType?: ConfigraphDataType;
   private _valueResolver?: ConfigValueResolver;
 
@@ -192,13 +182,13 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
       // deal with uninitialized case - `extends: ConfigraphBaseTypes.number`
       } else if (_.isFunction(this.typeDef.extends)) {
         const initializedDataType = this.typeDef.extends(typeInstanceOptions as any);
-        if (ConfigraphDataType.checkInstanceOf(initializedDataType)) {
+        if (initializedDataType instanceof ConfigraphDataType) {
           this.parentType = initializedDataType;
         } else {
           throw new Error('found invalid parent (as result of fn) in extends chain');
         }
       // normal case - `extends: ConfigraphBaseTypes.number({ ... })`
-      } else if (ConfigraphDataType.checkInstanceOf(this.typeDef.extends)) {
+      } else if (this.typeDef.extends instanceof ConfigraphDataType) {
         this.parentType = this.typeDef.extends;
       // anything else is considered an error
       } else if (this.typeDef.extends) {
