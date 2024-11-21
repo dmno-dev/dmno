@@ -50,7 +50,7 @@ ConfigraphPlugin,
 };
 
 export type SerializedConfigraphNode =
-  Pick<ConfigraphNode, 'key' | 'isValid' | 'isSchemaValid' | 'resolvedValue' | 'resolvedRawValue' | 'isResolved'>
+  Pick<ConfigraphNode, 'key' | 'isValid' | 'validationState' | 'isSchemaValid' | 'resolvedValue' | 'resolvedRawValue' | 'isResolved'>
   & {
     id: string,
     dataType: SerializedConfigraphDataType,
@@ -96,8 +96,7 @@ export type SerializedConfigraphDataType<NodeMetadata = {}> =
     'summary' | 'description' | 'typeDescription' | 'required' | 'expose' |
     'externalDocs' | 'ui'>
   ) &
-  // dmno config specific metadata
-  // 'sensitive' | 'useAt' | 'dynamic'
+  // dmno config specific metadata -- 'sensitive' | 'useAt' | 'dynamic'
   NodeMetadata;
 
 
@@ -108,6 +107,7 @@ export type SerializedConfigraphError = {
   name: string,
   message: string,
   isUnexpected: boolean,
+  isWarning?: boolean,
   cleanedStack?: Array<string>,
   tip?: string,
 };

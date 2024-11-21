@@ -80,6 +80,12 @@ export function joinAndCompact(strings: Array<string | number | boolean | undefi
   )).join(joinChar);
 }
 
+const VALIDATION_STATE_COLORS = {
+  error: 'red',
+  warn: 'yellow',
+  valid: 'cyan',
+} as const;
+
 export function getItemSummary(item: SerializedConfigItem) {
   const summary: Array<string> = [];
   const icon = item.coercionError?.icon || item.resolutionError?.icon || item?.validationErrors?.[0]?.icon || '✅';
@@ -88,10 +94,12 @@ export function getItemSummary(item: SerializedConfigItem) {
   const isRequired = item.dataType?.required;
   summary.push(joinAndCompact([
     icon,
-    kleur[item.isValid ? 'cyan' : 'red'](item.key) + (isRequired ? kleur.magenta('*') : ''),
+    kleur[VALIDATION_STATE_COLORS[item.validationState]](item.key) + (isRequired ? kleur.magenta('*') : ''),
 
     // kleur.gray(`[type = ${item.type.typeLabel}]`),
     isSensitive && ` 🔐${kleur.italic().gray('sensitive')}`,
+
+    item.useAt ? kleur.italic().gray(`(${item.useAt?.join(', ')})`) : undefined,
   ]));
 
   summary.push(joinAndCompact([
@@ -110,13 +118,12 @@ export function getItemSummary(item: SerializedConfigItem) {
     let overrideNote = kleur.gray().italic('value set via override: ');
     overrideNote += kleur.gray(activeOverride.sourceType);
     if (activeOverride.sourceLabel) overrideNote += kleur.gray(` - ${activeOverride.sourceLabel}`);
-
     summary.push(`      ${overrideNote}`);
   }
 
   const errors = _.compact([item.coercionError, item.resolutionError, ...item.validationErrors || []]);
   errors?.forEach((err) => {
-    summary.push(kleur.red(`   - ${err.message}`));
+    summary.push(kleur[err.isWarning ? 'yellow' : 'red'](`   - ${err.message}`));
     summary.push(...err.cleanedStack || '');
     if (err.tip) {
       summary.push(...err.tip.split('\n').map((line) => `     ${line}`));

@@ -1,3 +1,4 @@
+import { createReadStream } from 'fs';
 import { Command } from 'commander';
 import kleur from 'kleur';
 import { CliRunCtx, getCliRunCtx } from './cli-ctx';

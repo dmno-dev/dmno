@@ -31,9 +31,9 @@ const program = new DmnoCommand('resolve')
   .example('dmno resolve --service service1 --format env >> .env.local', 'Loads the resolved config for service1 and outputs it in .env file format and writes to .env.local');
 
 addWatchMode(program); // must be first
+addResolutionPhaseFlags(program);
 addCacheFlags(program);
 addServiceSelection(program, { disablePrompt: isSubshell() });
-
 
 program.action(async (opts: {
   // these args should be handled already by the helpers

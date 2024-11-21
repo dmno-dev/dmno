@@ -43,7 +43,7 @@ export { RedactMode };
 
 
 
-type ConfigRequiredAtTypes = 'build' | 'boot' | 'run' | 'deploy';
+export type UseAtPhases = 'build' | 'boot'; // run, deploy ?
 
 export type DmnoDataTypeMetadata = {
   /** whether this config is sensitive and must be kept secret */
@@ -58,7 +58,7 @@ export type DmnoDataTypeMetadata = {
   fromVendor?: string;
 
   /** at what time is this value required */
-  useAt?: ConfigRequiredAtTypes | Array<ConfigRequiredAtTypes>;
+  useAt?: UseAtPhases | Array<UseAtPhases>;
 
   /** opt in/out of build-type code replacements - default is false unless changed at the service level */
   dynamic?: boolean;
@@ -94,6 +94,8 @@ export type DmnoServiceSettings = {
   interceptSensitiveLeakRequests?: boolean,
   /** enable scanning all code and data for leaks before sending to the client (where possible) */
   preventClientLeaks?: boolean,
+  /** default `useAt` value */
+  defaultUseAt?: DmnoDataTypeMetadata['useAt'],
 };
 
 export type DmnoServiceMeta = {
@@ -119,6 +121,7 @@ DmnoEntityMetadata, DmnoDataTypeMetadata, DmnoConfigraphNode
   get redactSensitiveLogs() { return this.getMetadata('redactSensitiveLogs'); }
   get interceptSensitiveLeakRequests() { return this.getMetadata('interceptSensitiveLeakRequests'); }
   get preventClientLeaks() { return this.getMetadata('preventClientLeaks'); }
+  get defaultUseAt() { return this.getMetadata('defaultUseAt'); }
 
   get settings() {
     return {
@@ -126,6 +129,7 @@ DmnoEntityMetadata, DmnoDataTypeMetadata, DmnoConfigraphNode
       redactSensitiveLogs: this.redactSensitiveLogs,
       interceptSensitiveLeakRequests: this.interceptSensitiveLeakRequests,
       preventClientLeaks: this.preventClientLeaks,
+      defaultUseAt: this.defaultUseAt,
     };
   }
 
@@ -189,12 +193,20 @@ export class DmnoConfigraphNode extends ConfigraphNode<DmnoDataTypeMetadata> {
     return sensitiveSettings.redactMode;
   }
 
+  get useAt(): Array<UseAtPhases> | undefined {
+    const explicitUseAt = this.type.getMetadata('useAt');
+    if (explicitUseAt) return _.castArray(explicitUseAt);
+    const defaultUseAt = (this.parentEntity as DmnoConfigraphServiceEntity)?.defaultUseAt;
+    if (defaultUseAt) return _.castArray(defaultUseAt);
+  }
+
   toJSON(): SerializedConfigItem {
     const json = {
       ...super.toCoreJSON(),
       children: _.mapValues(this.children, (c) => c.toJSON()),
       isDynamic: this.isDynamic,
       isSensitive: this.isSensitive,
+      useAt: this.useAt,
       ...this.isSensitive && {
         maskedResolvedValue: redactString(this.resolvedValue?.toString(), this.redactMode),
         maskedResolvedRawValue: redactString(this.resolvedRawValue?.toString(), this.redactMode),
@@ -228,7 +240,9 @@ export class DmnoConfigraphNode extends ConfigraphNode<DmnoDataTypeMetadata> {
     customLabel: () => (this.isSensitive ? ' 🔐 _sensitive_' : ''),
     customSuffix: () => {
       const vendorName = this.type.getMetadata('fromVendor');
-      return vendorName ? `_injected by ${vendorName}_` : undefined;
+      return _.compact([
+        vendorName ? `_injected by ${vendorName}_` : undefined,
+      ]).join('\n');
     },
   };
 }

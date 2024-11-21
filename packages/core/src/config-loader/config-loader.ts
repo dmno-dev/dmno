@@ -20,11 +20,12 @@ import { generateServiceTypes } from '../config-engine/type-generation';
 import {
   beginServiceLoadPlugins, beginWorkspaceLoadPlugins, finishServiceLoadPlugins, InjectedPluginDoesNotExistError,
 } from '../config-engine/dmno-plugin';
+import { UseAtPhases } from '../config-engine/configraph-adapter';
 
 
 const debugTimer = createDebugTimer('dmno:config-loader');
 
-const debug = Debug('dmno');
+const debug = Debug('dmno:config-loader');
 
 export class ConfigLoader {
   startAt: Date;
@@ -216,9 +217,14 @@ export class ConfigLoader {
 
     // TODO: currently this reloads EVERYTHING always. We need to be smarter about it
     await this.regenerateAllTypeFiles();
-    await this.dmnoWorkspace.resolveConfig();
+    await this.dmnoWorkspace.resolveConfig({
+      resolutionPhase: this.resolutionPhase,
+    });
 
     this.schemaLoaded = true;
+
+    this.isReloadInProgress = false;
+    deferredCompleted.resolve();
   }
 
   private async regenerateAllTypeFiles() {
