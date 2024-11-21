@@ -25,9 +25,10 @@
   "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "ts-src": "./src/index.ts",
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     },
     "./meta": {
       "default": "./dmno.meta.json"
@@ -57,5 +58,8 @@
   "peerDependencies": {
     "dmno": "^0",
     "next": "^14"
+  },
+  "dependencies": {
+    "import-meta-resolve": "^4.1.0"
   }
 }
