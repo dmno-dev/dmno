@@ -58,6 +58,8 @@ program
 
     // we need to know up front whether to enable the file watchers when initializing the vite server
     initCliRunCtx({
+      // TODO: a bit awkward how this is being set up
+      createParentServer: ['dev', 'run'].includes(actionCommand.name()),
       enableWebUi: actionCommand.name() === 'dev',
       watch: actionCommand.name() === 'dev' || actionCommand.opts().watch,
     });

@@ -43,16 +43,20 @@ export class DmnoServer {
 
   constructor(readonly opts?: {
     watch?: boolean,
+    createParentServer?: boolean,
     enableWebUi?: boolean,
   }) {
     if (process.env.DMNO_CONFIG_SERVER_UUID) {
       this.serverId = process.env.DMNO_CONFIG_SERVER_UUID;
       this.isChildServer = true;
       this.webServerReady = this.initChildServer();
-    } else {
+    } else if (opts?.createParentServer) {
       this.serverId = crypto.randomUUID();
       this.configLoader = new ConfigLoader(!!opts?.watch);
       this.webServerReady = this.bootWsServer();
+    } else {
+      this.serverId = 'none';
+      this.configLoader = new ConfigLoader(!!opts?.watch);
     }
   }
 
@@ -296,8 +300,6 @@ export class DmnoServer {
     ...args: Parameters<typeof this.commands[K]>
   ): Promise<ReturnType<typeof this.commands[K]>> {
     console.log('make request', requestName);
-    // have to wait for server to be ready before we can send a request
-    await this.webServerReady;
 
     // In theory, we could check if we are currently in the parent server
     // and if so skip communicating over http/uws
@@ -309,8 +311,11 @@ export class DmnoServer {
 
       // we can bypass the http request if this is not a child server
       // but the overhead is very minimal, so we will re-enable this later
-      // return (this.commands[requestName] as any).apply(this, args);
+      return (this.commands[requestName] as any).apply(this, args);
     }
+
+    // have to wait for server to be ready before we can send a request to parent server
+    await this.webServerReady;
 
     const rawResult = await this.mTlsFetchHelper(`/api/${requestName}`, args);
     const result = JSON.parse(rawResult as any);
