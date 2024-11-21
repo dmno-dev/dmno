@@ -6,14 +6,9 @@ import './lib/init-process';
 /* eslint-disable import/first */
 // import first - we add global exception handler here
 const startBoot = new Date().getTime();
-
 const cliExecId = new Date().toISOString();
-console.time(`cli ${cliExecId}`);
-
-
 
 import _ from 'lodash-es';
-import kleur from 'kleur';
 import Debug from 'debug';
 import { DmnoCommand } from './lib/dmno-command';
 
@@ -66,7 +61,7 @@ program
   });
 
 process.on('exit', () => {
-  console.timeEnd(`cli ${cliExecId}`);
+  debug(`cli execution (${cliExecId}) took ${+new Date() - +startBoot}ms`);
 });
 
 debug(`finish loading - begin parse ${+new Date() - startBoot}ms`);
