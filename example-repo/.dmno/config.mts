@@ -1,10 +1,8 @@
-import { DmnoBaseTypes, defineDmnoService, configPath, NodeEnvType, switchBy, inject } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, NodeEnvType, switchBy, inject } from 'dmno';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 import { BitwardenSecretsManagerDmnoPlugin, BitwardenSecretsManagerTypes } from '@dmno/bitwarden-plugin';
 import { InfisicalDmnoPlugin, InfisicalTypes } from '@dmno/infisical-plugin';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
-
-
 
 const OnePassSecretsProd = new OnePasswordDmnoPlugin('1pass/prod', {
   // token: configPath('..', 'OP_TOKEN_PROD'),
@@ -20,13 +18,13 @@ const BitwardenPlugin = new BitwardenSecretsManagerDmnoPlugin('bitwarden');
 
 const InfisicalPlugin = new InfisicalDmnoPlugin('infisical', {
   environment: 'dev',
+  clientId: 'bcab88e6-3a4d-4441-bf7c-cce772fd3c57',
+  projectId: '4210fecf-247a-419f-beda-bfd5e11f6ce0',
+  // secret is injected
 });
 
 const EncryptedVaultSecrets = new EncryptedVaultDmnoPlugin('vault/prod', { name: 'prod', key: inject() });
-// const NonProdVault = new EncryptedVaultDmnoPlugin('vault/dev', {
-//   key: configPath('DMNO_VAULT_KEY'),
-//   name: 'dev',
-// });
+// const ProdEncryptedVaultSecrets = new EncryptedVaultDmnoPlugin('vault/prod', { name: 'prod', key: inject() });
 
 export default defineDmnoService({
   name: 'root',
@@ -37,42 +35,29 @@ export default defineDmnoService({
     preventClientLeaks: true,
   },
   schema: {
-    ITEM_X: { 
-      value: 'should-be-required',
-    },
-
     NODE_ENV: NodeEnvType,
     DMNO_ENV: {
       typeDescription: 'standardized environment flag set by DMNO',
       value: (ctx) => ctx.get('NODE_ENV'),
     },
-    INFISICAL_CLIENT_ID: {
-      extends: InfisicalTypes.clientId,
-    },
     INFISICAL_CLIENT_SECRET: {
       extends: InfisicalTypes.clientSecret,
+      value: EncryptedVaultSecrets.item(),
     },
-    INFISICAL_PROJECT_ID: {
-      extends: InfisicalTypes.projectId,
+    INFISICAL_ITEM_AVAILABE_ALL_ENVS: {
+      value: InfisicalPlugin.secret('TEST_KEY_ALL_ENVS'),
     },
-    TEST_KEY_ALL_ENVS: {
-      value: InfisicalPlugin.secret(),
-    },
-    DEV_ONLY: {
-      value: InfisicalPlugin.secret(),
+    INFISICAL_ITEM_AVAILABE_DEV_ENV_ONLY: {
+      value: InfisicalPlugin.secret('DEV_ONLY'),
     },
     REDACT_TEST: {
       sensitive: true,
       value: 'a a a a b b b b c c c c d d d',
       coerce: (val) => val.replaceAll(' ', ''),
     },
-
     OP_TOKEN: {
       extends: OnePasswordTypes.serviceAccountToken,
     },
-    // OP_TOKEN_PROD: {
-    //   extends: OnePasswordTypes.serviceAccountToken,
-    // },
     OP_ITEM_1: {
       value: switchBy('DMNO_ENV', {
         _default: OnePassSecretsDev.item(),
@@ -91,11 +76,11 @@ export default defineDmnoService({
 
     BWS_TOKEN: {
       extends: BitwardenSecretsManagerTypes.machineAccountAccessToken,
+      value: EncryptedVaultSecrets.item(),
     },
     BWS_ITEM: {
       value: BitwardenPlugin.secretById('df2246f1-7889-4d1b-a18e-b219001ee3b3'),
     },
-
 
     SOME_API_KEY: {
       value: switchBy('DMNO_ENV', {
@@ -108,7 +93,6 @@ export default defineDmnoService({
       extends: EncryptedVaultTypes.encryptionKey,
     },
 
-    
     ROOT_ONLY: {
       value: 'rootonly',
     },

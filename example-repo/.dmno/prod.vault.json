@@ -25,6 +25,14 @@
     "root!VAULT_ITEM_WITH_SWITCH#production": {
       "encryptedValue": "xoUIhrZDwiEzPnuBBK6a+Md/h/zFXrmJABkBznbuS39HdSJijCCtGmeorxZu77Y=",
       "updatedAt": "2024-09-20T22:39:16.882Z"
+    },
+    "root!INFISICAL_CLIENT_SECRET": {
+      "encryptedValue": "zI/U8xuSj6bZE0YhO9MEMKSXm8JBI9ktrBedbFfct8KM5ZFCoXTOG/FhQaeYiVMuqG/RSbq0AEa5oB3sBdHCCd9DApKufCHIBAwLhe/ArE5GTvZ4S5QYwlUh5lr59w==",
+      "updatedAt": "2024-11-21T18:35:07.374Z"
+    },
+    "root!BWS_TOKEN": {
+      "encryptedValue": "qY2wfX/uhoikdNkO8cWYHFRtzPGz+dvK1cZ7Lwsiil1sB0BJChml0fDq2R27SN4PoFXZ7O4ALdCTTcAHMVp/eE6yLkuTzCXXdKvhxJXM5hWkmmL8iy7Nvry5Zb+GZQvOPNfyQpSxW+l00QTV68OfCahg5FhHZ3YdsrmLcg==",
+      "updatedAt": "2024-11-21T18:35:36.586Z"
     }
   }
 }
