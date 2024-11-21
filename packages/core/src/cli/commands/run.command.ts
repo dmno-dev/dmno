@@ -82,8 +82,7 @@ program.action(async (_command, opts: {
 
   fullInjectedEnv.DMNO_INJECTED_ENV = JSON.stringify(injectedJson);
   // this is what signals to the child process that is has a parent dmno server to use
-  fullInjectedEnv.DMNO_CONFIG_SERVER_UUID = ctx.dmnoServer.serverId;
-
+  fullInjectedEnv.DMNO_PARENT_SERVER = ctx.dmnoServer.parentServerInfo;
 
   commandProcess = execa(pathAwareCommand || rawCommand, commandArgsOnly, {
     stdio: 'inherit',

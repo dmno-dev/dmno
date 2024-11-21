@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
+import getPort from 'get-port';
 import { Server as SocketIoServer } from 'socket.io';
 import uWS from 'uWebSockets.js';
 import launchEditor from 'launch-editor';
@@ -20,9 +21,6 @@ import { UseAtPhases } from '../config-engine/configraph-adapter';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// TODO: read port from workspace yaml file, or just pick an available one?
-const STATIC_PORT = 3666;
-
 // TODO: do we want to allow changing the host? or just always use localhost?
 // see old config-server.ts for details
 
@@ -35,9 +33,15 @@ function getCurrentPackageName() {
   if (process.env.PNPM_PACKAGE_NAME !== undefined) return process.env.PNPM_PACKAGE_NAME;
 }
 
+const DEFAULT_PORT = 3666; // DMNO on a telephone :)
 
 export class DmnoServer {
-  readonly serverId: string;
+  private serverId?: string;
+  private serverPort?: number;
+  get parentServerInfo() {
+    if (!this.opts?.createParentServer) throw new Error('not a parent dmno server');
+    return `${this.serverId}/${this.serverPort}`;
+  }
   private isChildServer: boolean = false;
   private configLoader?: ConfigLoader;
 
@@ -46,16 +50,19 @@ export class DmnoServer {
     createParentServer?: boolean,
     enableWebUi?: boolean,
   }) {
-    if (process.env.DMNO_CONFIG_SERVER_UUID) {
-      this.serverId = process.env.DMNO_CONFIG_SERVER_UUID;
+    if (process.env.DMNO_PARENT_SERVER) {
+      const [serverId, port] = process.env.DMNO_PARENT_SERVER.split('/');
+      this.serverId = serverId;
+      this.serverPort = parseInt(port);
       this.isChildServer = true;
       this.webServerReady = this.initChildServer();
     } else if (opts?.createParentServer) {
       this.serverId = crypto.randomUUID();
+      // TODO: read port from workspace yaml file, or just pick an available one?
+      this.serverPort = DEFAULT_PORT;
       this.configLoader = new ConfigLoader(!!opts?.watch);
       this.webServerReady = this.bootWsServer();
     } else {
-      this.serverId = 'none';
       this.configLoader = new ConfigLoader(!!opts?.watch);
     }
   }
@@ -71,7 +78,6 @@ export class DmnoServer {
 
   readonly webServerReady?: Promise<void>;
   private uwsServer?: uWS.TemplatedApp;
-  private uwsPort = STATIC_PORT;
   private certs?: Awaited<ReturnType<typeof loadOrCreateTlsCerts>>;
 
   private _webServerUrl?: string;
@@ -83,6 +89,11 @@ export class DmnoServer {
     // TODO: we could wait until the workspace info is loaded only
     if (!this.configLoader) throw new Error('no configLoader');
     await this.configLoader.isReady;
+
+    // TODO: this will try the default port (3666) and select another if not available
+    // we may want to warn the user more directly if this happens?
+    // we also probably want to let the user specify a port in workspace config
+    this.serverPort = await getPort({ port: DEFAULT_PORT });
 
     const uwsServerListeningDeferred = createDeferredPromise();
 
@@ -113,6 +124,12 @@ export class DmnoServer {
         res.onAborted(() => {
           res.aborted = true;
         });
+
+        if (this.serverId !== req.getHeader('dmno-server-id')) {
+          res.writeStatus('409');
+          res.end(JSON.stringify({ error: 'Incorrect DMNO server ID' }));
+          return;
+        }
 
         if (!uwsValidateClientCert(res, this.certs!.caCert)) return;
 
@@ -209,14 +226,9 @@ export class DmnoServer {
           });
         }
       })
-      .listen(this.uwsPort, (token) => {
-        this.uwsPort = uWS.us_socket_local_port(token);
-        this._webServerUrl = `https://localhost:${this.uwsPort}`;
-        if (token) {
-          console.log(`Listening to port ${this.uwsPort}`);
-        } else {
-          console.log('Failed finding available port');
-        }
+      .listen(this.serverPort, (token) => {
+        this._webServerUrl = `https://localhost:${this.serverPort}`;
+        if (!token) throw new Error('uWS failed to bind to port?');
         uwsServerListeningDeferred.resolve();
       });
 
@@ -329,13 +341,14 @@ export class DmnoServer {
 
     const clientOptions = {
       hostname: 'localhost',
-      port: this.uwsPort,
+      port: this.serverPort,
       path: urlPath,
       method: 'POST',
       ...data !== undefined && {
         headers: {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(postData),
+          'dmno-server-id': this.serverId,
         },
       },
       key: this.certs.clientKey,
@@ -350,8 +363,19 @@ export class DmnoServer {
         data += chunk;
       });
       res.on('end', () => {
-        // console.log('Response from server:', data);
-        deferred.resolve(data);
+        if (res.statusCode !== 200) {
+          let errorMessage: string;
+          try {
+            const dataObj = JSON.parse(data);
+            errorMessage = dataObj.error;
+          } catch (err) {
+            errorMessage = data;
+          }
+          deferred.reject(new Error(`Internal DMNO request failed - [${res.statusCode}] ${errorMessage}`));
+        } else {
+          // console.log('Response from server:', data);
+          deferred.resolve(data);
+        }
       });
     });
 
@@ -380,10 +404,8 @@ export class DmnoServer {
   }
   enableWatchMode(onReload: () => void | Promise<void>) {
     if (this.configLoader) {
-      console.log('enable watch mode');
       this.configLoader.devMode = true;
       this.configLoader.onReload = async () => {
-        console.log('configLoader triggered reload handler');
         await onReload();
 
         if (this.socketIoServer) {

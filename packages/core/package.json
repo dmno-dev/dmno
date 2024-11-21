@@ -120,6 +120,7 @@
     "esm-resolve": "^1.0.11",
     "execa": "^8.0.1",
     "fdir": "^6.1.1",
+    "get-port": "^7.1.0",
     "gradient-string": "^2.0.2",
     "jsonc-parser": "^3.2.1",
     "kleur": "catalog:",
