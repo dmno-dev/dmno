@@ -1,8 +1,8 @@
 import { expect, test, describe } from 'vitest';
 import _ from 'lodash-es';
 import {
-  Configraph,
   ConfigraphBaseTypes, ConfigraphDataType, createConfigraphDataType, ConfigraphDataTypesRegistry,
+  ValidationError,
 } from '@dmno/configraph';
 
 
@@ -89,4 +89,40 @@ describe('data types', () => {
   });
 
   // TODO: check validation call flow works (how it follows up the chain)
+});
+
+
+// some checks of validations on specific types
+// TODO: ideally these test cases can be moved to the types themselves, and we provide utils to run them
+function testType(t: ConfigraphDataType, validCases: Record<string, any>, invalidCases: Record<string, any>) {
+  for (const testCase in validCases) {
+    const value = validCases[testCase];
+    test(`${value} - valid`, () => {
+      expect(t.validate(value)).toEqual(true);
+    });
+  }
+  for (const testCase in invalidCases) {
+    const value = invalidCases[testCase];
+    test(`${value} - NOT valid`, () => {
+      const isValid = t.validate(value) as Array<any>;
+      expect(isValid).not.toEqual(true);
+      expect(isValid).length.above(0);
+      expect(isValid[0]).toBeInstanceOf(ValidationError);
+    });
+  }
+}
+
+describe('specific data type tests', () => {
+  describe('url', () => {
+    testType(ConfigraphBaseTypes.url(), {
+      'regular url': 'https://example.com/123',
+      'localhost url': 'http://localhost:1234/123',
+      'username only': 'https://username@example.com/123',
+      'username and password': 'https://user:pass@example.com/123',
+      'bad tld, but still valid': 'http://asdf', // TODO: not sure about this - maybe add options?
+    }, {
+      'bad string': 'asdf',
+      'domain only': 'asdf.com',
+    });
+  });
 });

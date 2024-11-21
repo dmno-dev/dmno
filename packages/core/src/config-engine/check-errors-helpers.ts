@@ -1,6 +1,8 @@
 import kleur from 'kleur';
 import _ from 'lodash-es';
+import { ConfigLoadError } from '@dmno/configraph';
 import { CliExitError } from '../cli/lib/cli-error';
+
 import {
   formatError, formattedValue, getItemSummary, joinAndCompact,
 } from '../cli/lib/formatting';
@@ -21,7 +23,9 @@ export function checkForSchemaErrors(workspace: SerializedWorkspace) {
 
       console.log(kleur.bold(service.configLoadError.message), '\n');
 
-      console.log(service.configLoadError.cleanedStack?.join('\n'), '\n');
+      if (service.configLoadError instanceof ConfigLoadError) {
+        console.log(service.configLoadError.cleanedStack?.join('\n'), '\n');
+      }
     });
     throw new CliExitError('Unable to load all config files');
   }
