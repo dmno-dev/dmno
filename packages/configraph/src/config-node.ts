@@ -103,15 +103,14 @@ export class ConfigraphNode<NodeMetadata = any> {
     } else if (_.isFunction(defOrShorthand)) {
       // in this case, we have no settings to pass through, so we pass an empty object
       const shorthandFnResult = defOrShorthand({});
-      if (!ConfigraphDataType.checkInstanceOf(shorthandFnResult)) {
+      if (!(shorthandFnResult instanceof ConfigraphDataType)) {
         // TODO: put this in schema error instead?
         throw new Error('invalid schema as result of fn shorthand');
       } else {
         typeDef = { extends: shorthandFnResult };
       }
-    } else if (ConfigraphDataType.checkInstanceOf(defOrShorthand)) {
-      // TODO: without proper instanceof check, we must resort to `as any`
-      typeDef = { extends: defOrShorthand as any };
+    } else if (defOrShorthand instanceof ConfigraphDataType) {
+      typeDef = { extends: defOrShorthand };
     } else if (_.isObject(defOrShorthand)) {
       typeDef = defOrShorthand;
     } else {

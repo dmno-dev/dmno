@@ -17,7 +17,7 @@ import {
 import {
   DmnoService,
 } from '../config-engine/config-engine';
-import { DmnoDataTypeMetadata } from '../config-engine/configraph-adapter';
+import { DmnoDataTypeMetadata, UseAtPhases } from '../config-engine/configraph-adapter';
 
 
 export type SerializedWorkspace = {
@@ -50,6 +50,7 @@ export type SerializedConfigItem =
     // dmno specific
     isDynamic: boolean,
     isSensitive: boolean,
+    useAt?: Array<UseAtPhases>,
     maskedResolvedValue?: string,
     maskedResolvedRawValue?: string,
   };
@@ -83,6 +84,7 @@ ConfigraphDataTypeDefinition<any, DmnoDataTypeMetadata>,
 
 export type SerializedDmnoPlugin =
 Omit<SerializedConfigraphPlugin, 'inputNodes'> & {
+  cliPath?: string,
   inputNodes: Record<string, SerializedConfigItem>
 };
 

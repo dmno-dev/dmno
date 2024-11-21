@@ -63,6 +63,7 @@ DmnoDataTypeMetadata, DmnoConfigraphServiceEntity
   toJSON(): SerializedDmnoPlugin {
     return {
       ...this.toCoreJSON(),
+      cliPath: this.cliPath,
       inputNodes: _.mapValues(this.internalEntity?.configNodes, (n) => n.toJSON()),
     };
   }

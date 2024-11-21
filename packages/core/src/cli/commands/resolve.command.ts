@@ -13,9 +13,10 @@ import { getCliRunCtx } from '../lib/cli-ctx';
 import { addCacheFlags } from '../lib/cache-helpers';
 import { addWatchMode } from '../lib/watch-mode-helpers';
 import { CliExitError } from '../lib/cli-error';
-import { checkForConfigErrors, checkForSchemaErrors } from '../lib/check-errors-helpers';
+import { checkForConfigErrors, checkForSchemaErrors } from '../../config-engine/check-errors-helpers';
 import { stringifyObjectAsEnvFile } from '../lib/env-file-helpers';
 import { isSubshell } from '../lib/shell-helpers';
+import { addResolutionPhaseFlags } from '../lib/resolution-context-helpers';
 
 const program = new DmnoCommand('resolve')
   .summary('Loads config schema and resolves config values')
@@ -57,29 +58,33 @@ program.action(async (opts: {
   const workspace = ctx.workspace!;
   const service = ctx.selectedService;
   checkForSchemaErrors(workspace);
-  await workspace.resolveConfig();
   checkForConfigErrors(service, { showAll: opts?.showAll });
 
-  const getExposedConfigValues = () => {
-    let exposedConfig = service.config;
-    if (opts.public) {
-      exposedConfig = _.pickBy(exposedConfig, (c) => !c.type.getMetadata('sensitive'));
+  async function getExposedConfigValues() {
+    const injectedJson = await ctx.dmnoServer.makeRequest('getInjectedJson', service.serviceName);
+    let exposedConfig = service.configNodes;
+    const values = {} as Record<string, any>;
+    for (const itemKey in injectedJson) {
+      if (itemKey.startsWith('$')) continue;
+      if (injectedJson[itemKey].value && opts.public) continue;
+      values[itemKey] = injectedJson[itemKey].value;
     }
-    return _.mapValues(exposedConfig, (val) => val.resolvedValue);
-  };
+    return values;
+  }
 
   // console.log(service.config);
   if (opts.format === 'json') {
     console.log(JSON.stringify(getExposedConfigValues()));
   } else if (opts.format === 'json-full') {
-    console.dir(service.toJSON(), { depth: null });
+    console.dir(service, { depth: null });
   } else if (opts.format === 'json-injected') {
-    console.log(JSON.stringify(service.configraphEntity.getInjectedEnvJSON()));
+    const injectedJson = await ctx.dmnoServer.makeRequest('getInjectedJson', ctx.selectedService.serviceName);
+    console.log(JSON.stringify(injectedJson));
   } else if (opts.format === 'env') {
     console.log(stringifyObjectAsEnvFile(getExposedConfigValues()));
   } else {
-    _.each(service.config, (item) => {
-      console.log(getItemSummary(item.toJSON()));
+    _.each(service.configNodes, (item) => {
+      console.log(getItemSummary(item));
     });
   }
 });

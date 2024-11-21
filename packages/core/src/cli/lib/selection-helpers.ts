@@ -8,9 +8,10 @@ import { DmnoPlugin } from '../../config-engine/dmno-plugin';
 import { getMaxLength } from './string-utils';
 import { joinAndCompact } from './formatting';
 import { CliExitError } from './cli-error';
+import { SerializedDmnoPlugin } from '../../config-loader/serialization-types';
 
 
-function getServiceLabel(s: DmnoService, padNameEnd: number) {
+function getServiceLabel(s: { serviceName: string, packageName: string, configLoadError?: any }, padNameEnd: number) {
   return joinAndCompact([
     `- ${s.serviceName.padEnd(padNameEnd)}`,
     kleur.gray(s.packageName),
@@ -30,10 +31,10 @@ export function addServiceSelection(program: Command, opts?: {
     .hook('preAction', async (thisCommand, actionCommand) => {
       const ctx = getCliRunCtx();
 
-      const workspace = await ctx.configLoader.getWorkspace();
+      const workspace = await ctx.dmnoServer.makeRequest('loadFullSchema');
       ctx.workspace = workspace;
 
-      const namesMaxLen = getMaxLength(_.map(workspace.allServices, (s) => s.serviceName));
+      const namesMaxLen = getMaxLength(_.map(workspace.services, (s) => s.serviceName));
       const disablePrompt = thisCommand.opts().noPrompt || opts?.disablePrompt;
 
       // // first display loading errors (which would likely cascade into schema errors)
@@ -59,8 +60,9 @@ export function addServiceSelection(program: Command, opts?: {
       // handle re-selecting the same service on a restart, which could be a bit weird if the name(s) have changed
       // but we try to just select the same one and not worry too much
       if (ctx.isWatchModeRestart && ctx.selectedService) {
-        ctx.selectedService = ctx.workspace.getService({ serviceName: ctx.selectedService.serviceName })
-      || ctx.workspace.getService({ packageName: ctx.selectedService.packageName });
+        ctx.selectedService = _.find(ctx.workspace.services, (s) => s.serviceName === ctx.selectedService!.serviceName)
+          || _.find(ctx.workspace.services, (s) => s.packageName === ctx.selectedService!.packageName);
+
         if (ctx.selectedService) return;
       }
 
@@ -74,13 +76,13 @@ export function addServiceSelection(program: Command, opts?: {
 
       const explicitSelection = thisCommand.opts().service;
       if (!explicitMenuOptIn && explicitSelection) {
-        ctx.selectedService = _.find(workspace.allServices, (s) => s.serviceName === explicitSelection);
+        ctx.selectedService = _.find(workspace.services, (s) => s.serviceName === explicitSelection);
         if (ctx.selectedService) return;
 
         throw new CliExitError(`Invalid service selection: ${kleur.bold(explicitSelection)}`, {
           suggestion: [
             'Maybe you meant one of:',
-            ..._.map(workspace.allServices, (s) => getServiceLabel(s, namesMaxLen)),
+            ..._.map(workspace.services, (s) => getServiceLabel(s, namesMaxLen)),
           ],
         });
       }
@@ -91,7 +93,7 @@ export function addServiceSelection(program: Command, opts?: {
         const packageName = process.env.npm_package_name || process.env.PNPM_PACKAGE_NAME;
         if (packageName) {
         // console.log('auto select package name', packageName);
-          const autoServiceFromPackageManager = _.find(workspace.allServices, (service) => {
+          const autoServiceFromPackageManager = _.find(workspace.services, (service) => {
             return service.packageName === packageName;
           });
 
@@ -111,7 +113,7 @@ export function addServiceSelection(program: Command, opts?: {
       if (!thisCommand.opts().silent && (explicitMenuOptIn || !opts?.disableMenuSelect)) {
         // order our services by folder depth (descending)
         // so we can look for whiuch folder the user is in
-        const servicesOrderedByDirDepth = _.orderBy(workspace.allServices, (s) => s.path.split('/').length, ['desc']);
+        const servicesOrderedByDirDepth = _.orderBy(workspace.services, (s) => s.path.split('/').length, ['desc']);
 
         const cwd = process.cwd();
         const autoServiceFromCwd = _.find(servicesOrderedByDirDepth, (service) => {
@@ -120,14 +122,14 @@ export function addServiceSelection(program: Command, opts?: {
 
         const menuSelection = await select({
           message: 'Please select a service?',
-          choices: _.map(workspace.allServices, (service) => ({
+          choices: _.map(workspace.services, (service) => ({
             name: getServiceLabel(service, namesMaxLen),
             value: service.serviceName,
           })),
           default: autoServiceFromCwd?.serviceName,
         });
 
-        ctx.selectedService = _.find(workspace.allServices, (s) => s.serviceName === menuSelection);
+        ctx.selectedService = _.find(workspace.services, (s) => s.serviceName === menuSelection);
         ctx.autoSelectedService = false;
         return;
       }
@@ -140,7 +142,7 @@ export function addServiceSelection(program: Command, opts?: {
     });
 }
 
-function getPluginLabel(p: DmnoPlugin, padNameEnd: number) {
+function getPluginLabel(p: SerializedDmnoPlugin, padNameEnd: number) {
   return [
     `- ${p.instanceId}`.padEnd(padNameEnd),
     kleur.gray(`${p.pluginType}`),
@@ -154,9 +156,7 @@ export function addPluginSelection(program: Command) {
     .hook('preAction', async (thisCommand, actionCommand) => {
       const ctx = getCliRunCtx();
 
-      const workspace = await ctx.configLoader.getWorkspace();
-      await workspace.resolveConfig();
-
+      const workspace = await ctx.dmnoServer.getWorkspace();
       const pluginsArray = _.values(workspace.plugins);
 
       const namesMaxLen = getMaxLength(_.map(pluginsArray, (p) => p.instanceId));

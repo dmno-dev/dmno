@@ -34,20 +34,15 @@ program.action(async (opts: {
 }, more) => {
   const ctx = getCliRunCtx();
 
-  const configServer = new ConfigServer(ctx.configLoader, {
-    ipcOnly: opts?.ipcOnly,
-  });
-  ctx.configLoader.devMode = true;
-
   if (!opts.silent) {
     console.log(DMNO_DEV_BANNER);
     await fallingDmnosAnimation();
   }
 
-  await configServer.webServerListening;
+  await ctx.dmnoServer.webServerReady;
   console.log(boxen(
     [
-      `Local DMNO UI running @ ${kleur.bold().magenta(configServer.webServerUrl || 'ERROR')}`,
+      `Local DMNO UI running @ ${kleur.bold().magenta(ctx.dmnoServer.webServerUrl || 'ERROR')}`,
     ].join('\n'),
     {
       padding: 1, borderStyle: 'round', borderColor: 'blueBright',
@@ -64,12 +59,12 @@ program.action(async (opts: {
     }
     firstLoad = false;
     console.log('');
-    const workspace = await ctx.configLoader.getWorkspace();
+    const workspace = await ctx.dmnoServer.getWorkspace();
     if (opts.service) {
-      const service = workspace.getService(opts.service);
+      const service = workspace.services[opts.service];
 
-      _.each(service.config, (item) => {
-        console.log(getItemSummary(item.toJSON()));
+      _.each(service.configNodes, (item) => {
+        console.log(getItemSummary(item));
       });
     } else {
       console.log('config loaded!');
@@ -82,12 +77,13 @@ program.action(async (opts: {
 
   // calling reload will regenerate types and resolve the config
   // TODO: we may want to change how the initial load in dev mode works so we dont need to reload here...
-  await ctx.configLoader.reload();
+  // await ctx.configLoader.reload();
 
   await logResult();
 
-  configServer.onReload = () => logResult();
-
+  ctx.dmnoServer.enableWatchMode(async () => {
+    await logResult();
+  });
 
 
   // console.log(ctx.configLoader.uuid);

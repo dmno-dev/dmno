@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 // hashbang needed to get npm generated ".bin/dmno" to work with esm imports
 
+import './lib/init-process';
+
 /* eslint-disable import/first */
 // import first - we add global exception handler here
 const startBoot = new Date().getTime();
 
-import './lib/init-process';
+const cliExecId = new Date().toISOString();
+console.time(`cli ${cliExecId}`);
+
+
 
 import _ from 'lodash-es';
 import kleur from 'kleur';
@@ -41,14 +46,29 @@ program.addCommand(ClearCacheCommand);
 program.addCommand(PluginCommand);
 program.addCommand(PrintEnvCommand);
 
-
-
 // have to pass through the root program for this one so we can access all the subcommands
 addDocsCommand(program);
-
 customizeHelp(program);
 
-initCliRunCtx();
+program
+  .hook('preAction', (thisCommand, actionCommand) => {
+    // init command does not need a dmno server
+    // might want to opt-in on each command instead of skipping here?
+    if (actionCommand.name() === 'init') return;
+
+    // we need to know up front whether to enable the file watchers when initializing the vite server
+    initCliRunCtx({
+      // TODO: a bit awkward how this is being set up
+      createParentServer: ['dev', 'run'].includes(actionCommand.name()),
+      enableWebUi: actionCommand.name() === 'dev',
+      watch: actionCommand.name() === 'dev' || actionCommand.opts().watch,
+    });
+  });
+
+process.on('exit', () => {
+  console.timeEnd(`cli ${cliExecId}`);
+});
+
 debug(`finish loading - begin parse ${+new Date() - startBoot}ms`);
 try {
   await program.parseAsync();
