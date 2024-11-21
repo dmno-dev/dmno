@@ -28,4 +28,5 @@ export default defineConfig({
   
   splitting: false,
   keepNames: true, // stops build from prefixing our class names with `_` in some cases
+  shims: true,
 });
