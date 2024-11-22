@@ -123,7 +123,7 @@ export function getItemSummary(item: SerializedConfigItem) {
 
   const errors = _.compact([item.coercionError, item.resolutionError, ...item.validationErrors || []]);
   errors?.forEach((err) => {
-    summary.push(kleur[err.isWarning ? 'yellow' : 'red'](`   - ${err.message}`));
+    summary.push(kleur[err.isWarning ? 'yellow' : 'red'](`   - ${err.isWarning ? '[WARNING] ' : ''}${err.message}`));
     summary.push(...err.cleanedStack || '');
     if (err.tip) {
       summary.push(...err.tip.split('\n').map((line) => `     ${line}`));
