@@ -1,0 +1,16 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": [ "^build" ],
+      "inputs": [ "tsconfig.json", "tsconfig.*.json", "tsup.config.ts", "src/**" ],
+      "outputs": [ "dist/**" ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "env": { }
+  },
+  "globalPassThroughEnv": [ "DMNO_PARENT_SERVER" ]
+}

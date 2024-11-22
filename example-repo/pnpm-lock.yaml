@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      turbo:
+        specifier: ^2.3.1
+        version: 2.3.1
     devDependencies:
       '@dmno/1password-plugin':
         specifier: link:../packages/plugins/1password
@@ -47,9 +51,6 @@ importers:
       dmno:
         specifier: link:../../../packages/core
         version: link:../../../packages/core
-      dotenv:
-        specifier: ^16.0.3
-        version: 16.4.5
       exit-hook:
         specifier: ^3.2.0
         version: 3.2.0
@@ -252,7 +253,7 @@ importers:
         version: 8.4.40
       tailwindcss:
         specifier: ^3.4.3
-        version: 3.4.7(ts-node@10.9.2(@swc/core@1.7.3(@swc/helpers@0.5.5))(@types/node@20.14.13)(typescript@5.5.4))
+        version: 3.4.7(ts-node@10.9.2(@types/node@20.14.13)(typescript@5.5.4))
       typescript:
         specifier: ^5.4.5
         version: 5.5.4
@@ -301,7 +302,7 @@ importers:
         version: link:../../../packages/integrations/remix
       '@remix-run/dev':
         specifier: ^2.10.3
-        version: 2.10.3(@remix-run/react@2.10.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4))(@remix-run/serve@2.10.3(typescript@5.5.4))(@types/node@20.14.13)(terser@5.31.3)(ts-node@10.9.2(@swc/core@1.7.3(@swc/helpers@0.5.5))(@types/node@20.14.13)(typescript@5.5.4))(typescript@5.5.4)(vite@5.3.5(@types/node@20.14.13)(terser@5.31.3))
+        version: 2.10.3(@remix-run/react@2.10.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4))(@remix-run/serve@2.10.3(typescript@5.5.4))(@types/node@20.14.13)(terser@5.31.3)(ts-node@10.9.2(@types/node@20.14.13)(typescript@5.5.4))(typescript@5.5.4)(vite@5.3.5(@types/node@20.14.13)(terser@5.31.3))
       '@types/react':
         specifier: ^18.2.20
         version: 18.3.3
@@ -343,7 +344,7 @@ importers:
         version: 8.4.40
       tailwindcss:
         specifier: ^3.4.4
-        version: 3.4.7(ts-node@10.9.2(@swc/core@1.7.3(@swc/helpers@0.5.5))(@types/node@20.14.13)(typescript@5.5.4))
+        version: 3.4.7(ts-node@10.9.2(@types/node@20.14.13)(typescript@5.5.4))
       typescript:
         specifier: ^5.5.4
         version: 5.5.4
@@ -1542,6 +1543,7 @@ packages:
   '@koa/router@12.0.1':
     resolution: {integrity: sha512-ribfPYfHb+Uw3b27Eiw6NPqjhIhTpVFzEWLwyc/1Xp+DCdwRRyIlAUODX+9bPARF6aQtUu1+/PHzdNvRzcs/+Q==}
     engines: {node: '>= 12'}
+    deprecated: Use v12.0.2 or higher to fix the vulnerability issue
 
   '@kwsites/file-exists@1.1.1':
     resolution: {integrity: sha512-m9/5YGR18lIwxSFDwfE3oA7bWuq9kdau6ugN4H2rJeyhFQZcG9AgSHkQtSD15a8WvTgfz9aikZMrKPHvbpqFiw==}
@@ -3661,6 +3663,7 @@ packages:
   eslint@8.57.0:
     resolution: {integrity: sha512-dZ6+mexnaTIbSBZWgou51U6OmzIhYM2VcNdtiTtI7qPNZm35Akpr0f6vtw3w1Kmn5PYo+tZVfh13WrhpS6oLqQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
 
   espree@9.6.1:
@@ -6827,8 +6830,42 @@ packages:
       typescript:
         optional: true
 
+  turbo-darwin-64@2.3.1:
+    resolution: {integrity: sha512-tjHfjW/Gs8Q9IO+9gPdIsSStZ8I09QYDRT/SyhFTPLnc7O2ZlxHPBVFfjUkHUjanHNYO8CpRGt+zdp1PaMCruw==}
+    cpu: [x64]
+    os: [darwin]
+
+  turbo-darwin-arm64@2.3.1:
+    resolution: {integrity: sha512-At1WStnxCfrBQ4M2g6ynre8WsusGwA11okhVolBxyFUemYozDTtbZwelr+IqNggjT251vviokxOkcFzzogbiFw==}
+    cpu: [arm64]
+    os: [darwin]
+
+  turbo-linux-64@2.3.1:
+    resolution: {integrity: sha512-COwEev7s9fsxLM2eoRCyRLPj+BXvZjFIS+GxzdAubYhoSoZit8B8QGKczyDl6448xhuFEWKrpHhcR9aBuwB4ag==}
+    cpu: [x64]
+    os: [linux]
+
+  turbo-linux-arm64@2.3.1:
+    resolution: {integrity: sha512-AP0uE15Rhxza2Jl+Q3gxdXRA92IIeFAYaufz6CMcZuGy9yZsBlLt9w6T47H6g7XQPzWuw8pzfjM1omcTKkkDpQ==}
+    cpu: [arm64]
+    os: [linux]
+
   turbo-stream@2.2.0:
     resolution: {integrity: sha512-FKFg7A0To1VU4CH9YmSMON5QphK0BXjSoiC7D9yMh+mEEbXLUP9qJ4hEt1qcjKtzncs1OpcnjZO8NgrlVbZH+g==}
+
+  turbo-windows-64@2.3.1:
+    resolution: {integrity: sha512-HDSneq0dNZYZch74c2eygq+OiJE/JYDs7OsGM0yRYVj336383xkUnxz6W2I7qiyMCQXzp4UVUDZXvZhUYcX3BA==}
+    cpu: [x64]
+    os: [win32]
+
+  turbo-windows-arm64@2.3.1:
+    resolution: {integrity: sha512-7/2/sJZiquwoT/jWBCfV0qKq4NarsJPmDRjMcR9dDMIwCYsGM8ljomkDRTCtkNeFcUvYw54MiRWHehWgbcRPsw==}
+    cpu: [arm64]
+    os: [win32]
+
+  turbo@2.3.1:
+    resolution: {integrity: sha512-vHZe/e6k1HZVKiMQPQ1BWFn53vjVQDFKdkjUq/pBKlRWi1gw9LQO6ntH4qZCcHY1rH6TXgsRmexXdgWl96YvVQ==}
+    hasBin: true
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -8935,7 +8972,7 @@ snapshots:
 
   '@prisma/engines@4.16.2': {}
 
-  '@remix-run/dev@2.10.3(@remix-run/react@2.10.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4))(@remix-run/serve@2.10.3(typescript@5.5.4))(@types/node@20.14.13)(terser@5.31.3)(ts-node@10.9.2(@swc/core@1.7.3(@swc/helpers@0.5.5))(@types/node@20.14.13)(typescript@5.5.4))(typescript@5.5.4)(vite@5.3.5(@types/node@20.14.13)(terser@5.31.3))':
+  '@remix-run/dev@2.10.3(@remix-run/react@2.10.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4))(@remix-run/serve@2.10.3(typescript@5.5.4))(@types/node@20.14.13)(terser@5.31.3)(ts-node@10.9.2(@types/node@20.14.13)(typescript@5.5.4))(typescript@5.5.4)(vite@5.3.5(@types/node@20.14.13)(terser@5.31.3))':
     dependencies:
       '@babel/core': 7.24.9
       '@babel/generator': 7.25.0
@@ -8979,7 +9016,7 @@ snapshots:
       pidtree: 0.6.0
       postcss: 8.4.40
       postcss-discard-duplicates: 5.1.0(postcss@8.4.40)
-      postcss-load-config: 4.0.2(postcss@8.4.40)(ts-node@10.9.2(@swc/core@1.7.3(@swc/helpers@0.5.5))(@types/node@20.14.13)(typescript@5.5.4))
+      postcss-load-config: 4.0.2(postcss@8.4.40)(ts-node@10.9.2(@types/node@20.14.13)(typescript@5.5.4))
       postcss-modules: 6.0.0(postcss@8.4.40)
       prettier: 2.8.8
       pretty-ms: 7.0.1
@@ -14319,7 +14356,7 @@ snapshots:
       camelcase-css: 2.0.1
       postcss: 8.4.40
 
-  postcss-load-config@4.0.2(postcss@8.4.40)(ts-node@10.9.2(@swc/core@1.7.3(@swc/helpers@0.5.5))(@types/node@20.14.13)(typescript@5.5.4)):
+  postcss-load-config@4.0.2(postcss@8.4.40)(ts-node@10.9.2(@types/node@20.14.13)(typescript@5.5.4)):
     dependencies:
       lilconfig: 3.1.2
       yaml: 2.5.0
@@ -15379,7 +15416,7 @@ snapshots:
 
   system-architecture@0.1.0: {}
 
-  tailwindcss@3.4.7(ts-node@10.9.2(@swc/core@1.7.3(@swc/helpers@0.5.5))(@types/node@20.14.13)(typescript@5.5.4)):
+  tailwindcss@3.4.7(ts-node@10.9.2(@types/node@20.14.13)(typescript@5.5.4)):
     dependencies:
       '@alloc/quick-lru': 5.2.0
       arg: 5.0.2
@@ -15398,7 +15435,7 @@ snapshots:
       postcss: 8.4.40
       postcss-import: 15.1.0(postcss@8.4.40)
       postcss-js: 4.0.1(postcss@8.4.40)
-      postcss-load-config: 4.0.2(postcss@8.4.40)(ts-node@10.9.2(@swc/core@1.7.3(@swc/helpers@0.5.5))(@types/node@20.14.13)(typescript@5.5.4))
+      postcss-load-config: 4.0.2(postcss@8.4.40)(ts-node@10.9.2(@types/node@20.14.13)(typescript@5.5.4))
       postcss-nested: 6.2.0(postcss@8.4.40)
       postcss-selector-parser: 6.1.1
       resolve: 1.22.8
@@ -15567,7 +15604,34 @@ snapshots:
       - tsx
       - yaml
 
+  turbo-darwin-64@2.3.1:
+    optional: true
+
+  turbo-darwin-arm64@2.3.1:
+    optional: true
+
+  turbo-linux-64@2.3.1:
+    optional: true
+
+  turbo-linux-arm64@2.3.1:
+    optional: true
+
   turbo-stream@2.2.0: {}
+
+  turbo-windows-64@2.3.1:
+    optional: true
+
+  turbo-windows-arm64@2.3.1:
+    optional: true
+
+  turbo@2.3.1:
+    optionalDependencies:
+      turbo-darwin-64: 2.3.1
+      turbo-darwin-arm64: 2.3.1
+      turbo-linux-64: 2.3.1
+      turbo-linux-arm64: 2.3.1
+      turbo-windows-64: 2.3.1
+      turbo-windows-arm64: 2.3.1
 
   type-check@0.4.0:
     dependencies:
