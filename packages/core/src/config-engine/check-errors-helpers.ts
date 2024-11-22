@@ -91,7 +91,7 @@ export function checkForConfigErrors(service: SerializedService, opts?: {
 }) {
   const failingItems = _.filter(service.configNodes, (item) => item.validationState === 'error');
 
-  // TODO: make isValid flag on service to work
+  // TODO: use service.isValid?
   if (failingItems.length > 0) {
     console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline(`Configuration of service "${kleur.magenta(service.serviceName)}" is currently invalid `)}  🚨 🚨 🚨\n`);
     console.log('Invalid items:\n');

@@ -212,7 +212,7 @@ export class ConfigraphNode<NodeMetadata = any> {
 
   /** whether the final resolved value is valid or not */
   get isValid() {
-    return this.validationState === 'valid';
+    return this.validationState === 'valid' || this.validationState === 'warn';
   }
 
   children: Record<string, typeof this> = {};

@@ -1,5 +1,5 @@
 
-import { DmnoBaseTypes, defineDmnoService, configPath, NodeEnvType, switchBy, inject } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, configPath, NodeEnvType, switchBy, inject, ValidationError } from 'dmno';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 
 
@@ -37,7 +37,6 @@ export default defineDmnoService({
       coerce: (val) => val.replace('\\n', '\n'),
       sensitive: true,
     },
-
     EXTRA_SUPER_LONG_NAME_EXAMPLE_FOO_BAR_BIZ_BAZ_BUZ_BING_BONG_BOOP: {
       summary: 'example showing a super long name that should be truncated but still show the icons',
       value: 'asldkjfhqoiuweyrklajsdhnxbcvmnsdjkhfhqiwuerqolejfhzsjmnvbxjkhfsiudyfrwjkebfmnsdbfkjsdhfiukjwehrkjsdbnfkjbsdkjfbxcmnbvjksdhgfkjweiuryweijkhkjsdbfmnxdbcvkjsdhfjkiweyrkiujhsdjkf'
@@ -89,6 +88,12 @@ export default defineDmnoService({
     },
     RESOLUTION_ERROR_EXAMPLE: {
       value: OnePassSecrets.itemByReference('badreference'),
+    },
+    WARNING_EXAMPLE: {
+      value: 'foo',
+      validate(val) {
+        throw new ValidationError('this is a warning', { isWarning: true });
+      }
     },
     // RESOLVER_CRASH_EXAMPLE: {
     //   value: OnePassSecrets.itemByLink('badlink', 'asdf'),
