@@ -116,7 +116,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
         token: {
           description: 'this service account token will be used via the CLI to communicate with 1password',
           extends: OnePasswordTypes.serviceAccountToken,
-          value: inputValues?.token || inject(),
+          value: inputValues?.token || inject({ allowFailure: true }),
           // TODO: add validation, token must be set unless `fallbackToCliBasedAuth` is true
           // required: true,
         },

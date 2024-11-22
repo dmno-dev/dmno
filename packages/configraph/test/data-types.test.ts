@@ -37,6 +37,12 @@ describe('data types', () => {
 
     const t4 = createConfigraphDataType({ required: true })();
     expect(t4.required).to.eq(true);
+
+    const t5 = createConfigraphDataType({ value: undefined })();
+    expect(t5.required).not.to.eq(true); // currently its undefined, we could make it false instead?
+
+    const t6 = createConfigraphDataType({})();
+    expect(t6.required).not.to.eq(true);
   });
 
   test('validation using settings works', () => {

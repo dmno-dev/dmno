@@ -403,13 +403,19 @@ export function processInlineResolverDef(resolverDef: InlineValueResolverDef) {
   } else if (
     _.isString(resolverDef) || _.isNumber(resolverDef) || _.isBoolean(resolverDef)
     || _.isPlainObject(resolverDef)
-    || resolverDef === undefined
   ) {
     return createResolver({
       _typeId: '$static',
       icon: 'bi:dash',
       label: 'static',
-      resolve: async () => resolverDef,
+      resolve: () => resolverDef,
+    });
+  } else if (resolverDef === undefined) {
+    return createResolver({
+      _typeId: '$undefined',
+      icon: 'oui:empty',
+      label: 'undefined',
+      resolve: () => undefined,
     });
   } else {
     throw new Error('invalid resolver definition');
