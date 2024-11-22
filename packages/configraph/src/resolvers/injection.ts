@@ -2,7 +2,9 @@ import { ConfigraphNode } from '../config-node';
 import { SchemaError } from '../errors';
 import { createResolver } from '../resolvers';
 
-export function inject(injectOpts?: {}) {
+export function inject(injectOpts?: {
+  allowFailure?: boolean,
+}) {
   return createResolver({
     label: 'inject',
     icon: 'fluent:swipe-down-24-regular',
@@ -34,7 +36,9 @@ export function inject(injectOpts?: {}) {
 
       // if we didn't find anything to inject, we'll add a schema error
       if (!matchingNodes.length) {
-        throw new SchemaError(`Injection failed - unable to find match for type ${this.configNode.type.typeLabel}`);
+        if (!injectOpts?.allowFailure) {
+          throw new SchemaError(`Injection failed - unable to find match for type ${this.configNode.type.typeLabel}`);
+        }
       // or if we found multiple matches in the same entity
       // (we could add some options around this?)
       } else if (matchingNodes.length > 1) {

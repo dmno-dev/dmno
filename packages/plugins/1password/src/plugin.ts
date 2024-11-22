@@ -116,7 +116,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
         token: {
           description: 'this service account token will be used via the CLI to communicate with 1password',
           extends: OnePasswordTypes.serviceAccountToken,
-          value: inputValues?.token || inject(),
+          value: inputValues?.token || inject({ allowFailure: true }),
           // TODO: add validation, token must be set unless `fallbackToCliBasedAuth` is true
           // required: true,
         },
@@ -179,14 +179,12 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
       });
     }
     // using cli
-    return await ctx.getOrSetCacheItem(`1pass-cli:V|${vaultId}/I|${itemId}`, async () => {
-      const itemJson = await execOpCliCommand([
-        'item', 'get', itemId,
-        `--vault=${vaultId}`,
-        '--format=json',
-      ]);
-      return JSON.parse(itemJson);
-    });
+    const itemJson = await execOpCliCommand([
+      'item', 'get', itemId,
+      `--vault=${vaultId}`,
+      '--format=json',
+    ]);
+    return JSON.parse(itemJson);
   }
 
   private async getOpItemByReference(ctx: ResolverContext, referenceUrl: ReferenceUrl) {
@@ -206,13 +204,11 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
       }
     }
     // using op CLI
-    return await ctx.getOrSetCacheItem(`1pass-cli:R|${referenceUrl}`, async () => {
-      return await execOpCliCommand([
-        'read', referenceUrl,
-        '--force',
-        '--no-newline',
-      ]);
-    });
+    return await execOpCliCommand([
+      'read', referenceUrl,
+      '--force',
+      '--no-newline',
+    ]);
   }
 
   private envItemsByService: Record<string, Record<string, string>> | undefined;
