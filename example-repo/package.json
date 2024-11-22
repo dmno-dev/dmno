@@ -5,14 +5,18 @@
   "main": "index.js",
   "author": "",
   "license": "MIT",
+  "packageManager": "pnpm@9.14.2",
   "scripts": {
     "dmno:dev": "dmno dev"
   },
   "devDependencies": {
     "@dmno/1password-plugin": "link:../packages/plugins/1password",
     "@dmno/bitwarden-plugin": "link:../packages/plugins/bitwarden",
+    "@dmno/encrypted-vault-plugin": "link:../packages/plugins/encrypted-vault",
     "@dmno/infisical-plugin": "link:../packages/plugins/infisical",
-    "dmno": "link:../packages/core",
-    "@dmno/encrypted-vault-plugin": "link:../packages/plugins/encrypted-vault"
+    "dmno": "link:../packages/core"
+  },
+  "dependencies": {
+    "turbo": "^2.3.1"
   }
 }

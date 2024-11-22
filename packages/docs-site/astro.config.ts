@@ -156,6 +156,10 @@ export default defineConfig({
               label: '.env Files',
               link: '/docs/guides/env-files/',
             },
+            {
+              label: 'Monorepos',
+              link: '/docs/guides/monorepos/',
+            },
           ],
         }, {
           label: 'Plugins',

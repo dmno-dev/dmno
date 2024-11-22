@@ -1,0 +1,78 @@
+---
+title: Monorepo guide
+---
+
+import { FileTree } from "@astrojs/starlight/components";
+
+While dmno works great in a traditional single-purpose repo, it was designed from the beginning to handle the challenges of working in a monorepo. No other config tool lets you easily share and reuse config across your monorepo without a ton of brittle custom glue code.
+
+## Monorepo structure
+
+While in a monolithic repo, you will have a single `.dmno` folder that holds all of your dmno config, in a monorepo, you'll have a single `.dmno` folder at the root in your _workspace root service_, and then each child project/service will have its own `.dmno` folder too. Here is an example:
+
+<FileTree>
+    - / (root of your project)
+      - .dmno (your root service config)
+        - **config.mts**
+      - packages
+        - my-package
+          - .dmno 
+            - **config.mts** (config for my-package service)
+        - another-package
+          - .dmno
+            - **config.mts** (config for another-package service)
+      - package.json
+</ FileTree>
+
+If you're starting fresh with `dmno`, then the [`dmno init`](/docs/reference/cli/init/) command will detect all your services and help initialize dmno in each.
+
+## Detecting child services
+
+By default, DMNO will rely on your existing tooling to detect where potential child projects are found. This is usually an array of paths or glob patterns. We look in the following locations:
+
+| Package manager / tool | Globs location |
+|---|---|
+| npm, yarn, bun | `package.json`<br/>└ `workspaces` |
+| pnpm | `pnpm-workspace.yaml`<br/>└ `packages` |
+| moonrepo | `.moon/workspace.yml`<br/>└ `projects` |
+
+In some situations, like in a large polyglot repo, or a large repo that has multiple smaller monorepos within it, you may need an alternate way of defining where to look for dmno services. In this case, you can create a `workspace.yaml` in your workspace root's `.dmno` folder. If this file is found, it will override everything else.
+
+```yaml title=".dmno/workpace.yaml"
+projects:
+  - "packages/*"
+  - "libs/some-lib"
+```
+
+:::note[Actual services have a `.dmno` folder]
+These glob patterns define where to look for _potential_ dmno services, however only those services which have been initialized and have a `.dmno` folder will be considered dmno services within your workspace.
+:::
+
+## Concurrent dmno tasks
+
+When running tasks within a monorepo, you often want to orchestrate many tasks on many child projects at once, using something like [Turborepo](https://turbo.build/repo/docs). Since many of those tasks may rely on dmno to load and resolve config, this could slow things down due to unnecessary repeated work.
+
+To solve this, [`dmno run`](/docs/reference/cli/run/) boots up a server that other dmno instances within child processes are able to communicate with, meaning we can load and resolve your config just once 🔥. To take advantage of this optimization, run your command via `dmno run` and you should be good to go - for example `dmno run -- turbo build`.
+
+:::tip[Env var pass-through]
+We use an injected `DMNO_PARENT_SERVER` env var to detect the parent server, so it must be passed through to child processes.
+
+In [turborepo "strict mode"](https://turbo.build/repo/docs/crafting-your-repository/using-environment-variables#strict-mode), env vars are not all passed through by default! So we must explicitly tell turbo about it using the [`globalPassThroughEnv`](https://turbo.build/repo/docs/reference/configuration#globalpassthroughenv) setting. For example:
+
+```diff lang=json title='turbo.json'
+{
+  "$schema": "https://turbo.build/schema.json",
++  "globalPassThroughEnv": [ "DMNO_PARENT_SERVER" ]
+  // rest of your turbo config...
+```
+:::
+
+## Reusing config
+
+As outlined in our [schema guide](/docs/guides/schema/), services in monorepos are allowed to `pick` items from other services. While there are other mechanisms for reusing values from other services, `pick` allows you to reuse both the schema and value.
+
+If you find your services have duplicate config items, or certain config could be derived from another with a function, consider moving that shared config up to the root service (or a common parent) and then pick them in children. It's ok if not every child service uses that shared config. You can also pick _exposed_ items from other services, which lets you keep config owned by the most relevant service, while still reusing it elsewhere.
+
+:::caution[Pick cycles are not allowed]
+Reusing config items from non-ancestors creates edges in the overall service dependency graph. Currently you are not allowed to create cycles in this graph, and if you do, dmno will throw an error. To resolve this issue, consider moving this config up to a common ancestor rather than picking from each other.
+:::
