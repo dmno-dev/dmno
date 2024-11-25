@@ -27,33 +27,20 @@ let ssrOutputDirPath: string;
 let ssrInjectConfigAtBuildTime = false;
 
 async function reloadDmnoConfig() {
-  const injectedEnvExists = globalThis.process?.env.DMNO_INJECTED_ENV;
+  (process as any).dmnoServer ||= new DmnoServer({ watch: true });
+  dmnoServer = (process as any).dmnoServer;
+  const resolvedService = await dmnoServer.getCurrentPackageConfig();
+  const injectedConfig = resolvedService.injectedEnv;
+  dmnoConfigValid = resolvedService.serviceDetails.isValid;
+  configItemKeysAccessed = {};
 
-  if (injectedEnvExists && astroCommand !== 'dev') {
-    debug('using injected dmno config');
-    dmnoInjectionResult = injectDmnoGlobals();
-  } else {
-    debug('using injected dmno config server');
-    (process as any).dmnoServer ||= new DmnoServer({ watch: true });
-    dmnoServer = (process as any).dmnoServer;
-    const resolvedService = await dmnoServer.getCurrentPackageConfig();
-    const injectedConfig = resolvedService.injectedEnv;
-    dmnoConfigValid = resolvedService.serviceDetails.isValid;
-    configItemKeysAccessed = {};
+  // shows nicely formatted errors in the terminal
+  checkServiceIsValid(resolvedService.serviceDetails);
 
-    // shows nicely formatted errors in the terminal
-    checkServiceIsValid(resolvedService.serviceDetails);
-
-    dmnoInjectionResult = injectDmnoGlobals({
-      injectedConfig,
-      trackingObject: configItemKeysAccessed,
-    });
-  }
-
-  // We may want to fetch via the CLI instead - it would be slightly faster during a build
-  // however we dont know if we are in dev/build mode until later and we do need the config injected right away
-  // const injectedDmnoEnv = execSync('npm exec -- dmno resolve -f json-injected').toString();
-  // injectionResult = injectDmnoGlobals({ injectedConfig: JSON.parse(injectedDmnoEnv) });
+  dmnoInjectionResult = injectDmnoGlobals({
+    injectedConfig,
+    trackingObject: configItemKeysAccessed,
+  });
 }
 
 // we run this right away so the globals get injected into the astro.config file

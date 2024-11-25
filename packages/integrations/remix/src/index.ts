@@ -26,28 +26,20 @@ let dmnoInjectionResult: ReturnType<typeof injectDmnoGlobals>;
 let enableDynamicPublicClientLoading = false;
 
 async function reloadDmnoConfig() {
-  const injectedEnvExists = globalThis.process?.env.DMNO_INJECTED_ENV;
+  (process as any).dmnoServer ||= new DmnoServer({ watch: true });
+  dmnoServer = (process as any).dmnoServer;
+  const resolvedService = await dmnoServer.getCurrentPackageConfig();
+  const injectedConfig = resolvedService.injectedEnv;
+  dmnoConfigValid = resolvedService.serviceDetails.isValid;
+  configItemKeysAccessed = {};
 
-  if (injectedEnvExists && !isDevMode) {
-    debug('using injected dmno config');
-    dmnoInjectionResult = injectDmnoGlobals();
-  } else {
-    debug('using injected dmno config server');
-    (process as any).dmnoServer ||= new DmnoServer({ watch: true });
-    dmnoServer = (process as any).dmnoServer;
-    const resolvedService = await dmnoServer.getCurrentPackageConfig();
-    const injectedConfig = resolvedService.injectedEnv;
-    dmnoConfigValid = resolvedService.serviceDetails.isValid;
-    configItemKeysAccessed = {};
+  // shows nicely formatted errors in the terminal
+  checkServiceIsValid(resolvedService.serviceDetails);
 
-    // shows nicely formatted errors in the terminal
-    checkServiceIsValid(resolvedService.serviceDetails);
-
-    dmnoInjectionResult = injectDmnoGlobals({
-      injectedConfig,
-      trackingObject: configItemKeysAccessed,
-    });
-  }
+  dmnoInjectionResult = injectDmnoGlobals({
+    injectedConfig,
+    trackingObject: configItemKeysAccessed,
+  });
 }
 
 // we run this right away so the globals get injected into the vite.config file
