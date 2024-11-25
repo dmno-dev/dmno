@@ -55,8 +55,7 @@ export async function setupViteServer(opts: {
     },
 
     async handleHotUpdate(ctx) {
-      // ignore updates to the generated type files
-      if (ctx.file.includes('/.dmno/.typegen/')) return;
+      // we've already ignored updates to the .typegen folder
 
       // ignore files outside of the .dmno folder(s)?
       // generally, we shouldn't be reloading the config when the user's app code is updated
@@ -76,6 +75,7 @@ export async function setupViteServer(opts: {
 
   // create vite server
   const originalNodeEnv = process.env.NODE_ENV;
+  let watchCount = 0;
   const server = await createServer({
     root: opts.workspaceRootPath,
     appType: 'custom',
@@ -89,18 +89,33 @@ export async function setupViteServer(opts: {
     server: {
       watch: opts.enableWatch ? {
         ignored: (path: any, stats?: any) => {
-          const isDir = stats?.isDirectory();
+          if (path.includes('/.dmno/')) {
+            if (path.includes('/.dmno/.typegen/')) return true;
+            watchCount++;
+            return false;
+          }
+          // this function gets called twice, once with stats and once without
+          // so we ignore the calls without stats
+          if (!stats) {
+            return false;
+          }
+
+          const isDir = stats.isDirectory();
+          if (!isDir) return true;
           // ignore some common folders, just to help with perf
-          if (isDir && WATCH_IGNORE_DIRS.includes(path.split('/').pop())) return true;
-          // only watch directories (since we need to descend into them) and files within .dmno folders
-          if (isDir || path.includes('/.dmno/')) return false;
-          return true;
+          if (WATCH_IGNORE_DIRS.includes(path.split('/').pop())) return true;
+          watchCount++;
+          return false;
         },
       } : null,
     },
   });
   // see https://github.com/vitejs/vite/issues/18712
   if (!originalNodeEnv) delete process.env.NODE_ENV;
+
+  // setTimeout(() => {
+  //   console.log(`watching ${watchCount} files`);
+  // }, 1000);
 
   // console.log(server.config);
 
