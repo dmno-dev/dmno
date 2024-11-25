@@ -1,5 +1,13 @@
 # @dmno/1password-plugin
 
+## 0.0.8
+
+### Patch Changes
+
+- [#168](https://github.com/dmno-dev/dmno/pull/168) [`7760f88`](https://github.com/dmno-dev/dmno/commit/7760f88ceb616a3a8938f497d00510670a3b1202) Thanks [@theoephraim](https://github.com/theoephraim)! - fix required behaviour for undefined values, add injection option to allow failure
+
+- [#170](https://github.com/dmno-dev/dmno/pull/170) [`48677e2`](https://github.com/dmno-dev/dmno/commit/48677e2c8fec9776ab3b9466aa579692b50a631d) Thanks [@theoephraim](https://github.com/theoephraim)! - fix 1pass service account integration
+
 ## 0.0.7
 
 ### Patch Changes
