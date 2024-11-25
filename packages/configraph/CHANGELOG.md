@@ -1,5 +1,17 @@
 # @dmno/configraph
 
+## 0.0.5
+
+### Patch Changes
+
+- [#156](https://github.com/dmno-dev/dmno/pull/156) [`c180f34`](https://github.com/dmno-dev/dmno/commit/c180f3492c29c2649d876546a1c91ca121358b41) Thanks [@theoephraim](https://github.com/theoephraim)! - update url base type validation to rely on new URL()
+
+- [#164](https://github.com/dmno-dev/dmno/pull/164) [`4031629`](https://github.com/dmno-dev/dmno/commit/4031629e79183e37c7dc06983c6b87582ef3d2de) Thanks [@theoephraim](https://github.com/theoephraim)! - refactor dmno server, perf improvements
+
+- [#168](https://github.com/dmno-dev/dmno/pull/168) [`7760f88`](https://github.com/dmno-dev/dmno/commit/7760f88ceb616a3a8938f497d00510670a3b1202) Thanks [@theoephraim](https://github.com/theoephraim)! - fix required behaviour for undefined values, add injection option to allow failure
+
+- [#166](https://github.com/dmno-dev/dmno/pull/166) [`c5a695e`](https://github.com/dmno-dev/dmno/commit/c5a695e79a81ae33a36c12ef3187895c4032052a) Thanks [@theoephraim](https://github.com/theoephraim)! - improve warning and isValid handling
+
 ## 0.0.4
 
 ### Patch Changes

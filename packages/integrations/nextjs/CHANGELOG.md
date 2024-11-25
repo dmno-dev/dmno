@@ -1,5 +1,11 @@
 # @dmno/nextjs-integration
 
+## 0.0.12
+
+### Patch Changes
+
+- [#163](https://github.com/dmno-dev/dmno/pull/163) [`0a412b7`](https://github.com/dmno-dev/dmno/commit/0a412b7d6a59160cd3be015b0aaa04bdd72d3d27) Thanks [@theoephraim](https://github.com/theoephraim)! - support next config file functions, ts/cjs
+
 ## 0.0.11
 
 ### Patch Changes

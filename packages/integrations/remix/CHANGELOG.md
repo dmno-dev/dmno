@@ -1,5 +1,13 @@
 # @dmno/remix-integration
 
+## 0.0.4
+
+### Patch Changes
+
+- [#164](https://github.com/dmno-dev/dmno/pull/164) [`4031629`](https://github.com/dmno-dev/dmno/commit/4031629e79183e37c7dc06983c6b87582ef3d2de) Thanks [@theoephraim](https://github.com/theoephraim)! - refactor dmno server, perf improvements
+
+- [#169](https://github.com/dmno-dev/dmno/pull/169) [`59460be`](https://github.com/dmno-dev/dmno/commit/59460be3a66e6b54dc6c909c2476c1674d68612b) Thanks [@theoephraim](https://github.com/theoephraim)! - fix vite-powered integrations with new dmno server reuse mechanism
+
 ## 0.0.3
 
 ### Patch Changes
