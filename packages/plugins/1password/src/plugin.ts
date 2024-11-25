@@ -9,11 +9,14 @@ import {
   PluginInputValue,
   inject,
 } from 'dmno';
+import Debug from 'debug';
 
 import { Client, createClient } from '@1password/sdk';
 
 import packageJson from '../package.json';
 import { OnePasswordTypes } from './data-types';
+
+const debug = Debug('dmno:1pass-plugin');
 
 type FieldId = string;
 type ItemId = string;
@@ -23,8 +26,11 @@ type ReferenceUrl = string;
 type ServiceAccountToken = string;
 
 async function execOpCliCommand(cmdArgs: Array<string>) {
+  const startAt = new Date();
   // using system-installed copy of `op`
   const cmd = spawnSync('op', cmdArgs);
+  debug(`op cli command - "${cmdArgs}"`);
+  debug(`> took ${+new Date() - +startAt}ms`);
   if (cmd.status === 0) {
     return cmd.stdout.toString();
   } else if (cmd.error) {
@@ -160,7 +166,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
         const opClient = await this.getSdkClient();
         // TODO: better error handling to tell you what went wrong? no access, non existant, etc
         try {
-          const opItem = opClient.items.get(vaultId, itemId);
+          const opItem = await opClient.items.get(vaultId, itemId);
           return JSON.parse(JSON.stringify(opItem)); // convert to plain object
         } catch (err) {
           // 1pass sdk throws strings as errors...
@@ -193,7 +199,8 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
         return await ctx.getOrSetCacheItem(`1pass-sdk:R|${referenceUrl}`, async () => {
           const opClient = await this.getSdkClient();
           // TODO: better error handling to tell you what went wrong? no access, non existant, etc
-          return opClient.secrets.resolve(referenceUrl);
+          const value = await opClient.secrets.resolve(referenceUrl);
+          return value;
         });
       } catch (err) {
         // 1pass sdk throws strings as errors...
