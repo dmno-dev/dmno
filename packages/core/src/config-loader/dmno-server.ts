@@ -3,7 +3,7 @@ import path, { dirname } from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-
+import _ from 'lodash-es';
 import getPort from 'get-port';
 import { Server as SocketIoServer } from 'socket.io';
 import uWS from 'uWebSockets.js';
@@ -18,7 +18,6 @@ import { findDmnoServices } from './find-services';
 import { MIME_TYPES_BY_EXT, uwsBodyParser, uwsValidateClientCert } from '../lib/uws-utils';
 import { UseAtPhases } from '../config-engine/configraph-adapter';
 
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // TODO: do we want to allow changing the host? or just always use localhost?
@@ -26,14 +25,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // TODO: do we want to allow toggling OFF ssl for the web ui?
 
+const DEFAULT_PORT = 3666; // DMNO on a telephone :)
 
 
-function getCurrentPackageName() {
+function getCurrentPackageNameFromPackageManager() {
+  // rely on package manager to detect current package
   if (process.env.npm_package_name !== undefined) return process.env.npm_package_name;
   if (process.env.PNPM_PACKAGE_NAME !== undefined) return process.env.PNPM_PACKAGE_NAME;
 }
-
-const DEFAULT_PORT = 3666; // DMNO on a telephone :)
 
 export class DmnoServer {
   private serverId?: string;
@@ -453,20 +452,37 @@ export class DmnoServer {
     return this.makeRequest('loadFullSchema');
   }
 
+
   // TODO: this isnt necessarily in the right place
   // but the logic was moved from ConfigServerClient and it is convenient to have
-  // this within whatever will be imported and used within integrations (vite  plugins)
+  // this within whatever will be imported and used within integrations (vite plugins)
   async getCurrentPackageConfig() {
-    const packageName = getCurrentPackageName();
-    if (packageName === '') {
-      throw new Error('To use dmno, you must set a package "name" in your package.json file');
-    }
-    // what to do if we can't figure out a package name?
-
     const workspace = await this.getWorkspace();
+
+    // we try to detect current package from package manager injected env vars
+    let packageName = getCurrentPackageNameFromPackageManager();
+    // but if running a script directly, we must figure it out another way
+    // so we compare CWD to the service paths and choose the most specific one
+    if (!packageName) {
+      const cwd = process.cwd();
+      const possibleServices = _.sortBy(
+        _.values(_.pickBy(workspace.services, (s) => cwd.startsWith(s.path))),
+        (s) => s.path.length,
+      );
+      // if we are not inside any of our dmno services, we don't know what to do
+      if (!possibleServices.length) {
+        throw new Error('Unable to detect current package from CWD. Try running via your package manager.');
+      }
+      packageName = possibleServices.pop()!.packageName;
+    }
+
+    if (!packageName) {
+      throw new Error('Unable to detect current dmno package.');
+    }
+
     const service = Object.values(workspace.services).find((s) => s.packageName === packageName);
     if (!service) {
-      throw new Error(`Unable to select service - ${packageName}`);
+      throw new Error(`Unable to select service by package name - ${packageName}`);
     }
 
     const injectedEnv = await this.makeRequest('getInjectedJson', service.serviceName);
