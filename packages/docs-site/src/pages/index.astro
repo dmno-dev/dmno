@@ -1,18 +1,20 @@
 ---
-import { Code } from '@astrojs/starlight/components';
-import LandingPage from '@/components/layouts/LandingPage.astro';
-import VideoBlock from '@/components/VideoBlock.astro';
-import CTABlock from '@/components/CTABlock.astro';
-import Hero from '@/components/Hero.astro';
-import LandingPageSection from '@/components/LandingPageSection.astro';
+import { Code } from "@astrojs/starlight/components";
+import LandingPage from "@/components/layouts/LandingPage.astro";
+import VideoBlock from "@/components/VideoBlock.astro";
+import CTABlock from "@/components/CTABlock.astro";
+import Hero from "@/components/Hero.astro";
+import LandingPageSection from "@/components/LandingPageSection.astro";
+import IconGraph from "@/components/IconGraph/IconGraph.vue";
 
-import importedCode from '/.dmno/config.mts?raw';
-import intellisenseImg from '@/assets/docs-images/platform-intellisense-example.png';
-import leakImg from '@/assets/docs-images/security-demo.png';
-import screenshotImg from '@/assets/blog/screenshot-with-comments.png';
+import importedCode from "/.dmno/config.mts?raw";
+import intellisenseImg from "@/assets/docs-images/platform-intellisense-example.png";
+import leakImg from "@/assets/docs-images/security-demo.png";
+import screenshotImg from "@/assets/blog/screenshot-with-comments.png";
 
 const muxId = "FmBLL2H1yt6cEfqz01QVje7LSlI8DtF9Vn18NRsv5o6E";
 ---
+
 <LandingPage
   title="DMNO"
   description="DMNO makes your configuration safer and smarter. It integrates with the tools you already use and it's powered by TypeScript and Vite."
@@ -20,33 +22,27 @@ const muxId = "FmBLL2H1yt6cEfqz01QVje7LSlI8DtF9Vn18NRsv5o6E";
   showSidebar={false}
   showIntegrations={true}
 >
-    <Hero>
-      <Fragment slot="heading">
-        Environment Variables.<br/>Evolved.
-      </Fragment>
-      <Fragment slot="subheading">
-        DMNO makes your configuration safer and smarter.<br/>It integrates with the tools you already use and it's powered by TypeScript and Vite.
-      </Fragment>
-    </Hero>
+  <Hero>
+    <Fragment slot="heading"> Connective Configuration </Fragment>
+    <Fragment slot="subheading">
+      DMNO is the missing middleware for your configuration and secrets.
+    </Fragment>
+  </Hero>
 
-    <CTABlock
-      text="Get started ->"
-      href="/docs/get-started/quickstart/"
-      command="npx dmno init"
-    />
+  <IconGraph client:load />
 
-    <!-- <img src={screenshotImg.src} alt="an annotated screenshot showing DMNO's various features"> -->
-    <LandingPageSection>
-      <VideoBlock muxId={muxId} />  
-    </LandingPageSection>
-    
-    
-    <LandingPageSection
-      title="Schema-defined configuration"
-      ctaLink="/docs/guides/schema/"
-    >
-      <Code
-        code={`
+  <CTABlock
+    text="Get started ->"
+    href="/docs/get-started/quickstart/"
+    command="npx dmno init"
+  />
+
+  <LandingPageSection
+    title="Schema-defined configuration"
+    ctaLink="/docs/guides/schema/"
+  >
+    <Code
+      code={`
 import { DmnoBaseTypes, defineDmnoService, switchBy } from 'dmno';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
@@ -92,20 +88,20 @@ export default defineDmnoService({
   }
 });
         `}
-        lang="ts"
-        title=".dmno/config.mts - sample config file"
-      />
-    </LandingPageSection>
-    <LandingPageSection
-      title="Leak prevention and detection"
-      imgPath={leakImg.src}
-      imgAlt="DMNO Warning of a potential leak"
-      ctaLink="/docs/get-started/security/#leak-detection"
+      lang="ts"
+      title=".dmno/config.mts - sample config file"
     />
-    <LandingPageSection
-      title="Feature-rich IntelliSense"
-      imgPath={intellisenseImg.src}
-      imgAlt="VS Code screenshot showing DMNO's IntelliSense"
-      ctaLink="https://dmno.dev/docs/guides/schema/#docs--intellisense"
-    />
+  </LandingPageSection>
+  <LandingPageSection
+    title="Leak prevention and detection"
+    imgPath={leakImg.src}
+    imgAlt="DMNO Warning of a potential leak"
+    ctaLink="/docs/get-started/security/#leak-detection"
+  />
+  <LandingPageSection
+    title="Feature-rich IntelliSense"
+    imgPath={intellisenseImg.src}
+    imgAlt="VS Code screenshot showing DMNO's IntelliSense"
+    ctaLink="https://dmno.dev/docs/guides/schema/#docs--intellisense"
+  />
 </LandingPage>
