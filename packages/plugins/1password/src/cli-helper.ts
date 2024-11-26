@@ -5,14 +5,28 @@ import { ResolutionError } from 'dmno';
 
 const debug = Debug('dmno:1pass-plugin');
 
+const OP_CLI_CACHE: Record<string, any> = {}
+
 export async function execOpCliCommand(cmdArgs: Array<string>) {
+
+  // very simple in-memory cache, will persist between runs in watch mode
+  // but need to think through how a user can opt out
+  // and interact with this cache from the web UI when we add it for the regular cache
+  const cacheKey = cmdArgs.join(' ');
+  if (OP_CLI_CACHE[cacheKey]) {
+    debug('op cli cache hit!');
+    return OP_CLI_CACHE[cacheKey];
+  }
+
   const startAt = new Date();
   // using system-installed copy of `op`
   const cmd = spawnSync('op', cmdArgs);
   debug(`op cli command - "${cmdArgs}"`);
   debug(`> took ${+new Date() - +startAt}ms`);
   if (cmd.status === 0) {
-    return cmd.stdout.toString();
+    const cliResult = cmd.stdout.toString()
+    OP_CLI_CACHE[cacheKey] = cliResult;
+    return cliResult;
   } else if (cmd.error) {
     if ((cmd.error as any).code === 'ENOENT') {
       throw new ResolutionError('1password cli `op` not found', {
