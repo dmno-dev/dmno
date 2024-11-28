@@ -1,66 +1,92 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { Icon } from '@iconify/vue';
 import ConnectionLine from './ConnectionLine.vue';
 import DMNOLogo from '@dmno/ui-lib/brand-assets/domino-d-gradient-tile.svg';
 
-const secretIcons = [
+function shuffleArray(array: any[]) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+const secretIcons = ref([
   { icon: 'mdi:1password', label: '1Password', docsHref: '/docs/plugins/1password/' },
   { icon: 'simple-icons:bitwarden', label: 'Bitwarden', docsHref: '/docs/plugins/bitwarden/' },
   { icon: 'mdi:lock', label: 'Encrypted Vault', docsHref: '/docs/plugins/encrypted-vault/' },
   { icon: 'mdi:infinity', label: 'Infisical', docsHref: '/docs/plugins/infisical/' },
-  { icon: 'lucide:ellipsis', label: 'Self-hosted', docsHref: '/docs/plugins/overview/' },
-]; 
+  { icon: 'mdi:server-outline', label: 'Self-hosted', docsHref: '/docs/plugins/overview/' },
+]);
 
-const integrationIcons = [
+const integrationIcons = ref([
   { icon: 'devicon:remix', label: 'Remix', docsHref: '/docs/integrations/remix/' },
   { icon: 'devicon:nextjs', label: 'Next.js', docsHref: '/docs/integrations/nextjs/' },
   { icon: 'devicon:astro', label: 'Astro', docsHref: '/docs/integrations/astro/' },
   { icon: 'logos:vitejs', label: 'Vite', docsHref: '/docs/integrations/vite/' },
   { icon: 'devicon:nodejs', label: 'Node.js', docsHref: '/docs/integrations/node/' }
-]
+]);
 
-const platformIcons = [
+const platformIcons = ref([
   { icon: 'devicon:netlify', label: 'Netlify', docsHref: '/docs/platforms/netlify/' },
   { icon: 'devicon:vercel', label: 'Vercel', docsHref: '/docs/platforms/vercel/' },
   { icon: 'devicon:cloudflare', label: 'Cloudflare', docsHref: '/docs/platforms/cloudflare/' },
-  { icon: 'devicon:docker', label: 'Docker', docsHref: '/docs/platforms/' },
-  { icon: 'lucide:ellipsis', label: 'Self-hosted', docsHref: '/docs/platforms/overview/' },
-]
-
+  { icon: 'devicon:docker', label: 'Docker - Coming Soon', docsHref: '/docs/platforms/' },
+  { icon: 'mdi:server-outline', label: 'Self-hosted', docsHref: '/docs/platforms/overview/' },
+]);
 
 // Selected icon states
-const selectedLeftIndex = ref(0)
-const selectedMiddleIndex = ref(0)
-const selectedRightIndex = ref(0)
+const selectedLeftIndex = ref(0);
+const selectedMiddleIndex = ref(0);
+const selectedRightIndex = ref(0);
 
 const LEFT_INTERVAL = 2000;
 const MIDDLE_INTERVAL = 2500;
 const RIGHT_INTERVAL = 2500;
 
-
 // Cycle through icons every 2 seconds
 onMounted(() => {
+  shuffleArray(secretIcons.value);
+  shuffleArray(integrationIcons.value);
+  shuffleArray(platformIcons.value);
+
   setInterval(() => {
-    selectedLeftIndex.value = (selectedLeftIndex.value + 1) % secretIcons.length
-  }, LEFT_INTERVAL)
+    selectedLeftIndex.value = (selectedLeftIndex.value + 1) % secretIcons.value.length;
+  }, LEFT_INTERVAL);
+
   setInterval(() => {
-    selectedMiddleIndex.value = (selectedMiddleIndex.value + 1) % integrationIcons.length
-  }, MIDDLE_INTERVAL)
+    selectedMiddleIndex.value = (selectedMiddleIndex.value + 1) % integrationIcons.value.length;
+  }, MIDDLE_INTERVAL);
+
   setInterval(() => {
-    selectedRightIndex.value = (selectedRightIndex.value + 1) % platformIcons.length
-  }, RIGHT_INTERVAL)
-})
+    selectedRightIndex.value = (selectedRightIndex.value + 1) % platformIcons.value.length;
+  }, RIGHT_INTERVAL);
+});
 
 // Adjusted coordinates for better connections
 const iconSize = 64 // 16 * 4 (w-16)
 const centerIconSize = 80 // 20 * 4 (w-20)
 const spacing = 100
 
-const leftX = 100
-const centerX = 350
-const middleX = 600
-const rightX = 850
+// Column spacing, calculated based on the viewport width
+const colSpacing = ref(window.innerWidth / 4 || 260); // Use SVG viewBox width divided by 4 columns
+
+const leftX = computed(() => 0)
+const centerX = computed(() => colSpacing.value)
+const middleX = computed(() => colSpacing.value * 2)
+const rightX = computed(() => colSpacing.value * 3)
+
+onMounted(() => {
+  const updateSpacing = () => {
+    colSpacing.value = window.innerWidth / 4 || 260;
+  }
+  
+  window.addEventListener('resize', updateSpacing)
+  
+  onUnmounted(() => {
+    window.removeEventListener('resize', updateSpacing)
+  })
+})
 
 // Calculate vertical positions
 const getVerticalPosition = (index: number, total: number) => {
@@ -76,7 +102,7 @@ const centerY = 300 - centerIconSize / 2
 const getRightConnectionY = (rightIndex: number, middleTotal: number) => {
   const middleSpacing = (middleTotal - 1) * spacing
   const middleStartY = (600 - middleSpacing) / 2
-  const segmentSize = middleSpacing / (platformIcons.length - 1)
+  const segmentSize = middleSpacing / (platformIcons.value.length - 1)
   return middleStartY + (rightIndex * segmentSize)
 }
 
@@ -193,11 +219,11 @@ const navigateTo = (href: string) => {
 
 <style>
 .container {
+  margin-left: 40px;
   width: 100%;
-  /* height: 100vh; */
   display: flex;
-  /* align-items: center;
-  justify-content: center; */
+  align-items: left;
+  justify-content: left;
 }
 
 .graph-container {
@@ -205,6 +231,7 @@ const navigateTo = (href: string) => {
   width: 1000px;
   height: 600px;
 }
+
 
 .svg-container {
   position: absolute;
@@ -282,27 +309,14 @@ const navigateTo = (href: string) => {
   position: absolute;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  /* gap: 1rem; */
 }
 
 .column-container > h2 {
   font-size: 1.25rem;
   font-weight: 600;
   color: rgb(221, 226, 233); /* text-gray-600 */
-  /* margin-bottom: 1rem; */
   text-align: left;
 }
 
-/* Add specific column widths if needed */
-.column-container.left {
-  width: 200px;
-}
-
-.column-container.middle {
-  width: 200px;
-}
-
-.column-container.right {
-  width: 200px;
-}
 </style>

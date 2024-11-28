@@ -11,6 +11,7 @@ import importedCode from "/.dmno/config.mts?raw";
 import intellisenseImg from "@/assets/docs-images/platform-intellisense-example.png";
 import leakImg from "@/assets/docs-images/security-demo.png";
 import screenshotImg from "@/assets/blog/screenshot-with-comments.png";
+import iconGraphPlaceholder from "@/assets/blog/screenshot-with-comments.png";
 
 const muxId = "FmBLL2H1yt6cEfqz01QVje7LSlI8DtF9Vn18NRsv5o6E";
 ---
@@ -29,7 +30,19 @@ const muxId = "FmBLL2H1yt6cEfqz01QVje7LSlI8DtF9Vn18NRsv5o6E";
     </Fragment>
   </Hero>
 
-  <IconGraph client:load />
+  <div class="icon-graph-container">
+    <div class="desktop-only">
+      <IconGraph client:only="vue" />
+    </div>
+
+    <div class="mobile-only">
+      <img
+        src={iconGraphPlaceholder.src}
+        alt="DMNO Integration Graph"
+        class="responsive-image"
+      />
+    </div>
+  </div>
 
   <CTABlock
     text="Get started ->"
@@ -39,6 +52,7 @@ const muxId = "FmBLL2H1yt6cEfqz01QVje7LSlI8DtF9Vn18NRsv5o6E";
 
   <LandingPageSection
     title="Schema-defined configuration"
+    subheader="Make your config a living part of your codebase and stop relying on .env files."
     ctaLink="/docs/guides/schema/"
   >
     <Code
@@ -94,14 +108,41 @@ export default defineDmnoService({
   </LandingPageSection>
   <LandingPageSection
     title="Leak prevention and detection"
+    subheader="Detect and prevent leaks before they happen, and automatically redact sensitive items in your logs."
     imgPath={leakImg.src}
     imgAlt="DMNO Warning of a potential leak"
     ctaLink="/docs/get-started/security/#leak-detection"
   />
   <LandingPageSection
     title="Feature-rich IntelliSense"
+    subheader="Get full-featured IntelliSense for your config in VS Code, without any additional setup."
     imgPath={intellisenseImg.src}
     imgAlt="VS Code screenshot showing DMNO's IntelliSense"
     ctaLink="https://dmno.dev/docs/guides/schema/#docs--intellisense"
   />
 </LandingPage>
+
+<style>
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+
+  .responsive-image {
+    width: 100%;
+    height: auto;
+  }
+
+  @media (min-width: 768px) {
+    .desktop-only {
+      display: block;
+    }
+
+    .mobile-only {
+      display: none;
+    }
+  }
+</style>
