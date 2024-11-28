@@ -1,10 +1,14 @@
 <script setup lang="ts">
-defineProps<{
+import { computed } from 'vue'
+
+const props = defineProps<{
   x1: number
   y1: number
   x2: number
   y2: number
 }>()
+
+const path = computed(() => `M${props.x1},${props.y1} L${props.x2},${props.y2}`)
 </script>
 
 <template>
@@ -12,7 +16,7 @@ defineProps<{
     <animateMotion
       dur="2s"
       repeatCount="indefinite"
-      :path="`M${x1},${y1} L${x2},${y2}`"
+      :path="path"
     />
     <animate
       attributeName="opacity"
