@@ -33,6 +33,7 @@ export type DmnoOverrideLoaderCtx = {
 
 // ~ load overrides from process (`process.env`) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+let originalProcessEnv: Record<string, any> | undefined;
 /**
  * parse env vars into an object, using a special separator to denote nesting.
  * This idea comes from https://www.npmjs.com/package/nconf
@@ -44,12 +45,14 @@ export function getConfigFromEnvVars(
   /** separator to interpret as nesting, defaults to "__" */
   separator = '__',
 ) {
+  if (originalProcessEnv) return originalProcessEnv;
   const config = {} as Record<string, any>;
   _.each(process.env, (val, key) => {
     const path = key.replaceAll(separator, '.');
     // _.set deals with initializing objects when necessary
     _.set(config, path, val);
   });
+  originalProcessEnv = config;
   return config;
 }
 

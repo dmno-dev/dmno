@@ -16,6 +16,7 @@ import { DmnoPlugin } from './dmno-plugin';
 import {
   DmnoOverrideLoader, dotEnvFileOverrideLoader, processEnvOverrideLoader, OverrideSource,
 } from './overrides';
+import { asyncEachParallel, asyncEachSeries, asyncMapParallel } from '../lib/async-utils';
 
 const debug = Debug('dmno');
 
@@ -219,7 +220,7 @@ export class DmnoWorkspace {
   async resolveConfig(opts?: {
     resolutionPhase?: UseAtPhases,
   }) {
-    for (const service of this.allServices) {
+    await asyncEachParallel(this.allServices, async (service) => {
       // reset overrides on all the individual nodes
       for (const node of Object.values(service.config)) {
         node.overrides = [];
@@ -242,7 +243,7 @@ export class DmnoWorkspace {
           });
         });
       });
-    }
+    });
 
     if (!this.rootService) {
       console.log('root service name', this.rootServiceName);
@@ -387,15 +388,15 @@ export class DmnoService {
       ? _.compact(this.rawConfig?.overrides)
       // default behaviour is to load overrides from process.env and dotenv files
       : [processEnvOverrideLoader(), dotEnvFileOverrideLoader()];
-    for (const overridePlugin of overridePlugins) {
+    const overrideSources = await asyncMapParallel(overridePlugins, async (overridePlugin) => {
       // config lets you toggle behaviour using `SOME_CONDITION && somePlugin()` so we must filter out `false`
       if (!overridePlugin) return;
-      const overrideSources = await overridePlugin.load({
+      return await overridePlugin.load({
         serviceId: this.serviceName,
         servicePath: this.path,
       });
-      this.overrideSources.push(...overrideSources);
-    }
+    });
+    this.overrideSources.push(..._.compact(_.flatten(overrideSources)));
   }
 
   get isSchemaValid() {

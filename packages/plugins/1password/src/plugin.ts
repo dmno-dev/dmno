@@ -13,7 +13,7 @@ import { Client, createClient } from '@1password/sdk';
 
 import packageJson from '../package.json';
 import { OnePasswordTypes } from './data-types';
-import { execOpCliCommand } from './cli-helper';
+import { execOpCliCommand, getIdsFromShareLink, opCliRead } from './cli-helper';
 
 type FieldId = string;
 type ItemId = string;
@@ -122,6 +122,7 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
         }
       });
     }
+
     // using cli
     const itemJson = await execOpCliCommand([
       'item', 'get', itemId,
@@ -148,20 +149,15 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
         throw err;
       }
     }
+
     // using op CLI
-    return await execOpCliCommand([
-      'read', referenceUrl,
-      '--force',
-      '--no-newline',
-    ]);
+    return await opCliRead(referenceUrl);
   }
 
   private envItemsByService: Record<string, Record<string, string>> | undefined;
   private async loadEnvItems(ctx: ResolverContext) {
     // we've already validated the url is good and includes the query params
-    const url = new URL(this.inputValue('envItemLink')!);
-    const vaultId = url.searchParams.get('v')!;
-    const itemId = url.searchParams.get('i')!;
+    const { vaultId, itemId } = getIdsFromShareLink(this.inputValue('envItemLink') as string);
 
     const envItemsObj = await this.getOpItemById(ctx, vaultId, itemId);
 
@@ -261,15 +257,11 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
       const linkValidationResult = OnePasswordTypes.itemLink().validate(privateLink);
 
       if (linkValidationResult !== true) {
-      // TODO: add link to plugin docs
-      // TODO: throwing an error here causes problems, need a different pattern to pass along the error without exploding
+        // TODO: add link to plugin docs
         throw new SchemaError(`Invalid item link - ${linkValidationResult[0].message}`);
       }
 
-      const url = new URL(privateLink);
-      const vaultId = url.searchParams.get('v')!;
-      const itemId = url.searchParams.get('i')!;
-
+      const { vaultId, itemId } = getIdsFromShareLink(privateLink);
       return this.itemById(vaultId, itemId, fieldIdOrPath);
     });
   }
@@ -302,6 +294,13 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
       resolve: async (ctx) => {
         // we've already checked that the defaultVaultId is set above if it's needed
         // and the plugin will have a schema error if the resolution failed
+
+        // if using the CLI, we can short-circuit and use our batched op read trick
+        if (!this.shouldUseSdk) {
+          const value = await opCliRead(`op://${vaultId}/${itemId}/${fieldId || path?.replace('.', '/')}`);
+          return value;
+        }
+
 
         const itemObj = await this.getOpItemById(ctx, vaultId, itemId);
 
@@ -373,6 +372,13 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
     referenceUrl: ReferenceUrl,
   ) {
     return this.createResolver(() => {
+      const linkValidationResult = OnePasswordTypes.secretReferenceUri().validate(referenceUrl);
+
+      if (linkValidationResult !== true) {
+        throw new SchemaError(`Invalid item reference - ${linkValidationResult[0].message}`);
+      }
+
+
       // TODO: validate the reference url looks ok?
       return {
         label: referenceUrl,

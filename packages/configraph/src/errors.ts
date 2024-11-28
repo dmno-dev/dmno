@@ -46,6 +46,10 @@ export class ConfigraphError extends Error {
     tip?: string | Array<string>,
     err?: Error,
     isWarning?: boolean,
+    /** machine-friendly error code if needed for anything else */
+    code?: string,
+    /** free-form additional metadata */
+    extraMetadata?: Record<string, any>,
   }) {
     if (_.isError(errOrMessage)) {
       super(errOrMessage.message);
@@ -68,6 +72,12 @@ export class ConfigraphError extends Error {
     return this.more.tip;
   }
 
+  get code() {
+    return this.more?.code;
+  }
+  get extraMetadata() {
+    return this.more?.extraMetadata;
+  }
 
   set isWarning(w: boolean) {
     this._isWarning = w;
@@ -131,7 +141,13 @@ export class CoercionError extends ConfigraphError {
 }
 export class ResolutionError extends ConfigraphError {
   static defaultIcon = '⛔';
-  retryable?: boolean = false;
+  protected _retryable?: boolean = false;
+  set retryable(val: boolean) { this._retryable = val; }
+  get retryable() {
+    if (this._retryable) return true;
+    if (this.originalError instanceof ResolutionError) return this.originalError.retryable;
+    return false;
+  }
 }
 
 export class EmptyRequiredValueError extends ValidationError {

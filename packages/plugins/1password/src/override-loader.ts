@@ -1,7 +1,9 @@
-import { DmnoOverrideLoader, OverrideSource, parsedDotEnvToObj } from 'dmno';
+import {
+  DmnoOverrideLoader, OverrideSource, parsedDotEnvToObj, ResolutionError,
+} from 'dmno';
 import { parseDotEnvContents } from 'dmno/utils';
 import { ONEPASS_ICON } from './constants';
-import { execOpCliCommand } from './cli-helper';
+import { execOpCliCommand, opCliRead } from './cli-helper';
 
 type OnePassLocation =
   // reference includes a field already
@@ -10,18 +12,6 @@ type OnePassLocation =
   { name: string, vault?: string, field?: string } |
   { link: string, field?: string };
 
-function parseReference(reference: string) {
-  if (!reference.startsWith('op://')) {
-    throw new Error('Valid secret reference must start with "op://"');
-  }
-  const [vaultName, itemId, fieldName] = reference.substring(5).split('/'); // remove op://
-  return {
-    vaultName: vaultName === 'Employee' ? 'Private' : vaultName,
-    itemId,
-    fieldName,
-  };
-}
-
 async function getItemValue(loc: OnePassLocation, defaultFieldName?: string) {
   let rawItemJson: string;
 
@@ -29,9 +19,7 @@ async function getItemValue(loc: OnePassLocation, defaultFieldName?: string) {
 
   // reference includes a field
   if ('reference' in loc) {
-    const itemValue = await execOpCliCommand([
-      'read', loc.reference,
-    ]);
+    const itemValue = await opCliRead(loc.reference);
     return itemValue;
   } else if ('link' in loc) {
     rawItemJson = await execOpCliCommand([
@@ -65,13 +53,33 @@ async function getItemValue(loc: OnePassLocation, defaultFieldName?: string) {
 
 export function onePasswordOverrideLoader(
   itemLocation: OnePassLocation,
-  // format = 'dotenv' // can add this if we want to support more formats later
+  opts?: {
+    ignoreMissing?: boolean,
+    // format?: 'dotenv' | 'toml' | 'yaml' // can add this if we want to support more formats later
+  },
 ): DmnoOverrideLoader {
   return {
     async load(ctx) {
-      // console.log('start loading 1pass overrides');
       // const start = +new Date();
-      const dotEnvStr = await getItemValue(itemLocation, ctx.serviceId);
+      let dotEnvStr: string;
+      try {
+        dotEnvStr = await getItemValue(itemLocation, ctx.serviceId);
+      } catch (err) {
+        if (opts?.ignoreMissing && err instanceof ResolutionError && ['BAD_VAULT_REFERENCE', 'BAD_ITEM_REFERENCE', 'BAD_FIELD_REFERENCE'].includes(err.code || '')) {
+          // we need to pass through a message somehow, so it can be displayed
+          // easiest to attach to to a now disabled override loader instance
+          // TODO: improve this whole situation... will depend on how we want to show this info
+          return [
+            new OverrideSource(
+              '1password .env - disabled',
+              'Loading overrides from 1Password failed, ignoring due to ignoreMissing flag',
+              ONEPASS_ICON,
+              {},
+            ),
+          ];
+        }
+        throw err;
+      }
       const parsedDotEnv = parseDotEnvContents(dotEnvStr);
       const envObj = parsedDotEnvToObj(parsedDotEnv);
       // console.log('finished', +new Date() - start);

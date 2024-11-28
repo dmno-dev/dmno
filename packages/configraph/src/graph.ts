@@ -2,6 +2,7 @@ import _ from 'lodash-es';
 import graphlib from '@dagrejs/graphlib';
 import Debug from 'debug';
 
+import { asyncForEach } from 'modern-async';
 import { ConfigraphNode } from './config-node';
 import { SchemaError } from './errors';
 import { ConfigraphEntity, ConfigraphEntityDef } from './entity';
@@ -370,7 +371,8 @@ export class Configraph<
     while (nodeIdsToResolve.length) {
       let resolvedCount = 0;
       debug('resolving batch', nodeIdsToResolve);
-      for (const nodeId of nodeIdsToResolve) {
+      // eslint-disable-next-line @typescript-eslint/no-loop-func
+      await asyncForEach(nodeIdsToResolve, async (nodeId) => {
         const node = this.nodesByFullPath[nodeId];
         // currently this resolve fn will trigger resolve on nested items
         const nodeWasResolved = node.isResolved;
@@ -383,7 +385,8 @@ export class Configraph<
         if (!node.isFullyResolved) {
           nextBatchNodeIds.push(nodeId);
         }
-      }
+      }, Infinity);
+      //! What concurrency limit do we want to impose?
 
       if (nextBatchNodeIds.length > 0) {
         // if this batch yielded no new resolutions, we can stop

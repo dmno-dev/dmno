@@ -11,7 +11,7 @@ export default defineDmnoService({
   overrides: [
     processEnvOverrideLoader(),
     // personal overrides, create item in "Employee" vault with this name, item label must match 
-    onePasswordOverrideLoader({ name: 'dmno-local-dev-overrides' }), // defaults to field matching service name ("api")
+    onePasswordOverrideLoader({ reference: 'op://Employee/dmno-local-dev-overrides/api' }),
     // shared overrides
     onePasswordOverrideLoader({ reference: 'op://dev test/rznyyjrwcv5sgc4ykjhzpkoevm/api' }),
   ],

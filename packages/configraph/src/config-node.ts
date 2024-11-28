@@ -38,10 +38,10 @@ export type ConfigValueOverride = {
 
 export class InvalidChildError extends ValidationError {}
 export class WaitingForParentResolutionError extends ResolutionError {
-  retryable = true;
+  _retryable = true;
 }
 export class WaitingForChildResolutionError extends ResolutionError {
-  retryable = true;
+  _retryable = true;
 }
 
 
@@ -306,8 +306,13 @@ export class ConfigraphNode<NodeMetadata = any> {
       if (!this.valueResolver.isFullyResolved) {
         this.debug('running node resolver');
         await this.valueResolver.resolve(itemResolverCtx);
-        this.isResolved = true;
-        if (this.resolutionError) return;
+        // some errors mean we are waiting for another node to resolve, so we will retry them
+        // but most other normal errors we know we are done
+        if (this.resolutionError && this.resolutionError.retryable) {
+          return;
+        } else {
+          this.isResolved = true;
+        }
       }
     } else {
       this.debug('no resolver - marking as resolved');

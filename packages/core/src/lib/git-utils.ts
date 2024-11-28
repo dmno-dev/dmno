@@ -1,4 +1,4 @@
-import { asyncExec } from './exec-utils';
+import { asyncExec } from './exec-helpers';
 
 export async function checkIsFileGitIgnored(path: string, warnIfNotGitRepo = false) {
   try {

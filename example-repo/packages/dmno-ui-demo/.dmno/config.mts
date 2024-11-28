@@ -9,7 +9,6 @@ const OnePassSecrets = OnePasswordDmnoPlugin.injectInstance('1pass');
 // throw new Error('bloop');
 
 export default defineDmnoService({
-  // name: 'dmno-ui-demo',
   settings: {
     interceptSensitiveLeakRequests: true,
     redactSensitiveLogs: true,
@@ -83,21 +82,25 @@ export default defineDmnoService({
       extends: DmnoBaseTypes.number(),
       value: 'not-a-number',
     },
-    SCHEMA_ERROR_EXAMPLE: {
-      // value: configPath('bad-entity-id', 'bad-path'),
-    },
-    RESOLUTION_ERROR_EXAMPLE: {
-      value: OnePassSecrets.itemByReference('badreference'),
-    },
+    // SCHEMA_ERROR_EXAMPLE: {
+    //   // schema error blocks resolution
+    //   value: configPath('bad-entity-id', 'bad-path'),
+    // },
+    // OP_BAD_FIELD: {
+    //   value: OnePassSecrets.itemByReference("op://dev test/example/bad-section/bad-id"),
+    // },
+    // OP_BAD_VAULT: {
+    //   value: OnePassSecrets.itemByReference('op://not-a-vault/not-an-item/not-a-path'),
+    // }, 
+    // OP_BAD_ITEM: {
+    //   value: OnePassSecrets.itemByReference('op://dev test/not an item/not-a-path'),
+    // },
     WARNING_EXAMPLE: {
       value: 'foo',
       validate(val) {
         throw new ValidationError('this is a warning', { isWarning: true });
       }
     },
-    // RESOLVER_CRASH_EXAMPLE: {
-    //   value: OnePassSecrets.itemByLink('badlink', 'asdf'),
-    // }
   }
 });
 

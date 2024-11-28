@@ -98,7 +98,7 @@ export function createResolver(
 
 //! maybe do this via a type/errorCode instead of custom class?
 export class DependencyNotResolvedResolutionError extends ResolutionError {
-  retryable = true;
+  _retryable = true;
 }
 export class DependencyInvalidResolutionError extends ResolutionError {}
 
