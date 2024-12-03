@@ -377,7 +377,7 @@ export class DmnoService {
         }
         this.serviceName = this.rawConfig.name;
       } else {
-        this.serviceName = opts.isRoot ? 'root' : this.packageName;
+        this.serviceName = this.packageName;
       }
     }
   }

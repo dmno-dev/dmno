@@ -358,7 +358,7 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
     let recommendedServiceName: string | undefined;
     if (workspaceInfo.isMonorepo) {
       if (service.isRoot) recommendedServiceName = 'root';
-      else recommendedServiceName = service.name.replace(/^@[^/]+\//, '');
+      // not passing a `recommendedServiceName` results in the scaffolded file having a comment instead explaining it will inherit from package.json
     }
     // we used to prompt the user here to pick/confirm the service name, but it was a bit confusing
 

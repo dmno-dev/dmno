@@ -169,7 +169,7 @@ export function generateDmnoConfigInitialCode(opts: {
     opts.isRoot && '  settings: {\n    redactSensitiveLogs: true,\n    interceptSensitiveLeakRequests: true,\n    preventClientLeaks: true,\n  },',
     opts.serviceName
       ? `  name: '${opts.serviceName}',`
-      : (opts.isMonorepo ? '  // no name specified - inherit from package.json' : undefined),
+      : (opts.isMonorepo ? '  // no `name` specified - will inherit from package.json' : undefined),
     !opts.isRoot && '  pick: [],',
     '  schema: {',
     ...schemaConfigAsCode.split('\n').map((line) => `    ${line}`),
