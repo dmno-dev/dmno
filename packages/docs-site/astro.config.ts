@@ -190,29 +190,13 @@ export default defineConfig({
           label: 'Integrations',
           badge: 'New',
           items: [
-            {
-              label: 'Overview',
-              link: '/docs/integrations/overview/',
-            },
-            {
-              label: 'Remix',
-              link: '/docs/integrations/remix/',
-            },
-            {
-              label: 'Next.js',
-              link: '/docs/integrations/nextjs/',
-            },
-            {
-              label: 'Astro',
-              link: '/docs/integrations/astro/',
-            },
-            {
-              label: 'Vite',
-              link: '/docs/integrations/vite/',
-            }, {
-              label: 'Node.js',
-              link: '/docs/integrations/node/',
-            },
+            { label: 'Overview', link: '/docs/integrations/overview/' },
+            { label: 'Remix', link: '/docs/integrations/remix/' },
+            { label: 'Next.js', link: '/docs/integrations/nextjs/' },
+            { label: 'Astro', link: '/docs/integrations/astro/' },
+            { label: 'Vite', link: '/docs/integrations/vite/' },
+            { label: 'Fastify', link: '/docs/integrations/fastify/' },
+            { label: 'Node.js', link: '/docs/integrations/node/' },
           ],
         }, {
           label: 'Platforms',

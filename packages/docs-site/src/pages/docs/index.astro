@@ -9,6 +9,7 @@ import NextLogoSvg from '~icons/logos/nextjs?raw';
 import RemixLogoSvg from '~icons/logos/remix-icon?raw';
 import AstroLogoSvg from '~icons/devicon/astro?raw';
 import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
+import FastifyLogoSvg from '~icons/logos/fastify-icon?raw';
 
 ---
 <StarlightPage frontmatter={{
@@ -73,6 +74,9 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
         <a href="/docs/integrations/nextjs/" set:html={NextLogoSvg} />
         <a href="/docs/integrations/astro/" set:html={AstroLogoSvg} />
         <a href="/docs/integrations/vite/" set:html={ViteLogoSvg} />
+      </div>
+      <div class="logo-bar">
+        <a href="/docs/integrations/fastify/" set:html={FastifyLogoSvg} />
         <a href="/docs/integrations/node/" set:html={NodeLogoSvg} />
       </div>
       <div class="richtext">
@@ -97,7 +101,6 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
   </style>
 
   <style lang="less">
-
     :global(.main-frame) {
     }
     .homepage {
@@ -205,11 +208,13 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
         display: flex;
         align-items: center;
         justify-content: center;
-;
         &:hover {
-          background: linear-gradient(var(--spin), var(--brand-pink) 0%, var(--brand-pink) 100%);
+          background: linear-gradient(
+            var(--spin),
+            var(--brand-pink) 0%,
+            var(--brand-pink) 100%
+          );
           background: var(--brand-pink);
-
         }
         &:hover {
           transform: translate3d(-2px, -2px, 0);
@@ -236,8 +241,8 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
         font-weight: bold;
         background: black;
         position: relative;
-        html[data-theme='light'] & {
-          background: rgba(0,0,0,.2);
+        html[data-theme="light"] & {
+          background: rgba(0, 0, 0, 0.2);
           background: var(--brand-cyan--t2);
           color: black;
         }
@@ -325,6 +330,7 @@ import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
       display: flex;
       flex-wrap: wrap;
       gap: 5%;
+      align-items: center;
 
       > div, > a {
         flex-grow: 1;

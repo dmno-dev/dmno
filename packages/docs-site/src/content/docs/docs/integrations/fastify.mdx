@@ -1,0 +1,106 @@
+---
+title: Fastify
+description: Use DMNO to manage your Fastify app's environment variables
+npmPackage: "@dmno/fastify-integration"
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components'
+import TabbedCode from '@/components/TabbedCode.astro';
+import BugReportLink from '@/components/BugReportLink.astro';
+
+Fastify does not provide any built-in handling of env vars, although there is a [fastify-env](https://github.com/fastify/fastify-env) plugin, which internally uses dotenv files with json schema and ajv for validations. Whether you use that plugin, or have wired up something else yourself, we think using DMNO instead is worth the additional benefits.
+
+:::note[Compatibility - TypeScript + ESM]
+This plugin works if you are using JavaScript or TypeScript, but currently it only supports ESM projects.
+
+If you have a CommonJS Fastify app and you'd like to use DMNO, please contact us on [our Discord](https://chat.dmno.dev)!
+:::
+
+### Installation
+
+While `dmno init` will automatically detect that you are using Fastify and install the necessary packages for you, you may also want to install them yourself:
+
+<TabbedCode packageName="@dmno/fastify-integration dmno" />
+
+The rest of the Fastify setup looks slightly different depending on if you areusing the [fastify-cli](https://github.com/fastify/fastify-cli) or not. Select your situation using the tabs below:
+
+#### Initialize + register `dmnoFastifyPlugin`
+<Tabs syncKey='fastifyType'>
+  <TabItem label="Direct usage">
+    Wherever you initialize your `fastify` instance and register plugins, import and register our `dmnoFastifyPlugin`:
+
+    ```diff lang="js"
+    import Fastify from 'fastify';
+    +import { dmnoFastifyPlugin } from '@dmno/fastify-integration';
+
+    const fastify = Fastify({ /* ... */ });
+    +fastify.register(dmnoFastifyPlugin);
+    fastify.register(someOtherPlugin);
+    ```
+  </TabItem>
+  <TabItem label="fastify-cli">
+    Create a new file in the plugins directory to initialize the plugin:
+
+    ```diff lang="js" title="src/plugins/dmno.js"
+    import { dmnoFastifyPlugin } from "@dmno/fastify-integration";
+    export default dmnoFastifyPlugin;
+    ```
+  </TabItem>
+</Tabs>
+
+#### Adjust your package.json scripts
+
+In this case, we must run our `dev` and `start` commands via [`dmno run`](/docs/reference/cli/run/). You'll want to adjust your `package.json` scripts accordingly. Your existing scripts may not match exactly, but that's ok. Just note that if you want live reload you need to include the `-w` flag.
+
+<Tabs syncKey='fastifyType'>
+  <TabItem label="Direct usage">  
+    ```diff lang="json" title="package.json" ins=/(dmno run (-w )?-- )/
+    {
+      "name": "yourapp",
+      "scripts": {
+        "dev": "dmno run -w -- nodemon src/main.js",
+        "start": "dmno run -- node src/main.js"
+      },
+      //...
+    ```
+  </TabItem>
+  <TabItem label="fastify-cli">
+    ```diff lang="json" title="pacakge.json" ins=/(dmno run (-w )?-- )/
+    {
+      "name": "your-fastify-cli-app", 
+      "scripts": {
+        "start": "npm run build:ts && dmno run -- fastify start -l info dist/app.js",
+        "dev": "npm run build:ts && concurrently -k -p \"[{name}]\" -n \"TypeScript,App\" -c \"yellow.bold,cyan.bold\" \"npm:watch:ts\" \"npm:dev:start\"",
+        "dev:start": "dmno run -w -- fastify start --ignore-watch=.ts$ -w -l info -P dist/app.js"
+        //...
+      }
+      //...
+    ```
+  </TabItem>
+</Tabs>
+
+:::tip[One-off scripts]
+You'll probably also want to run any other one-off scripts or other tools that require config via `dmno run` so that they get your config and secrets injected as well.
+:::
+
+
+### Configure your configuration schema
+
+`dmno init` will scaffold out the `schema` in your `config.mts` files based on your existing `.env` files. See our [Schema Guide](/docs/guides/schema/) for the specifics of how to author additional updates to your DMNO `schema`.
+
+## Accessing config
+
+> Use `DMNO_CONFIG` instead of `process.env` 🎉
+
+You'll now have fully typed and validated config and some cool security features described below.
+
+## Security and leak prevention
+
+Aside from the general DX improvements that DMNO provides, it also introduces important security features to keep your secrets safe:
+- redacts your sensitive config from logs
+- intercepts requests that send sensitive config to hosts not on an allow list
+- stops returning sensitive config as part of server responses
+
+You can read more about these features and how to enable/disable them in our [Security Guide](/docs/get-started/security/).
+
+The Fastify plugin does its best to enable these things automatically, but it would be entirely reasonable to disable these features, and use the underlying helpers to customize the behavior.
