@@ -48,3 +48,10 @@ export async function asyncEachParallel<V>(
 ): Promise<void> {
   return asyncForEach(iterable, iteratee, Infinity);
 }
+
+export async function asyncMapParallel<V, M>(
+  iterable: Iterable<V> | AsyncIterable<V>,
+  iteratee: (value: V, index: number, iterable: Iterable<V> | AsyncIterable<V>) => Promise<M> | M,
+): Promise<Array<M>> {
+  return asyncMap(iterable, iteratee, Infinity);
+}

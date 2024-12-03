@@ -129,12 +129,12 @@ EntityClass extends ConfigraphEntity = ConfigraphEntity,
 
     if (!node.isResolved) {
       throw new DependencyNotResolvedResolutionError(
-        `Tried to access node that was not yet resolved - ${nodePath}`,
+        `Plugin input tried to access node that was not yet resolved - ${nodePath}`,
       );
     }
     if (!node.isValid) {
       throw new DependencyInvalidResolutionError(
-        `Resolver tried to use node that is invalid - ${nodePath}`,
+        `Plugin input resolver tried to use node that is invalid - ${nodePath}`,
       );
     }
 

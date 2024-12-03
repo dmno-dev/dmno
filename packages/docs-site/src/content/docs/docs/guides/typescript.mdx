@@ -23,7 +23,7 @@ To simplify accessing your config, we inject the `DMNO_CONFIG` and `DMNO_PUBLIC_
 The DMNO Config loader automaticaly generates TS types to be consumed by your code into the `.dmno/.typegen` directory:
 - `.dmno/.typegen/global.d.ts` - injects the `DMNO_CONFIG` global
 - `.dmno/.typegen/global-public.d.ts` - injects the `DMNO_PUBLIC_CONFIG` global
-- `.dmno/schema.ts` - the actual schema of your config, used by the `.d.ts` files
+- `.dmno/schema.d.ts` - the actual schema of your config, used by the `.d.ts` files
 
 _We use these same types to give you autocompletion when authoring your schema itself._
 

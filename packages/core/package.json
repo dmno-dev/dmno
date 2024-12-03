@@ -49,6 +49,11 @@
       "import": "./dist/vendor-types/index.js",
       "types": "./dist/vendor-types/index.d.ts"
     },
+    "./utils": {
+      "ts-src": "./src/utils.ts",
+      "import": "./dist/utils.js",
+      "types": "./dist/utils.d.ts"
+    },
     "./cli-lib": {
       "ts-src": "./src/cli/plugin-cli-lib.ts",
       "import": "./dist/cli/plugin-cli-lib.js",
@@ -128,7 +133,7 @@
     "lodash-es": "catalog:",
     "log-update": "^6.0.0",
     "magic-string": "^0.30.12",
-    "modern-async": "^2.0.0",
+    "modern-async": "catalog:",
     "node-forge": "^1.3.1",
     "outdent": "^0.8.0",
     "picomatch": "^3.0.1",

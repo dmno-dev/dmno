@@ -10,6 +10,7 @@ catalog:
   "debug": "^4.3.4"
   "kleur": "^4.1.5"
   "lodash-es": "^4.17.21"
+  "modern-async": "^2.0.4"
   "svgo": "^3.2.0"
   "tsup": "^8.2.4"
   "typescript": "^5.5.4"

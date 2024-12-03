@@ -1,6 +1,6 @@
 import { DmnoBaseTypes, ValidationError, createDmnoDataType } from 'dmno';
 
-const ONEPASS_ICON = 'simple-icons:1password';
+import { ONEPASS_ICON } from './constants';
 
 const OnePasswordServiceAccountToken = createDmnoDataType({
   typeLabel: '1password/service-account-token',

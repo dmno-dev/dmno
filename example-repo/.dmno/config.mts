@@ -1,5 +1,5 @@
-import { DmnoBaseTypes, defineDmnoService, NodeEnvType, switchBy, inject } from 'dmno';
-import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
+import { DmnoBaseTypes, defineDmnoService, NodeEnvType, switchBy, inject, processEnvOverrideLoader, dotEnvFileOverrideLoader } from 'dmno';
+import { OnePasswordDmnoPlugin, OnePasswordTypes, onePasswordOverrideLoader } from '@dmno/1password-plugin';
 import { BitwardenSecretsManagerDmnoPlugin, BitwardenSecretsManagerTypes } from '@dmno/bitwarden-plugin';
 import { InfisicalDmnoPlugin, InfisicalTypes } from '@dmno/infisical-plugin';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
@@ -34,11 +34,25 @@ export default defineDmnoService({
     redactSensitiveLogs: true,
     preventClientLeaks: true,
   },
+  overrides: [
+    // loads overrides from shell environment (process.env)
+    processEnvOverrideLoader(),
+    // looks for .env files (.env, .env.local, etc)
+    dotEnvFileOverrideLoader(),
+    // personal overrides, create item in "Employee" vault with this name, item label must match 
+    onePasswordOverrideLoader({ reference: 'op://Employee/dmno-local-dev-overrides/root' }, { ignoreMissing: true }),
+    // shared overrides
+    onePasswordOverrideLoader({ reference: 'op://dev test/rznyyjrwcv5sgc4ykjhzpkoevm/root' }),
+  ],
   schema: {
+    ITEM_X: { 
+      value: 'should-be-required',
+    },
+
     NODE_ENV: NodeEnvType,
     DMNO_ENV: {
       typeDescription: 'standardized environment flag set by DMNO',
-      value: (ctx) => ctx.get('NODE_ENV'),
+      value: () => DMNO_CONFIG.NODE_ENV,
     },
     INFISICAL_CLIENT_SECRET: {
       extends: InfisicalTypes.clientSecret,

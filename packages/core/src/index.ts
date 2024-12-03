@@ -12,5 +12,10 @@ export * from './globals-injector/injector';
 
 export * from './config-loader/serialization-types';
 
+export {
+  DmnoOverrideLoader, OverrideSource,
+  processEnvOverrideLoader, dotEnvFileOverrideLoader,
+} from './config-engine/overrides';
+
 // used by 1pass plugin - will likely extract eventually
 export * from './lib/dotenv-utils';
