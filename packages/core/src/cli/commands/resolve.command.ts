@@ -60,14 +60,13 @@ program.action(async (opts: {
   checkForSchemaErrors(workspace);
   checkForConfigErrors(service, { showAll: opts?.showAll });
 
-  async function getExposedConfigValues() {
-    const injectedJson = await ctx.dmnoServer.makeRequest('getInjectedJson', service.serviceName);
-    let exposedConfig = service.configNodes;
+  function getExposedConfigValues() {
     const values = {} as Record<string, any>;
-    for (const itemKey in injectedJson) {
-      if (itemKey.startsWith('$')) continue;
-      if (injectedJson[itemKey].value && opts.public) continue;
-      values[itemKey] = injectedJson[itemKey].value;
+    for (const itemKey in service.configNodes) {
+      const item = service.configNodes[itemKey];
+      // --public option skips anything sensitive
+      if (item.isSensitive && opts.public) continue;
+      values[itemKey] = item.resolvedValue;
     }
     return values;
   }
