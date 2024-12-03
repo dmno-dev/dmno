@@ -8,10 +8,10 @@ import { Tabs, TabItem } from '@astrojs/starlight/components'
 import TabbedCode from '@/components/TabbedCode.astro';
 import BugReportLink from '@/components/BugReportLink.astro';
 
-Fastify does not provide any built-in handling of env vars, although there is a [fastify-env](https://github.com/fastify/fastify-env) plugin, which internally uses dotenv files with json schema and ajv for validations. Whether you use that plugin, or have wired up something else yourself, we think using DMNO instead will provide many benefits.
+Fastify does not provide any built-in handling of env vars, although there is a [fastify-env](https://github.com/fastify/fastify-env) plugin, which internally uses dotenv files with json schema and ajv for validations. Whether you use that plugin, or have wired up something else yourself, we think using DMNO instead is worth the additional benefits.
 
 :::note[Compatibility - TypeScript + ESM]
-This plugin works regardless of if you are using JavaScript or TypeScript, but currently it only supports ESM projects.
+This plugin works if you are using JavaScript or TypeScript, but currently it only supports ESM projects.
 
 If you have a CommonJS Fastify app and you'd like to use DMNO, please contact us on [our Discord](https://chat.dmno.dev)!
 :::
@@ -50,7 +50,7 @@ The rest of the Fastify setup looks slightly different depending on if you areus
 
 #### Adjust your package.json scripts
 
-Unlike some of our front-end integrations where we hook into an existing build process, we must run our dev and boot commands via [`dmno run`](/docs/reference/cli/run/). You'll want to adjust your `package.json` scripts accordingly. Your existing scripts may not match exactly, but that's ok.
+In this case, we must run our `dev` and `start` commands via [`dmno run`](/docs/reference/cli/run/). You'll want to adjust your `package.json` scripts accordingly. Your existing scripts may not match exactly, but that's ok. Just note that if you want live reload you need to include the `-w` flag.
 
 <Tabs syncKey='fastifyType'>
   <TabItem label="Direct usage">  
