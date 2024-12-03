@@ -1,5 +1,11 @@
 # @dmno/configraph
 
+## 0.0.6
+
+### Patch Changes
+
+- [#151](https://github.com/dmno-dev/dmno/pull/151) [`1e5ade2`](https://github.com/dmno-dev/dmno/commit/1e5ade232c9a6a55841a38f07b73fb0f10132a36) Thanks [@theoephraim](https://github.com/theoephraim)! - infer required:true if static value is set
+
 ## 0.0.5
 
 ### Patch Changes

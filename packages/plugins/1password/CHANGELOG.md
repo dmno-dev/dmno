@@ -1,5 +1,11 @@
 # @dmno/1password-plugin
 
+## 0.0.9
+
+### Patch Changes
+
+- [#151](https://github.com/dmno-dev/dmno/pull/151) [`1e5ade2`](https://github.com/dmno-dev/dmno/commit/1e5ade232c9a6a55841a38f07b73fb0f10132a36) Thanks [@theoephraim](https://github.com/theoephraim)! - introduce override loader system and 1pass override loader
+
 ## 0.0.8
 
 ### Patch Changes
