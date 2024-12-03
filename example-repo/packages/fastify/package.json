@@ -1,0 +1,24 @@
+{
+  "name": "fastify",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "dmno run -w -- vite-node --watch src/index.ts"
+  },
+  "keywords": [ ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dmno": "link:../../../packages/core",
+    "@dmno/fastify-integration": "link:../../../packages/integrations/fastify",
+    "fastify": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "fastify-tsconfig": "^2.0.0",
+    "vite": "^5",
+    "vite-node": "^2.1.8"
+  }
+}

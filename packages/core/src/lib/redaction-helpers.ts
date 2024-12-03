@@ -119,6 +119,14 @@ export function redactSensitiveConfig(o: any): any {
   if (Array.isArray(o)) {
     return o.map(redactSensitiveConfig);
   }
+  // try to redact if it's a plain object - not necessarily great for perf...
+  if (o && typeof (o) === 'object' && Object.getPrototypeOf(o) === Object.prototype) {
+    try {
+      return JSON.parse(redactSensitiveConfig(JSON.stringify(o)));
+    } catch (err) {
+      return o;
+    }
+  }
 
   const type = typeof o;
   if (type === 'string' || (type === 'object' && Object.prototype.toString.call(o) === '[object String]')) {

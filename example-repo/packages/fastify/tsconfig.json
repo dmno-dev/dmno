@@ -1,0 +1,13 @@
+{
+  "extends": "fastify-tsconfig",
+  "compilerOptions": {
+    "outDir": "dist",
+    "sourceMap": true,
+    "composite": true,
+    "types": [ "vite/client" ],
+    "strict": true
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}

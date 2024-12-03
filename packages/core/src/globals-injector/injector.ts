@@ -1,5 +1,7 @@
+import kleur from 'kleur';
 import {
   redactString,
+  redactSensitiveConfig,
   resetSensitiveConfigRedactor,
   patchGlobalConsoleToRedactSensitiveLogs,
   unpatchGlobalConsoleSensitiveLogRedaction,
@@ -242,6 +244,8 @@ function isString(s: any) {
   return Object.prototype.toString.call(s) === '[object String]';
 }
 
+(globalThis as any)._dmnoRedact = redactSensitiveConfig;
+
 // reusable leak scanning helper function, used by various integrations
 (globalThis as any)._dmnoLeakScan = function _dmnoLeakScan(
   toScan: string | Response | ReadableStream,
@@ -262,8 +266,8 @@ function isString(s: any) {
       // so we'll write a nicer error message to help the user debug
         console.error([ // eslint-disable-line no-console
           '',
-          '🚨 DETECTED LEAKED SENSITIVE CONFIG 🚨',
-          `> Config item key: ${itemKey}`,
+          `🚨 ${kleur.bgRed(' DETECTED LEAKED SENSITIVE CONFIG ')} 🚨`,
+          `> Config item key: ${kleur.blue(itemKey)}`,
           ...meta?.method ? [`> Scan method: ${meta.method}`] : [],
           ...meta?.file ? [`> File: ${meta.file}`] : [],
           '',
