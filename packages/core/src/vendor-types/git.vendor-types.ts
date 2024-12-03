@@ -1,3 +1,4 @@
+import { execa } from 'execa';
 import { createDmnoDataType, DmnoBaseTypes } from 'dmno';
 
 const gitCommonTypeInfo = {
@@ -43,25 +44,43 @@ export const GitDataTypes = {
     },
     ...gitCommonTypeInfo,
   }),
-  BranchName: createDmnoDataType({
-    typeLabel: 'git/branchName',
-    typeDescription: 'Name of a git branch',
-    externalDocs: {
-      description: 'Git branches (Atlassian docs)',
-      url: 'https://www.atlassian.com/git/tutorials/using-branches',
-    },
-    ...gitCommonTypeInfo,
-  }),
-  CommitSha: createDmnoDataType({
-    typeLabel: 'git/commitSha',
-    typeDescription: 'Unique id of a specific git commit - also known as “SHA” or “hash”',
-    // full SHA is 40 chars, but it is common to use shortened versions, so we may want multiple types or options
-    externalDocs: {
-      description: 'What are Git Hashes? (Graphite docs)',
-      url: 'https://graphite.dev/guides/git-hashing',
-    },
-    ...gitCommonTypeInfo,
-  }),
+  BranchName: createDmnoDataType(
+    (opts?: { autoPopulate?: boolean }) => ({
+      typeLabel: 'git/branchName',
+      typeDescription: 'Name of a git branch',
+      externalDocs: {
+        description: 'Git branches (Atlassian docs)',
+        url: 'https://www.atlassian.com/git/tutorials/using-branches',
+      },
+      ...opts?.autoPopulate && {
+        value: async () => {
+          const result = await execa('git', ['branch', '--show-current']);
+          return result.stdout;
+        },
+      },
+      ...gitCommonTypeInfo,
+    }),
+  ),
+  CommitSha: createDmnoDataType(
+    (opts?: {
+      autoPopulate?: boolean
+    }) => ({
+      typeLabel: 'git/commitSha',
+      typeDescription: 'Unique id of a specific git commit - also known as “SHA” or “hash”',
+      // full SHA is 40 chars, but it is common to use shortened versions, so we may want multiple types or options
+      externalDocs: {
+        description: 'What are Git Hashes? (Graphite docs)',
+        url: 'https://graphite.dev/guides/git-hashing',
+      },
+      ...opts?.autoPopulate && {
+        value: async () => {
+          const result = await execa('git', ['rev-parse', '--short', 'HEAD']);
+          return result.stdout;
+        },
+      },
+      ...gitCommonTypeInfo,
+    }),
+  ),
   CommitMessage: createDmnoDataType({
     typeLabel: 'git/commitMessage',
     typeDescription: 'Descriptive message describing the commit',
