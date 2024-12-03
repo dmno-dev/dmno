@@ -1,5 +1,22 @@
 # dmno
 
+## 0.0.32
+
+### Patch Changes
+
+- [#151](https://github.com/dmno-dev/dmno/pull/151) [`1e5ade2`](https://github.com/dmno-dev/dmno/commit/1e5ade232c9a6a55841a38f07b73fb0f10132a36) Thanks [@theoephraim](https://github.com/theoephraim)! - infer required:true if static value is set
+
+- [#172](https://github.com/dmno-dev/dmno/pull/172) [`6d95194`](https://github.com/dmno-dev/dmno/commit/6d951943d5d02d0fcd445a4c1873fcb4e7f1bb2f) Thanks [@theoephraim](https://github.com/theoephraim)! - fix dmno resolve --format=json, cwd based detection of current package/service
+
+- [#151](https://github.com/dmno-dev/dmno/pull/151) [`1e5ade2`](https://github.com/dmno-dev/dmno/commit/1e5ade232c9a6a55841a38f07b73fb0f10132a36) Thanks [@theoephraim](https://github.com/theoephraim)! - introduce override loader system and 1pass override loader
+
+- [#174](https://github.com/dmno-dev/dmno/pull/174) [`08f165d`](https://github.com/dmno-dev/dmno/commit/08f165dd6e04a6fe76a904f7501af33ebc201baf) Thanks [@theoephraim](https://github.com/theoephraim)! - initial version of fastify integration
+
+- [#151](https://github.com/dmno-dev/dmno/pull/151) [`1e5ade2`](https://github.com/dmno-dev/dmno/commit/1e5ade232c9a6a55841a38f07b73fb0f10132a36) Thanks [@theoephraim](https://github.com/theoephraim)! - adjust tsconfig to make schema use .d.ts
+
+- Updated dependencies [[`1e5ade2`](https://github.com/dmno-dev/dmno/commit/1e5ade232c9a6a55841a38f07b73fb0f10132a36)]:
+  - @dmno/configraph@0.0.6
+
 ## 0.0.31
 
 ### Patch Changes
