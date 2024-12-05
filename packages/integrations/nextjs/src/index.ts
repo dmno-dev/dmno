@@ -63,7 +63,9 @@ export function dmnoNextConfigPlugin(dmnoOptions?: DmnoPluginOptions) {
     (process.env.__VERCEL_BUILD_RUNNING || process.env.VERCEL) // build running via `vercel` cli or on vercel
     || process.env.NETLIFY // build running remotely on netlify
     || (process.env.NETLIFY_LOCAL && !process.env.NETLIFY_DEV) // build running locally via `netlify` cli
+    || process.env.CF_PAGES // maybe add additional check for /functions folder?
     || dmnoOptions?.injectResolvedConfigAtBuildTime // explicit opt-in
+
   );
 
   // nextjs doesnt have a proper plugin system, so we write a function which takes in a config object and returns an augmented one
