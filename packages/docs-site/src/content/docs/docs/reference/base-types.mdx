@@ -104,7 +104,7 @@ export default defineDmnoService({
 
 ### `enum`
 
-`DmnoBaseTypes.Enum({ settingsSchema? })`
+`DmnoBaseTypes.enum({ settingsSchema? })`
 
 DMNO Built-in data type for Enums. Includes the following optional settings: 
 
@@ -121,13 +121,13 @@ type settingsSchema = {
 
 Example: 
 ```javascript
-const myEnumType = DmnoBaseTypes.Enum({ values: ['one', 'two', 'three'] });
-const myEnumType2 = DmnoBaseTypes.Enum({
+const myEnumType = DmnoBaseTypes.enum({ values: ['one', 'two', 'three'] });
+const myEnumType2 = DmnoBaseTypes.enum({
   values: [
     { value: 'one', description: 'The first one' },
     { value: 'two', description: 'The second one' }],
 });
-const myEnumType3 = DmnoBaseTypes.Enum(
+const myEnumType3 = DmnoBaseTypes.enum(
   {
     values: {
       one: 'The first one',
