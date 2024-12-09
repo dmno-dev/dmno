@@ -16,7 +16,7 @@ const secretIcons = ref([
   { icon: 'simple-icons:bitwarden', label: 'Bitwarden', docsHref: '/docs/plugins/bitwarden/' },
   { icon: 'mdi:lock', label: 'Encrypted Vault', docsHref: '/docs/plugins/encrypted-vault/' },
   { icon: 'mdi:infinity', label: 'Infisical', docsHref: '/docs/plugins/infisical/' },
-  { icon: 'mdi:server-outline', label: 'Self-hosted', docsHref: '/docs/plugins/overview/' },
+  { icon: 'mdi:server-outline', label: 'your self-hosted secrets manager', docsHref: '/docs/plugins/overview/' },
 ]);
 
 const integrationIcons = ref([
@@ -31,8 +31,8 @@ const platformIcons = ref([
   { icon: 'devicon:netlify', label: 'Netlify', docsHref: '/docs/platforms/netlify/' },
   { icon: 'devicon:vercel', label: 'Vercel', docsHref: '/docs/platforms/vercel/' },
   { icon: 'devicon:cloudflare', label: 'Cloudflare', docsHref: '/docs/platforms/cloudflare/' },
-  { icon: 'devicon:docker', label: 'Docker - Coming Soon', docsHref: '/docs/platforms/' },
-  { icon: 'mdi:server-outline', label: 'Self-hosted', docsHref: '/docs/platforms/overview/' },
+  { icon: 'devicon:docker', label: 'Docker', docsHref: '/docs/platforms/' },
+  { icon: 'mdi:server-outline', label: 'Self-hosted infra', docsHref: '/docs/platforms/overview/' },
 ]);
 
 // Selected icon states
@@ -40,9 +40,7 @@ const selectedLeftIndex = ref(0);
 const selectedMiddleIndex = ref(0);
 const selectedRightIndex = ref(0);
 
-const LEFT_INTERVAL = 2000;
-const MIDDLE_INTERVAL = 2500;
-const RIGHT_INTERVAL = 2500;
+const INTERVAL = 4000;
 
 // Cycle through icons every 2 seconds
 onMounted(() => {
@@ -52,24 +50,31 @@ onMounted(() => {
 
   setInterval(() => {
     selectedLeftIndex.value = (selectedLeftIndex.value + 1) % secretIcons.value.length;
-  }, LEFT_INTERVAL);
+  }, INTERVAL);
 
   setInterval(() => {
     selectedMiddleIndex.value = (selectedMiddleIndex.value + 1) % integrationIcons.value.length;
-  }, MIDDLE_INTERVAL);
+  }, INTERVAL);
 
   setInterval(() => {
     selectedRightIndex.value = (selectedRightIndex.value + 1) % platformIcons.value.length;
-  }, RIGHT_INTERVAL);
+  }, INTERVAL);
+
+  setInterval(() => {
+    shuffleArray(secretIcons.value);
+    shuffleArray(integrationIcons.value);
+    shuffleArray(platformIcons.value);
+  }, INTERVAL*platformIcons.value.length);
 });
 
 // Adjusted coordinates for better connections
 const iconSize = 64 // 16 * 4 (w-16)
 const centerIconSize = 80 // 20 * 4 (w-20)
 const spacing = 100
+const maxWidth = window.innerWidth < 1200 ? window.innerWidth : 1200;
 
 // Column spacing, calculated based on the viewport width
-const colSpacing = ref(window.innerWidth / 4 || 260); // Use SVG viewBox width divided by 4 columns
+const colSpacing = ref(maxWidth / 4 || 260); // Use SVG viewBox width divided by 4 columns
 
 const leftX = computed(() => 0)
 const centerX = computed(() => colSpacing.value)
@@ -78,7 +83,7 @@ const rightX = computed(() => colSpacing.value * 3)
 
 onMounted(() => {
   const updateSpacing = () => {
-    colSpacing.value = window.innerWidth / 4 || 260;
+    colSpacing.value = maxWidth / 4 || 260;
   }
   
   window.addEventListener('resize', updateSpacing)
@@ -113,6 +118,33 @@ const navigateTo = (href: string) => {
 
 <template>
   <div class="container">
+    <div class="dynamic-text-container">
+      <h2>Use secrets from 
+        <span class="dynamic-text-wrapper">
+          <transition name="fade" mode="out-in">
+            <span :key="secretIcons[selectedLeftIndex].label" class="dynamic-text active-secret">
+              {{ secretIcons[selectedLeftIndex].label }}
+            </span>
+          </transition>
+        </span> 
+        in your 
+        <span class="dynamic-text-wrapper">
+          <transition name="fade" mode="out-in">
+            <span :key="integrationIcons[selectedMiddleIndex].label" class="dynamic-text active-integration">
+              {{ integrationIcons[selectedMiddleIndex].label }}
+            </span>
+          </transition>
+        </span> 
+        app and deploy to 
+        <span class="dynamic-text-wrapper">
+          <transition name="fade" mode="out-in">
+            <span :key="platformIcons[selectedRightIndex].label" class="dynamic-text active-platform">
+              {{ platformIcons[selectedRightIndex].label }}
+            </span>
+          </transition>
+        </span>.
+      </h2>
+    </div>
     <div class="graph-container">
       <svg class="svg-container" viewBox="0 0 1000 600">
         <!-- Left to Center connections -->
@@ -148,69 +180,70 @@ const navigateTo = (href: string) => {
           />
         </template>
       </svg>
-
-      <!-- Left Group -->
-      <div class="column-container left" :style="{ left: leftX + 'px' }">
-        <h2>Secrets</h2>
-        <div
-          v-for="(icon, index) in secretIcons"
-          :key="index"
-          :class="[
-            'icon-base icon-left',
-            index === selectedLeftIndex ? 'icon-selected' : ''
-          ]"
-          :style="{ top: getVerticalPosition(index, secretIcons.length) + 'px' }"
-          :title="icon.label"
-          @click="navigateTo(icon.docsHref)"
-        >
-          <Icon :icon="icon.icon" class="icon" :ssr="true" />
+      <div class="icon-container">
+        <!-- Left Group -->
+        <div class="column-container left" :style="{ left: leftX + 'px' }">
+          <h2>Secrets</h2>
+          <div
+            v-for="(icon, index) in secretIcons"
+            :key="index"
+            :class="[
+              'icon-base icon-left',
+              index === selectedLeftIndex ? 'icon-selected' : ''
+            ]"
+            :style="{ top: getVerticalPosition(index, secretIcons.length) + 'px' }"
+            :title="icon.label"
+            @click="navigateTo(icon.docsHref)"
+          >
+            <Icon :icon="icon.icon" class="icon" :ssr="true" />
+          </div>
         </div>
-      </div>
 
-      <!-- Center Node -->
-      <div
-        class="center-icon"
-        :style="{ 
-          left: centerX + 'px',
-          top: centerY + 'px'
-        }"
-      >
-        <img :src="DMNOLogo.src" class="icon" />
-      </div>
-
-      <!-- Middle Group -->
-      <div class="column-container middle" :style="{ left: middleX + 'px' }">
-        <h2>Integrations</h2>
+        <!-- Center Node -->
         <div
-          v-for="(icon, index) in integrationIcons"
-          :key="index"
-          :class="[
-            'icon-base icon-middle',
-            index === selectedMiddleIndex ? 'icon-selected' : ''
-          ]"
-          :style="{ top: getVerticalPosition(index, integrationIcons.length) + 'px' }"
-          :title="icon.label"
-          @click="navigateTo(icon.docsHref)"
+          class="center-icon"
+          :style="{ 
+            left: centerX + 'px',
+            top: centerY + 'px'
+          }"
         >
-          <Icon :icon="icon.icon" class="icon" :ssr="true" />
+          <img :src="DMNOLogo.src" class="icon" />
         </div>
-      </div>
 
-      <!-- Right Group -->
-      <div class="column-container right" :style="{ left: rightX + 'px' }">
-        <h2>Platforms</h2>
-        <div
-          v-for="(icon, index) in platformIcons"
-          :key="index"
-          :class="[
-            'icon-base icon-right',
-            index === selectedRightIndex ? 'icon-selected' : ''
-          ]"
-          :style="{ top: getVerticalPosition(index, platformIcons.length) + 'px' }"
-          :title="icon.label"
-          @click="navigateTo(icon.docsHref)"
-        >
-          <Icon :icon="icon.icon" class="icon" :ssr="true" />
+        <!-- Middle Group -->
+        <div class="column-container middle" :style="{ left: middleX + 'px' }">
+          <h2>Integrations</h2>
+          <div
+            v-for="(icon, index) in integrationIcons"
+            :key="index"
+            :class="[
+              'icon-base icon-middle',
+              index === selectedMiddleIndex ? 'icon-selected' : ''
+            ]"
+            :style="{ top: getVerticalPosition(index, integrationIcons.length) + 'px' }"
+            :title="icon.label"
+            @click="navigateTo(icon.docsHref)"
+          >
+            <Icon :icon="icon.icon" class="icon" :ssr="true" />
+          </div>
+        </div>
+
+        <!-- Right Group -->
+        <div class="column-container right" :style="{ left: rightX + 'px' }">
+          <h2>Platforms</h2>
+          <div
+            v-for="(icon, index) in platformIcons"
+            :key="index"
+            :class="[
+              'icon-base icon-right',
+              index === selectedRightIndex ? 'icon-selected' : ''
+            ]"
+            :style="{ top: getVerticalPosition(index, platformIcons.length) + 'px' }"
+            :title="icon.label"
+            @click="navigateTo(icon.docsHref)"
+          >
+            <Icon :icon="icon.icon" class="icon" :ssr="true" />
+          </div>
         </div>
       </div>
     </div>
@@ -224,20 +257,45 @@ const navigateTo = (href: string) => {
   display: flex;
   align-items: left;
   justify-content: left;
+  flex-wrap: wrap;
 }
 
 .graph-container {
   position: relative;
   width: 1000px;
   height: 600px;
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
-
 
 .svg-container {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+}
+
+.icon-container {
+  position: absolute;
+  max-width: 1200px;
+  min-width: 800px;
+  display: flex;
+}
+
+.dynamic-text-container {
+  margin: 2rem 0;
+} 
+
+.dynamic-text-container > .dynamic-text {
+  color: rgb(147 51 234); /* text-purple-600 */
+  &:nth-of-type(1) {
+    color: rgb(41, 232, 232);
+  }
+  
+  &:nth-of-type(2) {
+    color: rgb(116, 240, 161);
+  }
 }
 
 .icon-base {
@@ -317,6 +375,29 @@ const navigateTo = (href: string) => {
   font-weight: 600;
   color: rgb(221, 226, 233); /* text-gray-600 */
   text-align: left;
+}
+
+.dynamic-text-wrapper {
+  display: inline-block;
+  color: rgb(147 51 234); /* text-purple-600 */
+  &:nth-of-type(1) {
+    color: rgb(41, 232, 232);
+  }
+  
+  &:nth-of-type(2) {
+    color: rgb(116, 240, 161);
+  }
+  /* min-width: 100px; Adjust based on your content */
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 </style>
