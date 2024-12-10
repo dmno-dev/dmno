@@ -37,11 +37,15 @@ async function checkOpCliAuth() {
     // and return the resolve fn to be called after the first CLI method actually completes
     // except for one further trick, which is to first check if we are already logged in, and resolve right away
     opAuthDeferred = createDeferredPromise();
+    const startAt = new Date();
     try {
       await spawnAsync('op', ['whoami']);
       opAuthDeferred.resolve(true);
     } catch (err) {
       return opAuthDeferred.resolve;
+    } finally {
+      const whoamiTime = +new Date() - +startAt;
+      debug(`additional whoami check took ${whoamiTime}ms`);
     }
   }
 }

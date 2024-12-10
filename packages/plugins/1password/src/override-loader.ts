@@ -3,56 +3,37 @@ import {
 } from 'dmno';
 import { parseDotEnvContents } from 'dmno/utils';
 import { ONEPASS_ICON } from './constants';
-import { execOpCliCommand, opCliRead } from './cli-helper';
+import { getIdsFromShareLink, opCliRead } from './cli-helper';
 
-type OnePassLocation =
-  // reference includes a field already
+type OnePassOverridesLocation =
+  /** 1Password reference to where the overrides are stored */
   { reference: string } |
-  // selecting by name is possible without a vault, but will throw an error if multiple items are found
-  { item: string, vault?: string, field?: string } |
+  /** item and vault ids (or names) of where the overrides are stored
+   * field will default to the current service ID if not specified
+   * */
+  { item: string, vault: string, field?: string } |
+  /**
+   * shareable link to the item where the overrides are stored
+   * field will default to the current service ID if not specified
+   * */
   { link: string, field?: string };
 
-async function getItemValue(loc: OnePassLocation, defaultFieldName?: string) {
-  let rawItemJson: string;
-
-  let fieldName: string | undefined;
-
-  // reference includes a field
+async function getItemValue(loc: OnePassOverridesLocation, defaultFieldName?: string) {
   if ('reference' in loc) {
-    const itemValue = await opCliRead(loc.reference);
-    return itemValue;
+    return await opCliRead(loc.reference);
   } else if ('link' in loc) {
-    rawItemJson = await execOpCliCommand([
-      'item', 'get', loc.link,
-      '--format', 'json',
-    ]);
-    fieldName = loc.field || defaultFieldName;
+    const { vaultId, itemId } = getIdsFromShareLink(loc.link);
+    return await opCliRead(`op://${vaultId}/${itemId}/${loc.field || defaultFieldName}`);
   } else if ('item' in loc) {
-    // TODO: handle error when no vault id is provided and more than 1 item is found
-    // TODO: also probably ok if zero items were found if looking up by name
-    rawItemJson = await execOpCliCommand([
-      'item', 'get', loc.item,
-      ...loc.vault ? ['--vault', loc.vault] : [],
-      '--format', 'json',
-    ]);
-    fieldName = loc.field || defaultFieldName;
+    return await opCliRead(`op://${loc.vault}/${loc.item}/${loc.field || defaultFieldName}`);
   } else {
     throw new Error('invalid 1password location');
   }
-  if (!fieldName) throw new Error('missing field name');
-
-  if (!rawItemJson) {
-    throw new Error('unable to fetch overrides from 1password');
-  }
-
-  const itemDetails = JSON.parse(rawItemJson);
-  const fieldDetails = itemDetails.fields.find((f: any) => f.label === fieldName);
-  return fieldDetails.value;
 }
 
 
 export function onePasswordOverrideLoader(
-  itemLocation: OnePassLocation,
+  itemLocation: OnePassOverridesLocation,
   opts?: {
     ignoreMissing?: boolean,
     // format?: 'dotenv' | 'toml' | 'yaml' // can add this if we want to support more formats later
