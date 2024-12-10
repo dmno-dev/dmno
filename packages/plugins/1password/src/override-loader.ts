@@ -9,7 +9,7 @@ type OnePassLocation =
   // reference includes a field already
   { reference: string } |
   // selecting by name is possible without a vault, but will throw an error if multiple items are found
-  { name: string, vault?: string, field?: string } |
+  { item: string, vault?: string, field?: string } |
   { link: string, field?: string };
 
 async function getItemValue(loc: OnePassLocation, defaultFieldName?: string) {
@@ -24,16 +24,16 @@ async function getItemValue(loc: OnePassLocation, defaultFieldName?: string) {
   } else if ('link' in loc) {
     rawItemJson = await execOpCliCommand([
       'item', 'get', loc.link,
-      '--format=json',
+      '--format', 'json',
     ]);
     fieldName = loc.field || defaultFieldName;
-  } else if ('name' in loc) {
+  } else if ('item' in loc) {
     // TODO: handle error when no vault id is provided and more than 1 item is found
     // TODO: also probably ok if zero items were found if looking up by name
     rawItemJson = await execOpCliCommand([
-      'item', 'get', loc.name,
-      ...loc.vault ? [`--vault="${loc.vault}"`] : [],
-      '--format=json',
+      'item', 'get', loc.item,
+      ...loc.vault ? ['--vault', loc.vault] : [],
+      '--format', 'json',
     ]);
     fieldName = loc.field || defaultFieldName;
   } else {

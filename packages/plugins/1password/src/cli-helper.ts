@@ -24,8 +24,8 @@ export async function execOpCliCommand(cmdArgs: Array<string>) {
 
   try {
     // uses system-installed copy of `op`
+    debug('op cli command args', cmdArgs);
     const cliResult = await spawnAsync('op', cmdArgs);
-    debug(`op cli command - "${cmdArgs}"`);
     debug(`> took ${+new Date() - +startAt}ms`);
     // OP_CLI_CACHE[cacheKey] = cliResult;
     return cliResult;
