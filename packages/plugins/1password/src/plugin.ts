@@ -126,8 +126,8 @@ export class OnePasswordDmnoPlugin extends DmnoPlugin {
     // using cli
     const itemJson = await execOpCliCommand([
       'item', 'get', itemId,
-      `--vault=${vaultId}`,
-      '--format=json',
+      '--vault', vaultId,
+      '--format', 'json',
     ]);
     return JSON.parse(itemJson);
   }

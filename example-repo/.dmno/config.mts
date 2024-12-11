@@ -39,10 +39,16 @@ export default defineDmnoService({
     processEnvOverrideLoader(),
     // looks for .env files (.env, .env.local, etc)
     dotEnvFileOverrideLoader(),
+    
     // personal overrides, create item in "Employee" vault with this name, item label must match 
     onePasswordOverrideLoader({ reference: 'op://Employee/dmno-local-dev-overrides/root' }, { ignoreMissing: true }),
-    // shared overrides
-    onePasswordOverrideLoader({ reference: 'op://dev test/rznyyjrwcv5sgc4ykjhzpkoevm/root' }),
+    
+    // shared overrides - using the non reference format just to test it
+    onePasswordOverrideLoader({
+      vault: 'dev test',
+      item: 'rznyyjrwcv5sgc4ykjhzpkoevm',
+      field: 'root',
+    }),
   ],
   schema: {
     ITEM_X: { 

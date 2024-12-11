@@ -10,6 +10,54 @@ const ENABLE_BATCHING = true;
 
 const OP_CLI_CACHE: Record<string, any> = {};
 
+
+/*
+  ! IMPORTANT INFO ON CLI AUTH
+
+  Because we trigger multiple requests in parallel, if the app/cli is not unlocked, it will show multiple auth popups.
+  In a big project this is super awkward because you may need to scan your finger over and over again.
+
+  To worka round this, we track if we are currently making the first op cli command, and if so acquire a mutex in the form of
+  a deferred promise that other requests can then wait on. We also use the additional trick of checking `op whoami` so that
+  if the app is already unlocked, we dont have to actually wait for the first request to finish to proceed with the rest.
+
+  Ideally 1password will fix this issue at some point and we can remove this extra logic.
+
+  NOTE - We don't currently do anything special to handle if the user denies the login, or is logged into the wrong account.
+*/
+
+// use a singleton within the module to track op cli auth state as a mutex / deferred promise
+let opAuthDeferred: DeferredPromise<boolean> | undefined;
+async function checkOpCliAuth() {
+  if (opAuthDeferred) {
+    // if the deferred promise already exists, we'll just wait for it to complete
+    await opAuthDeferred.promise;
+  } else {
+    // otherwise it means this is the first call of this function, so we create a new deferred promise
+    // and return the resolve fn to be called after the first CLI method actually completes
+    // except for one further trick, which is to first check if we are already logged in, and resolve right away
+    opAuthDeferred = createDeferredPromise();
+    const startAt = new Date();
+    let isLoggedIn: boolean;
+    try {
+      await spawnAsync('op', ['whoami']);
+      isLoggedIn = true;
+    } catch (err) {
+      isLoggedIn = false;
+    }
+
+    const whoamiTime = +new Date() - +startAt;
+    debug(`additional whoami check took ${whoamiTime}ms`);
+
+    if (isLoggedIn) {
+      opAuthDeferred.resolve(true);
+    } else {
+      return opAuthDeferred.resolve;
+    }
+  }
+}
+
+
 export async function execOpCliCommand(cmdArgs: Array<string>) {
   // very simple in-memory cache, will persist between runs in watch mode
   // but need to think through how a user can opt out
@@ -22,14 +70,17 @@ export async function execOpCliCommand(cmdArgs: Array<string>) {
 
   const startAt = new Date();
 
+  const authCompletedFn = await checkOpCliAuth();
   try {
     // uses system-installed copy of `op`
+    debug('op cli command args', cmdArgs);
     const cliResult = await spawnAsync('op', cmdArgs);
-    debug(`op cli command - "${cmdArgs}"`);
+    authCompletedFn?.(true);
     debug(`> took ${+new Date() - +startAt}ms`);
     // OP_CLI_CACHE[cacheKey] = cliResult;
     return cliResult;
   } catch (err) {
+    authCompletedFn?.(false);
     throw processOpCliError(err);
   }
 }
@@ -132,7 +183,7 @@ function processOpCliError(err: Error | any) {
 let opReadBatch: Record<string, { deferredPromises: Array<DeferredPromise<string>> }> | undefined;
 const BATCH_READ_TIMEOUT = 50;
 
-function executeReadBatch(batchToExecute: NonNullable<typeof opReadBatch>) {
+async function executeReadBatch(batchToExecute: NonNullable<typeof opReadBatch>) {
   debug('execute op read batch', Object.keys(batchToExecute));
   const envMap = {} as Record<string, string>;
   let i = 1;
@@ -140,9 +191,11 @@ function executeReadBatch(batchToExecute: NonNullable<typeof opReadBatch>) {
     envMap[`DMNO_1P_INJECT_${i++}`] = opReference;
   });
   const startAt = new Date();
+
+  const authCompletedFn = await checkOpCliAuth();
   // `env -0` splits values by a null character instead of newlines
   // because otherwise we'll have trouble dealing with values that contain newlines
-  spawnAsync('op', 'run --no-masking -- env -0'.split(' '), {
+  await spawnAsync('op', 'run --no-masking -- env -0'.split(' '), {
     env: {
       // have to pass through at least path so it can find `op`, but might need other items too?
       PATH: process.env.PATH!,
@@ -150,7 +203,8 @@ function executeReadBatch(batchToExecute: NonNullable<typeof opReadBatch>) {
       ...envMap,
     },
   })
-    .then((result) => {
+    .then(async (result) => {
+      authCompletedFn?.(true);
       debug(`batched OP request took ${+new Date() - +startAt}ms`);
 
       const lines = result.split('\0');
@@ -168,7 +222,9 @@ function executeReadBatch(batchToExecute: NonNullable<typeof opReadBatch>) {
         });
       }
     })
-    .catch((err) => {
+    .catch(async (err) => {
+      authCompletedFn?.(false);
+
       // have to do special handling of errors because if any IDs are no good, it kills the whole request
       const opErr = processOpCliError(err);
       debug('batch failed', opErr);
@@ -218,7 +274,7 @@ function executeReadBatch(batchToExecute: NonNullable<typeof opReadBatch>) {
 
       if (Object.keys(batchToExecute).length) {
         debug('re-executing remainder of batch', Object.keys(batchToExecute));
-        executeReadBatch(batchToExecute);
+        await executeReadBatch(batchToExecute);
       }
     });
 }
@@ -245,11 +301,11 @@ export async function opCliRead(opReference: string) {
     opReadBatch[opReference].deferredPromises.push(deferred);
 
     if (shouldExecuteBatch) {
-      setTimeout(() => {
+      setTimeout(async () => {
         if (!opReadBatch) throw Error('expected to find op read batch!');
         const batchToExecute = opReadBatch;
         opReadBatch = undefined;
-        executeReadBatch(batchToExecute);
+        await executeReadBatch(batchToExecute);
       }, BATCH_READ_TIMEOUT);
     }
     return deferred.promise;
