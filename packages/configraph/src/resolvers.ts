@@ -461,9 +461,10 @@ export class ResolverContext {
   dependsOnPathsObj: Record<string, boolean> = {};
   get dependsOnPaths() { return _.keys(this.dependsOnPathsObj); }
 
-  get(nodePath: string): any {
+  get(nodePath: string, opts?: { allowMissing?: boolean }): any {
     const node = this.entity?.getConfigNodeByPath(nodePath);
     if (!node) {
+      if (opts?.allowMissing) return;
       throw new Error(`Tried to get config node that does not exist "${nodePath}"`);
     }
 

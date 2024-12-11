@@ -62,13 +62,17 @@ describe('data types', () => {
 
   test('check reusing settings in extends', () => {
     const val = 'THEO@DMNO.DEV';
-    // TODO: can make this more clear
-    // internally the email type uses the string type's toLowerCase option
-    const t = ConfigraphBaseTypes.email({ normalize: true });
-    expect(t.coerce(val)).toBe(val.toLowerCase());
 
-    const t2 = ConfigraphBaseTypes.email({ normalize: false });
-    expect(t2.coerce(val)).toBe(val);
+    // check that string can coerce to lowercase
+    const t1 = ConfigraphBaseTypes.string({ toLowerCase: true });
+    expect(t1.coerce(val)).toBe(val.toLowerCase());
+
+    // internally the email type uses the string type's toLowerCase option
+    const t2 = ConfigraphBaseTypes.email({ normalize: true });
+    expect(t2.coerce(val)).toBe(val.toLowerCase());
+
+    const t3 = ConfigraphBaseTypes.email({ normalize: false });
+    expect(t3.coerce(val)).toBe(val);
   });
 
   describe('additional metadata', () => {

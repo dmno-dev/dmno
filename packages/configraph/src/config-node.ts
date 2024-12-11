@@ -23,7 +23,7 @@ const debug = Debug('configraph:node');
 //! this might be in the wrong place?
 export type ConfigValueOverride = {
   sourceType: string;
-  icon: string;
+  icon?: string;
   sourceLabel?: string;
 
   /** the value of the override */
@@ -297,12 +297,13 @@ export class ConfigraphNode<NodeMetadata = any> {
     // now deal with resolution
     // TODO: need to track dependencies used in coerce/validate/etc
 
-    // TODO: probably want to _skip_ resolution if we have overrides present?
-    const itemResolverCtx = new ResolverContext(this.valueResolver || this);
+    const itemResolverCtx = new ResolverContext((!this.overrides.length && this.valueResolver) || this);
     resolverCtxAls.enterWith(itemResolverCtx);
 
-
-    if (this.valueResolver) {
+    if (this.overrides.length) {
+      this.debug('using override - marking as resolved');
+      this.isResolved = true;
+    } else if (this.valueResolver) {
       if (!this.valueResolver.isFullyResolved) {
         this.debug('running node resolver');
         await this.valueResolver.resolve(itemResolverCtx);
