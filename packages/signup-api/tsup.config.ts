@@ -21,13 +21,13 @@ for (const itemKey in parsedLoadedEnv) {
 export default defineConfig({
   // Entry points
   entry: [ 
-    'src/endpoints/signup.ts',
+    'functions-src/signup.ts',
   ],
   
   sourcemap: true, // Generate sourcemaps
   treeshake: true, // Remove unused code
-  clean: true, // Clean output directory before building
-  outDir: "functions-dist", // Output directory
+  // clean: true, // Clean output directory before building
+  outDir: "functions", // Output directory
   format: ['esm'], // Output format(s)
 
   // add replacements

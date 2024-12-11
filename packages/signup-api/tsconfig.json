@@ -2,9 +2,12 @@
   "extends": "dmno/tsconfigs/dmno-folder",
   "include": [
     "src/**/*.ts",
+    "functions-src/**/*.ts"
   ],
   "compilerOptions": {
-    "lib": [ "ES2023" ],
+    "target": "esnext",
+    "module": "esnext",
+    "lib": [ "esnext" ],
     "baseUrl": ".",
     "paths": {
       "@/components/*": [
@@ -12,6 +15,10 @@
       ],
       "@/utils/*": [
         "src/utils/*"
+      ],
+      "@/types/*": [
+        "src/types/*",
+        "@cloudflare/workers-types"
       ]
     }
   }
