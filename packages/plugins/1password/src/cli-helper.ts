@@ -38,14 +38,21 @@ async function checkOpCliAuth() {
     // except for one further trick, which is to first check if we are already logged in, and resolve right away
     opAuthDeferred = createDeferredPromise();
     const startAt = new Date();
+    let isLoggedIn: boolean;
     try {
       await spawnAsync('op', ['whoami']);
-      opAuthDeferred.resolve(true);
+      isLoggedIn = true;
     } catch (err) {
+      isLoggedIn = false;
+    }
+
+    const whoamiTime = +new Date() - +startAt;
+    debug(`additional whoami check took ${whoamiTime}ms`);
+
+    if (isLoggedIn) {
+      opAuthDeferred.resolve(true);
+    } else {
       return opAuthDeferred.resolve;
-    } finally {
-      const whoamiTime = +new Date() - +startAt;
-      debug(`additional whoami check took ${whoamiTime}ms`);
     }
   }
 }
