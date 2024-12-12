@@ -1,3 +1,5 @@
+import { setTimeout as delay } from 'node:timers/promises';
+import { nextTick } from 'node:process';
 import { expect, test, describe } from 'vitest';
 import { Configraph } from '@dmno/configraph';
 
@@ -180,6 +182,25 @@ describe('pick behaviour', async () => {
         expect(entity.schemaErrors.length).toBe(1);
         expect(entity.schemaErrors[0].message).toContain('cycle');
       });
+    });
+  });
+  describe('pick resolution', () => {
+    test('picked items will wait for source to resolve', async () => {
+      const g = new Configraph();
+      g.createEntity({
+        configSchema: {
+          delayedSource: {
+            value: async () => {
+              await delay(1);
+              return 'resolved-after-delay';
+            },
+          },
+        },
+      });
+      const e = g.createEntity({ pickSchema: ['delayedSource'] });
+      await g.resolveConfig();
+      expect(e.configNodes.delayedSource.resolutionError).toBeUndefined();
+      expect(e.configNodes.delayedSource.resolvedValue).toEqual('resolved-after-delay');
     });
   });
 });

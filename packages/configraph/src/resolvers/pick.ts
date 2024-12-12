@@ -1,4 +1,4 @@
-import { createResolver } from '../resolvers';
+import { createResolver, DependencyNotResolvedResolutionError } from '../resolvers';
 import { ConfigraphNode } from '../config-node';
 
 export function createdPickedValueResolver(
@@ -15,8 +15,9 @@ export function createdPickedValueResolver(
       // since we handle resolution of services in the right order
       // we can assume the picked value will be resolved already (if it was possible at all)
       if (!sourceNode.isResolved) {
-        return new Error('picked value has not been resolved yet');
+        throw new DependencyNotResolvedResolutionError('picked value has not been resolved yet');
       }
+
       if (valueTransform) {
         return valueTransform(sourceNode.resolvedValue);
       } else {
