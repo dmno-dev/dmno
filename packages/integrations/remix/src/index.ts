@@ -63,7 +63,9 @@ export function dmnoRemixVitePlugin(dmnoOptions?: DmnoPluginOptions) {
     process.env.__VERCEL_BUILD_RUNNING // build running via `vercel` cli
     || process.env.NETLIFY // build running remotely on netlify
     || (process.env.NETLIFY_LOCAL && !process.env.NETLIFY_DEV) // build running locally via `netlify` cli
+    || process.env.CF_PAGES // maybe add additional check for /functions folder?
     || dmnoOptions?.injectResolvedConfigAtBuildTime // explicit opt-in
+
   );
 
   return {

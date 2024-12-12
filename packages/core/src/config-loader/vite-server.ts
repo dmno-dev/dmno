@@ -34,6 +34,8 @@ export async function setupViteServer(opts: {
     },
 
     transform(code, id, options) {
+      // TODO: need to detect file types more broadly and can do better detection of if we need to inject at all
+      if (id.endsWith('.json')) return;
       // fairly naive way of doing this... but for now we are replacing `DMNO_CONFIG.SOME_KEY` with `getResolverCtx().get('SOME_KEY')`
       // TODO: we probably should limit which files this applies in
       const fixedCode = new MagicString(code);
