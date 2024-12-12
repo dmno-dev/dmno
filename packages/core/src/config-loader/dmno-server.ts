@@ -1,32 +1,34 @@
 import https from 'node:https';
+
 import path, { dirname } from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { TLSSocket } from 'node:tls';
 import _ from 'lodash-es';
 import getPort from 'get-port';
 import { Server as SocketIoServer } from 'socket.io';
-import uWS from 'uWebSockets.js';
 import launchEditor from 'launch-editor';
 import Debug from 'debug';
 import { CacheMode } from '@dmno/configraph';
 import { createDeferredPromise } from '@dmno/ts-lib';
+import forge from 'node-forge';
 import { ConfigLoader } from './config-loader';
 import { loadOrCreateTlsCerts } from '../lib/certs';
 import { pathExists } from '../lib/fs-utils';
 import { findDmnoServices } from './find-services';
-import { MIME_TYPES_BY_EXT, uwsBodyParser, uwsValidateClientCert } from '../lib/uws-utils';
+import { MIME_TYPES_BY_EXT, bodyParser, writeResponse } from '../lib/web-server-utils';
 import { UseAtPhases } from '../config-engine/configraph-adapter';
 
+
+const debug = Debug('dmno:server');
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // TODO: do we want to allow changing the host? or just always use localhost?
-// see old config-server.ts for details
-
-// TODO: do we want to allow toggling OFF ssl for the web ui?
+// TODO: do we want to specifying  changing the port?
+// TODO: do we want to allow disabling ssl for the web ui?
 
 const DEFAULT_PORT = 3666; // DMNO on a telephone :)
-
 
 function getCurrentPackageNameFromPackageManager() {
   // rely on package manager to detect current package
@@ -51,6 +53,7 @@ export class DmnoServer {
   }) {
     if (process.env.DMNO_PARENT_SERVER) {
       const [serverId, port] = process.env.DMNO_PARENT_SERVER.split('/');
+      debug(`connecting to parent server - ${process.env.DMNO_PARENT_SERVER}`);
       this.serverId = serverId;
       this.serverPort = parseInt(port);
       this.isChildServer = true;
@@ -59,6 +62,7 @@ export class DmnoServer {
       this.serverId = crypto.randomUUID();
       // TODO: read port from workspace yaml file, or just pick an available one?
       this.serverPort = DEFAULT_PORT;
+      debug(`creating parent server - ${this.parentServerInfo}`);
       this.configLoader = new ConfigLoader(!!opts?.watch);
       this.webServerReady = this.bootWsServer();
     } else {
@@ -74,10 +78,10 @@ export class DmnoServer {
     this.certs = await loadOrCreateTlsCerts('localhost', certDir);
   }
 
-
   readonly webServerReady?: Promise<void>;
-  private uwsServer?: uWS.TemplatedApp;
+  private webServer?: https.Server;
   private certs?: Awaited<ReturnType<typeof loadOrCreateTlsCerts>>;
+  private caStore?: forge.pki.CAStore;
 
   private _webServerUrl?: string;
   public get webServerUrl() { return this._webServerUrl; }
@@ -89,16 +93,15 @@ export class DmnoServer {
     if (!this.configLoader) throw new Error('no configLoader');
     await this.configLoader.isReady;
 
-    // TODO: this will try the default port (3666) and select another if not available
-    // we may want to warn the user more directly if this happens?
-    // we also probably want to let the user specify a port in workspace config
+    // this will try the default port (3666) and select another if not available
+    // TODO: we may want to warn the user more directly if this happens?
     this.serverPort = await getPort({ port: DEFAULT_PORT });
 
-    const uwsServerListeningDeferred = createDeferredPromise();
+    const webServerListeningDeferred = createDeferredPromise();
 
     const certDir = `${this.configLoader.workspaceRootPath}/.dmno/certs`;
     this.certs = await loadOrCreateTlsCerts('localhost', certDir);
-
+    this.caStore = forge.pki.createCaStore([forge.pki.certificateFromPem(this.certs!.caCert)]);
 
     const devUiPath = path.resolve(`${__dirname}/../dev-ui-dist/`);
 
@@ -112,135 +115,142 @@ export class DmnoServer {
       }
     }
 
-    this.uwsServer = uWS.SSLApp({
-      cert_file_name: path.join(certDir, 'SERVER.crt'),
-      key_file_name: path.join(certDir, 'SERVER_key.pem'),
-      ca_file_name: path.join(certDir, 'CA.crt'),
-      // passphrase: '1234',
-    })
-      .any('/api/:requestName', async (res, req) => {
-        /* Can't return or yield from here without responding or attaching an abort handler */
-        res.onAborted(() => {
-          res.aborted = true;
-        });
+    const httpsServer = https.createServer({
+      key: this.certs.serverKey,
+      cert: this.certs.serverCert,
+      ca: this.certs.caCert,
+      requestCert: true,
+      // rejectUnauthorized: true, // if enabled you cannot do authentication based on client cert
+      // checkClientCertificate: true
+    });
 
-        if (this.serverId !== req.getHeader('dmno-server-id')) {
-          res.writeStatus('409');
-          res.end(JSON.stringify({ error: 'Incorrect DMNO server ID' }));
-          return;
-        }
+    httpsServer.on('request', async (req, res) => {
+      if (!(req.socket instanceof TLSSocket)) throw new Error('expected TLSSocket');
 
-        if (!uwsValidateClientCert(res, this.certs!.caCert)) return;
+      // console.log(`${req.socket.getProtocol()} ${req.method} request from: ${req.connection.remoteAddress}`);
 
-        const reqName = req.getParameter(0) || '';
-        if (!(reqName in this.commands)) {
-          res.writeStatus('404');
-          res.end(JSON.stringify({ error: 'Not found!' }));
-          return;
-        }
-
-        // parse the body to get function args
-        let args;
-        if (req.getMethod() === 'post') {
-          try {
-            args = await uwsBodyParser(res);
-          } catch (err) {
-            res.writeStatus('400');
-            console.log(err);
-            res.end(JSON.stringify({ error: 'body parsing failed' }));
-            return;
-          }
-        } else if (req.getMethod() === 'get') {
-          args = [];
-        } else {
-          res.writeStatus('404');
-          res.end(JSON.stringify({ error: 'unsupported method' }));
-          return;
-        }
-
-
-        // @ts-ignore
-        const rawResponse = await this.commands[reqName].call(this, ...args);
-
-        /* If we were aborted, you cannot respond */
-        if (!res.aborted) {
-          res.cork(() => {
-            res.end(JSON.stringify(rawResponse));
-          });
-        }
-      })
-      .any('/*', async (res, req) => {
-        res.onAborted(() => {
-          res.aborted = true;
-        });
-
-        if (!uwsValidateClientCert(res, this.certs!.caCert)) return;
-
-        if (!this.opts?.enableWebUi) {
-          res.writeStatus('404');
-          res.writeHeader('content-type', 'text/html');
-          res.end('<h1>dmno web ui is disabled</h1><p>Run `dmno dev` to boot the web dashboard</p>');
-          return;
-        }
-
-        // have to use .any for the route matching to work properly
-        if (req.getMethod() !== 'get') {
-          res.writeStatus('404');
-          res.end(JSON.stringify({ error: 'method not supported' }));
-        }
-
-
-        let reqPath = req.getUrl();
-        if (!reqPath || reqPath === '/') reqPath = '/index.html';
-        // debugWeb('http request', reqPath);
-
-
-        const fullPath = path.join(devUiPath, reqPath);
-        const extension = fullPath.split('.').pop();
-
-        let fileContents = devUiIndexHtml;
-        let contentType = 'text/html';
-
+      if (!req.socket.authorized) {
+        return writeResponse(res, 401, { error: 'Access denied' });
+      } else {
+        // VALIDATE CLIENT CERT (mTLS)
         try {
-          fileContents = await fs.promises.readFile(fullPath, 'utf-8');
-          contentType = (MIME_TYPES_BY_EXT as any)[extension || ''];
-        } catch (err) {
-          if ((err as any).code === 'ENOENT') {
-            if (reqPath.startsWith('/assets/')) {
-              res.writeStatus('404');
-              res.writeHeader('content-type', 'text/html');
-              res.end('<h1>oops! file does not exist</h1>');
-              return;
-            }
-          } else {
-            throw err;
+          const clientCert = req.socket.getPeerCertificate(true);
+          // could check cert subject and issuer - cert.subject.CN cert.issuer.CN
+          const clientCertRaw = clientCert.raw.toString('base64');
+
+          const derKey = forge.util.decode64(clientCertRaw);
+          const asnObj = forge.asn1.fromDer(derKey);
+          const asn1Cert = forge.pki.certificateFromAsn1(asnObj);
+          const pemCert = forge.pki.certificateToPem(asn1Cert);
+          const client = forge.pki.certificateFromPem(pemCert);
+          const certValid = forge.pki.verifyCertificateChain(this.caStore!, [client]);
+          if (!certValid) {
+            return writeResponse(res, 401, { error: 'Unauthorized - bad client cert' });
           }
+        } catch (err) {
+          console.log(err);
+          return writeResponse(res, 401, { error: 'Error validating client cert' });
         }
 
-        if (!res.aborted) {
-          res.cork(() => {
-            res.writeStatus('200');
-            res.writeHeader('content-type', contentType);
-            res.end(fileContents);
-          });
+        // API request handler
+        if (req.url?.startsWith('/api/')) {
+          const [,,requestName] = req.url.split('/');
+
+          // makes sure we are connecting to the right parent server
+          if (this.serverId !== req.headers['dmno-server-id']) {
+            return writeResponse(res, 409, { error: 'Incorrect DMNO server ID' });
+          }
+
+          if (!(requestName in this.commands)) {
+            return writeResponse(res, 404, { error: 'Not found!' });
+          }
+
+          // parse the body to get function args
+          let args;
+          if (req.method?.toLowerCase() === 'post') {
+            try {
+              args = await bodyParser(req);
+            } catch (err) {
+              console.log(err);
+              return writeResponse(res, 400, { error: 'body parsing failed' });
+            }
+          } else if (req.method?.toLowerCase() === 'get') {
+            args = [];
+          } else {
+            return writeResponse(res, 404, { error: 'unsupported method!' });
+          }
+
+          // @ts-ignore
+          const rawResponse = await this.commands[requestName].call(this, ...args);
+          return writeResponse(res, 200, rawResponse);
+
+        // serve the dev ui
+        } else {
+          if (!this.opts?.enableWebUi) {
+            return writeResponse(
+              res,
+              404,
+              '<h1>dmno web ui is disabled</h1><p>Run `dmno dev` to boot the web dashboard</p>',
+              'text/html',
+            );
+          }
+          if (req.method?.toLowerCase() !== 'get') {
+            return writeResponse(res, 404, { error: 'unsupported method!' });
+          }
+
+
+          let reqPath = req.url;
+          if (!reqPath || reqPath === '/') reqPath = '/index.html';
+          // debugWeb('http request', reqPath);
+
+          const fullPath = path.join(devUiPath, reqPath);
+          const extension = fullPath.split('.').pop();
+
+          let fileContents = devUiIndexHtml;
+          let contentType = 'text/html';
+
+          try {
+            fileContents = await fs.promises.readFile(fullPath, 'utf-8');
+            contentType = (MIME_TYPES_BY_EXT as any)[extension || ''];
+          } catch (err) {
+            if ((err as any).code === 'ENOENT') {
+              if (reqPath.startsWith('/assets/')) {
+                return writeResponse(
+                  res,
+                  404,
+                  '<h1>oops! file does not exist</h1>',
+                  'text/html',
+                );
+              }
+            } else {
+              throw err;
+            }
+          }
+
+
+          return writeResponse(res, 200, fileContents, contentType);
         }
-      })
-      .listen(this.serverPort, (token) => {
-        this._webServerUrl = `https://localhost:${this.serverPort}`;
-        if (!token) throw new Error('uWS failed to bind to port?');
-        uwsServerListeningDeferred.resolve();
-      });
+      }
+    });
+
+    this.webServer = httpsServer;
+
+    httpsServer.listen(this.serverPort, () => {
+      let host = (httpsServer.address() as any).address;
+      if (host === '::') host = 'localhost';
+      this._webServerUrl = `https://${host}:${this.serverPort}`;
+      webServerListeningDeferred.resolve();
+    });
 
     process.on('exit', (code) => {
       // TODO: can be smarter about tracking what needs to be shut down
       try {
-        this.uwsServer?.close();
+        this.webServer?.close();
       } catch (err) {
-
       }
     });
 
-    await uwsServerListeningDeferred.promise;
+    await webServerListeningDeferred.promise;
 
     if (this.opts?.enableWebUi) {
       await this.initSocketIoServer();
@@ -252,7 +262,7 @@ export class DmnoServer {
 
     const debugWeb = Debug('dmno:webserver');
 
-    this.socketIoServer = new SocketIoServer({
+    this.socketIoServer = new SocketIoServer(this.webServer, {
       path: '/ws',
       serveClient: false,
       // allowRequest: (req, callback) => {
@@ -261,7 +271,6 @@ export class DmnoServer {
       // },
       cors: { origin: '*' },
     });
-    this.socketIoServer.attachApp(this.uwsServer);
     this.socketIoServer.on('connection', (socket) => {
       debugWeb('socket connection');
       // let handshake = socket.handshake;
@@ -296,9 +305,8 @@ export class DmnoServer {
     });
   }
 
-
   shutdown() {
-    this.uwsServer?.close();
+    this.webServer?.close();
     this.configLoader?.shutdown().catch(() => {
       console.log('error shutting down dmno vite dev server');
     });
@@ -310,25 +318,19 @@ export class DmnoServer {
     requestName: K,
     ...args: Parameters<typeof this.commands[K]>
   ): Promise<ReturnType<typeof this.commands[K]>> {
-    // In theory, we could check if we are currently in the parent server
-    // and if so skip communicating over http/uws
-    // but the overhead seems negligible?
-
-    // if not a child, we will wait for the config loader to finish loading
+    // we can bypass the http request if this is not a child server communicating with a parent
     if (!this.isChildServer) {
+      // must wait for the config loader to finish loading
       await this.configLoader?.isReady;
-
-      // we can bypass the http request if this is not a child server
-      // but the overhead is very minimal, so we will re-enable this later
       return (this.commands[requestName] as any).apply(this, args);
     }
 
-    // have to wait for server to be ready before we can send a request to parent server
+    // see above - this waits for certs and workspace info to be ready
     await this.webServerReady;
 
+    // makes a http request using mTLS
     const rawResult = await this.mTlsFetchHelper(`/api/${requestName}`, args);
     const result = JSON.parse(rawResult as any);
-    // const result = await rawResult.json();
     return result;
   }
 
@@ -372,14 +374,12 @@ export class DmnoServer {
           }
           deferred.reject(new Error(`Internal DMNO request failed - [${res.statusCode}] ${errorMessage}`));
         } else {
-          // console.log('Response from server:', data);
           deferred.resolve(data);
         }
       });
     });
 
     req.on('error', (e) => {
-      // console.error('errp', e);
       deferred.reject(e);
     });
 

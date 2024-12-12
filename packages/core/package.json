@@ -141,7 +141,6 @@
     "socket.io": "^4.8.0",
     "svgo": "catalog:",
     "typescript": "catalog:",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#semver:^20.49.0",
     "validate-npm-package-name": "^5.0.0",
     "vite": "catalog:",
     "vite-node": "catalog:",

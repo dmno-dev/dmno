@@ -501,6 +501,8 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
         **/.dmno/.icon-cache
         # local config overrides
         **/.dmno/.env.local
+        # local ssl certs
+        **/.dmno/certs
       `;
       await fs.promises.writeFile(gitIgnorePath, gitIgnore);
       console.log(setupStepMessage(`.gitignore ${createdGitIgnore ? 'created' : 'updated'} with dmno files!`, { path: gitIgnorePath }));
@@ -532,44 +534,4 @@ export async function initDmnoForService(workspaceInfo: ScannedWorkspaceInfo, se
       docs: '/guides/typescript',
     }));
   }
-
-  // const tsConfigFiles = await (
-  //   new fdir() // eslint-disable-line new-cap
-  //     .withRelativePaths()
-  //     .glob('./tsconfig.json', './tsconfig.*.json', 'jsconfig.json')
-  //     .withMaxDepth(0)
-  //     .crawl(service.path)
-  //     .withPromise()
-  // );
-  // if (!tsConfigFiles.length) {
-  //   console.log(setupStepMessage('Failed to inject dmno types - no tsconfig/jsconfig found', {
-  //     type: 'failure',
-  //     docs: '/guides/typescript',
-  //   }));
-  // }
-  // for (const tsConfigFileName of tsConfigFiles) {
-  //   const tsConfigPath = `${service.path}/${tsConfigFileName}`;
-  //   const originalTsConfigContents = (await fs.promises.readFile(tsConfigPath)).toString();
-  //   const updatedTsConfigContents = await injectDmnoTypesIntoTsConfig(originalTsConfigContents);
-  //   if (updatedTsConfigContents) {
-  //     // TODO: maybe want to confirm with the user and show a diff?
-  //     await fs.promises.writeFile(tsConfigPath, updatedTsConfigContents);
-
-  //     console.log(setupStepMessage(`injected dmno types into ${tsConfigFileName}`, {
-  //       path: tsConfigPath,
-  //       // docs: suggestedDmnoIntegration.docs,
-  //     }));
-  //   } else {
-  //     console.log(setupStepMessage('tsconfig already includes dmno types', {
-  //       type: 'noop',
-  //       path: tsConfigPath,
-  //       // docs: suggestedDmnoIntegration.docs,
-  //     }));
-  //   }
-  // }
-
-
-  // SECRETS PLUGINS
-  // TODO
-  // if (service.isRoot) {}
 }
