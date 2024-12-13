@@ -62,6 +62,9 @@ export type DmnoDataTypeMetadata = {
 
   /** opt in/out of build-type code replacements - default is false unless changed at the service level */
   dynamic?: boolean;
+
+  /** set to false to keep this item out of DMNO_CONFIG */
+  includeInDmnoConfig?: boolean,
 };
 
 // way more legible, but super weird that we are involving a class like this
@@ -142,7 +145,11 @@ DmnoEntityMetadata, DmnoDataTypeMetadata, DmnoConfigraphNode
   getInjectedEnvJSON(): InjectedDmnoEnv {
     // some funky ts stuff going on here... doesn't like how I set the values,
     // but otherwise the type seems to work ok?
-    const env: any = _.mapValues(this.configNodes, (item) => item.toInjectedJSON());
+    const env: any = {};
+    _.each(this.configNodes, (item, itemKey) => {
+      if (!item.includeInDmnoConfig) return;
+      env[itemKey] = item.toInjectedJSON();
+    });
     // simple way to get settings passed through to injected stuff - we may want
     env.$SETTINGS = this.settings;
     return env as any;
@@ -157,6 +164,10 @@ export class DmnoConfigraphNode extends ConfigraphNode<DmnoDataTypeMetadata> {
 
   get isSensitive() {
     return !!this.type.getMetadata('sensitive');
+  }
+
+  get includeInDmnoConfig() {
+    return this.type.getMetadata('includeInDmnoConfig') !== false;
   }
 
   get isDynamic() {

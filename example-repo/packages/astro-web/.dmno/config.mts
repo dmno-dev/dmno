@@ -20,6 +20,18 @@ export default defineDmnoService({
     'SOME_API_KEY',
   ],
   schema: {
+
+    INTERNAL_ITEM: {
+      description: 'will not be included in DMNO_CONFIG',
+      value: 'dont-include-me',
+      includeInDmnoConfig: false,
+    },
+
+    FN_INTERNAL_CHECK: {
+      value: () => DMNO_CONFIG.INTERNAL_ITEM,
+    },
+
+
     OP_TOKEN: { extends: OnePasswordTypes.serviceAccountToken },
 
     FOO: {

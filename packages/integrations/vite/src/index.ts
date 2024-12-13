@@ -20,7 +20,7 @@ async function reloadDmnoConfig() {
   (process as any).dmnoServer ||= new DmnoServer({ watch: true });
   dmnoServer = (process as any).dmnoServer;
   const resolvedService = await dmnoServer.getCurrentPackageConfig();
-  const injectedConfig = resolvedService.injectedEnv;
+  const injectedConfig = resolvedService.injectedDmnoEnv;
   dmnoConfigValid = resolvedService.serviceDetails.isValid;
   configItemKeysAccessed = {};
 

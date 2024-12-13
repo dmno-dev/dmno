@@ -17,6 +17,7 @@ const OnePasswordServiceAccountToken = createDmnoDataType({
   sensitive: {
     redactMode: 'show_last_2',
   },
+  includeInDmnoConfig: false,
 });
 
 const OnePasswordUUID = createDmnoDataType({

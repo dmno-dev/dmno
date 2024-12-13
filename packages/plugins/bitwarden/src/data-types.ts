@@ -16,6 +16,7 @@ const BitwardenMachineIdentityAccessToken = createDmnoDataType({
     icon: BITWARDEN_ICON,
   },
   sensitive: true,
+  includeInDmnoConfig: false,
 });
 
 const BitwardenSecretId = createDmnoDataType({
@@ -29,6 +30,7 @@ const BitwardenSecretId = createDmnoDataType({
   ui: {
     icon: BITWARDEN_ICON,
   },
+  includeInDmnoConfig: false,
 });
 
 const BitwardenProjectId = createDmnoDataType({
@@ -42,6 +44,7 @@ const BitwardenProjectId = createDmnoDataType({
   ui: {
     icon: BITWARDEN_ICON,
   },
+  includeInDmnoConfig: false,
 });
 
 

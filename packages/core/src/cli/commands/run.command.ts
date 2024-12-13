@@ -62,25 +62,18 @@ program.action(async (_command, opts: {
   //! await workspace.resolveConfig();
   checkForConfigErrors(service);
 
-  const injectedJson = await ctx.dmnoServer.makeRequest('getInjectedJson', ctx.selectedService.serviceName);
+  const {
+    injectedProcessEnv,
+    injectedDmnoEnv,
+  } = await ctx.dmnoServer.makeRequest('getServiceResolvedConfig', ctx.selectedService.serviceName);
 
   const fullInjectedEnv = {
+    // TODO: not sure if we want to overwrite or not
     ...process.env,
+    ...injectedProcessEnv,
   };
-  // we need to add any config items that are defined in dmno config, but we dont want to modify existing items
-  for (const key in injectedJson) {
-    // must skip $SETTINGS
-    if (key.startsWith('$')) continue;
 
-    // TODO: need to think about how we deal with nested items
-    // TODO: let config nodes expose themselves in inject env vars with aliases
-    if (!Object.hasOwn(process.env, key)) {
-      const strVal = injectedJson[key]?.value?.toString();
-      if (strVal !== undefined) fullInjectedEnv[key] = strVal;
-    }
-  }
-
-  fullInjectedEnv.DMNO_INJECTED_ENV = JSON.stringify(injectedJson);
+  fullInjectedEnv.DMNO_INJECTED_ENV = JSON.stringify(injectedDmnoEnv);
   // this is what signals to the child process that is has a parent dmno server to use
   fullInjectedEnv.DMNO_PARENT_SERVER = ctx.dmnoServer.parentServerInfo;
 

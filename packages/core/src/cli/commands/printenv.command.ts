@@ -34,13 +34,14 @@ program.action(async (itemPath: string, opts: {}, thisCommand) => {
   checkForSchemaErrors(workspace);
   checkForConfigErrors(service);
 
-
-  const injectedEnv = await ctx.dmnoServer.makeRequest('getInjectedJson', service.serviceName);
+  // TODO: process env version or dmno env? what if the key is renamed as an env var? flag to select?
   // TODO: could be smarter about not caring about errors unless they affect the item(s) being printed
   // TODO: support nested paths
   // TODO: do we want to support multiple items?
 
-  if (!injectedEnv[itemPath]) {
+  const { injectedProcessEnv } = await ctx.dmnoServer.makeRequest('getServiceResolvedConfig', service.serviceName);
+
+  if (!(itemPath in injectedProcessEnv)) {
     throw new CliExitError(`Config item ${itemPath} not found in config schema`, {
       details: [
         'Perhaps you meant one of:',
@@ -49,10 +50,9 @@ program.action(async (itemPath: string, opts: {}, thisCommand) => {
     });
   }
 
-
   // TODO: what to do about formatting of arrays/objects/etc
   // now just print the resolved value
-  ctx.logOutput(injectedEnv[itemPath].value);
+  ctx.logOutput(injectedProcessEnv[itemPath]);
 });
 
 export const PrintEnvCommand = program;
