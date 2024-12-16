@@ -180,8 +180,8 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
           this.parentType = ConfigraphBaseTypes[this.typeDef.extends](typeInstanceOptions as any);
         }
       // deal with uninitialized case - `extends: ConfigraphBaseTypes.number`
-      } else if (_.isFunction(this.typeDef.extends)) {
-        const initializedDataType = this.typeDef.extends(typeInstanceOptions as any);
+      } else if (_.isFunction(this.typeDef.extends) && (this.typeDef.extends as any)._isConfigraphTypeFactory) {
+        const initializedDataType = this.typeDef.extends();
         if (initializedDataType instanceof ConfigraphDataType) {
           this.parentType = initializedDataType;
         } else {
@@ -546,17 +546,25 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
 export class ConfigraphDataTypesRegistry<Metadata = {}> {
   // eslint-disable-next-line class-methods-use-this
   create<TypeSettings = {}>(
-    opts: ConfigraphDataTypeDefinition<TypeSettings, Metadata>,
+    dataTypeDef: (
+      // most cases we pass in a static object
+      ConfigraphDataTypeDefinition<TypeSettings, Metadata>
+      // but we can pass in a function if the data type accepts additional usage options
+      | ((uo?: TypeSettings) => ConfigraphDataTypeDefinition<TypeSettings, Metadata>)
+    ),
   ): ConfigraphDataTypeFactoryFn<TypeSettings, Metadata> {
     const typeRegistry = this;
-    const typeFactoryFn = (usageOpts?: TypeSettings) => (
-      new ConfigraphDataType<TypeSettings, Metadata>(
-        opts,
+    const typeFactoryFn = (usageOpts?: TypeSettings) => {
+      const dataTypeObj = _.isFunction(dataTypeDef) ? dataTypeDef(usageOpts) : dataTypeDef;
+
+      return new ConfigraphDataType<TypeSettings, Metadata>(
+        _.isFunction(dataTypeDef) ? dataTypeDef(usageOpts) : dataTypeDef,
         usageOpts ?? {} as TypeSettings,
         typeFactoryFn,
         typeRegistry,
-      )
-    );
+      );
+    };
+    typeFactoryFn._isConfigraphTypeFactory = true;
     return typeFactoryFn;
   }
 }
@@ -604,60 +612,60 @@ export type StringDataTypeSettings = {
  * Represents a generic string data type.
  * @category Base Types
  */
-const StringDataType = createConfigraphDataType<StringDataTypeSettings>({
-  typeLabel: 'dmno/string',
-  extends: PrimitiveBaseType,
-  injectable: false,
-  ui: { icon: 'carbon:string-text' },
+const StringDataType = createConfigraphDataType((settings?: StringDataTypeSettings) => {
+  return ({
+    typeLabel: 'dmno/string',
+    extends: PrimitiveBaseType,
+    injectable: false,
+    ui: { icon: 'carbon:string-text' },
 
-  coerce(rawVal) {
-    const settings = this.typeInstanceOptions;
-    if (_.isNil(rawVal)) return undefined;
-    let val = _.isString(rawVal) ? rawVal : rawVal.toString();
+    coerce(rawVal) {
+      if (_.isNil(rawVal)) return undefined;
+      let val = _.isString(rawVal) ? rawVal : rawVal.toString();
 
-    if (settings?.toUpperCase) val = val.toUpperCase();
-    if (settings?.toLowerCase) val = val.toLowerCase();
+      if (settings?.toUpperCase) val = val.toUpperCase();
+      if (settings?.toLowerCase) val = val.toLowerCase();
 
-    return val;
-  },
+      return val;
+    },
 
-  validate(val: string) {
-    const settings = this.typeInstanceOptions;
+    validate(val: string) {
     // we support returning multiple errors and our base types use this pattern
     // but many user defined types should just throw the first error they encounter
-    const errors = [] as Array<ValidationError>;
+      const errors = [] as Array<ValidationError>;
 
-    // special handling to not allow empty strings (unless explicitly allowed)
-    if (val === '' && !settings?.allowEmpty) {
-      return [new ValidationError('If set, string must not be empty')];
-    }
-
-    if (settings?.minLength !== undefined && val.length < settings.minLength) {
-      errors.push(new ValidationError(`Length must be more than ${settings.minLength}`));
-    }
-    if (settings?.maxLength !== undefined && val.length > settings.maxLength) {
-      errors.push(new ValidationError(`Length must be less than ${settings.maxLength}`));
-    }
-    if (settings?.isLength !== undefined && val.length !== settings.isLength) {
-      errors.push(new ValidationError(`Length must be exactly ${settings.isLength}`));
-    }
-
-    if (settings?.startsWith && !val.startsWith(settings.startsWith)) {
-      errors.push(new ValidationError(`Value must start with "${settings.startsWith}"`));
-    }
-    if (settings?.endsWith && !val.endsWith(settings.endsWith)) {
-      errors.push(new ValidationError(`Value must start with "${settings.endsWith}"`));
-    }
-
-    if (settings?.matches) {
-      const regex = _.isString(settings.matches) ? new RegExp(settings.matches) : settings.matches;
-      const matches = val.match(regex);
-      if (!matches) {
-        errors.push(new ValidationError(`Value must match regex "${settings.matches}"`));
+      // special handling to not allow empty strings (unless explicitly allowed)
+      if (val === '' && !settings?.allowEmpty) {
+        return [new ValidationError('If set, string must not be empty')];
       }
-    }
-    return errors.length ? errors : true;
-  },
+
+      if (settings?.minLength !== undefined && val.length < settings.minLength) {
+        errors.push(new ValidationError(`Length must be more than ${settings.minLength}`));
+      }
+      if (settings?.maxLength !== undefined && val.length > settings.maxLength) {
+        errors.push(new ValidationError(`Length must be less than ${settings.maxLength}`));
+      }
+      if (settings?.isLength !== undefined && val.length !== settings.isLength) {
+        errors.push(new ValidationError(`Length must be exactly ${settings.isLength}`));
+      }
+
+      if (settings?.startsWith && !val.startsWith(settings.startsWith)) {
+        errors.push(new ValidationError(`Value must start with "${settings.startsWith}"`));
+      }
+      if (settings?.endsWith && !val.endsWith(settings.endsWith)) {
+        errors.push(new ValidationError(`Value must start with "${settings.endsWith}"`));
+      }
+
+      if (settings?.matches) {
+        const regex = _.isString(settings.matches) ? new RegExp(settings.matches) : settings.matches;
+        const matches = val.match(regex);
+        if (!matches) {
+          errors.push(new ValidationError(`Value must match regex "${settings.matches}"`));
+        }
+      }
+      return errors.length ? errors : true;
+    },
+  });
 });
 
 /**
@@ -688,27 +696,25 @@ export type NumberDataTypeSettings = {
  * Represents a generic number data type.
  * @category Base Types
  */
-const NumberDataType = createConfigraphDataType<NumberDataTypeSettings>({
+const NumberDataType = createConfigraphDataType((settings?: NumberDataTypeSettings) => ({
   typeLabel: 'dmno/number',
   extends: PrimitiveBaseType,
   injectable: false,
   ui: { icon: 'carbon:string-integer' },
   validate(val) {
-    const settings = this.typeInstanceOptions || {};
     const errors = [] as Array<ValidationError>;
-    if (settings.min !== undefined && val < settings.min) {
-      errors.push(new ValidationError(`Min value is ${settings.min}`));
+    if (settings?.min !== undefined && val < settings?.min) {
+      errors.push(new ValidationError(`Min value is ${settings?.min}`));
     }
-    if (settings.max !== undefined && val > settings.max) {
-      errors.push(new ValidationError(`Max value is ${settings.max}`));
+    if (settings?.max !== undefined && val > settings?.max) {
+      errors.push(new ValidationError(`Max value is ${settings?.max}`));
     }
-    if (settings.isDivisibleBy !== undefined && val % settings.isDivisibleBy !== 0) {
-      errors.push(new ValidationError(`Value must be divisible by ${settings.isDivisibleBy}`));
+    if (settings?.isDivisibleBy !== undefined && val % settings.isDivisibleBy !== 0) {
+      errors.push(new ValidationError(`Value must be divisible by ${settings?.isDivisibleBy}`));
     }
     return errors.length ? errors : true;
   },
   coerce(val) {
-    const settings = this.typeInstanceOptions || {};
     let numVal!: number;
     if (_.isString(val)) {
       const parsed = parseFloat(val);
@@ -720,21 +726,21 @@ const NumberDataType = createConfigraphDataType<NumberDataTypeSettings>({
       throw new CoercionError(`Cannot convert ${val} to number`);
     }
 
-    if (settings.coerceToMinMaxRange) {
-      if (settings.min !== undefined) numVal = Math.max(settings.min, numVal);
-      if (settings.max !== undefined) numVal = Math.min(settings.max, numVal);
+    if (settings?.coerceToMinMaxRange) {
+      if (settings?.min !== undefined) numVal = Math.max(settings?.min, numVal);
+      if (settings?.max !== undefined) numVal = Math.min(settings?.max, numVal);
     }
 
     // not sure if we want to coerce to integer by default, versus just checking
-    if (settings.isInt === true || settings.precision === 0) {
+    if (settings?.isInt === true || settings?.precision === 0) {
       numVal = Math.round(numVal);
-    } else if (settings.precision) {
+    } else if (settings?.precision) {
       const p = 10 ** settings.precision;
       numVal = Math.round(numVal * p) / p;
     }
     return numVal;
   },
-});
+}));
 
 
 const BooleanDataType = createConfigraphDataType({
@@ -771,20 +777,19 @@ const BooleanDataType = createConfigraphDataType({
 const URL_REGEX = /(?:^|\s)((https?:\/\/)?(?:localhost|[\w-]+(?:\.[\w-]+)+)(:\d+)?(\/\S*)?)/;
 // swapped to above to allow localhost
 // /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/;
-const UrlDataType = createConfigraphDataType<{
+const UrlDataType = createConfigraphDataType((settings?: {
   prependProtocol?: boolean
   normalize?: boolean,
   allowedDomains?: Array<string>
-}>({
+}) => ({
   typeLabel: 'dmno/url',
-  extends: (settings) => StringDataType({
+  extends: StringDataType({
     ...settings?.normalize && { toLowerCase: true },
   }),
   injectable: false,
   ui: { icon: 'carbon:url' },
   typeDescription: 'standard URL',
   coerce(rawVal) {
-    const settings = this.typeInstanceOptions;
     if (settings?.prependProtocol && !rawVal.startsWith('https://')) {
       return `https://${rawVal}`;
     }
@@ -792,7 +797,6 @@ const UrlDataType = createConfigraphDataType<{
   },
 
   validate(val) {
-    const settings = this.typeInstanceOptions;
     // if invalid, this will throw - and will be converted into a ValidationError
     const url = new URL(val);
     if (
@@ -803,7 +807,7 @@ const UrlDataType = createConfigraphDataType<{
     }
     return true;
   },
-});
+}));
 
 
 const SimpleObjectDataType = createConfigraphDataType({
@@ -839,7 +843,7 @@ type ObjectDataTypeSettings = {
   allowEmpty?: boolean,
 };
 
-const _RawObjectDataType = createConfigraphDataType<ObjectDataTypeSettings>({
+const _RawObjectDataType = createConfigraphDataType((settings?: ObjectDataTypeSettings) => ({
   typeLabel: 'dmno/object',
   extends: PrimitiveBaseType,
   injectable: false,
@@ -858,14 +862,13 @@ const _RawObjectDataType = createConfigraphDataType<ObjectDataTypeSettings>({
     }
   },
   validate(val) {
-    const settings = this.typeInstanceOptions;
     // special handling to not allow empty strings (unless explicitly allowed)
     if (_.isEmpty(val) && !settings?.allowEmpty) {
       return [new ValidationError('If set, object must not be empty')];
     }
     return true;
   },
-});
+}));
 const ObjectDataType = (
   childrenSchema: ObjectDataTypeSettings['children'],
   otherSettings?: Omit<ObjectDataTypeSettings, 'children'>,
@@ -897,14 +900,14 @@ export type ArrayDataTypeSettings = {
    */
   isLength?: number;
 };
-const ArrayDataType = createConfigraphDataType<ArrayDataTypeSettings>({
+const ArrayDataType = createConfigraphDataType((settings?: ArrayDataTypeSettings) => ({
   typeLabel: 'dmno/array',
   extends: PrimitiveBaseType,
   injectable: false,
   ui: { icon: 'tabler:brackets' }, // square brackets
   // TODO: validate checks if it's an array
   // helper to coerce csv string into array of strings
-});
+}));
 
 
 /**
@@ -942,14 +945,13 @@ export type DictionaryDataTypeSettings = {
    */
   keyDescription?: string;
 };
-const DictionaryDataType = createConfigraphDataType<DictionaryDataTypeSettings>({
+const DictionaryDataType = createConfigraphDataType((settings?: DictionaryDataTypeSettings) => ({
   typeLabel: 'dmno/dictionary',
   extends: PrimitiveBaseType,
   injectable: false,
   ui: { icon: 'tabler:code-asterisk' }, // curly brackets with an asterisk inside
   // TODO: validate checks if it's an object
-
-});
+}));
 
 type PossibleEnumValues = string | number | boolean; // do we need explicitly allow null/undefined?
 type ExtendedEnumDescription = {
@@ -967,13 +969,12 @@ type EnumDataTypeSettings = (
   | Record<string, Omit<ExtendedEnumDescription, 'value'>>
 );
 
-const EnumDataType = createConfigraphDataType<EnumDataTypeSettings>({
+const EnumDataType = createConfigraphDataType((settings?: EnumDataTypeSettings) => ({
   typeLabel: 'dmno/enum',
   extends: PrimitiveBaseType,
   injectable: false,
   ui: { icon: 'material-symbols-light:category' }, // a few shapes... not sure about this one
   validate(val) {
-    const settings = this.typeInstanceOptions;
     let possibleValues: Array<any>;
     if (_.isPlainObject(settings)) {
       possibleValues = _.keys(settings);
@@ -991,14 +992,12 @@ const EnumDataType = createConfigraphDataType<EnumDataTypeSettings>({
       });
     }
   },
-});
+}));
 
 const EMAIL_REGEX = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-const EmailDataType = createConfigraphDataType<{
-  normalize?: boolean,
-}>({
+const EmailDataType = createConfigraphDataType((settings?: { normalize?: boolean }) => ({
   typeLabel: 'dmno/email',
-  extends: (settings) => StringDataType({
+  extends: StringDataType({
     ...settings?.normalize && { toLowerCase: true },
   }),
   injectable: false,
@@ -1010,30 +1009,29 @@ const EmailDataType = createConfigraphDataType<{
     if (result) return true;
     return new ValidationError('Value must be a valid email address');
   },
-});
+}));
 
 const IP_V4_ADDRESS_REGEX = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/;
 const IP_V6_ADDRESS_REGEX = /^(?:(?:[a-fA-F\d]{1,4}:){7}(?:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){6}(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){5}(?::(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,2}|:)|(?:[a-fA-F\d]{1,4}:){4}(?:(?::[a-fA-F\d]{1,4}){0,1}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,3}|:)|(?:[a-fA-F\d]{1,4}:){3}(?:(?::[a-fA-F\d]{1,4}){0,2}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,4}|:)|(?:[a-fA-F\d]{1,4}:){2}(?:(?::[a-fA-F\d]{1,4}){0,3}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,5}|:)|(?:[a-fA-F\d]{1,4}:){1}(?:(?::[a-fA-F\d]{1,4}){0,4}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,6}|:)|(?::(?:(?::[a-fA-F\d]{1,4}){0,5}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,7}|:)))(?:%[0-9a-zA-Z]{1,})?$/;
-const ipAddressDataType = createConfigraphDataType<{
+const ipAddressDataType = createConfigraphDataType((settings?: {
   version?: 4 | 6,
   normalize?: boolean,
-}>({
+}) => ({
   typeLabel: 'dmno/ipAddress',
-  extends: (settings) => StringDataType({
+  extends: StringDataType({
     ...settings?.normalize && { toLowerCase: true },
   }),
   injectable: false,
   ui: { icon: 'iconoir:ip-address-tag' },
   typeDescription: 'ip v4 or v6 address',
   validate(val) {
-    const settings = this.typeInstanceOptions;
     // default to v4
     const regex = settings?.version === 6 ? IP_V6_ADDRESS_REGEX : IP_V4_ADDRESS_REGEX;
     const result = regex.test(val);
     if (result) return true;
     return new ValidationError('Value must be a valid IP address');
   },
-});
+}));
 
 const PortDataType = createConfigraphDataType({
   typeLabel: 'dmno/port',
@@ -1051,12 +1049,12 @@ const PortDataType = createConfigraphDataType({
 });
 
 const SEMVER_REGEX = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
-const SemverDataType = createConfigraphDataType<{
+const SemverDataType = createConfigraphDataType((settings?: {
   normalize?: boolean,
   // range?: string, // ex.
-}>({
+}) => ({
   typeLabel: 'dmno/semver',
-  extends: (settings) => StringDataType({
+  extends: StringDataType({
     ...settings?.normalize && { toLowerCase: true },
   }),
   injectable: false,
@@ -1067,7 +1065,7 @@ const SemverDataType = createConfigraphDataType<{
     if (result) return true;
     return new ValidationError('Value must be a valid semantic version string');
   },
-});
+}));
 
 // https://rgxdb.com/r/526K7G5W
 const ISO_DATE_REGEX = /^(?:[+-]?\d{4}(?!\d{2}\b))(?:(-?)(?:(?:0[1-9]|1[0-2])(?:\1(?:[12]\d|0[1-9]|3[01]))?|W(?:[0-4]\d|5[0-2])(?:-?[1-7])?|(?:00[1-9]|0[1-9]\d|[12]\d{2}|3(?:[0-5]\d|6[1-6])))(?:[T\s](?:(?:(?:[01]\d|2[0-3])(?:(:?)[0-5]\d)?|24:?00)(?:[.,]\d+(?!:))?)?(?:\2[0-5]\d(?:[.,]\d+)?)?(?:[zZ]|(?:[+-])(?:[01]\d|2[0-3]):?(?:[0-5]\d)?)?)?)?$/;

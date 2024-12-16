@@ -1,4 +1,5 @@
-import { createDmnoDataType, DmnoBaseTypes } from 'dmno';
+import { execa } from 'execa';
+import { createDmnoDataType, DmnoBaseTypes, ResolutionError } from 'dmno';
 
 const gitCommonTypeInfo = {
   ui: {
@@ -43,25 +44,60 @@ export const GitDataTypes = {
     },
     ...gitCommonTypeInfo,
   }),
-  BranchName: createDmnoDataType({
-    typeLabel: 'git/branchName',
-    typeDescription: 'Name of a git branch',
-    externalDocs: {
-      description: 'Git branches (Atlassian docs)',
-      url: 'https://www.atlassian.com/git/tutorials/using-branches',
-    },
-    ...gitCommonTypeInfo,
-  }),
-  CommitSha: createDmnoDataType({
-    typeLabel: 'git/commitSha',
-    typeDescription: 'Unique id of a specific git commit - also known as “SHA” or “hash”',
-    // full SHA is 40 chars, but it is common to use shortened versions, so we may want multiple types or options
-    externalDocs: {
-      description: 'What are Git Hashes? (Graphite docs)',
-      url: 'https://graphite.dev/guides/git-hashing',
-    },
-    ...gitCommonTypeInfo,
-  }),
+  BranchName: createDmnoDataType(
+    (opts?: {
+      /** attempt to populate by calling git commands on the local machine */
+      autoPopulate?: boolean
+    }) => ({
+      typeLabel: 'git/branchName',
+      typeDescription: 'Name of a git branch',
+      externalDocs: {
+        description: 'Git branches (Atlassian docs)',
+        url: 'https://www.atlassian.com/git/tutorials/using-branches',
+      },
+      ...opts?.autoPopulate && {
+        value: async () => {
+          try {
+            const result = await execa('git', ['branch', '--show-current'].filter((a) => !!a));
+            return result.stdout;
+          } catch (err) {
+            throw new ResolutionError(`local git command failed - ${(err as Error).message}`);
+          }
+        },
+      },
+      ...gitCommonTypeInfo,
+    }),
+  ),
+  CommitSha: createDmnoDataType(
+    (opts?: {
+      /** attempt to populate by calling git commands on the local machine */
+      autoPopulate?: boolean
+      /** whether to use the long or short version of the hash, defaults to long */
+      format?: 'short' | 'long',
+    }) => ({
+      typeLabel: 'git/commitSha',
+      typeDescription: 'Unique id of a specific git commit - also known as “SHA” or “hash”',
+      externalDocs: {
+        description: 'What are Git Hashes? (Graphite docs)',
+        url: 'https://graphite.dev/guides/git-hashing',
+      },
+      // TODO: add validation of short/long
+      ...opts?.autoPopulate && {
+        value: async () => {
+          try {
+            const result = await execa(
+              'git',
+              ['rev-parse', opts?.format === 'short' ? '--short' : '', 'HEAD'].filter((a) => !!a),
+            );
+            return result.stdout;
+          } catch (err) {
+            throw new ResolutionError(`local git command failed - ${(err as Error).message}`);
+          }
+        },
+      },
+      ...gitCommonTypeInfo,
+    }),
+  ),
   CommitMessage: createDmnoDataType({
     typeLabel: 'git/commitMessage',
     typeDescription: 'Descriptive message describing the commit',

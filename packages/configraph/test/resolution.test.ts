@@ -8,8 +8,8 @@ const testResolver = (opts?: {
   fail?: boolean | 'unexpected',
   resolveToValue?: any,
 }) => createResolver({
-  label: 'failed-resolver',
-  resolve(ctx) {
+  label: 'test-resolver',
+  resolve() {
     if (opts?.fail === 'unexpected') {
       throw new Error('unexpected error');
     } else if (opts?.fail === true) {
@@ -57,24 +57,40 @@ describe('graph resolution', () => {
     const g = new Configraph();
     const e = g.createEntity({
       configSchema: {
-        resolutionError: { value: testResolver({ fail: true }) },
-        unexpectedError: { value: testResolver({ fail: 'unexpected' }) },
+        resolutionErr: { value: testResolver({ fail: true }) },
+        unexpectedErr: { value: testResolver({ fail: 'unexpected' }) },
       },
     });
     await g.resolveConfig();
-    expect(e.configNodes.resolutionError.resolutionError).toBeInstanceOf(ResolutionError);
-    expect(e.configNodes.unexpectedError.resolutionError).toBeInstanceOf(ResolutionError);
+    expect(e.configNodes.resolutionErr.resolutionError).toBeInstanceOf(ResolutionError);
+    expect(e.configNodes.unexpectedErr.resolutionError).toBeInstanceOf(ResolutionError);
   });
 
-  test('referencing non-existant nodes results in a resolution error', async () => {
+  test('resolver does not run if an override is present', async () => {
     const g = new Configraph();
     const e = g.createEntity({
       configSchema: {
-        fn: { value: (ctx) => ctx.get('does-not-exist') },
+        resolutionErr: { value: testResolver({ fail: true }) },
+      },
+    });
+    await g.processConfig();
+    e.configNodes.resolutionErr.overrides.push({ sourceType: 'manual', value: 'override-value' });
+    await g.resolveConfig();
+    expect(e.configNodes.resolutionErr.resolutionError).toBeUndefined();
+    expect(e.configNodes.resolutionErr.resolvedValue).toBe('override-value');
+  });
+
+  test('referencing non-existant nodes results in a resolution error, but repects `allowMissing` option', async () => {
+    const g = new Configraph();
+    const e = g.createEntity({
+      configSchema: {
+        invalidFn: { value: (ctx) => ctx.get('does-not-exist') },
+        validFn: { value: (ctx) => ctx.get('does-not-exist', { allowMissing: true }) },
       },
     });
     await g.resolveConfig();
-    expect(e.configNodes.fn.resolutionError).toBeInstanceOf(ResolutionError);
+    expect(e.configNodes.invalidFn.resolutionError).toBeInstanceOf(ResolutionError);
+    expect(e.configNodes.validFn.resolutionError).toBeUndefined();
   });
 
   test('referencing invalid nodes results in a resolution error', async () => {
