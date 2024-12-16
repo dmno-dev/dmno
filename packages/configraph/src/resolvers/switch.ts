@@ -21,7 +21,7 @@ export function switchBy(switchByKey: string, branches: SwitchByResolverOptions)
     resolveBranches: _.map(branches, (itemDef, itemKey) => ({
       // TODO: do we want to use a special symbol? or pass default as different arg?
       isDefault: itemKey === '_default' || itemKey === '_',
-      condition: (ctx: ResolverContext) => ctx.get(switchByKey) === itemKey,
+      condition: (ctx: ResolverContext) => ctx.get(switchByKey)?.toString() === itemKey,
       id: itemKey,
       label: `${switchByKey} === "${itemKey}"`,
       resolver: processInlineResolverDef(itemDef),

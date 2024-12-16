@@ -143,6 +143,23 @@ describe('graph resolution', () => {
       expect(e.configNodes.switchTest.resolvedValue).toBe('default-val');
     });
 
+    test('works with non-string values', async () => {
+      const g = new Configraph();
+      const e = g.createEntity({
+        configSchema: {
+          someBool: { value: true },
+          switchTest: {
+            value: switchBy('someBool', {
+              true: 'true-val',
+              false: 'false-val',
+            }),
+          },
+        },
+      });
+      await g.resolveConfig();
+      expect(e.configNodes.switchTest.resolvedValue).toBe('true-val');
+    });
+
     test('item has a SchemaError if key/path is not valid', async () => {
       const g = new Configraph();
       const e = g.createEntity({
