@@ -409,10 +409,24 @@ export class DmnoService {
     return this.configraphEntity.isValid;
   }
 
-  getEnv() {
-    const env: Record<string, any> = _.mapValues(this.configraphEntity.configNodes, (node) => {
-      return node.resolvedValue;
-    });
+  /**
+   * key/value object of resolved config ready to be injected as actual environment variables (process.env)
+   */
+  getInjectedProcessEnv() {
+    const env: Record<string, string | undefined> = {};
+    for (const node of _.values(this.configraphEntity.configNodes)) {
+      // TODO: handle key renaming
+      // TODO: better handling of nested keys / object
+      const val = node.resolvedValue;
+      // not sure about this handling of _empty_ items
+      if (val === null || val === undefined || val === '') {
+        env[node.key] = undefined;
+      } else if (_.isPlainObject(val)) {
+        env[node.key] = JSON.stringify(val);
+      } else {
+        env[node.key] = val.toString();
+      }
+    }
     return env;
   }
 

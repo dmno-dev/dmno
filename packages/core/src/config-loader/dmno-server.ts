@@ -426,10 +426,13 @@ export class DmnoServer {
       // TODO: ideally resolution would be a second step that we could trigger as needed
       return workspace.toJSON();
     },
-    getInjectedJson: async (serviceId: string) => {
+    getServiceResolvedConfig: async (serviceId: string) => {
       const workspace = await this.configLoader?.getWorkspace()!;
       const service = workspace.getService(serviceId);
-      return service.getInjectedEnvJSON();
+      return {
+        injectedProcessEnv: service.getInjectedProcessEnv(),
+        injectedDmnoEnv: service.getInjectedEnvJSON(),
+      };
     },
     clearCache: async () => {
       const workspace = await this.configLoader?.getWorkspace()!;
@@ -485,11 +488,12 @@ export class DmnoServer {
       throw new Error(`Unable to select service by package name - ${packageName}`);
     }
 
-    const injectedEnv = await this.makeRequest('getInjectedJson', service.serviceName);
+    const { injectedProcessEnv, injectedDmnoEnv } = await this.makeRequest('getServiceResolvedConfig', service.serviceName);
 
     return {
       serviceDetails: service,
-      injectedEnv,
+      injectedProcessEnv,
+      injectedDmnoEnv,
     };
   }
 }

@@ -60,6 +60,7 @@ program.action(async (opts: {
   checkForSchemaErrors(workspace);
   checkForConfigErrors(service, { showAll: opts?.showAll });
 
+  // this logic could probably move to the service itself?
   function getExposedConfigValues() {
     const values = {} as Record<string, any>;
     for (const itemKey in service.configNodes) {
@@ -71,14 +72,18 @@ program.action(async (opts: {
     return values;
   }
 
+  // when we are using the non default format (which includes everything) we have the same questions
+  // here about what values to include, and how to handle env var keys that may be renamed
+  // probably need a flag to select which we are talking about
+
   // console.log(service.config);
   if (opts.format === 'json') {
     console.log(JSON.stringify(getExposedConfigValues()));
   } else if (opts.format === 'json-full') {
     console.dir(service, { depth: null });
   } else if (opts.format === 'json-injected') {
-    const injectedJson = await ctx.dmnoServer.makeRequest('getInjectedJson', ctx.selectedService.serviceName);
-    console.log(JSON.stringify(injectedJson));
+    const { injectedDmnoEnv } = await ctx.dmnoServer.makeRequest('getServiceResolvedConfig', ctx.selectedService.serviceName);
+    console.log(JSON.stringify(injectedDmnoEnv));
   } else if (opts.format === 'env') {
     console.log(stringifyObjectAsEnvFile(getExposedConfigValues()));
   } else {

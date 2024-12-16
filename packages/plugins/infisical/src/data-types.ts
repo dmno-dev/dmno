@@ -15,7 +15,7 @@ const InfisicalClientId = createDmnoDataType({
   ui: {
     icon: INFISICAL_ICON,
   },
-  sensitive: true,
+  includeInDmnoConfig: false,
 });
 
 const InfisicalClientSecret = createDmnoDataType({
@@ -29,6 +29,8 @@ const InfisicalClientSecret = createDmnoDataType({
   ui: {
     icon: INFISICAL_ICON,
   },
+  sensitive: true,
+  includeInDmnoConfig: false,
 });
 
 const InfisicalEnvironment = createDmnoDataType({
@@ -42,6 +44,7 @@ const InfisicalEnvironment = createDmnoDataType({
   ui: {
     icon: INFISICAL_ICON,
   },
+  includeInDmnoConfig: false,
 });
 
 const InfisicalProjectId = createDmnoDataType({
@@ -55,6 +58,7 @@ const InfisicalProjectId = createDmnoDataType({
   ui: {
     icon: INFISICAL_ICON,
   },
+  includeInDmnoConfig: false,
 });
 
 
