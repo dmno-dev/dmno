@@ -1,0 +1,70 @@
+{
+  "name": "@dmno/cloudflare-platform",
+  "version": "0.0.0",
+  "description": "Tools and data-types to use DMNO with Cloudflare",
+  "author": "dmno-dev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmno-dev/dmno.git",
+    "directory": "packages/platforms/cloudflare"
+  },
+  "bugs": "https://github.com/dmno-dev/dmno/issues",
+  "homepage": "https://dmno.dev/docs/platforms/cloudflare",
+  "keywords": [
+    "dmno",
+    "cloudflare",
+    "config",
+    "env vars",
+    "environment variables",
+    "secrets",
+    "dmno-plugin"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "ts-src": "./src/index.js",
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "bin": {
+    "dwrangler": "./dist/dwrangler.js"
+  },
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:ifnodist": "[ -d \"./dist\" ] && echo 'dist exists' || pnpm build",
+    "build:tarball": "turbo build && pnpm pack --pack-destination \"../../../../tmp-package-registry\"",
+    "dev": "pnpm run build --watch",
+    "lint": "eslint src --ext .ts,.cjs,.mjs",
+    "lint:fix": "pnpm run lint --fix"
+  },
+  "devDependencies": {
+    "@dmno/eslint-config": "workspace:*",
+    "@dmno/tsconfig": "workspace:*",
+    "@types/debug": "catalog:",
+    "@types/lodash-es": "catalog:",
+    "@types/node": "catalog:",
+    "dmno": "workspace:*",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  },
+  "dependencies": {
+    "debug": "catalog:",
+    "execa": "^9.5.1",
+    "lodash-es": "catalog:",
+    "nano-spawn": "^0.2.0"
+  },
+  "peerDependencies": {
+    "dmno": "^0",
+    "wrangler": "^3"
+  },
+  "peerDependenciesMeta": {
+    "wrangler": {
+      "optional": true
+    }
+  }
+}

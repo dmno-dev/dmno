@@ -82,11 +82,16 @@ Even if you are not writing TypeScript, these days you are still likely relying 
   // ...
   "include": [
     "**/*.js",
-+    ".dmno/.typegen/global.d.ts"
++    ".dmno/.typegen/global.d.ts",
 +    ".dmno/.typegen/global-public.d.ts"
   ]
 }
 ```
+
+:::note[Invalid keys are not strict]
+JavaScript is by default not strict - so while you will get nice autocompletion and IntelliSense on your config, your IDE will not give you the handy red squiggle if you use an _invalid_ key. Depending on your setup you may still get a build/runtime error.
+:::
+
 
 
 #### Injecting `DMNO_CONFIG` vs `DMNO_PUBLIC_CONFIG`

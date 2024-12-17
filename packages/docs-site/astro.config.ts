@@ -207,6 +207,10 @@ export default defineConfig({
               link: '/docs/platforms/overview/',
             },
             {
+              label: 'Cloudflare',
+              link: '/docs/platforms/cloudflare/',
+            },
+            {
               label: 'Netlify',
               link: '/docs/platforms/netlify/',
             },

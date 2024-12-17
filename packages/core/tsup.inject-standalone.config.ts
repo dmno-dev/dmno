@@ -28,6 +28,7 @@ const outDir = `dist/globals-injector-standalone${process.env.DMNO_EDGE_COMPAT ?
 export default defineConfig({
   entry: [ // Entry point(s)
     'src/globals-injector/injector.ts', // function used to inject dmno globals
+    'src/globals-injector/auto-inject.ts', // exports inject function and automatically calls it once
   ],
 
   esbuildPlugins: [

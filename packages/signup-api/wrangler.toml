@@ -1,0 +1,2 @@
+name = "signup-api"
+pages_build_output_dir = "./dist"

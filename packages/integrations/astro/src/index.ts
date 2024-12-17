@@ -270,6 +270,7 @@ function dmnoAstroIntegration(dmnoIntegrationOpts?: DmnoAstroIntegrationOptions)
         ssrInjectConfigAtBuildTime = [
           '@astrojs/netlify',
           '@astrojs/vercel/serverless',
+          '@astrojs/cloudflare',
         ].includes(opts.config.adapter?.name || '');
       },
 

@@ -79,6 +79,11 @@
       "import": "./dist/globals-injector-standalone/edge/injector.js",
       "default": "./dist/globals-injector-standalone/edge/injector.cjs"
     },
+    "./injector-standalone/edge-auto": {
+      "ts-src": "./src/globals-injector/auto-inject.ts",
+      "import": "./dist/globals-injector-standalone/edge/auto-inject.js",
+      "default": "./dist/globals-injector-standalone/edge/auto-inject.cjs"
+    },
     "./tsconfigs/*.json": "./tsconfigs/*",
     "./tsconfigs/*": "./tsconfigs/*.json"
   },

@@ -9,7 +9,7 @@
           <input v-if="isSubmitting" placeholder="Sending..." />
           <template v-else>
             <input type="text" v-model="email" :placeholder="emailSubmitted ? 'Thanks!' : 'Your email'" />
-            <a href="#" @click="onSubmit" class="button" v-html="ArrowIconSvg">
+            <a href="#" @click.prevent="onSubmit" class="button" v-html="ArrowIconSvg">
             </a>
           </template>
           

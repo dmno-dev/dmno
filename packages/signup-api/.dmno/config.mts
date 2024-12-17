@@ -1,15 +1,31 @@
-import { DmnoBaseTypes, defineDmnoService, configPath, switchBy } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, configPath, switchBy, pickFromSchemaObject } from 'dmno';
+import { CloudflareWranglerEnvSchema, DmnoWranglerEnvSchema } from '@dmno/cloudflare-platform';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
+import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 const EncryptedVault = new EncryptedVaultDmnoPlugin('vault', {
   key: configPath('..', 'DMNO_VAULT_KEY'),
   name: 'prod',
 });
 
+const onepass = new OnePasswordDmnoPlugin('1pass', {
+  fallbackToCliBasedAuth: true
+});
+
+
 export default defineDmnoService({
   name: 'signup-api',
   pick: [],
   schema: {
+    ...pickFromSchemaObject(CloudflareWranglerEnvSchema, {
+      CLOUDFLARE_ACCOUNT_ID: {
+        value: onepass.itemByReference("op://Shared/Cloudflare/account id"),
+      },
+      CLOUDFLARE_API_TOKEN: {
+        value: onepass.itemByReference("op://Shared/Cloudflare/workers api token"),
+      },
+    }),
+
     DMNO_ENV: { // TODO: formalize this
       // will be overridden by netlify during deploys - see netlify.toml
       value: 'development',
