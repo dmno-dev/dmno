@@ -9,14 +9,14 @@ import CloudflareLogo from "~icons/logos/cloudflare";
 import TabbedCode from '@/components/TabbedCode.astro';
 import BugReportLink from '@/components/BugReportLink.astro';
 
-At DMNO we _love_ [Cloudflare](https://cloudflare.com/). This very site is hosted on it! That's why we're very excited to make it easier and safer to manage config and secrets in all of your Cloudflare projects.
+At DMNO we _love_ [Cloudflare](https://cloudflare.com/). This very site is hosted on it! That's why we're excited to make it easier and safer to manage config and secrets in all of your Cloudflare projects.
 
-This platform integration exposes pre-made schemas and underlying types to interact with env vars related to Cloudflare, as well as a special cli wrapper around `wrangler` that helps deal with config. Aside from all the usual benefits of DMNO - validation, type-safety, sync with backends like 1Password, share config across a monorepo - our Cloudflare integration has a few extra tricks up it's sleeve:
+This platform integration exposes premade schemas and underlying types to interact with env vars related to Cloudflare, as well as a special cli wrapper around `wrangler` that helps deal with config. Aside from all the usual benefits of DMNO - validation, type-safety, sync with backends like 1Password, sharing config across a monorepo - our Cloudflare integration has a few extra tricks up its sleeve:
 - configure `wrangler` using DMNO, injecting built-in env vars, and special new ones that are passed in via flags
-- inject config into Cloudflare Workers - both during local dev and deployment
+- inject config into Cloudflare Workers - during both local dev and deployment
 - enable DMNO security features in workers - leak prevention, log redaction
-- unified system to handle both static and dynamic config
-- add full type-safety to your config, without needing to run `wrangler types`
+- handle both static and dynamic config
+- add type-safety to your config, without needing to run `wrangler types`
 - access your config anywhere, not just within route handlers
 
 
@@ -30,11 +30,11 @@ If you run into any issues, feel free to <BugReportLink label='platforms/cloudfl
 
 
 ## Configuring `wrangler` using DMNO
-Many facets of the `wrangler` cli, including authentication, can be set using [system environment variables](https://developers.cloudflare.com/workers/wrangler/system-environment-variables/). By default, if you have a `.env` file in your repo, `wrangler` will automatically use it, but of course this suffers from all the same usual headaches of using a `.env` file. Instead, DMNO provides a pre-made vendor schema and associated types so you can inject validated settings into `wrangler` without resorting to a gitignored `.env` file. Instead, we could could pull our sensitive Cloudflare API keys from any DMNO plugin, like [1Password](/docs/plugins/1password/) or an [encrypted vault](/docs/plugins/encrypted-vault/), share values across a monorepo, or compose our config however we see fit.
+Many facets of the `wrangler` CLI, including authentication, can be set using [system environment variables](https://developers.cloudflare.com/workers/wrangler/system-environment-variables/). By default, if you have a `.env` file in your repo, `wrangler` will automatically use it. But, this suffers from all the usual headaches of using a `.env` file. Instead, DMNO provides a premade vendor schema and associated types so you can inject validated settings into `wrangler` without resorting to a gitignored `.env` file. Instead, you can pull your sensitive Cloudflare API keys from any DMNO plugin, like [1Password](/docs/plugins/1password/) or an [encrypted vault](/docs/plugins/encrypted-vault/), share values across a monorepo, or compose your config however you see fit.
 
-Because `wrangler` is configured using a mix of `wrangler.toml`, env vars, CLI flags, and has no concept of plugins, we also provide a small wrapper CLI, called `dwrangler`, that handles everything automatically.
+Because `wrangler` is configured using a mix of `wrangler.toml`, env vars, CLI flags, and has no concept of plugins, we also provide a wrapper CLI, called `dwrangler`, that handles everything automatically.
 
-For example, if we wanted to pull our Cloudflare credentials from 1Password, configure dev options, and inject our config, our `.dmno/config.mts` might look like this:
+For example, if you wanted to pull your Cloudflare credentials from 1Password, configure dev options, and inject your config, your `.dmno/config.mts` might look like this:
 
 ```ts title=".dmno/config.mts"
 import { CloudflareWranglerEnvSchema, DmnoWranglerEnvSchema } from '@dmno/cloudflare-platform';
@@ -82,7 +82,7 @@ export default defineDmnoService({
 });
 ```
 
-To take advantage of this new config, we swap usage of `wrangler` to `dwrangler`, whether calling it directly or in our `package.json` scripts.
+To take advantage of this new config, you swap usage of `wrangler` to `dwrangler`, whether calling it directly or in your `package.json` scripts.
 
 ```diff lang="json" title="package.json" ins=/(d)wrangler/
 {
@@ -94,35 +94,35 @@ To take advantage of this new config, we swap usage of `wrangler` to `dwrangler`
 ```
 
 :::note[Don't worry, `dwrangler` is a simple wrapper]
-There's not too much magic going on. It's a simple wrapper script that puts config into env vars, flags, and handles smart reloading in dev mode.
+There's not too much magic going on. It's a wrapper script that puts config into env vars, flags, and handles smart reloading in `dev` mode.
 :::
 
 
 ## Cloudflare Workers
 
-Dealing with [config in Cloudflare Workers](https://developers.cloudflare.com/workers/configuration/environment-variables/) is a bit different than other JS/TS environments. Instead of relying on a global `process.env`, config is passed in as "bindings" to route handlers. These values can be either "vars" (not-sensitive, plaintext) or "secrets" (sensitive, encrypted), and can be set in a variety of ways for local development and for deployments:
+Dealing with [config in Cloudflare Workers](https://developers.cloudflare.com/workers/configuration/environment-variables/) is a bit different than other JS/TS environments. Instead of relying on a global `process.env`, config is passed in as _bindings_ to route handlers. These values can be either _vars_ (not-sensitive, plaintext) or _secrets_ (sensitive, encrypted), and can be set in a variety of ways for local development and for deployments:
 
-- `wrangler --var` cli option - sets vars during local dev, also sets non-sensitive vars during `wrangler deploy`
+- `wrangler --var` CLI option - sets vars during local dev, also sets non-sensitive vars during `wrangler deploy`
 - `wrangler.toml` in a `[vars]` section - sets vars, can also be varied per environment (e.g., `[staging.vars]`)
 - `.dev.vars` file - set sensitive secrets during local development only
-- `wrangler secret` - command to set secrets remotely, also see `wrangler versions secret` to handle versioned deploys with secrets
+- `wrangler secret` - command to set secrets remotely, also see [`wrangler versions secret`](https://developers.cloudflare.com/workers/wrangler/commands/#secret-put-1) to handle versioned deploys with secrets
 
 Additionally, if not relying on a custom build, `wrangler` internally uses [esbuild](https://esbuild.github.io), and you can do build-time replacements, which can also be used for configuration purposes:
 
 - `wrangler.toml` in a `[define]` section - static vars, can also be varied per environment (e.g., `[staging.define]`)
-- `wrangler --define` cli option - does static replacements during the build, both locally and during deploys
+- `wrangler --define` CLI option - does static replacements during the build, both locally and during deploys
 
 Navigating all of this can be tricky, so we built this integration to make it as easy as possible. Define your DMNO config, and we take care of the rest, giving you a unified way to access your configuration, regardless of if it is [static or dynamic](/docs/guides/dynamic-config/), and sensitive or not.
 
-### Injection via "inline" mode
+### Injection via _inline_ mode
 
 While it is not very _Cloudflare-y_, our preferred way to inject DMNO config is by inlining the entire resolved config during the build/deploy process. While it may feel a little odd, config changes always trigger a new deployment anyway.
 
 Doing it this way has a few important benefits:
-- we now have the full validated and coerced config, with additional metadata, and it is directly a part of a specific version of your worker
+- validated and coerced config, with additional metadata, and it is directly a part of a specific version of your worker
 - all config can now be accessed _everywhere_, just like `process.env`, not just within request handlers
-- full type-safety and intellisense on your config, without re-running `wrangler types`
-- we can enable DMNO's [security features](/docs/get-started/security/) to prevent secrets from leaking over http responses, requests to other servers, and redact secrets from logs
+- type-safety and IntelliSense on your config, without re-running `wrangler types`
+- enables DMNO's [security features](/docs/get-started/security/) to prevent secrets from leaking over http responses, requests to other servers, and redact secrets from logs
 
 To set this up, we must import the DMNO globals injector at the top of your main worker entrypoint. This version is specifically made to be compatible with Cloudflare's edge runtime, and will look for data injected by `dwrangler` at build time.
 
@@ -137,15 +137,15 @@ export default {
   },
 };
 ```
-
+:::caution[Potential downsides]
 There are 2 downsides of this approach to consider:
 - existing uses of `env.SOME_SECRET` will no longer work - **you must use `DMNO_CONFIG.SOME_SECRET` instead**.
-- the current version of bundled worker code is accessible within the cloudflare UI, so your devs with access to your account can access this code and see these secrets
+- the current version of bundled worker code is accessible within the Cloudflare UI, so your devs with access to your account can access this code and see these secrets
+:::
 
+### Injection via _secrets_ mode 
 
-### Injection via "secrets" mode 
-
-If you want to continue to use Cloudflare's built-in secrets functionality, you can instead use the "secrets" injection mode. In this mode, while static config items will still be replaced at build time, dynamic config items will be set as [Cloudflare secrets](https://developers.cloudflare.com/workers/configuration/secrets/#secrets-on-deployed-workers) and you will continue to read them from the `env` binding injected into your route handlers.
+If you want to continue to use Cloudflare's built-in secrets functionality, you can instead use the _secrets_ injection mode. In this mode, static config items will still be replaced at build time, dynamic config items will be set as [Cloudflare secrets](https://developers.cloudflare.com/workers/configuration/secrets/#secrets-on-deployed-workers) and you will continue to read them from the `env` binding injected into your route handlers.
 
 To enable this mode, you must set the `WRANGLER_INJECT_MODE` in your config to `secrets`:
 ```diff lang="ts" title=".dmno/config.mts"
@@ -164,11 +164,11 @@ export default defineDmnoService({
 
 **Cons:**
 - we cannot activate DMNO's security features - sensitive secrets can appear in logs, and easily be leaked
-- you (still) cannot access config outside of route handlers
+- you still cannot access config outside of route handlers
 - secrets will always be injected as strings
 - less reliable types
 
-To make things a bit more convenient, we do replace references to `DMNO_CONFIG.SOME_VAR` to `env.SOME_VAR`, which means you get automatic type-safety and intellisense, and you never have to think about whether a config item is static or dynamic.
+To make things a bit more convenient, we do replace references to `DMNO_CONFIG.SOME_VAR` to `env.SOME_VAR`, which means you get automatic type-safety and IntelliSense, and you never have to think about whether a config item is static or dynamic.
 
 :::caution[You must use the `env` convention]
 This replacement means that to use `DMNO_CONFIG` and take advantage of the type safety it provides, you must stick with the convention of naming the bindings argument of your route handlers `env`, and if you pass it around to other functions, you should also stick with the name.
@@ -190,14 +190,14 @@ function someHelper(env) {
 
 
 
-While it should all feel pretty seamless, running `dwrangler deploy` in this mode calls multiple commands to do a 3-part deployment:
-- build and upload a new versioned deploy, without activating it
-- upload resolved config as encrypted secrets, creating another version with secrets attached
-- activate the new version with correct secrets attached
+While it should all feel seamless, running `dwrangler deploy` in this mode calls multiple commands to do a 3-part deployment:
+1. build and upload a new versioned deploy, without activating it
+2. upload resolved config as encrypted secrets, creating another version with secrets attached
+3. activate the new version with correct secrets attached
 
 ### Which mode should you use?
 
-We think for most users the "inline" mode is the better choice, but both options are totally sensible. Here is a comparison table to help:
+We think for most users the _inline_ mode is the better choice, but both options have their merits. Here is a comparison table to help:
 
 | Inline mode | Secrets mode |
 |---|---|
@@ -213,7 +213,7 @@ Cloudflare's new [Workers Builds (beta)](https://developers.cloudflare.com/worke
 
 While this is great, it's not much different than running your CI anywhere else, and the same issues of injecting config into your running worker are present.
 
-To use `dmno` within Workers Builds, just swap your deploy command from `wrangler` to `dwrangler`, just like if you were running it anywhere else. There is also a section for setting "Build variables and secrets" where you can populate any additional config needed during the build. If you are using DMNO to fetch sensitive config from somehwere else, this is how you would pass in that _secret-zero_, for example, a service account token for 1password.
+To use `dmno` within Workers Builds, just swap your deploy command from `wrangler` to `dwrangler`, just like if you were running it anywhere else. There is also a section for setting "Build variables and secrets" where you can populate any additional config needed during the build. If you are using DMNO to fetch sensitive config from somehwere else, this is how you would pass in that _secret-zero_, for example, a service account token for 1Password.
 
 :::caution[No preview deployments]
 At this time, Workers Builds has no notion of deploy previews for PRs or branches. Your only option is to create another worker and point the build settings at a specific branch.
@@ -222,10 +222,10 @@ At this time, Workers Builds has no notion of deploy previews for PRs or branche
 
 ## Cloudflare Pages
 
-Cloudflare pages allows you to host static sites and provides a little sugar on top of Cloudflare Workers for attached functions. Unfortunately, Wrangler's Pages functionality does not allow the same level of configuration of the underlying ESBuild process. However it may not matter, because in practice, most users are likely using an existing framework and have their own build process already. In this case, you can rely on our [drop-in integrations](/docs/integrations/overview/) to inject your DMNO config.
+Cloudflare pages allows you to host static sites and provides a little sugar on top of Cloudflare Workers for attached functions. Unfortunately, Wrangler's Pages functionality does not allow the same level of configuration of the underlying ESBuild process. However, it may not matter because, in practice, most users are likely using an existing framework and already have their own build process. In this case, you can rely on our [drop-in integrations](/docs/integrations/overview/) to inject your DMNO config.
 
 :::tip[Just use workers!]
-Workers support hosting [static assets](https://developers.cloudflare.com/workers/static-assets/) too and it seems that the Cloudflare team is working to make workers do everything that Pages can. Our hunch is that Pages will eventually be deprecated, and moving over to Workers will be a smart bet.
+Workers support hosting [static assets](https://developers.cloudflare.com/workers/static-assets/) too and it seems that the Cloudflare team is working to make Workers do everything that Pages can. Our hunch is that Pages will eventually be deprecated, and moving over to Workers will be a smart bet.
 :::
 
 Regardless, you could still use DMNO to resolve your config and upload secrets to Cloudflare, but without a custom build, you would have to rely on `env` rather than `DMNO_CONFIG`, and you would not get all the benefits of DMNO.
