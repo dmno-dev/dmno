@@ -1,5 +1,20 @@
 # dmno
 
+## 0.0.33
+
+### Patch Changes
+
+- [#182](https://github.com/dmno-dev/dmno/pull/182) [`ada2518`](https://github.com/dmno-dev/dmno/commit/ada25181ea966b3be92b5c8ae061afceb3bc3659) Thanks [@theoephraim](https://github.com/theoephraim)! - add `includeInDmnoConfig` option so items can be exluded from DMNO_CONFIG
+
+- [#181](https://github.com/dmno-dev/dmno/pull/181) [`30ef304`](https://github.com/dmno-dev/dmno/commit/30ef304f06e18893221e78fe50f561fe83d1ddf7) Thanks [@theoephraim](https://github.com/theoephraim)! - fix issue with picked nodes and parallelized resolution
+
+- [#161](https://github.com/dmno-dev/dmno/pull/161) [`dc2425c`](https://github.com/dmno-dev/dmno/commit/dc2425cadc14ee40791b49de14ea0e433998aef0) Thanks [@philmillman](https://github.com/philmillman)! - cloudflare platform support
+
+- [#175](https://github.com/dmno-dev/dmno/pull/175) [`1b70c75`](https://github.com/dmno-dev/dmno/commit/1b70c75d10f3a4866815fb18a53336d3ddb64bda) Thanks [@theoephraim](https://github.com/theoephraim)! - simplify dmno type instance options, skip resolution if override present, add allowMissing to ctx.get, add git vendor types autopopulate
+
+- Updated dependencies [[`30ef304`](https://github.com/dmno-dev/dmno/commit/30ef304f06e18893221e78fe50f561fe83d1ddf7), [`82d2179`](https://github.com/dmno-dev/dmno/commit/82d21790f90dc7d64033a28368cdae3a860b1144), [`1b70c75`](https://github.com/dmno-dev/dmno/commit/1b70c75d10f3a4866815fb18a53336d3ddb64bda)]:
+  - @dmno/configraph@0.0.7
+
 ## 0.0.32
 
 ### Patch Changes

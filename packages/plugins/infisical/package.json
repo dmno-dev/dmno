@@ -1,6 +1,6 @@
 {
   "name": "@dmno/infisical-plugin",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "dmno plugin to pull secrets from Infisical",
   "author": "dmno-dev",
   "license": "MIT",

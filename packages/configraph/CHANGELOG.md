@@ -1,5 +1,15 @@
 # @dmno/configraph
 
+## 0.0.7
+
+### Patch Changes
+
+- [#181](https://github.com/dmno-dev/dmno/pull/181) [`30ef304`](https://github.com/dmno-dev/dmno/commit/30ef304f06e18893221e78fe50f561fe83d1ddf7) Thanks [@theoephraim](https://github.com/theoephraim)! - fix issue with picked nodes and parallelized resolution
+
+- [#183](https://github.com/dmno-dev/dmno/pull/183) [`82d2179`](https://github.com/dmno-dev/dmno/commit/82d21790f90dc7d64033a28368cdae3a860b1144) Thanks [@theoephraim](https://github.com/theoephraim)! - make switchBy work with non string values
+
+- [#175](https://github.com/dmno-dev/dmno/pull/175) [`1b70c75`](https://github.com/dmno-dev/dmno/commit/1b70c75d10f3a4866815fb18a53336d3ddb64bda) Thanks [@theoephraim](https://github.com/theoephraim)! - simplify dmno type instance options, skip resolution if override present, add allowMissing to ctx.get, add git vendor types autopopulate
+
 ## 0.0.6
 
 ### Patch Changes

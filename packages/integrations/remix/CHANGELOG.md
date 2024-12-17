@@ -1,5 +1,13 @@
 # @dmno/remix-integration
 
+## 0.0.5
+
+### Patch Changes
+
+- [#182](https://github.com/dmno-dev/dmno/pull/182) [`ada2518`](https://github.com/dmno-dev/dmno/commit/ada25181ea966b3be92b5c8ae061afceb3bc3659) Thanks [@theoephraim](https://github.com/theoephraim)! - add `includeInDmnoConfig` option so items can be exluded from DMNO_CONFIG
+
+- [#161](https://github.com/dmno-dev/dmno/pull/161) [`dc2425c`](https://github.com/dmno-dev/dmno/commit/dc2425cadc14ee40791b49de14ea0e433998aef0) Thanks [@philmillman](https://github.com/philmillman)! - cloudflare platform support
+
 ## 0.0.4
 
 ### Patch Changes
