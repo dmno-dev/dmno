@@ -99,7 +99,7 @@ let wranglerProcess: ChildProcess | undefined;
 
 if (isDevMode) {
   dmnoServer.enableWatchMode(async () => {
-    console.log('reload!!!');
+    console.log('reload triggered by DMNO config change');
     dmnoHasTriggeredReload = true;
     if (wranglerProcess) {
       // wranglerProcess.kill(15);
@@ -173,7 +173,7 @@ async function restartWrangler() {
     }
     // always inject static items using --define
     const allReplacements = { ...staticReplacements.dmnoConfig, ...staticReplacements.dmnoPublicConfig };
-    console.log(allReplacements);
+    debug('define replacements', allReplacements);
     for (const k in allReplacements) {
       wranglerBuildArgs.push('--define', `${k}:${allReplacements[k]}`);
     }
@@ -204,7 +204,6 @@ async function restartWrangler() {
     console.log('dwrangler will run a multi-step deployment for you');
 
     console.log('1 - CREATING NEW VERSION');
-
 
     const multiStepDeployEnv = {
       FORCE_COLOR: 'true',
@@ -290,7 +289,7 @@ async function restartWrangler() {
     //   console.log('error!', data);
     // });
     wranglerProcess.on('exit', (code, signal) => {
-      console.log('wranglerProcess exit', { code, signal });
+      debug('wranglerProcess exit', { code, signal });
       // we are seeing wrangler exit code 0 and no signal both when
       // the user hits CTRL+C and when we restart the process
       // so we have to track whether we restarted it and ignore the close signal we get right after
@@ -305,18 +304,18 @@ async function restartWrangler() {
         process.exit(exitCode);
       }
     });
-  // wranglerProcess.on('close', () => {
-  //   console.log('wrangler process - close');
-  // });
-  // wranglerProcess.on('disconnect', () => {
-  //   console.log('wrangler process - disconnect');
-  // });
-  // wranglerProcess.on('error', () => {
-  //   console.log('wrangler process - error');
-  // });
-  // wranglerProcess.on('message', () => {
-  //   console.log('wrangler process - message');
-  // });
+    // wranglerProcess.on('close', () => {
+    //   console.log('wrangler process - close');
+    // });
+    // wranglerProcess.on('disconnect', () => {
+    //   console.log('wrangler process - disconnect');
+    // });
+    // wranglerProcess.on('error', () => {
+    //   console.log('wrangler process - error');
+    // });
+    // wranglerProcess.on('message', () => {
+    //   console.log('wrangler process - message');
+    // });
   }
 }
 
