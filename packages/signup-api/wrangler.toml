@@ -1,4 +1,2 @@
-[build]
-command = "pnpm run build"
-watch_dir = "function-src"
-
+name = "signup-api"
+pages_build_output_dir = "./dist"

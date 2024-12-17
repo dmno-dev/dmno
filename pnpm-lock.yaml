@@ -673,7 +673,7 @@ importers:
         version: link:../../tsconfig
       '@remix-run/dev':
         specifier: ^2.10.3
-        version: 2.10.3(@remix-run/react@2.10.3(react-dom@18.3.0(react@18.3.0))(react@18.3.0)(typescript@5.5.4))(@types/node@20.14.12)(less@4.2.0)(ts-node@10.9.2(@types/node@20.14.12)(typescript@5.5.4))(typescript@5.5.4)(vite@5.3.5(@types/node@20.14.12)(less@4.2.0))(wrangler@3.95.0)
+        version: 2.10.3(@remix-run/react@2.10.3(react-dom@18.3.0(react@18.3.0))(react@18.3.0)(typescript@5.5.4))(@types/node@20.14.12)(less@4.2.0)(ts-node@10.9.2(@types/node@20.14.12)(typescript@5.5.4))(typescript@5.5.4)(vite@5.3.5(@types/node@20.14.12)(less@4.2.0))(wrangler@3.96.0)
       '@remix-run/react':
         specifier: ^2.10.3
         version: 2.10.3(react-dom@18.3.0(react@18.3.0))(react@18.3.0)(typescript@5.5.4)
@@ -1019,6 +1019,12 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20241112.0
         version: 4.20241112.0
+      '@dmno/1password-plugin':
+        specifier: workspace:*
+        version: link:../plugins/1password
+      '@dmno/cloudflare-platform':
+        specifier: workspace:*
+        version: link:../platforms/cloudflare
       '@dmno/encrypted-vault-plugin':
         specifier: workspace:*
         version: link:../plugins/encrypted-vault
@@ -1046,6 +1052,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
+      wrangler:
+        specifier: ^3.96.0
+        version: 3.96.0(@cloudflare/workers-types@4.20241112.0)
 
   packages/ts-lib:
     dependencies:
@@ -9197,9 +9206,6 @@ packages:
   ofetch@1.3.4:
     resolution: {integrity: sha512-KLIET85ik3vhEfS+3fDlc/BAZiAp+43QEC/yCo5zkNoY2YaKvNkOaFr/6wCFgFH1kuYQM5pMNi0Tg8koiIemtw==}
 
-  ohash@1.1.3:
-    resolution: {integrity: sha512-zuHHiGTYTA1sYJ/wZN+t5HKZaH23i4yI1HMwbuXm24Nid7Dv0KcuRlKoNKS9UNfAVSBlnGLcuQrnOKWOZoEGaw==}
-
   ohash@1.1.4:
     resolution: {integrity: sha512-FlDryZAahJmEF3VR3w1KogSEdWX3WhA5GPakFx4J81kEAiHyLMpdLLElS8n8dfNadMgAne/MywcvmogzscVt4g==}
 
@@ -12202,6 +12208,16 @@ packages:
 
   wrangler@3.95.0:
     resolution: {integrity: sha512-3w5852i3FNyDz421K2Qk4v5L8jjwegO5O8E1+VAQmjnm82HFNxpIRUBq0bmM7CTLvOPI/Jjcmj/eAWjQBL7QYg==}
+    engines: {node: '>=16.17.0'}
+    hasBin: true
+    peerDependencies:
+      '@cloudflare/workers-types': ^4.20241205.0
+    peerDependenciesMeta:
+      '@cloudflare/workers-types':
+        optional: true
+
+  wrangler@3.96.0:
+    resolution: {integrity: sha512-KjbHTUnwTa5eKl3hzv2h6nHBfAsbUkdurL7f6Y288/Bdn6tcEis13jLVR/nw/eWa3tNCBG1xOMZJboUyzWcC1g==}
     engines: {node: '>=16.17.0'}
     hasBin: true
     peerDependencies:
@@ -15325,7 +15341,7 @@ snapshots:
 
   '@polka/url@1.0.0-next.25': {}
 
-  '@remix-run/dev@2.10.3(@remix-run/react@2.10.3(react-dom@18.3.0(react@18.3.0))(react@18.3.0)(typescript@5.5.4))(@types/node@20.14.12)(less@4.2.0)(ts-node@10.9.2(@types/node@20.14.12)(typescript@5.5.4))(typescript@5.5.4)(vite@5.3.5(@types/node@20.14.12)(less@4.2.0))(wrangler@3.95.0)':
+  '@remix-run/dev@2.10.3(@remix-run/react@2.10.3(react-dom@18.3.0(react@18.3.0))(react@18.3.0)(typescript@5.5.4))(@types/node@20.14.12)(less@4.2.0)(ts-node@10.9.2(@types/node@20.14.12)(typescript@5.5.4))(typescript@5.5.4)(vite@5.3.5(@types/node@20.14.12)(less@4.2.0))(wrangler@3.96.0)':
     dependencies:
       '@babel/core': 7.24.7
       '@babel/generator': 7.24.7
@@ -15384,7 +15400,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.5.4
       vite: 5.3.5(@types/node@20.14.12)(less@4.2.0)
-      wrangler: 3.95.0
+      wrangler: 3.96.0(@cloudflare/workers-types@4.20241112.0)
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
@@ -17492,7 +17508,7 @@ snapshots:
 
   capnp-ts@0.7.0:
     dependencies:
-      debug: 4.3.7(supports-color@9.4.0)
+      debug: 4.4.0
       tslib: 2.6.2
     transitivePeerDependencies:
       - supports-color
@@ -19889,9 +19905,9 @@ snapshots:
       defu: 6.1.4
       destr: 2.0.3
       iron-webcrypto: 1.1.1
-      ohash: 1.1.3
+      ohash: 1.1.4
       radix3: 1.1.2
-      ufo: 1.5.3
+      ufo: 1.5.4
       uncrypto: 0.1.3
       unenv: 1.9.0
     transitivePeerDependencies:
@@ -20921,7 +20937,7 @@ snapshots:
       node-forge: 1.3.1
       pathe: 1.1.2
       std-env: 3.7.0
-      ufo: 1.5.3
+      ufo: 1.5.4
       untun: 0.1.3
       uqr: 0.1.2
     transitivePeerDependencies:
@@ -22067,7 +22083,7 @@ snapshots:
   miniflare@3.20241205.0:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
-      acorn: 8.12.1
+      acorn: 8.14.0
       acorn-walk: 8.3.3
       capnp-ts: 0.7.0
       exit-hook: 2.2.1
@@ -22156,14 +22172,14 @@ snapshots:
       acorn: 8.12.1
       pathe: 1.1.2
       pkg-types: 1.1.0
-      ufo: 1.5.3
+      ufo: 1.5.4
 
   mlly@1.7.1:
     dependencies:
       acorn: 8.12.1
       pathe: 1.1.2
       pkg-types: 1.1.3
-      ufo: 1.5.3
+      ufo: 1.5.4
 
   mlly@1.7.3:
     dependencies:
@@ -22836,9 +22852,7 @@ snapshots:
     dependencies:
       destr: 2.0.3
       node-fetch-native: 1.6.4
-      ufo: 1.5.3
-
-  ohash@1.1.3: {}
+      ufo: 1.5.4
 
   ohash@1.1.4: {}
 
@@ -23278,7 +23292,7 @@ snapshots:
   pkg-types@1.1.0:
     dependencies:
       confbox: 0.1.7
-      mlly: 1.7.1
+      mlly: 1.7.3
       pathe: 1.1.2
 
   pkg-types@1.1.3:
@@ -25616,7 +25630,7 @@ snapshots:
       mri: 1.2.0
       node-fetch-native: 1.6.4
       ofetch: 1.3.4
-      ufo: 1.5.3
+      ufo: 1.5.4
     optionalDependencies:
       '@netlify/blobs': 7.3.0
     transitivePeerDependencies:
@@ -26353,6 +26367,33 @@ snapshots:
       workerd: 1.20241205.0
       xxhash-wasm: 1.0.2
     optionalDependencies:
+      fsevents: 2.3.3
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
+  wrangler@3.96.0(@cloudflare/workers-types@4.20241112.0):
+    dependencies:
+      '@cloudflare/kv-asset-handler': 0.3.4
+      '@esbuild-plugins/node-globals-polyfill': 0.2.3(esbuild@0.17.19)
+      '@esbuild-plugins/node-modules-polyfill': 0.2.2(esbuild@0.17.19)
+      blake3-wasm: 2.1.5
+      chokidar: 4.0.1
+      date-fns: 4.1.0
+      esbuild: 0.17.19
+      itty-time: 1.0.6
+      miniflare: 3.20241205.0
+      nanoid: 3.3.7
+      path-to-regexp: 6.3.0
+      resolve: 1.22.8
+      selfsigned: 2.4.1
+      source-map: 0.6.1
+      unenv: unenv-nightly@2.0.0-20241204-140205-a5d5190
+      workerd: 1.20241205.0
+      xxhash-wasm: 1.0.2
+    optionalDependencies:
+      '@cloudflare/workers-types': 4.20241112.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil

@@ -7,6 +7,7 @@
     "dev": "pnpm --filter=\"@dmno/signup-api\" run --parallel \"/dev:*/\" ",
     "dev:ts": "dmno run -w -- pnpm run build --watch",
     "dev:netlify": "netlify dev",
+    "deploy": "dwrangler pages deploy",
     "lint": "eslint src --ext .ts,.cjs,.astro,.md,.mdx",
     "lint:fix": "pnpm run lint --fix"
   },
@@ -20,7 +21,9 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241112.0",
+    "@dmno/cloudflare-platform": "workspace:*",
     "@dmno/encrypted-vault-plugin": "workspace:*",
+    "@dmno/1password-plugin": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "@netlify/functions": "^2.6.3",
@@ -28,6 +31,7 @@
     "dmno": "workspace:*",
     "netlify-cli": "^17.1.0",
     "tsup": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "wrangler": "^3.96.0"
   }
 }
