@@ -1,5 +1,11 @@
 # @dmno/vite-integration
 
+## 0.0.14
+
+### Patch Changes
+
+- [#182](https://github.com/dmno-dev/dmno/pull/182) [`ada2518`](https://github.com/dmno-dev/dmno/commit/ada25181ea966b3be92b5c8ae061afceb3bc3659) Thanks [@theoephraim](https://github.com/theoephraim)! - add `includeInDmnoConfig` option so items can be exluded from DMNO_CONFIG
+
 ## 0.0.13
 
 ### Patch Changes
