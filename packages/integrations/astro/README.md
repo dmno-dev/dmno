@@ -1,6 +1,5 @@
 Check out the [docs](https://dmno.dev/docs/integrations/astro/) for more information on how to use [DMNO](https://dmno.dev) + [Astro](https://astro.build/).
 
-*** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
 
 If you have any questions, please reach out to us on [Discord](https://chat.dmno.dev).
 
@@ -10,7 +9,19 @@ If you have any questions, please reach out to us on [Discord](https://chat.dmno
 
 Provides tooling to integrate dmno into your astro dev/build workflow
 
-### How to use
+### Installation
+
+```bash
+# let dmno init do the work for you
+npx dmno init
+```
+
+```bash
+# or do it manually
+npm add @dmno/astro-integration
+```
+
+### Example Usage
 
 Import and initialize our astro integration and add to the integrations section in your astro.config.mjs file
 
@@ -24,13 +35,6 @@ export default defineConfig({
     dmnoAstroIntegration(),
   ]
 });
-```
-
-
-add type references to `src/env.d.ts`
-
-```
-/// <reference types="../.dmno/.typegen/global-public.d.ts" />
 ```
 
 
