@@ -1,6 +1,5 @@
 Check out the [docs](https://dmno.dev/docs/plugins/encrypted-vault/) for more information on how to use [DMNO](https://dmno.dev) with an encrypted vault for your secrets.
 
-*** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
 
 If you have any questions, please reach out to us on [Discord](https://chat.dmno.dev).
 
@@ -13,25 +12,64 @@ Provides functionality to encrypt and store secrets committed to your repo for t
 
 ## Plugin
 
+### Installation
+
+```bash
+npm add @dmno/encrypted-vault-plugin
+```
+
 ### Initialization
 
 ```typescript
-const vaultPlugin = new EncryptedVaultPlugin('vault', {});
+import { defineDmnoService, configPath } from 'dmno';
+import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
+
+const MyProdVault = new EncryptedVaultDmnoPlugin('vault/prod', {
+  key: configPath('..', 'DMNO_VAULT_KEY'),
+});
+
+
+export default defineDmnoService({
+  schema: {
+    DMNO_VAULT_KEY: {
+      extends: EncryptedVaultTypes.encryptionKey,
+      // NOTE - the type itself is already marked as secret
+    },
+    // simple case example
+    SUPER_SECRET_ITEM: {
+      value: MyProdVault.item(),
+    },
+  },
+});
 ```
 
 
 ### Value Resolvers
 
+#### Fetch item using unique IDs
+`myEncryptedVault.item()`
 
-
-### Fetch item using unique IDs
-`onePassVault.item()`
-
-
-### Fetch item using "reference"
-`onePassVault.itemByReference()`
-
-
-
-## Data Types
+### Data Types
 - `EncryptedVaultTypes.encryptionKey`
+
+### CLI Commands
+
+```bash
+# set up a new encrypted vault
+dmno plugin -p vault -- setup
+
+# Update or insert an item to te vault
+dmno plugin -p vault -- upsert
+
+# add an item to the vault
+dmno plugin -p vault -- add
+
+# update an item in the vault
+dmno plugin -p vault -- update
+
+# delete an item from the vault
+dmno plugin -p vault -- delete
+
+# delete an item from the vault
+dmno plugin -p vault -- delete
+```

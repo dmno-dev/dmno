@@ -1,7 +1,5 @@
 Check out the [docs](https://dmno.dev/docs/plugins/1password/) for more information on how to use [DMNO](https://dmno.dev) with [1Password](https://1password.com/).
 
-*** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
-
 If you have any questions, please reach out to us on [Discord](https://chat.dmno.dev).
 
 ----
@@ -12,10 +10,33 @@ Securely use your secrets and data from 1password within DMNO Config Engine.
 
 ## Plugin
 
-### Initialization
+### Installation
+
+```bash
+npm add @dmno/1password-plugin
+```
+
+### Example Usage
 
 ```typescript
-const onePassVault = new OnePasswordDmnoPlugin('1pass');
+import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
+
+// token will be injected using types by default
+const onePassSecrets = new OnePasswordDmnoPlugin('1pass');
+
+// or you can wire up the path explicitly
+const onePassSecrets2 = new OnePasswordDmnoPlugin('1passWithExplicitPath', {
+  token: configPath('..', 'OP_TOKEN'),
+});
+
+export default defineDmnoService({
+  schema: {
+    OP_TOKEN: {
+      extends: OnePasswordTypes.serviceAccountToken,
+      // NOTE - the type itself is already marked as sensitive 🔐
+    },
+  },
+});
 ```
 
 

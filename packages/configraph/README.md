@@ -2,8 +2,8 @@
 
 This library powers the reactive graph at the core of [DMNO](https://dmno.dev).
 
-It is designed to be able to use on its own (outside of DMNO), but is not ready for external use just yet.
+It will eventually be released as a standalone library, but we're still actively iterating on it.
 
-*** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
+If you're interested in using `configraph` or have any questions, please reach out to us on [Discord](https://chat.dmno.dev).
 
-If you have any questions, please reach out to us on [Discord](https://chat.dmno.dev).
+For more information on DMNO in general, please see the [DMNO docs](https://dmno.dev/docs).
