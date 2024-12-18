@@ -15,7 +15,7 @@ npx dmno init
 
 Check out the [docs](https://dmno.dev/docs) for more information on [plugins](https://dmno.dev/docs/plugins/overview/), [integrations](https://dmno.dev/docs/integrations/overview/), and [platforms](https://dmno.dev/docs/platforms/overview/) we support.
 
-🚧 We're currently in beta, so if you notice anything weird or there's a feature you would like to see, definitely let us know here on GitHub or on [Discord](https://chat.dmno.dev). 🚧
+> If you notice anything weird or there's a feature you would like to see, let us know here on [GitHub](https://github.com/dmno-dev/dmno/issues/new/choose) or on [Discord](https://chat.dmno.dev).
 
 
 ## Contributing

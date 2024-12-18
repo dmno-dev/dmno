@@ -1,7 +1,5 @@
 Check out the [docs](https://dmno.dev/docs/plugins/infisical/) for more information on how to use [DMNO](https://dmno.dev) with [Infisical](https://infisical.com/).
 
-*** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
-
 If you have any questions, please reach out to us on [Discord](https://chat.dmno.dev).
 
 ----
@@ -12,13 +10,18 @@ Securely use your secrets and data from Infisical within DMNO Config Engine.
 
 ## Plugin
 
-### Initialization
+### Installation
+
+```bash
+npm add @dmno/infisical-plugin
+``` 
+
+### Example Usage
 
 You must initialize an instance of the plugin, giving it a unique ID and wiring up the access token to its location within your config schema.
 
 Then you can use the plugin instance which now has authentication, to fetch individual items by their name.
 
-For example:
 
 ```typescript
 import { DmnoBaseTypes, defineDmnoService, configPath, NodeEnvType, switchBy, configPath } from 'dmno';
