@@ -1,41 +1,45 @@
 ---
-import CTABlock from './CTABlock.astro';
+import CTABlock from "./CTABlock.astro";
 
 interface Props {
-  title?: string,
-  imgPath?: string,
-  imgAlt?: string,
-  imgDescription?: string,
-  ctaLink?: string,
-  ctaText?: string,
+  title?: string;
+  imgPath?: string;
+  imgAlt?: string;
+  imgDescription?: string;
+  ctaLink?: string;
+  ctaText?: string;
+  subheader?: string;
 }
-const { title, imgPath, imgAlt, imgDescription, ctaLink } = Astro.props as Props;
+const { title, imgPath, imgAlt, imgDescription, ctaLink, subheader } =
+  Astro.props as Props;
 ---
 
 <section class="feature-block">
-  { title && <h2>{title}</h2> }
-  { imgPath && <figure>
-    <img src={imgPath} alt={imgAlt}>
-    <figcaption class="description">{imgDescription}</figcaption>
-  </figure>}
-  
+  {title && <h2>{title}</h2>}
+  {subheader && <h3>{subheader}</h3>}
+  {
+    imgPath && (
+      <figure>
+        <img src={imgPath} alt={imgAlt} />
+        <figcaption class="description">{imgDescription}</figcaption>
+      </figure>
+    )
+  }
+
   <slot />
-  
-  { ctaLink && <CTABlock
-    text="Read more ->"
-    href={ctaLink}
-  />}
+
+  {ctaLink && <CTABlock text="Read more ->" href={ctaLink} />}
 </section>
 
 <style>
-.feature-block {
-  padding: 3rem  2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  
-  @container (max-width: 800px) { 
-    padding: 2rem 0rem;
+  .feature-block {
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    @container (max-width: 800px) {
+      padding: 2rem 0rem;
+    }
   }
-}
 </style>
