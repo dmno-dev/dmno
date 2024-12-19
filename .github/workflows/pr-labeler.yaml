@@ -14,9 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+      contents: read
       pull-requests: write
     steps:
-      - name: Label PR 
+      - name: Label PR based on maintainer status
         uses: actions/github-script@v5
         with:
           script: |
@@ -29,3 +30,7 @@ jobs:
                 MAINTAINERS.includes(context.payload.pull_request.user.login) ? 'maintainer' : 'community'
               ]
             });
+      - name: Label PR based on changed files
+        uses: actions/labeler@v5
+        with:
+          configuration-path: .github/config/labeler.yaml
