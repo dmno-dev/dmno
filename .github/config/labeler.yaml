@@ -12,7 +12,7 @@ config-engine:
     - any-glob-to-any-file: 'packages/core/src/config-engine/*'
 configraph:
 - changed-files:
-    - any-glob-to-any-file: 'packages/config-graph/*'
+    - any-glob-to-any-file: 'packages/configraph/*'
 ## docs/readmes
 documentation:
 - changed-files: 
