@@ -1,141 +1,23 @@
-<script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { Icon } from '@iconify/vue';
-import ConnectionLine from './ConnectionLine.vue';
-import DMNOLogo from '@dmno/ui-lib/brand-assets/domino-d-gradient-tile.svg';
-
-function shuffleArray(array: any[]) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-}
-
-const secretIcons = ref([
-  { icon: 'mdi:1password', label: '1Password', docsHref: '/docs/plugins/1password/' },
-  { icon: 'simple-icons:bitwarden', label: 'Bitwarden', docsHref: '/docs/plugins/bitwarden/' },
-  { icon: 'mdi:lock', label: 'Encrypted Vault', docsHref: '/docs/plugins/encrypted-vault/' },
-  { icon: 'mdi:infinity', label: 'Infisical', docsHref: '/docs/plugins/infisical/' },
-  { icon: 'mdi:server-outline', label: 'your self-hosted secrets manager', docsHref: '/docs/plugins/overview/' },
-]);
-
-const integrationIcons = ref([
-  { icon: 'devicon:remix', label: 'Remix', docsHref: '/docs/integrations/remix/' },
-  { icon: 'devicon:nextjs', label: 'Next.js', docsHref: '/docs/integrations/nextjs/' },
-  { icon: 'devicon:astro', label: 'Astro', docsHref: '/docs/integrations/astro/' },
-  { icon: 'logos:vitejs', label: 'Vite', docsHref: '/docs/integrations/vite/' },
-  { icon: 'devicon:nodejs', label: 'Node.js', docsHref: '/docs/integrations/node/' }
-]);
-
-const platformIcons = ref([
-  { icon: 'devicon:netlify', label: 'Netlify', docsHref: '/docs/platforms/netlify/' },
-  { icon: 'devicon:vercel', label: 'Vercel', docsHref: '/docs/platforms/vercel/' },
-  { icon: 'devicon:cloudflare', label: 'Cloudflare', docsHref: '/docs/platforms/cloudflare/' },
-  { icon: 'devicon:docker', label: 'Docker', docsHref: '/docs/platforms/' },
-  { icon: 'mdi:server-outline', label: 'Self-hosted infra', docsHref: '/docs/platforms/overview/' },
-]);
-
-// Selected icon states
-const selectedLeftIndex = ref(0);
-const selectedMiddleIndex = ref(0);
-const selectedRightIndex = ref(0);
-
-const INTERVAL = 4000;
-
-// Cycle through icons every 2 seconds
-onMounted(() => {
-  shuffleArray(secretIcons.value);
-  shuffleArray(integrationIcons.value);
-  shuffleArray(platformIcons.value);
-
-  setInterval(() => {
-    selectedLeftIndex.value = (selectedLeftIndex.value + 1) % secretIcons.value.length;
-  }, INTERVAL);
-
-  setInterval(() => {
-    selectedMiddleIndex.value = (selectedMiddleIndex.value + 1) % integrationIcons.value.length;
-  }, INTERVAL);
-
-  setInterval(() => {
-    selectedRightIndex.value = (selectedRightIndex.value + 1) % platformIcons.value.length;
-  }, INTERVAL);
-
-  setInterval(() => {
-    shuffleArray(secretIcons.value);
-    shuffleArray(integrationIcons.value);
-    shuffleArray(platformIcons.value);
-  }, INTERVAL*platformIcons.value.length);
-});
-
-// Adjusted coordinates for better connections
-const iconSize = 64 // 16 * 4 (w-16)
-const centerIconSize = 80 // 20 * 4 (w-20)
-const spacing = 100
-const maxWidth = window.innerWidth < 1200 ? window.innerWidth : 1200;
-
-// Column spacing, calculated based on the viewport width
-const colSpacing = ref(maxWidth / 4 || 260); // Use SVG viewBox width divided by 4 columns
-
-const leftX = computed(() => 0)
-const centerX = computed(() => colSpacing.value)
-const middleX = computed(() => colSpacing.value * 2)
-const rightX = computed(() => colSpacing.value * 3)
-
-onMounted(() => {
-  const updateSpacing = () => {
-    colSpacing.value = maxWidth / 4 || 260;
-  }
-  
-  window.addEventListener('resize', updateSpacing)
-  
-  onUnmounted(() => {
-    window.removeEventListener('resize', updateSpacing)
-  })
-})
-
-// Calculate vertical positions
-const getVerticalPosition = (index: number, total: number) => {
-  const totalHeight = (total - 1) * spacing
-  const startY = (600 - totalHeight) / 2
-  return startY + (index * spacing)
-}
-
-// Center Y position - align with middle of all icons
-const centerY = 300 - centerIconSize / 2
-
-// Calculate connection points for the right group
-const getRightConnectionY = (rightIndex: number, middleTotal: number) => {
-  const middleSpacing = (middleTotal - 1) * spacing
-  const middleStartY = (600 - middleSpacing) / 2
-  const segmentSize = middleSpacing / (platformIcons.value.length - 1)
-  return middleStartY + (rightIndex * segmentSize)
-}
-
-const navigateTo = (href: string) => {
-  window.location.href = href;
-}
-</script>
-
 <template>
   <div class="container">
     <div class="dynamic-text-container">
-      <h2>Use secrets from 
+      <h2>Use secrets from
         <span class="dynamic-text-wrapper">
           <transition name="fade" mode="out-in">
             <span :key="secretIcons[selectedLeftIndex].label" class="dynamic-text active-secret">
               {{ secretIcons[selectedLeftIndex].label }}
             </span>
           </transition>
-        </span> 
-        in your 
+        </span>
+        in your
         <span class="dynamic-text-wrapper">
           <transition name="fade" mode="out-in">
             <span :key="integrationIcons[selectedMiddleIndex].label" class="dynamic-text active-integration">
               {{ integrationIcons[selectedMiddleIndex].label }}
             </span>
           </transition>
-        </span> 
-        app and deploy to 
+        </span>
+        app and deploy to
         <span class="dynamic-text-wrapper">
           <transition name="fade" mode="out-in">
             <span :key="platformIcons[selectedRightIndex].label" class="dynamic-text active-platform">
@@ -202,7 +84,7 @@ const navigateTo = (href: string) => {
         <!-- Center Node -->
         <div
           class="center-icon"
-          :style="{ 
+          :style="{
             left: centerX + 'px',
             top: centerY + 'px'
           }"
@@ -250,6 +132,126 @@ const navigateTo = (href: string) => {
   </div>
 </template>
 
+<script setup lang="ts">
+import {
+  ref, onMounted, onUnmounted, computed,
+} from 'vue';
+import { Icon } from '@iconify/vue';
+import DMNOLogo from '@dmno/ui-lib/brand-assets/domino-d-gradient-tile.svg';
+import ConnectionLine from './ConnectionLine.vue';
+
+function shuffleArray(array: Array<any>) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+const secretIcons = ref([
+  { icon: 'mdi:1password', label: '1Password', docsHref: '/docs/plugins/1password/' },
+  { icon: 'simple-icons:bitwarden', label: 'Bitwarden', docsHref: '/docs/plugins/bitwarden/' },
+  { icon: 'mdi:lock', label: 'Encrypted Vault', docsHref: '/docs/plugins/encrypted-vault/' },
+  { icon: 'mdi:infinity', label: 'Infisical', docsHref: '/docs/plugins/infisical/' },
+  { icon: 'mdi:server-outline', label: 'your self-hosted secrets manager', docsHref: '/docs/plugins/overview/' },
+]);
+
+const integrationIcons = ref([
+  { icon: 'devicon:remix', label: 'Remix', docsHref: '/docs/integrations/remix/' },
+  { icon: 'devicon:nextjs', label: 'Next.js', docsHref: '/docs/integrations/nextjs/' },
+  { icon: 'devicon:astro', label: 'Astro', docsHref: '/docs/integrations/astro/' },
+  { icon: 'logos:vitejs', label: 'Vite', docsHref: '/docs/integrations/vite/' },
+  { icon: 'devicon:nodejs', label: 'Node.js', docsHref: '/docs/integrations/node/' },
+]);
+
+const platformIcons = ref([
+  { icon: 'devicon:netlify', label: 'Netlify', docsHref: '/docs/platforms/netlify/' },
+  { icon: 'devicon:vercel', label: 'Vercel', docsHref: '/docs/platforms/vercel/' },
+  { icon: 'devicon:cloudflare', label: 'Cloudflare', docsHref: '/docs/platforms/cloudflare/' },
+  { icon: 'devicon:docker', label: 'Docker', docsHref: '/docs/platforms/' },
+  { icon: 'mdi:server-outline', label: 'Self-hosted infra', docsHref: '/docs/platforms/overview/' },
+]);
+
+// Selected icon states
+const selectedLeftIndex = ref(0);
+const selectedMiddleIndex = ref(0);
+const selectedRightIndex = ref(0);
+
+const INTERVAL = 4000;
+
+// Cycle through icons every 2 seconds
+onMounted(() => {
+  shuffleArray(secretIcons.value);
+  shuffleArray(integrationIcons.value);
+  shuffleArray(platformIcons.value);
+
+  setInterval(() => {
+    selectedLeftIndex.value = (selectedLeftIndex.value + 1) % secretIcons.value.length;
+  }, INTERVAL);
+
+  setInterval(() => {
+    selectedMiddleIndex.value = (selectedMiddleIndex.value + 1) % integrationIcons.value.length;
+  }, INTERVAL);
+
+  setInterval(() => {
+    selectedRightIndex.value = (selectedRightIndex.value + 1) % platformIcons.value.length;
+  }, INTERVAL);
+
+  setInterval(() => {
+    shuffleArray(secretIcons.value);
+    shuffleArray(integrationIcons.value);
+    shuffleArray(platformIcons.value);
+  }, INTERVAL * platformIcons.value.length);
+});
+
+// Adjusted coordinates for better connections
+const iconSize = 64; // 16 * 4 (w-16)
+const centerIconSize = 80; // 20 * 4 (w-20)
+const spacing = 100;
+const maxWidth = window.innerWidth < 1200 ? window.innerWidth : 1200;
+
+// Column spacing, calculated based on the viewport width
+const colSpacing = ref(maxWidth / 4 || 260); // Use SVG viewBox width divided by 4 columns
+
+const leftX = computed(() => 0);
+const centerX = computed(() => colSpacing.value);
+const middleX = computed(() => colSpacing.value * 2);
+const rightX = computed(() => colSpacing.value * 3);
+
+onMounted(() => {
+  const updateSpacing = () => {
+    colSpacing.value = maxWidth / 4 || 260;
+  };
+
+  window.addEventListener('resize', updateSpacing);
+
+  onUnmounted(() => {
+    window.removeEventListener('resize', updateSpacing);
+  });
+});
+
+// Calculate vertical positions
+const getVerticalPosition = (index: number, total: number) => {
+  const totalHeight = (total - 1) * spacing;
+  const startY = (600 - totalHeight) / 2;
+  return startY + (index * spacing);
+};
+
+// Center Y position - align with middle of all icons
+const centerY = 300 - centerIconSize / 2;
+
+// Calculate connection points for the right group
+const getRightConnectionY = (rightIndex: number, middleTotal: number) => {
+  const middleSpacing = (middleTotal - 1) * spacing;
+  const middleStartY = (600 - middleSpacing) / 2;
+  const segmentSize = middleSpacing / (platformIcons.value.length - 1);
+  return middleStartY + (rightIndex * segmentSize);
+};
+
+const navigateTo = (href: string) => {
+  window.location.href = href;
+};
+</script>
+
 <style>
 .container {
   margin-left: 40px;
@@ -285,14 +287,14 @@ const navigateTo = (href: string) => {
 
 .dynamic-text-container {
   margin: 2rem 0;
-} 
+}
 
 .dynamic-text-container > .dynamic-text {
   color: rgb(147 51 234); /* text-purple-600 */
   &:nth-of-type(1) {
     color: rgb(41, 232, 232);
   }
-  
+
   &:nth-of-type(2) {
     color: rgb(116, 240, 161);
   }
@@ -323,7 +325,7 @@ const navigateTo = (href: string) => {
 /* todo user brand colors */
 
 .icon-left {
-  border-color: rgb(156 163 175); 
+  border-color: rgb(156 163 175);
 }
 
 .icon-left.icon-selected {
@@ -335,7 +337,7 @@ const navigateTo = (href: string) => {
 }
 
 .icon-right.icon-selected {
-  border: 2px solid rgb(243, 125, 227); 
+  border: 2px solid rgb(243, 125, 227);
 }
 
 .center-icon {
@@ -383,7 +385,7 @@ const navigateTo = (href: string) => {
   &:nth-of-type(1) {
     color: rgb(41, 232, 232);
   }
-  
+
   &:nth-of-type(2) {
     color: rgb(116, 240, 161);
   }

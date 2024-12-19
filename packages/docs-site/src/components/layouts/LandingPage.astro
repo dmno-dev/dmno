@@ -6,6 +6,7 @@ import NextLogoSvg from '~icons/logos/nextjs?raw';
 import RemixLogoSvg from '~icons/logos/remix-icon?raw';
 import AstroLogoSvg from '~icons/devicon/astro?raw';
 import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
+import FastifyLogoSvg from '~icons/logos/fastify-icon?raw';
 
 interface Props {
   title?: string;
@@ -43,6 +44,7 @@ const {
           <a href="/docs/integrations/astro/" set:html={AstroLogoSvg} />
           <a href="/docs/integrations/vite/" set:html={ViteLogoSvg} />
           <a href="/docs/integrations/node/" set:html={NodeLogoSvg} />
+          <a href="/docs/integrations/fastify/" set:html={FastifyLogoSvg} />
         </div>
         
         <div class="richtext">
@@ -200,6 +202,7 @@ const {
     display: flex;
     flex-wrap: wrap;
     gap: 5%;
+    align-items: center;
 
     > div, > a {
       flex-grow: 1;

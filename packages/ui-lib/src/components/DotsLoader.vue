@@ -14,6 +14,7 @@ import { computed, onMounted, ref } from 'vue';
 
 const props = defineProps({
   autoPlay: { type: Boolean },
+  startAt: { type: Number },
 });
 
 
@@ -44,7 +45,7 @@ const POSITION_STEPS: Array<Array<PositionNames>> = [
 
 const NUM_POSITIONS = POSITION_STEPS.length;
 
-const counter = ref(0);
+const counter = ref(props.startAt ? props.startAt - 1 : 0);
 onMounted(() => {
   if (props.autoPlay) setTimeout(start, TIC_SEC_MS);
 });
