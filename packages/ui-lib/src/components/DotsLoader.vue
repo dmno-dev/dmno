@@ -93,7 +93,7 @@ defineExpose({ start, stop });
 
   --dot-size: 18%;
 
-  &.dots-loader--1 {
+  &.dots-loader--1 > div:first-child {
     --dot-size: 25%;
   }
 

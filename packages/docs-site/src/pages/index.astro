@@ -1,11 +1,11 @@
 ---
-import { Code } from "@astrojs/starlight/components";
+// ! THIS IS PRIMARY MAIN HOMEPAGE /
+
 import LandingPage from "@/components/layouts/LandingPage.astro";
-import VideoBlock from "@/components/VideoBlock.astro";
 import CTABlock from "@/components/CTABlock.astro";
 import Hero from "@/components/Hero.astro";
 import LandingPageSection from "@/components/LandingPageSection.astro";
-import IconGraph from "@/components/IconGraph/IconGraph.vue";
+
 import IntegrationsHero from "@/components/homepage/IntegrationsHero.vue";
 
 import importedCode from "/.dmno/config.mts?raw";
@@ -13,6 +13,7 @@ import intellisenseImg from "@/assets/docs-images/platform-intellisense-example.
 import leakImg from "@/assets/docs-images/security-demo.png";
 import screenshotImg from "@/assets/blog/screenshot-with-comments.png";
 import iconGraphPlaceholder from "@/assets/blog/screenshot-with-comments.png";
+import ConfigExample from "@/components/homepage/ConfigExample.astro";
 
 const muxId = "FmBLL2H1yt6cEfqz01QVje7LSlI8DtF9Vn18NRsv5o6E";
 ---
@@ -25,17 +26,12 @@ const muxId = "FmBLL2H1yt6cEfqz01QVje7LSlI8DtF9Vn18NRsv5o6E";
   showIntegrations={true}
 >
   <Hero>
-    <Fragment slot="heading"> Connective Configuration </Fragment>
+    <Fragment slot="heading">Connective Configuration</Fragment>
     <Fragment slot="subheading">
-      <em>
-        DMNO is the missing middleware for your configuration and secrets.
-      </em>
+      DMNO is the missing middleware for your configuration and secrets
     </Fragment>
-  </Hero>
-
-  <div class="hero-container">
     <IntegrationsHero client:only="vue" />
-  </div>
+  </Hero>
 
   <CTABlock
     text="Get started ->"
@@ -48,56 +44,7 @@ const muxId = "FmBLL2H1yt6cEfqz01QVje7LSlI8DtF9Vn18NRsv5o6E";
     subheader="Make your config a living part of your codebase and stop relying on .env files."
     ctaLink="/docs/guides/schema/"
   >
-    <Code
-      code={`
-import { DmnoBaseTypes, defineDmnoService, switchBy } from 'dmno';
-import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
-import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
-
-// use a plugin to fetch secrets from a secure backend like 1Password
-const OnePass = new OnePasswordDmnoPlugin('1pass', {
-  token: configPath('OP_TOKEN'),
-});
-// or store them encrypted within your repo
-const MyProdVault = new EncryptedVaultDmnoPlugin('vault', {
-  key: configPath('DMNO_VAULT_KEY'),
-});
-
-export default defineDmnoService({
-  settings: {
-    // automatically detect and prevent leaks
-    interceptSensitiveLeakRequests: true,
-    redactSensitiveLogs: true,
-    preventClientLeaks: true,
-  }, 
-  // re-use items defined in other services
-  pick: ['API_KEY', 'DB_URL', 'DMNO_ENV'], 
-  // more config specific to this service
-  schema: {
-    DMNO_VAULT_KEY: {
-      // re-use existing types with validation and docs info built-in
-      extends: EncryptedVaultTypes.encryptionKey,
-    },
-    OP_TOKEN: {
-      extends: OnePasswordTypes.serviceAccountToken,
-    },
-    SAAS_API_KEY: {
-      // load different values based on any other value
-      value: switchBy('DMNO_ENV', {
-        _default: 'my-dev-key',
-        production: MyProdVault.item(),
-      }),
-    },
-    SAAS_PROJECT_TAG: {
-      // use a function to set a value - reference any other config
-      value: (ctx) => \`myapp_\${DMNO_CONFIG.DMNO_ENV}\`,
-    },
-  }
-});
-        `}
-      lang="ts"
-      title=".dmno/config.mts - sample config file"
-    />
+    <ConfigExample />
   </LandingPageSection>
   <LandingPageSection
     title="Leak prevention and detection"
@@ -115,33 +62,4 @@ export default defineDmnoService({
   />
 </LandingPage>
 
-<style scoped>
-  .hero-container {
-    margin-bottom: 80px;
-  }
-</style>
-
-<style>
-  .desktop-only {
-    display: none;
-  }
-
-  .mobile-only {
-    display: block;
-  }
-
-  .responsive-image {
-    width: 100%;
-    height: auto;
-  }
-
-  @media (min-width: 768px) {
-    .desktop-only {
-      display: block;
-    }
-
-    .mobile-only {
-      display: none;
-    }
-  }
-</style>
+<style></style>

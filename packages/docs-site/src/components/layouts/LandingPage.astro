@@ -1,12 +1,7 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-
-import ViteLogoSvg from '~icons/devicon/vitejs?raw';
-import NextLogoSvg from '~icons/logos/nextjs?raw';
-import RemixLogoSvg from '~icons/logos/remix-icon?raw';
-import AstroLogoSvg from '~icons/devicon/astro?raw';
-import NodeLogoSvg from '~icons/logos/nodejs-icon?raw';
-import FastifyLogoSvg from '~icons/logos/fastify-icon?raw';
+import { Icon } from 'astro-iconify';
+import LogoBar from '../LogoBar.astro';
 
 interface Props {
   title?: string;
@@ -37,18 +32,28 @@ const {
 
     { showIntegrations && 
       <section class="integrations-section">
-        <h3>Drop-in integrations for your favorite frameworks & tools</h3>
-        <div class="logo-bar">
-          <a href="/docs/integrations/remix/" set:html={RemixLogoSvg} />
-          <a href="/docs/integrations/nextjs/" set:html={NextLogoSvg} />
-          <a href="/docs/integrations/astro/" set:html={AstroLogoSvg} />
-          <a href="/docs/integrations/vite/" set:html={ViteLogoSvg} />
-          <a href="/docs/integrations/node/" set:html={NodeLogoSvg} />
-          <a href="/docs/integrations/fastify/" set:html={FastifyLogoSvg} />
+        <div>
+          <h2>DMNO works with everything</h2>
+          <p>Many use cases don't require anything extra, but our drop-in integrations make things even simpler</p>
         </div>
+        <LogoBar>
+          <a href="/docs/integrations/remix/"><Icon name="devicon:remix" /></a>
+          <a href="/docs/integrations/nextjs/"><Icon name="devicon:nextjs" /></a>
+          <a href="/docs/integrations/astro/"><Icon name="devicon:astro" /></a>
+          <a href="/docs/integrations/vite/"><Icon name="devicon:vitejs" /></a>
+          <a href="/docs/integrations/node/"><Icon name="logos:nodejs-icon" /></a>
+          <a href="/docs/integrations/fastify/"><Icon name="logos:fastify-icon" /></a>
+
+          <a href="/docs/plugins/1password/"><Icon name="simple-icons:1password" /></a>
+          <a href="/docs/plugins/bitwarden/"><Icon name="simple-icons:bitwarden" /></a>
+
+          <a href="/docs/platforms/cloudflare/"><Icon name="devicon:cloudflare" /></a>
+          <a href="/docs/platforms/vercel/"><Icon name="devicon:vercel" /></a>
+          <a href="/docs/platforms/netlify/"><Icon name="devicon:netlify" /></a>
+        </LogoBar>
         
         <div class="richtext">
-          <p>Use something else? 💪 <a href={DMNO_PUBLIC_CONFIG.DISCORD_JOIN_URL}>Join us on discord</a> and help us build the next one!</p>
+          <p>Looking for something else? 💪 <a href={DMNO_PUBLIC_CONFIG.DISCORD_JOIN_URL}>Join us on discord</a> and help us build the next one!</p>
         </div>
       </section>
     }
@@ -182,8 +187,18 @@ const {
   }
 
   .integrations-section {
+
+    h2 {
+      font-weight: bold;
+      margin: 0;
+      padding: 0;
+    }
+    h3 {
+      margin: 0;
+      padding: 0;
+    }
     background: var(--brand-purple--t2);
-    padding: 1rem;
+    padding: 2rem;
     @media (min-width: 50rem) {
       padding: 2rem;
     }
@@ -192,39 +207,12 @@ const {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    p {
-      text-align: right;
-      font-style: italic;
+    border: 1px solid var(--brand-purple);
+    .richtext {
       width: 100%;
+      font-size: .85em;
     }
   }
-  .logo-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5%;
-    align-items: center;
-
-    > div, > a {
-      flex-grow: 1;
-      :global(> svg) {
-        display: block;
-        width: 100%;
-        height: auto;
-        max-height: 80px;
-        min-width: 30px;
-        opacity: .8;
-        
-        &:hover {
-          opacity: 1;
-          transform: scale(1.1);
-        }
-
-      }
-      
-      
-    }
-  }
-
 </style>
   
 </StarlightPage>

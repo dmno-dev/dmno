@@ -1,5 +1,9 @@
 <template lang="pug">
-  a.icon-graph-tile(:class="computedClasses" :href="info.docsHref")
+  a.icon-graph-tile(
+    :class="computedClasses" :href="info.docsHref"
+    @mouseenter="$emit('hover:start')"
+    @mouseleave="$emit('hover:end')"
+  )
     .icon-graph-tile__shadow
     .icon-graph-tile__back
     .icon-graph-tile__front
@@ -38,10 +42,10 @@ const computedClasses = computed(() => ({
 
 <style scoped>
 .icon-graph-tile {
-  --tile-radius: calc(var(--tile-spacing) / 2);
-  --tile-shadow-offset: calc(.4 * var(--tile-spacing));
+  --tile-radius: calc(.05 * var(--tile-width));
+  --tile-thickness: calc(.04 * var(--tile-width));
   --tile-shadow-color: #999;
-  --tile-edge-color: #222;
+  --tile-edge-color: #555;
 
   width: var(--tile-width);
   height: calc(var(--tile-width) / 2);
@@ -53,7 +57,7 @@ const computedClasses = computed(() => ({
   z-index: 2;
 
   &:hover {
-    --tile-edge-color: var(--brand-pink);
+    --tile-edge-color: var(--accent-color, black);
     transform: scale(1.03);
   }
 
@@ -94,7 +98,7 @@ const computedClasses = computed(() => ({
   width: inherit;
   height: inherit;
   position: absolute;
-  background: white;
+  background: #FFF;
   color: black;
   z-index: 3;
   display: grid;
@@ -110,38 +114,41 @@ const computedClasses = computed(() => ({
   height: inherit;
   background: var(--tile-shadow-color);
   position: absolute;
-  margin-left: calc(-1 * var(--tile-shadow-offset));
-  margin-top: calc(-1 * var(--tile-shadow-offset));
+  margin-left: calc(-1 * var(--tile-thickness));
+  margin-top: calc(-1 * var(--tile-thickness));
   z-index: 2;
   border-radius: inherit;
   /* rounded corner 3d color */
-  background: #777;
+  background: #CCC;
   border: 1px solid var(--tile-edge-color);
 
   /* 3d top face */
   &:before {
     content: '';
-    right: -2px;
-    left: calc(var(--tile-shadow-offset) + var(--tile-radius) / 2);
-    height: calc(var(--tile-shadow-offset) + 1px);
+    /* right: calc(-.2 * var(--tile-radius)); */
+
+    top: 0;
+    left: calc(var(--tile-thickness) + var(--tile-radius) / 2);
+    right: calc(-.25 * var(--tile-thickness));
+    height: calc(var(--tile-thickness));
     border-top-right-radius: 2px;
     /* background: var(--tile-shadow-color); */
     position: absolute;
     transform: skewX(45deg);
     /* box-shadow: inset 0px -4px 4px rgba(0,0,0,.3); */
-    background: #AAA;
+    background: #FFF;
     /* border-top: 1px solid var(--tile-edge-color); */
     border-right: 1px solid var(--tile-edge-color);
   }
   /* 3d left face */
   &:after {
     content: '';
-    bottom: -2px;
-    top: calc(var(--tile-shadow-offset) + var(--tile-radius) / 2) ;
-    width: calc(var(--tile-shadow-offset) + 1px);
+    left: 0;
+    top: calc(var(--tile-thickness) + var(--tile-radius) / 2);
+    bottom: calc(-.25 * var(--tile-thickness));
+    width: calc(var(--tile-thickness));
     border-bottom-left-radius: 2px;
-    background: var(--tile-shadow-color);
-    background: #555;
+    background: #999;
     position: absolute;
     transform: skewY(45deg);
     /* border-left: 1px solid var(--tile-edge-color); */
@@ -150,17 +157,14 @@ const computedClasses = computed(() => ({
   }
 }
 .icon-graph-tile__shadow {
-  height: var(--tile-shadow-offset);
-  /* background: red; */
+  height: calc(1.1 * var(--tile-thickness));
   position: absolute;
-  z-index: 5;
   bottom: 1px;
-  left: 0;
-  right: calc(var(--tile-shadow-offset)) ;
-  box-shadow: -2px 2px 10px rgba(0,0,0,.4);
+  left: calc(var(--tile-radius)/4);
+  right: calc(var(--tile-thickness) / 2);
+  box-shadow: calc(-.07 * var(--tile-width)) 1px 4px rgba(0,0,0,.6);
   transform: skewX(45deg);
   z-index: 1;
-
 }
 
 

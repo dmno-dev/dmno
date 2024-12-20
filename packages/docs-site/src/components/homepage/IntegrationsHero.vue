@@ -1,26 +1,5 @@
 <template lang="pug">
   .integrations-hero
-    //- div
-    //-   transition(name="swap")
-    //-     IntegrationTile(
-    //-       :key="activeIndexes.plugin"
-    //-       :info="TILES.plugin[activeIndexes.plugin]"
-    //-     )
-    //- div
-    //-   transition(name="swap")
-    //-     IntegrationTile(
-    //-       :key="activeIndexes.integration"
-    //-       :info="TILES.integration[activeIndexes.integration]"
-    //-       dots-position="top"
-    //-     )
-    //- div
-    //-   transition(name="swap")
-    //-     IntegrationTile(
-    //-       :key="activeIndexes.platform"
-    //-       :info="TILES.platform[activeIndexes.platform]"
-    //-       dots-position="left"
-    //-     )
-
     .integrations-hero__tiles
       template(v-for="integrationType, rowIndex in Object.keys(TILES)" :key="integrationType")
         div(:ref="(el) => rowEls[integrationType] = el")
@@ -28,17 +7,21 @@
             v-for="i in activeIndexesList[integrationType]"
             :key="`${integrationType}-${i}`"
             :info="TILES[integrationType][i]"
-            :dot-number="i+1"
+            :dot-number="i + 1"
             :dots-position="rowIndex % 2 === 1 ? 'left' : 'right'"
             :class="i === activeIndexes[integrationType] ? '--active' : ''"
+            @hover:start="hoverIndexes[integrationType] = i"
+            @hover:end="hoverIndexes[integrationType] = null"
           )
     .integrations-hero__text
       div
-        span Use secrets from <b>{{ TILES.plugin[activeIndexes.plugin].label }}</b>
+        span
+          | Safely use your secrets<br/>
+          | from <b>{{ TILES.plugin[hoverIndexes.plugin ?? activeIndexes.plugin].label }}</b>
       div
-        span with <b>{{ TILES.integration[activeIndexes.integration].label }}</b>
+        span with <b>{{ TILES.integration[hoverIndexes.integration ?? activeIndexes.integration].label }}</b>
       div
-        span deployed to <b>{{ TILES.platform[activeIndexes.platform].label }}</b>
+        span and <b>{{ TILES.platform[hoverIndexes.platform ?? activeIndexes.platform].label }}</b>
 
 </template>
 
@@ -48,9 +31,6 @@ import {
   reactive,
   useTemplateRef,
 } from 'vue';
-import { Icon } from '@iconify/vue';
-// import ConnectionLine from './ConnectionLine.vue';
-import DMNOLogo from '@dmno/ui-lib/brand-assets/domino-d-gradient-tile.svg';
 import IntegrationTile from './IntegrationTile.vue';
 
 
@@ -64,7 +44,7 @@ const TILES = Object.freeze({
     },
     { icon: 'mdi:lock', label: 'Encrypted Vault', docsHref: '/docs/plugins/encrypted-vault/' },
     { icon: 'mdi:infinity', label: 'Infisical', docsHref: '/docs/plugins/infisical/' },
-    { icon: 'mdi:server-outline', label: 'your self-hosted secrets manager', docsHref: '/docs/plugins/overview/' },
+    { icon: 'mdi:server-outline', label: 'a self-hosted store', docsHref: '/docs/plugins/overview/' },
     {
       icon: 'file-icons:dotenv', label: 'dotenv files', docsHref: '/docs/plugins/overview/', color: '555555',
     },
@@ -73,7 +53,8 @@ const TILES = Object.freeze({
     { icon: 'devicon:remix', label: 'Remix', docsHref: '/docs/integrations/remix/' },
     { icon: 'devicon:nextjs', label: 'Next.js', docsHref: '/docs/integrations/nextjs/' },
     { icon: 'devicon:astro', label: 'Astro', docsHref: '/docs/integrations/astro/' },
-    { icon: 'logos:vitejs', label: 'Vite', docsHref: '/docs/integrations/vite/' },
+    { icon: 'devicon:vitejs', label: 'Vite', docsHref: '/docs/integrations/vite/' },
+    { icon: 'logos:fastify-icon', label: 'Fastify', docsHref: '/docs/integrations/fastify/' },
     { icon: 'devicon:nodejs', label: 'Node.js', docsHref: '/docs/integrations/node/' },
   ],
   platform: [
@@ -81,7 +62,7 @@ const TILES = Object.freeze({
     { icon: 'devicon:vercel', label: 'Vercel', docsHref: '/docs/platforms/vercel/' },
     { icon: 'devicon:cloudflare', label: 'Cloudflare', docsHref: '/docs/platforms/cloudflare/' },
     { icon: 'devicon:docker', label: 'Docker', docsHref: '/docs/platforms/' },
-    { icon: 'mdi:server-outline', label: 'Self-hosted infra', docsHref: '/docs/platforms/overview/' },
+    { icon: 'mdi:server-outline', label: 'self-hosted infra', docsHref: '/docs/platforms/overview/' },
   ],
 });
 
@@ -105,6 +86,11 @@ const activeIndexesList = computed(() => ({
   platform: getIndexes(activeIndexes.platform, TILES.platform.length),
   integration: getIndexes(activeIndexes.integration, TILES.integration.length),
 }));
+const hoverIndexes = reactive({
+  plugin: null,
+  platform: null,
+  integration: null,
+});
 
 const rowEls = ref({});
 
@@ -141,46 +127,54 @@ onMounted(() => {
 }
 
 .integrations-hero {
-
   --tile-shift-duration: 4s;
-  --tile-width: 100px;
+  --tile-width: 60px;
   --tile-height: calc(var(--tile-width) / 2);
   --tile-spacing: calc(var(--tile-width) / 10);
   --tile-width-w-spacing: calc(var(--tile-width) + var(--tile-spacing));
 
-  display: grid;
-  /* margin: 0 10%; */
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  color: white;
 
-  grid-template-columns: calc(3 * var(--tile-width)) 1fr;
-  gap: 0px;
-  /* justify-content: center; */
-  align-items: center;
+  position: relative;
+  border-radius: 8px;
+  grid-template-columns: 1fr 1fr;
+  gap: 0rem;
+
+  display: grid;
+
+
+  @media (min-width: 50rem) {
+    border-radius: 16px;
+    --tile-width: 120px;
+  }
+  html[data-theme="light"] & {
+    border-color: var(--brand-white);
+  }
 
   .integrations-hero__text {
     justify-content: center;
-    font-size: 24px;
     font-weight: bold;
     display: flex;
-    gap: var(--tile-spacing);
     flex-direction: column;
+    font-size: 14px;
+    text-align: left;
+
+    @media (min-width: 50rem) {
+      font-size: 24px;
+    }
 
     > div {
-      /* min-height: var(--tile-height); */
-      display: grid;
-      align-items: center;
-    }
-    > div:nth-child(1) b {
-      color: var(--brand-pink);
-    }
-    > div:nth-child(2) b {
-      color: var(--brand-green);
-    }
-    > div:nth-child(3) b {
-      color: var(--brand-cyan);
+      b {
+        color: var(--accent-color);
+      }
     }
   }
-
   .integrations-hero__tiles {
+    width: calc(3 * var(--tile-width));
+    justify-self: center;
 
     /* overlay to see active area */
     &::before {
@@ -202,10 +196,10 @@ onMounted(() => {
     padding-bottom: var(--tile-spacing);
     height: calc(3 * (var(--tile-height) + var(--tile-spacing)) + var(--tile-spacing) );
     mask-image: linear-gradient(to right,
-      transparent 12%,
-      red 30%,
-      red 70%,
-      transparent 88%
+      transparent 7%,
+      red 25%,
+      red 75%,
+      transparent 93%
     );
 
     > div {
@@ -224,6 +218,17 @@ onMounted(() => {
       &:nth-child(2) {
         animation-name: slide-right;
       }
+    }
+  }
+  .integrations-hero__text, .integrations-hero__tiles {
+    > div:nth-child(1){
+      --accent-color: var(--brand-pink);
+    }
+    > div:nth-child(2){
+      --accent-color: var(--brand-green);
+    }
+    > div:nth-child(3){
+      --accent-color: var(--brand-cyan);
     }
   }
 

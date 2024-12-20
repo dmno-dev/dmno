@@ -1,13 +1,10 @@
 ---
+// ! THIS IS THE "DOCS" HOMEPAGE /docs/
 import DIcon from "@/components/DIcon.astro";
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import { DmnoTileLogo } from "@dmno/ui-lib";
 import { Code } from "@astrojs/starlight/components";
-import ViteLogoSvg from "~icons/devicon/vitejs?raw";
-import NextLogoSvg from "~icons/logos/nextjs?raw";
-import RemixLogoSvg from "~icons/logos/remix-icon?raw";
-import AstroLogoSvg from "~icons/devicon/astro?raw";
-import NodeLogoSvg from "~icons/logos/nodejs-icon?raw";
+import ConfigExample from "@/components/homepage/ConfigExample.astro";
 ---
 
 <StarlightPage
@@ -83,416 +80,325 @@ import NodeLogoSvg from "~icons/logos/nodejs-icon?raw";
       </div>
       <section class="sample-config-section">
         <h3>Sample config file</h3>
-        <Code
-          code={`
-  import { DmnoBaseTypes, defineDmnoService, switchBy } from 'dmno';
-  import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
-  import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
-  
-  // use a plugin to fetch secrets from a secure backend like 1Password
-  const OnePass = new OnePasswordDmnoPlugin('1pass', {
-    token: configPath('OP_TOKEN'),
-  });
-  // or store them encrypted within your repo
-  const MyProdVault = new EncryptedVaultDmnoPlugin('vault', {
-    key: configPath('DMNO_VAULT_KEY'),
-  });
-  
-  export default defineDmnoService({
-    settings: {
-      // automatically detect and prevent leaks
-      interceptSensitiveLeakRequests: true,
-      redactSensitiveLogs: true,
-      preventClientLeaks: true,
-    }, 
-    // re-use items defined in other services
-    pick: ['API_KEY', 'DB_URL', 'DMNO_ENV'], 
-    // more config specific to this service
-    schema: {
-      DMNO_VAULT_KEY: {
-        // re-use existing types with validation and docs info built-in
-        extends: EncryptedVaultTypes.encryptionKey,
-      },
-      OP_TOKEN: {
-        extends: OnePasswordTypes.serviceAccountToken,
-      },
-      SAAS_API_KEY: {
-        // load different values based on any other value
-        value: switchBy('DMNO_ENV', {
-          _default: 'my-dev-key',
-          production: MyProdVault.item(),
-        }),
-      },
-      SAAS_PROJECT_TAG: {
-        // use a function to set a value - reference any other config
-        value: (ctx) => \`myapp_\${DMNO_CONFIG.DMNO_ENV}\`,
-      },
-    }
-  });
-          `}
-          lang="ts"
-          title=".dmno/config.mts - sample config file"
-        />
+        <ConfigExample />
       </section>
-
-      <!-- <section class="integrations-section">
-      <h3>Drop-in integrations for your favorite frameworks & tools</h3>
-      <div class="logo-bar">
-        <a href="/docs/integrations/remix/" set:html={RemixLogoSvg} />
-        <a href="/docs/integrations/nextjs/" set:html={NextLogoSvg} />
-        <a href="/docs/integrations/astro/" set:html={AstroLogoSvg} />
-        <a href="/docs/integrations/vite/" set:html={ViteLogoSvg} />
-        <a href="/docs/integrations/node/" set:html={NodeLogoSvg} />
-      </div>
-      <div class="richtext">
-        <p>
-          Use something else? 💪 <a href={DMNO_PUBLIC_CONFIG.DISCORD_JOIN_URL}
-            >Join us on discord</a
-          > and help us build the next one!
-        </p>
-      </div>
-    </section> -->
     </section>
-
-    {/* hide site title */}
-    <style is:global>
-      head:has(meta[content="👋"]) ~ body .content-panel:has(h1#_top) {
-        display: none !important;
-      }
-      head:has(meta[content="👋"])
-        ~ body
-        .content-panel:has(h1#_top)
-        ~ .content-panel {
-        border-top: none;
-      }
-
-      .main-frame {
-        min-height: 100vh;
-      }
-    </style>
-
-    <style lang="less">
-      :global(.main-frame) {
-      }
-      .homepage {
-        .hero {
-          color: var(--color-text-full-shade);
-          padding-bottom: 2rem;
-          display: flex;
-          flex-direction: column;
-
-          @media (min-width: 50rem) {
-            gap: 2rem;
-            padding-top: 4rem;
-            padding-bottom: 5rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-          }
-
-          @media (min-width: 72rem) {
-            padding-left: 4rem;
-            padding-right: 4rem;
-            gap: 4rem;
-          }
-
-          @media (min-width: 100rem) {
-            grid-template-columns: 4fr 5fr;
-          }
-
-          .hero__logo {
-            display: flex;
-            position: relative;
-            align-items: center;
-
-            :global(.dmno-tile-logo) {
-              max-width: 50vw;
-            }
-          }
-          .hero__text {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-          }
-
-          &:before {
-            content: "";
-            position: absolute;
-            z-index: -1;
-            top: 0;
-            bottom: 50%;
-            left: 0%;
-            right: 0;
-            opacity: 0.2;
-          }
-        }
-        h1 {
-          display: none;
-          @media (min-width: 50rem) {
-            font-size: 4rem;
-            display: block;
-          }
-          line-height: 0.8em;
-        }
-        h2 {
-          @media (min-width: 50rem) {
-            font-size: 1.5rem;
-          }
-
-          line-height: 1.4em;
-          margin: 1.5rem 0;
-          font-weight: 500;
-        }
-        .squiggle {
-          /* Define a custom property for the gradient angle */
-          @property --squiggle-angle {
-            syntax: "<angle>";
-            initial-value: 0deg;
-            inherits: false;
-          }
-
-          /* Create the wavy underline */
-          text-decoration: wavy underline var(--brand-pink);
-
-          /* Add animation */
-          animation: squiggle-move 2s ease-in-out infinite;
-        }
-
-        @keyframes squiggle-move {
-          from {
-            text-decoration-color: color-mix(
-              in oklch,
-              var(--brand-pink),
-              var(--brand-purple) 25%
-            );
-          }
-          50% {
-            text-decoration-color: color-mix(
-              in oklch,
-              var(--brand-pink),
-              var(--brand-purple) 75%
-            );
-          }
-          to {
-            text-decoration-color: color-mix(
-              in oklch,
-              var(--brand-pink),
-              var(--brand-purple) 25%
-            );
-          }
-        }
-
-        .cta-wrap {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          @media (min-width: 50rem) {
-            flex-direction: row;
-            gap: 2rem;
-          }
-        }
-
-        a.button {
-          @property --spin {
-            syntax: "<angle>";
-            initial-value: 35deg;
-            inherits: false;
-          }
-
-          background: linear-gradient(
-            var(--spin),
-            var(--brand-purple) 0%,
-            var(--brand-red) 100%
-          );
-          color: var(--brand-white);
-
-          font-size: 18px;
-          height: 48px;
-          border-radius: 50px;
-          padding: 0px 2rem;
-          align-content: center;
-          font-weight: bold;
-          text-wrap: nowrap;
-          text-decoration: none;
-          text-align: center;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          &:hover {
-            background: linear-gradient(
-              var(--spin),
-              var(--brand-pink) 0%,
-              var(--brand-pink) 100%
-            );
-            background: var(--brand-pink);
-          }
-          &:hover {
-            transform: translate3d(-2px, -2px, 0);
-            background: var(--brand-pink);
-            box-shadow: 2px 2px 0 var(--tile-drop-shadow);
-          }
-          &:focus {
-            outline: 1px solid var(--brand-pink);
-          }
-          &:active {
-            transform: translate3d(0, 0, 0);
-            box-shadow: none;
-          }
-        }
-
-        .install-command {
-          display: flex;
-          font-size: 18px;
-          height: 48px;
-          border: 2px solid var(--brand-pink);
-          align-items: center;
-          padding-right: 64px;
-          font-weight: bold;
-          background: black;
-          position: relative;
-          html[data-theme="light"] & {
-            background: rgba(0, 0, 0, 0.2);
-            background: var(--brand-cyan--t2);
-            color: black;
-          }
-
-          font-family: var(--code-font);
-          text-wrap: nowrap;
-
-          --border-gradient-color-1: var(--brand-green);
-          --border-gradient-color-2: var(--brand-cyan);
-          border: 2px solid var(--border-gradient-color-1);
-          border-image-source: linear-gradient(
-            90deg,
-            var(--border-gradient-color-1),
-            var(--border-gradient-color-2)
-          );
-          border-image-slice: 1;
-
-          :global(.d-icon) {
-            height: 44px;
-            width: 44px;
-            flex-shrink: 0;
-
-            // console/cli caret
-            &:first-child {
-              width: 36px;
-              padding: 8px;
-            }
-
-            // copy icon
-            &:last-child {
-              position: absolute;
-              right: 0px;
-              top: 0px;
-              padding: 8px;
-              &:hover {
-                color: var(--brand-pink);
-                cursor: pointer;
-              }
-            }
-          }
-          .install-command__copy.--success {
-            color: var(--brand-green) !important;
-            :global(svg:nth-child(1)) {
-              display: none;
-            }
-            :global(svg:nth-child(2)) {
-              display: block;
-            }
-          }
-        }
-      }
-
-      .value-prop-section {
-        display: grid;
-        .row {
-          display: grid;
-          grid-template-columns: 1fr; /* Single column by default (mobile) */
-        }
-
-        @media (min-width: 768px) {
-          .row:nth-child(1) {
-            grid-template-columns: 1fr 2fr;
-            margin-left: 2rem;
-          }
-          .row:nth-child(2) {
-            grid-template-columns: 3fr 1fr;
-            margin-right: 1rem;
-          }
-        }
-
-        h3 {
-          margin: 1rem 0;
-        }
-        ul {
-          // remove default list styling
-          list-style: none;
-          padding: 0 0 0 0.5rem;
-          align-self: grid-end;
-        }
-        .value-prop-section__text {
-          padding: 1rem 2rem;
-        }
-        .value-prop-section__image-wrapper {
-          margin: 2.5rem 0 0 1rem;
-        }
-      }
-
-      .integrations-section {
-        background: var(--brand-purple--t2);
-        padding: 1rem;
-        @media (min-width: 50rem) {
-          padding: 2rem;
-        }
-        margin: 2rem 0;
-        border-radius: 12px;
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-        p {
-          text-align: right;
-          font-style: italic;
-          width: 100%;
-        }
-      }
-      .logo-bar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5%;
-        align-items: center;
-
-        > div,
-        > a {
-          flex-grow: 1;
-          :global(> svg) {
-            display: block;
-            width: 100%;
-            height: auto;
-            max-height: 80px;
-            min-width: 30px;
-            opacity: 0.8;
-
-            &:hover {
-              opacity: 1;
-              transform: scale(1.1);
-            }
-          }
-        }
-      }
-    </style>
-
-    <script>
-      document
-        .querySelector(".install-command__copy")
-        ?.addEventListener("click", async (e) => {
-          await navigator.clipboard.writeText("npx dmno init");
-          if (e.target instanceof Element) {
-            e.target.classList.add("--success");
-            setTimeout(() => {
-              (e.target as Element).classList.remove("--success");
-            }, 2000);
-          }
-        });
-    </script>
   </div>
 </StarlightPage>
+
+{/* hide site title */}
+<style is:global>
+  head:has(meta[content="👋"]) ~ body .content-panel:has(h1#_top) {
+    display: none !important;
+  }
+  head:has(meta[content="👋"])
+    ~ body
+    .content-panel:has(h1#_top)
+    ~ .content-panel {
+    border-top: none;
+  }
+
+  .main-frame {
+    min-height: 100vh;
+  }
+</style>
+
+<style lang="less">
+  :global(.main-frame) {
+  }
+  .homepage {
+    .hero {
+      color: var(--color-text-full-shade);
+      padding-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+
+      @media (min-width: 50rem) {
+        gap: 2rem;
+        padding-top: 4rem;
+        padding-bottom: 5rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      @media (min-width: 72rem) {
+        padding-left: 4rem;
+        padding-right: 4rem;
+        gap: 4rem;
+      }
+
+      @media (min-width: 100rem) {
+        grid-template-columns: 4fr 5fr;
+      }
+
+      .hero__logo {
+        display: flex;
+        position: relative;
+        align-items: center;
+
+        :global(.dmno-tile-logo) {
+          max-width: 50vw;
+        }
+      }
+      .hero__text {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      &:before {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        top: 0;
+        bottom: 50%;
+        left: 0%;
+        right: 0;
+        opacity: 0.2;
+      }
+    }
+    h1 {
+      display: none;
+      @media (min-width: 50rem) {
+        font-size: 4rem;
+        display: block;
+      }
+      line-height: 0.8em;
+    }
+    h2 {
+      @media (min-width: 50rem) {
+        font-size: 1.5rem;
+      }
+
+      line-height: 1.4em;
+      margin: 1.5rem 0;
+      font-weight: 500;
+    }
+    .squiggle {
+      /* Define a custom property for the gradient angle */
+      @property --squiggle-angle {
+        syntax: "<angle>";
+        initial-value: 0deg;
+        inherits: false;
+      }
+
+      /* Create the wavy underline */
+      text-decoration: wavy underline var(--brand-pink);
+
+      /* Add animation */
+      animation: squiggle-move 2s ease-in-out infinite;
+    }
+
+    @keyframes squiggle-move {
+      from {
+        text-decoration-color: color-mix(
+          in oklch,
+          var(--brand-pink),
+          var(--brand-purple) 25%
+        );
+      }
+      50% {
+        text-decoration-color: color-mix(
+          in oklch,
+          var(--brand-pink),
+          var(--brand-purple) 75%
+        );
+      }
+      to {
+        text-decoration-color: color-mix(
+          in oklch,
+          var(--brand-pink),
+          var(--brand-purple) 25%
+        );
+      }
+    }
+
+    .cta-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      @media (min-width: 50rem) {
+        flex-direction: row;
+        gap: 2rem;
+      }
+    }
+
+    a.button {
+      @property --spin {
+        syntax: "<angle>";
+        initial-value: 35deg;
+        inherits: false;
+      }
+
+      background: linear-gradient(
+        var(--spin),
+        var(--brand-purple) 0%,
+        var(--brand-red) 100%
+      );
+      color: var(--brand-white);
+
+      font-size: 18px;
+      height: 48px;
+      border-radius: 50px;
+      padding: 0px 2rem;
+      align-content: center;
+      font-weight: bold;
+      text-wrap: nowrap;
+      text-decoration: none;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      &:hover {
+        background: linear-gradient(
+          var(--spin),
+          var(--brand-pink) 0%,
+          var(--brand-pink) 100%
+        );
+        background: var(--brand-pink);
+      }
+      &:hover {
+        transform: translate3d(-2px, -2px, 0);
+        background: var(--brand-pink);
+        box-shadow: 2px 2px 0 var(--tile-drop-shadow);
+      }
+      &:focus {
+        outline: 1px solid var(--brand-pink);
+      }
+      &:active {
+        transform: translate3d(0, 0, 0);
+        box-shadow: none;
+      }
+    }
+
+    .install-command {
+      display: flex;
+      font-size: 18px;
+      height: 48px;
+      border: 2px solid var(--brand-pink);
+      align-items: center;
+      padding-right: 64px;
+      font-weight: bold;
+      background: black;
+      position: relative;
+      html[data-theme="light"] & {
+        background: rgba(0, 0, 0, 0.2);
+        background: var(--brand-cyan--t2);
+        color: black;
+      }
+
+      font-family: var(--code-font);
+      text-wrap: nowrap;
+
+      --border-gradient-color-1: var(--brand-green);
+      --border-gradient-color-2: var(--brand-cyan);
+      border: 2px solid var(--border-gradient-color-1);
+      border-image-source: linear-gradient(
+        90deg,
+        var(--border-gradient-color-1),
+        var(--border-gradient-color-2)
+      );
+      border-image-slice: 1;
+
+      :global(.d-icon) {
+        height: 44px;
+        width: 44px;
+        flex-shrink: 0;
+
+        // console/cli caret
+        &:first-child {
+          width: 36px;
+          padding: 8px;
+        }
+
+        // copy icon
+        &:last-child {
+          position: absolute;
+          right: 0px;
+          top: 0px;
+          padding: 8px;
+          &:hover {
+            color: var(--brand-pink);
+            cursor: pointer;
+          }
+        }
+      }
+      .install-command__copy.--success {
+        color: var(--brand-green) !important;
+        :global(svg:nth-child(1)) {
+          display: none;
+        }
+        :global(svg:nth-child(2)) {
+          display: block;
+        }
+      }
+    }
+  }
+
+  .value-prop-section {
+    display: grid;
+    .row {
+      display: grid;
+      grid-template-columns: 1fr; /* Single column by default (mobile) */
+    }
+
+    @media (min-width: 768px) {
+      .row:nth-child(1) {
+        grid-template-columns: 1fr 2fr;
+        margin-left: 2rem;
+      }
+      .row:nth-child(2) {
+        grid-template-columns: 3fr 1fr;
+        margin-right: 1rem;
+      }
+    }
+
+    h3 {
+      margin: 1rem 0;
+    }
+    ul {
+      // remove default list styling
+      list-style: none;
+      padding: 0 0 0 0.5rem;
+      align-self: grid-end;
+    }
+    .value-prop-section__text {
+      padding: 1rem 2rem;
+    }
+    .value-prop-section__image-wrapper {
+      margin: 2.5rem 0 0 1rem;
+    }
+  }
+
+  .integrations-section {
+    background: var(--brand-purple--t2);
+    padding: 1rem;
+    @media (min-width: 50rem) {
+      padding: 2rem;
+    }
+    margin: 2rem 0;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    p {
+      text-align: right;
+      font-style: italic;
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  document
+    .querySelector(".install-command__copy")
+    ?.addEventListener("click", async (e) => {
+      await navigator.clipboard.writeText("npx dmno init");
+      if (e.target instanceof Element) {
+        e.target.classList.add("--success");
+        setTimeout(() => {
+          (e.target as Element).classList.remove("--success");
+        }, 2000);
+      }
+    });
+</script>
