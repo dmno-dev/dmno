@@ -23,7 +23,6 @@ import ThemeToggle from './ThemeToggle.vue';
 <style scoped>
 #header-bar {
   grid-area: header;
-  background: black;
   color: white;
   padding: 6px 8px;
   background: #2a2a2a;

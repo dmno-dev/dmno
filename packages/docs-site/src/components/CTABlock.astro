@@ -1,5 +1,7 @@
 ---
-import DIcon from '@/components/DIcon.astro';
+import DIcon from "@/components/DIcon.astro";
+import TileButton from "@/components/TileButton.vue";
+
 interface Props {
   text?: string;
   href?: string;
@@ -7,23 +9,36 @@ interface Props {
 }
 
 const { text, href, command } = Astro.props as Props;
-
 ---
 
 <div class="cta-block">
-  { href && text && 
-    <a href={href} class="button">{text}</a>
-  }
-  {command && 
-    <div class="install-command">
-      <DIcon name="console" />
-      <div>{command}</div>
-      <DIcon name={['copy', 'check']} class="install-command__copy" />
-    </div>
+  {href && text && <TileButton href={href}>{text}</TileButton>}
+  {
+    command && (
+      <div class="install-command">
+        <DIcon name="console" />
+        <div>{command}</div>
+        <DIcon name={["copy", "check"]} class="install-command__copy" />
+      </div>
+    )
   }
 </div>
 
 <style lang="less">
+  @property --spin-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: true;
+  }
+  @keyframes spin {
+    0% {
+      --spin-angle: 0deg;
+    }
+    100% {
+      --spin-angle: 360deg;
+    }
+  }
+
   .cta-block {
     display: flex;
     flex-wrap: wrap;
@@ -31,83 +46,61 @@ const { text, href, command } = Astro.props as Props;
     justify-content: center;
     gap: 1rem;
 
-
     @media (min-width: 50rem) {
       flex-direction: row;
       gap: 2rem;
     }
-    
   }
-
-  a.button {
-
-    @property --spin {
-      syntax: '<angle>';
-      initial-value: 35deg;
-      inherits: false;
-    }
-
-    background: linear-gradient(var(--spin), var(--brand-purple) 0%, var(--brand-red) 100%);
-    color: var(--brand-white);
-    
-    font-size: 18px;
-    height: 48px;
-    border-radius: 50px;
-    padding: 0px 2rem;
-    align-content: center;
-    font-weight: bold;
-    text-wrap: nowrap;
-    text-decoration: none;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-;
-    &:hover {
-      background: linear-gradient(var(--spin), var(--brand-pink) 0%, var(--brand-pink) 100%);
-      background: var(--brand-pink);
-
-    }
-    &:hover {
-      transform: translate3d(-2px, -2px, 0);
-      background: var(--brand-pink);
-      box-shadow: 2px 2px 0 var(--tile-drop-shadow);
-    }
-    &:focus {
-      outline: 1px solid var(--brand-pink);
-    }
-    &:active {
-      transform: translate3d(0, 0, 0);
-      box-shadow: none;
-    }
-  }
-      
 
   .install-command {
     display: flex;
     font-size: 18px;
     height: 48px;
-    border: 2px solid var(--brand-pink);
+    border: 1px solid var(--brand-pink);
+
     align-items: center;
     padding-right: 64px;
     font-weight: bold;
     background: black;
     position: relative;
-    html[data-theme='light'] & {
-      background: rgba(0,0,0,.2);
-      background: var(--brand-cyan--t2);
-      color: black;
-    }
-
     font-family: var(--code-font);
     text-wrap: nowrap;
 
-    --border-gradient-color-1: var(--brand-green);
-    --border-gradient-color-2: var(--brand-cyan);
-    border: 2px solid var(--border-gradient-color-1);
-    border-image-source: linear-gradient(90deg, var(--border-gradient-color-1), var(--border-gradient-color-2));
+    --glow-color: var(--brand-yellow);
+    animation: spin 5s linear infinite;
+    html[data-theme="light"] & {
+      // background: rgba(0, 0, 0, 0.2);
+      background: color-mix(in oklab, var(--brand-cyan) 10%, white);
+      color: black;
+      --glow-color: var(--brand-cyan);
+    }
+
+    border: 1px solid var(--brand-green);
+    border-image-source: conic-gradient(
+      from calc(var(--spin-angle) + 180deg),
+      var(--glow-color) 0deg,
+      var(--brand-green) 45deg,
+      var(--brand-green) 315deg,
+      var(--glow-color) 360deg
+    );
     border-image-slice: 1;
-    
+
+    // glow
+    &:before {
+      content: "";
+      inset: 0;
+      position: absolute;
+      background: red;
+      z-index: -1;
+      filter: blur(3px);
+      background: conic-gradient(
+        from var(--spin-angle),
+        var(--glow-color) 0deg,
+        transparent 45deg,
+        transparent 315deg,
+        var(--glow-color) 360deg
+      );
+    }
 
     :global(.d-icon) {
       height: 44px;
@@ -119,7 +112,7 @@ const { text, href, command } = Astro.props as Props;
         width: 36px;
         padding: 8px;
       }
-      
+
       // copy icon
       &:last-child {
         position: absolute;
@@ -134,23 +127,26 @@ const { text, href, command } = Astro.props as Props;
     }
     .install-command__copy.--success {
       color: var(--brand-green) !important;
-      :global(svg:nth-child(1)) { display: none; }
-      :global(svg:nth-child(2)) { display: block; }          
+      :global(svg:nth-child(1)) {
+        display: none;
+      }
+      :global(svg:nth-child(2)) {
+        display: block;
+      }
     }
-    
-
   }
 </style>
 
 <script>
-  document.querySelector('.install-command__copy')?.addEventListener('click', async (e) => {
-    await navigator.clipboard.writeText('npx dmno init');
-    if (e.target instanceof Element) {
-      e.target.classList.add('--success');
-      setTimeout(() => {
-        (e.target as Element).classList.remove('--success');
-      }, 2000);
-    }
-  });
+  document
+    .querySelector(".install-command__copy")
+    ?.addEventListener("click", async (e) => {
+      await navigator.clipboard.writeText("npx dmno init");
+      if (e.target instanceof Element) {
+        e.target.classList.add("--success");
+        setTimeout(() => {
+          (e.target as Element).classList.remove("--success");
+        }, 2000);
+      }
+    });
 </script>
-

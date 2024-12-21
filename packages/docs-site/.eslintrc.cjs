@@ -6,7 +6,10 @@ module.exports = {
       extends: ["@dmno/eslint-config/base"],
     },
     {
-      // Define the configuration for `.astro` file.
+      files: ["**/*.vue"],
+      extends: ["@dmno/eslint-config/vue"],
+    },
+    {
       files: ["**/*.astro"],
       extends: ["plugin:astro/recommended"],
       // Allows Astro components to be parsed.

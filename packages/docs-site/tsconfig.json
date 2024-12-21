@@ -10,5 +10,8 @@
     ],
     "customConditions": [ "ts-src" ]
   },
-  "exclude": [ "dist", "~partytown" ]
+  "exclude": [
+    "dist", "~partytown",
+    "src/components/homepage/config-example.ts"
+  ]
 }

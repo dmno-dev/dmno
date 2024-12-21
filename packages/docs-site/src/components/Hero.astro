@@ -1,6 +1,5 @@
 ---
-
-interface Props{
+interface Props {
   heading?: string;
   subheading?: string;
   image?: string;
@@ -12,28 +11,29 @@ const { heading, subheading } = Astro.props as Props;
 <div class="hero">
   <h1><slot name="heading">{heading}</slot></h1>
   <h2><slot name="subheading">{subheading}</slot></h2>
+  <slot />
 </div>
 
 <style>
   .hero {
     color: var(--color-text-full-shade);
     padding-bottom: 2rem;
-    padding: 3rem  2rem;
+    padding: 3rem 2rem;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    @container (max-width: 800px) { 
+    gap: 0.5rem;
+    text-align: center;
+    @container (max-width: 800px) {
       padding: 2rem 0rem;
     }
-    
+
     .hero__logo {
       display: flex;
       position: relative;
       align-items: center;
-      
+
       :global(.dmno-tile-logo) {
         max-width: 50vw;
-        
       }
     }
     .hero__text {
@@ -41,33 +41,51 @@ const { heading, subheading } = Astro.props as Props;
     }
 
     &:before {
-      content: '';
+      content: "";
       position: absolute;
       z-index: -1;
       top: 0;
       bottom: 50%;
       left: 0%;
       right: 0;
-      opacity: .2; 
+      opacity: 0.2;
     }
   }
   h1 {
-    font-size: 1.6rem;
-    line-height: 1.3em;
+    font-size: 2rem;
+    line-height: 1em;
+    /* the "g" masking is cut off without some padding */
+    padding-bottom: 0.1em;
+
+    --color-one: var(--brand-pink);
+    --color-two: var(--brand-purple);
+
+    background-color: var(--color-two);
+    background: linear-gradient(
+      180deg,
+      var(--color-one) 10%,
+      var(--color-two) 90%
+    );
+    background-clip: text;
+    color: transparent;
+
     @media (min-width: 50rem) {
-      font-size: 4rem;
+      font-size: 3.2rem;
       display: block;
       line-height: 1em;
     }
-    
+    @media (min-width: 72rem) {
+      font-size: 3.6rem;
+    }
   }
   h2 {
     font-size: 1.2rem;
     line-height: 1.4em;
     font-weight: 500;
+    margin-bottom: 2rem;
+    font-weight: bold;
     @media (min-width: 50rem) {
       font-size: 1.5rem;
     }
-    
   }
 </style>
