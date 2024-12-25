@@ -1,7 +1,5 @@
 Check out the [docs](https://dmno.dev/docs/integrations/nextjs/) for more information on how to use [DMNO](https://dmno.dev) + [Next.js](https://nextjs.org/).
 
-*** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
-
 If you have any questions, please reach out to us on [Discord](https://chat.dmno.dev).
 
 ----
@@ -10,9 +8,19 @@ If you have any questions, please reach out to us on [Discord](https://chat.dmno
 
 Provides tooling to integrate dmno into your nextjs app
 
-### How to use
+  ### Installation
 
-#### Add to your next config
+```bash
+# let dmno init do the work for you
+npx dmno init
+```
+
+```bash
+# or do it manually
+npm add @dmno/nextjs-integration
+```
+
+### Example Usage
 
 Initialize the plugin and use in your next config (`next.config.mjs`)
 
@@ -38,7 +46,18 @@ import '@dmno/nextjs-integration';
 ```
 
 
-### Gotchas
+#### Add to package.json
 
-Running `dmno run -w -- next dev` will automatically restart the next dev server on config changes, but unfortunately it does not trigger a page refresh in the browser
+```json
+{
+  "name": "yourapp",
+  "scripts": {
+    "dev": "dmno run -w -- next dev",
+    "build": "dmno run -- next build",
+    "start": "dmno run -- next start",
+    "lint": "dmno run -- next lint"
+  },
+  // ...
+}
+```
 

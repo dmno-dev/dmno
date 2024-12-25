@@ -1,7 +1,5 @@
 Check out the [docs](https://dmno.dev/docs/plugins/bitwarden/) for more information on how to use [DMNO](https://dmno.dev) with [Bitwarden Secrets Manager](https://bitwarden.com/help/secrets-manager-overview/).
 
-*** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
-
 If you have any questions, please reach out to us on [Discord](https://chat.dmno.dev).
 
 ----
@@ -12,13 +10,17 @@ Securely use your secrets and data from Bitwarden Secrets Manager within DMNO Co
 
 ## Plugin
 
-### Initialization
+### Installation
+
+```bash
+npm add @dmno/bitwarden-plugin
+```
+
+### Example Usage
 
 You must initialize an instance of the plugin, giving it a unique ID and wiring up the access token to its location within your config schema.
 
-Then you can use the plugin instance which now has authentication, to fetch individual items by their UUID.
-
-For example:
+Then, you can use the plugin instance which now has authentication, to fetch individual items by their UUID.
 
 ```typescript
 import { DmnoBaseTypes, defineDmnoService, configPath, NodeEnvType, switchBy, configPath } from 'dmno';

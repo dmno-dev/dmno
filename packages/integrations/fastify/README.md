@@ -1,16 +1,20 @@
 Check out the [docs](https://dmno.dev/docs/integrations/fastify/) for more information on how to use [DMNO](https://dmno.dev) + [Fastify](https://fastify.dev/).
 
-*** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
-
 If you have any questions, please reach out to us on [Discord](https://chat.dmno.dev).
 
 ----
 
 # @dmno/fastify-integration [![npm](https://img.shields.io/npm/v/@dmno/fastify-integration)](https://www.npmjs.com/package/@dmno/fastify-integration)
 
-Provides tooling to integrate dmno into your fastify app
+Provides tooling to integrate DMNO into your Fastify app
 
-### How to use
+### Installation
+
+```bash
+npm add @dmno/fastify-integration
+```
+
+### Example Usage
 
 Import and register the `dmnoFastifyPlugin` when you initialize Fastify.
 

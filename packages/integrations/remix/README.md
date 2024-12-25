@@ -1,7 +1,5 @@
 Check out the [docs](https://dmno.dev/docs/integrations/remix/) for more information on how to use [DMNO](https://dmno.dev) + [Remix](https://remix.run/).
 
-*** THIS IS PREVIEW SOFTWARE AND SUBJECT TO RAPID CHANGE ***
-
 If you have any questions, please reach out to us on [Discord](https://chat.dmno.dev).
 
 ----
@@ -10,10 +8,22 @@ If you have any questions, please reach out to us on [Discord](https://chat.dmno
 
 Provides tooling to integrate dmno into your Remix dev/build workflow
 
-### How to use
+### Installation
+
+```bash 
+# let dmno init automatically add the integration
+npx dmno init
+```
+
+```bash
+# or do it manually
+npm add @dmno/remix-integration
+```
+
+### Example Usage
 
 Import and initialize our remix integration and add to your `vite.config.ts` file.
-You must add both the vite plugin and the Remix preset.
+You must add both the Vite plugin and the Remix preset.
 
 ```typescript
 import { dmnoRemixVitePlugin, dmnoRemixPreset } from "@dmno/remix-integration";

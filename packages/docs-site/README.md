@@ -1,9 +1,6 @@
 > If you're looking for this site in a browser, you can find it at [dmno.dev](https://dmno.dev).
 
-# DMNO Docs (dmno.dev)
-
-Start by following the instructions in the [root README](../../README.md) to install dependencies and get started.
-
+# DMNO Docs - dmno.dev
 
 ## 🚀 Project Structure
 
@@ -29,6 +26,7 @@ All commands are run from the root of the project, from a terminal:
 | `pnpm run preview`         | Preview your build locally, before deploying     |
 | `pnpm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
 | `pnpm run astro -- --help` | Get help using the Astro CLI                     |
+| `pnpm run -w build:libs`          | Run at root to build the libraries for the docs site            |
 
 ## 👀 Want to learn more?
 
