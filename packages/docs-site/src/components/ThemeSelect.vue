@@ -1,6 +1,7 @@
 
 <template>
   <div class="theme-select" @click="toggleTheme">
+    <div class="theme-select__shadow" />
     <div class="theme-select__inner">
       <div class="theme-select__dark">
         <div v-html="MoonIcon" />
@@ -14,14 +15,14 @@
 
 <script setup lang="ts">
 // @ts-ignore
-import SunIcon from "~icons/material-symbols/light-mode?raw";
+import SunIcon from '~icons/material-symbols/light-mode?raw';
 // @ts-ignore
-import MoonIcon from "~icons/material-symbols/dark-mode?raw";
+import MoonIcon from '~icons/material-symbols/dark-mode?raw';
 
 function toggleTheme() {
   const currentTheme = document.documentElement.dataset.theme;
   const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-  localStorage.setItem('starlight-theme', newTheme); 
+  localStorage.setItem('starlight-theme', newTheme);
   document.documentElement.dataset.theme = newTheme;
 }
 </script>
@@ -41,30 +42,21 @@ function toggleTheme() {
     position: absolute;
   }
 
-  --hover-offset: -2px;
+  --hover-offset-x: 2px;
+  --hover-offset-y: 2px;
 
   html[data-theme="light"] & {
-    --hover-offset: 2px; // have to reverse because of 3d flip
+    --hover-offset-x: -2px; // have to reverse because of 3d flip
   }
 
   &:hover {
     .theme-select__inner {
       > div {
-        margin-top: -2px;
-        margin-left: var(--hover-offset);
-        box-shadow: 2px 2px 0px var(--tile-drop-shadow);
+        margin-left: var(--hover-offset-x);
+        margin-top: var(--hover-offset-y);
       }
     }
   }
-  // &:active {
-  //   .theme-select__inner {
-  //     > div {
-  //       margin-top: 0px;
-  //       margin-left: 0;
-  //       box-shadow: none;
-  //     }
-  //   }
-  // }
 }
 
 .theme-select__inner {
@@ -79,6 +71,21 @@ function toggleTheme() {
     // transition: all .1s;
   }
 
+  html[data-theme="light"] & {
+    transform: rotateY(180deg);
+  }
+}
+
+.theme-select__shadow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #999;
+  top: 0;
+  left: 0;
+  border-radius: 4px;
+  transition: transform 0.25s;
+  transform-style: preserve-3d;
   html[data-theme="light"] & {
     transform: rotateY(180deg);
   }

@@ -81,7 +81,7 @@ const dotsRef = ref<InstanceType<typeof DotsLoader>>();
   width: 100%;
   height: 100%;
 
-  border-radius: 0% 50% 50% 0%;
+  border-radius: 5% 50% 50% 5%;
   margin-left: 3%;
   background: white;
   // background: linear-gradient(35deg, var(--logo-color-1) 0%, var(--logo-color-2) 100%);

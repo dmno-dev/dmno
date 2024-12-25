@@ -1,0 +1,54 @@
+---
+
+---
+
+<div class="logo-bar">
+  <slot />
+</div>
+
+<style>
+  .logo-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    html[data-theme="light"] & {
+      color: black;
+    }
+
+    gap: 20px;
+    --logo-size: 50px;
+    @media (min-width: 50rem) {
+      gap: 30px;
+      --logo-size: 65px;
+    }
+
+    /* @media (min-width: 72rem) {
+      gap: 40px;
+    }
+
+    @media (min-width: 100rem) {
+      grid-template-columns: 4fr 5fr;
+    } */
+
+    :global(> div),
+    :global(> a) {
+      color: currentColor;
+      /* background: red; */
+      :global(> svg) {
+        display: block;
+        height: auto;
+        max-height: var(--logo-size);
+        min-width: var(--logo-size);
+        filter: saturate(80%);
+
+        &:hover {
+          filter: saturate(100%);
+          transform: scale(1.1);
+        }
+      }
+    }
+  }
+</style>

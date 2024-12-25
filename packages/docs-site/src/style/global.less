@@ -31,7 +31,7 @@ h5 {
 :root {
   --cp-s: 89%;
   --cp-l: 65%;
-  --cp-l2: 55%;
+  --cp-l2: 50%;
   --cp-s-dark: 65%;
   --cp-l-dark: 10%;
   --cp-t1: 50%;
@@ -482,5 +482,22 @@ li>p>img:last-child {
     &:hover {
       color: var(--color-text-full-shade);
     }
+  }
+}
+
+.responsive-image {
+  width: 100%;
+  height: auto;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .desktop-only {
+    display: none;
   }
 }

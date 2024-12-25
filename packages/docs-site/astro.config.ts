@@ -110,10 +110,6 @@ export default defineConfig({
           label: 'Get Started',
           items: [
             {
-              label: 'What is DMNO?',
-              link: '/docs/get-started/what-is-dmno/',
-            },
-            {
               label: 'Quickstart',
               link: '/docs/get-started/quickstart/',
             },

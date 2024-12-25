@@ -44,7 +44,7 @@ const shouldRenderSearch = !isTopLevel;
       <span class="logo-font logo-dmno-text"> DMNO </span>
     </a>
   </div>
-  
+
   <HeaderNav />
   <!-- {isTopLevel ? 
     <HeaderNavMarketing
@@ -53,7 +53,7 @@ const shouldRenderSearch = !isTopLevel;
     <HeaderNav />
   } -->
 
-  {shouldRenderSearch ? <Search {...Astro.props} /> : <div/>}
+  {shouldRenderSearch ? <Search {...Astro.props} /> : <div />}
   <div class="sl-hidden md:sl-flex right-group">
     <SocialIcons />
     <ThemeSelect client:load />
@@ -156,7 +156,7 @@ const shouldRenderSearch = !isTopLevel;
   }
 
   .right-group {
-    justify-content: right ;
+    justify-content: right;
   }
   .header :global(.social-icons::after) {
     content: "";
