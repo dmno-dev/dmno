@@ -1,6 +1,6 @@
 {
   "name": "@dmno/fastify-integration",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Fastify plugin to use configuration and secrets from DMNO",
   "author": "dmno-dev",
   "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "@dmno/netlify-platform",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "tools to use dmno with netlify",
   "author": "dmno-dev",
   "license": "MIT",

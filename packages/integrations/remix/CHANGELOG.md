@@ -1,5 +1,11 @@
 # @dmno/remix-integration
 
+## 0.0.6
+
+### Patch Changes
+
+- [#185](https://github.com/dmno-dev/dmno/pull/185) [`29dcfc2`](https://github.com/dmno-dev/dmno/commit/29dcfc2e6dc9021b30305f694954b4af61dd9d8c) Thanks [@philmillman](https://github.com/philmillman)! - update readmes
+
 ## 0.0.5
 
 ### Patch Changes
