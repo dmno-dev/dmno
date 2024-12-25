@@ -1,5 +1,14 @@
 # dmno
 
+## 0.0.34
+
+### Patch Changes
+
+- [#185](https://github.com/dmno-dev/dmno/pull/185) [`29dcfc2`](https://github.com/dmno-dev/dmno/commit/29dcfc2e6dc9021b30305f694954b4af61dd9d8c) Thanks [@philmillman](https://github.com/philmillman)! - update readmes
+
+- Updated dependencies [[`29dcfc2`](https://github.com/dmno-dev/dmno/commit/29dcfc2e6dc9021b30305f694954b4af61dd9d8c)]:
+  - @dmno/configraph@0.0.8
+
 ## 0.0.33
 
 ### Patch Changes
