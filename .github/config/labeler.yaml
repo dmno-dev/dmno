@@ -1,0 +1,66 @@
+# Labeler configuration
+
+## core packages
+core:
+- changed-files:
+    - any-glob-to-any-file: 'packages/core/*'
+configraph:
+- changed-files:
+    - any-glob-to-any-file: 'packages/configraph/*'
+## docs/readmes
+docs-site:
+- changed-files:
+    - any-glob-to-any-file: 'packages/docs-site/*'
+## integrations
+integrations/astro:
+- changed-files:
+    - any-glob-to-any-file: 'packages/integrations/astro/*'
+integrations/nextjs:
+- changed-files:
+    - any-glob-to-any-file: 'packages/integrations/nextjs/*'
+integrations/vite:
+- changed-files:
+    - any-glob-to-any-file: 'packages/integrations/vite/*'
+## plugins
+plugins/1password:
+- changed-files:
+    - any-glob-to-any-file: 'packages/plugins/1password/*'
+plugins/encrypted-vault:
+- changed-files:
+    - any-glob-to-any-file: 'packages/plugins/encrypted-vault/*'
+plugins/infisical:
+- changed-files:
+    - any-glob-to-any-file: 'packages/plugins/infisical/*'
+plugins/bitwarden:
+- changed-files:
+    - any-glob-to-any-file: 'packages/plugins/bitwarden/*'
+## integrations
+integrations/astro:
+- changed-files:
+    - any-glob-to-any-file: 'packages/integrations/astro/*'
+integrations/fastify:
+- changed-files:
+    - any-glob-to-any-file: 'packages/integrations/fastify/*'
+integrations/nextjs:
+- changed-files:
+    - any-glob-to-any-file: 'packages/integrations/nextjs/*'
+integrations/remix:
+- changed-files:
+    - any-glob-to-any-file: 'packages/integrations/remix/*'
+integrations/vite:
+- changed-files:
+    - any-glob-to-any-file: 'packages/integrations/vite/*'
+## platforms
+platforms/netlify:
+- changed-files:
+    - any-glob-to-any-file: 'packages/platforms/netlify/*'
+platforms/vercel:
+- changed-files:
+    - any-glob-to-any-file: 'packages/platforms/vercel/*'
+platforms/cloudflare:
+- changed-files:
+    - any-glob-to-any-file: 'packages/platforms/cloudflare/*'
+## example-repo
+example-repo:
+- changed-files:
+    - any-glob-to-any-file: 'example-repo/*'
