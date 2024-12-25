@@ -4,19 +4,10 @@
 core:
 - changed-files:
     - any-glob-to-any-file: 'packages/core/*'
-cli:
-- changed-files:
-    - any-glob-to-any-file: 'packages/core/src/cli/*'
-config-engine:
-- changed-files:
-    - any-glob-to-any-file: 'packages/core/src/config-engine/*'
 configraph:
 - changed-files:
     - any-glob-to-any-file: 'packages/configraph/*'
 ## docs/readmes
-documentation:
-- changed-files: 
-  - any-glob-to-any-file: '**/README.md'
 docs-site:
 - changed-files:
     - any-glob-to-any-file: 'packages/docs-site/*'
