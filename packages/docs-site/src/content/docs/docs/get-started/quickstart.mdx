@@ -1,6 +1,6 @@
 ---
-title: DMNO quickstart
-description: Get started with DMNO's quickstart guide and start managing your configuration more effectively.
+title: Quickstart guide
+description: Get started with DMNO and start managing your configuration more effectively.
 ---
 
 import { Steps, FileTree, Code } from '@astrojs/starlight/components';
@@ -8,17 +8,9 @@ import TabbedCode from '@/components/TabbedCode.astro';
 
 ## Current requirements
 
-DMNO Config requires the following: 
-
-- Node.js > 20.x
-- One of the following:
-  - `pnpm`
-  - `npm`
-  - `yarn`
-  - `bun`
-
-Optionally: 
-- TypeScript
+DMNO Config requires either of the following: 
+- `node` (>20.x) + either `pnpm`, `npm`, or `yarn`
+- `bun`
 
 :::tip
 While TypeScript is not required in your applications, you will get the full feature set (e.g., IntelliSense and inline docs) of DMNO by using it in a TypeScript project. Note that our `config.mts` files themselves are written in TypeScript, so you'll want to use an editor that at least supports it. 
@@ -31,16 +23,16 @@ While TypeScript is not required in your applications, you will get the full fea
     Run this command in the root of your project:
     <TabbedCode dynamicExec="dmno init" />
 
-    This will create a `.dmno` folder in the root of your project with a `config.mts` file, including config items in your `schema` that we automatically imported from `.env` files. If in a monorepo, any additional services of your choice will get their own `.dmno` folders and associated files. Each `.dmno` folder looks something like this: 
+    This will create a `.dmno` folder in the root of your project with a `config.mts` file, including config items in your `schema` that we automatically scaffold using config items we find in `.env` files and in your source code. If in a monorepo, any additional services of your choice will get their own `.dmno` folders and associated files. Each `.dmno` folder looks something like this: 
 
     <FileTree>
-    - / 
+    - /your-project 
       - .dmno
         - .typegen/ (generated types)
-        - .env.local (your local overrides and sensitive values)
+        - .env.local (optional local overrides file, gitignored)
         - **config.mts** (your config schema)
         - tsconfig.json (dmno specific tsconfig)
-      - ... the rest of your folders
+      - ... the rest of your files and folders
     </FileTree>
 
 2. ### **Run `dmno resolve` in watch mode**
@@ -50,9 +42,9 @@ While TypeScript is not required in your applications, you will get the full fea
 
 3. ### **Write your schema**
 
-    The config schema and other settings live in the `.dmno/config.mts` files. `dmno init` does its best to scaffold out the initial version of this schema based on your existing `.env` files. Updating each item with a description, [`required`](/docs/guides/schema/#validations--required-config), and [`sensitive`](/docs/guides/schema/#secrets--security) is a great next step. You can then improve your schema over time, adding validations, and setting values from within the schema itself.
+    The config schema and other settings live in the `.dmno/config.mts` files. `dmno init` does its best to scaffold out the initial version of this schema but it should be reviewed. Updating each item with a description, [`required`](/docs/guides/schema/#validations--required-config), and [`sensitive`](/docs/guides/schema/#secrets--security) is a great next step. You can then improve your schema over time, adding validations, and setting values from within the schema itself.
 
-    Your initial should look something like this:
+    Your initial schema should look something like this:
 
     ```typescript title=".dmno/config.mts"
     import { DmnoBaseTypes, defineDmnoService } from 'dmno';

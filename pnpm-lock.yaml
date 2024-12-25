@@ -458,6 +458,9 @@ importers:
       nanostores:
         specifier: ^0.10.3
         version: 0.10.3
+      postcss-nested:
+        specifier: ^7.0.2
+        version: 7.0.2(postcss@8.4.47)
       sharp:
         specifier: ^0.33.4
         version: 0.33.4
@@ -9693,6 +9696,12 @@ packages:
   postcss-nested@6.0.1:
     resolution: {integrity: sha512-mEp4xPMi5bSWiMbsgoPfcP74lsWLHkQbZc3sY+jWYd65CUwXrUaTp0fmNpa01ZcETKlIgUdFN/MpS2xZtqL9dQ==}
     engines: {node: '>=12.0'}
+    peerDependencies:
+      postcss: ^8.2.14
+
+  postcss-nested@7.0.2:
+    resolution: {integrity: sha512-5osppouFc0VR9/VYzYxO03VaDa3e8F23Kfd6/9qcZTUI8P58GIYlArOET2Wq0ywSl2o2PjELhYOFI4W7l5QHKw==}
+    engines: {node: '>=18.0'}
     peerDependencies:
       postcss: ^8.2.14
 
@@ -23361,6 +23370,11 @@ snapshots:
     dependencies:
       postcss: 8.4.47
       postcss-selector-parser: 6.0.16
+
+  postcss-nested@7.0.2(postcss@8.4.47):
+    dependencies:
+      postcss: 8.4.47
+      postcss-selector-parser: 7.0.0
 
   postcss-selector-parser@6.0.16:
     dependencies:

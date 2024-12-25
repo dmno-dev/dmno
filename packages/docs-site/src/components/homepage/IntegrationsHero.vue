@@ -72,7 +72,7 @@ const activeIndexes = reactive({
   platform: Math.floor(Math.random() * TILES.platform.length),
 });
 
-function getIndexes(i, arrayLength) {
+function getIndexes(i: number, arrayLength: number) {
   return [
     (arrayLength + i - 2) % arrayLength,
     (arrayLength + i - 1) % arrayLength,
@@ -92,10 +92,11 @@ const hoverIndexes = reactive({
   integration: null,
 });
 
-const rowEls = ref({});
+const rowEls = reactive<Partial<Record<keyof typeof TILES, HTMLElement>>>({});
 
 function initRowAnimationRestart(type: keyof typeof TILES) {
-  const el = rowEls.value[type];
+  const el = rowEls[type];
+  if (!el) return;
   el.addEventListener('animationend', () => {
     const delta = type === 'integration' ? -1 : 1;
     // using % on negative numbers doesn't work, so we add the full length again to stay positive
@@ -104,7 +105,7 @@ function initRowAnimationRestart(type: keyof typeof TILES) {
     el.style.animation = 'none';
     // eslint-disable-next-line no-void
     void el.offsetWidth; // trigger reflow
-    el.style.animation = null;
+    el.style.animation = '';
   });
 }
 
@@ -136,7 +137,6 @@ onMounted(() => {
   max-width: 800px;
   width: 100%;
   margin: 0 auto;
-  color: white;
 
   position: relative;
   border-radius: 8px;
@@ -173,7 +173,7 @@ onMounted(() => {
     }
   }
   .integrations-hero__tiles {
-    width: calc(3 * var(--tile-width));
+    width: calc(3 * var(--tile-width) + 2 * var(--tile-spacing));
     justify-self: center;
 
     /* overlay to see active area */
@@ -222,13 +222,13 @@ onMounted(() => {
   }
   .integrations-hero__text, .integrations-hero__tiles {
     > div:nth-child(1){
-      --accent-color: var(--brand-pink);
+      --accent-color: var(--brand-pink--text);
     }
     > div:nth-child(2){
-      --accent-color: var(--brand-green);
+      --accent-color: var(--brand-green--text);
     }
     > div:nth-child(3){
-      --accent-color: var(--brand-cyan);
+      --accent-color: var(--brand-cyan--text);
     }
   }
 

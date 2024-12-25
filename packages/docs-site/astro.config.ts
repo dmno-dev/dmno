@@ -110,10 +110,6 @@ export default defineConfig({
           label: 'Get Started',
           items: [
             {
-              label: 'Home',
-              link: '/docs/',
-            },
-            {
               label: 'Quickstart',
               link: '/docs/get-started/quickstart/',
             },

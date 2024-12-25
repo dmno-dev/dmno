@@ -1,5 +1,5 @@
 <template>
-  <div :class="['dots-loader', `dots-loader--${counter+1}`]">
+  <div :class="['dots-loader', `--${counter+1}`, isMounted && '--loaded']">
     <div
       v-for="(_p, i) in POSITION_STEPS"
       :key="i"
@@ -10,7 +10,9 @@
 
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import {
+  computed, onMounted, ref,
+} from 'vue';
 
 const props = defineProps({
   autoPlay: { type: Boolean },
@@ -44,10 +46,15 @@ const POSITION_STEPS: Array<Array<PositionNames>> = [
 
 
 const NUM_POSITIONS = POSITION_STEPS.length;
+const isMounted = ref(false);
 
 const counter = ref(props.startAt ? props.startAt - 1 : 0);
-onMounted(() => {
+onMounted(async () => {
   if (props.autoPlay) setTimeout(start, TIC_SEC_MS);
+  // firefox was animating the dots on initial load, so we enable animations after initial load
+  setTimeout(() => {
+    isMounted.value = true;
+  });
 });
 
 let ticInterval: ReturnType<typeof setInterval> | undefined;
@@ -93,16 +100,19 @@ defineExpose({ start, stop });
 
   --dot-size: 18%;
 
-  &.dots-loader--1 > div:first-child {
+  &.--1 > div:first-child {
     --dot-size: 25%;
   }
 
   > div {
+    transform: translate(0,0);
     width: var(--dot-size);
     height: var(--dot-size);
     border-radius: 50%;
     background: currentColor;
     position: absolute;
+  }
+  &.--loaded > div {
     transition: transform 1s, width 1s, height 1s;
   }
 }

@@ -13,6 +13,10 @@
     gap: 40px;
     align-items: center;
     justify-content: center;
+    color: white;
+    html[data-theme="light"] & {
+      color: black;
+    }
 
     gap: 20px;
     --logo-size: 50px;
@@ -29,14 +33,12 @@
       grid-template-columns: 4fr 5fr;
     } */
 
-    > div,
-    > a {
-      /* flex-grow: 1; */
+    :global(> div),
+    :global(> a) {
       color: currentColor;
       /* background: red; */
-      > svg {
+      :global(> svg) {
         display: block;
-        width: 100%;
         height: auto;
         max-height: var(--logo-size);
         min-width: var(--logo-size);

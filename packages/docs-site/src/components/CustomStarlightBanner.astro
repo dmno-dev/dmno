@@ -15,15 +15,13 @@ const showDefaultBanner =
       <div class="sl-banner__wrap-inner">
         {banner && <div class="sl-banner" set:html={banner.content} />}
         {showDefaultBanner && (
-          <>
-            <div class="sl-banner info richtext">
-              ✨ If you've tried DMNO or looked through the docs,{" "}
-              <a href="https://forms.gle/AfM99kTJ9p1c25g86" target="_blank">
-                let us know
-              </a>
-              what you think!
-            </div>
-          </>
+          <div class="sl-banner info richtext">
+            ✨ If you've tried DMNO or looked through the docs,{" "}
+            <a href="https://forms.gle/AfM99kTJ9p1c25g86" target="_blank">
+              let us know
+            </a>
+            what you think!
+          </div>
         )}
       </div>
     </div>

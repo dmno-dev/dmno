@@ -5,21 +5,11 @@ import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-v
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 
 // use a plugin to fetch secrets from a secure backend like 1Password
-const OnePass = new OnePasswordDmnoPlugin('1pass', {
-  token: configPath('OP_TOKEN'),
-});
+const onePassSecrets = new OnePasswordDmnoPlugin('1pass', { token: configPath('OP_TOKEN') });
 // or store them encrypted within your repo
-const MyProdVault = new EncryptedVaultDmnoPlugin('vault', {
-  key: configPath('DMNO_VAULT_KEY'),
-});
+const vaultFileSecrets = new EncryptedVaultDmnoPlugin('vault', { key: configPath('DMNO_VAULT_KEY') });
 
 export default defineDmnoService({
-  settings: {
-    // automatically detect and prevent leaks
-    interceptSensitiveLeakRequests: true,
-    redactSensitiveLogs: true,
-    preventClientLeaks: true,
-  },
   // re-use items defined in other services
   pick: ['API_KEY', 'DB_URL', 'DMNO_ENV'],
   // more config specific to this service
@@ -35,7 +25,7 @@ export default defineDmnoService({
       // load different values based on any other value
       value: switchBy('DMNO_ENV', {
         _default: 'my-dev-key',
-        production: OnePass.item(),
+        production: onePassSecrets.item(),
       }),
     },
     SAAS_PROJECT_TAG: {

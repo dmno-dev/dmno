@@ -18,9 +18,8 @@ a.tile-button(
 </template>
 
 <script setup lang="ts">
-import { onMount } from 'nanostores';
 import {
-  ref, computed, type PropType, onBeforeMount,
+  computed,
 } from 'vue';
 
 const { size = 'm' } = defineProps<{
@@ -91,24 +90,23 @@ const computedClasses = computed(() => ({
   cursor: pointer;
   text-decoration: none;
   font-weight: bold;
-  width: max-content;
   position: relative;
 
-  transition: --tile-thickness .2s cubic-bezier(.3, .7, .4, 1);;
+  /* slower slide back in */
+  transition: --tile-thickness .6s cubic-bezier(.3, .7, .4, 1);
 
   will-change: transform;
   outline-offset: 4px;
+  display: grid;
 
   :focus:not(:focus-visible) {
     outline: none;
   }
 
-  /* slower slide back in */
-  transition: --tile-thickness .6s cubic-bezier(.3, .7, .4, 1);
 
   &:hover, &:focus {
     --tile-thickness: var(--full-tile-thickness);
-    /* slide out more quickly */
+    /* slide out more quickly, with some bounce */
     transition: --tile-thickness .25s cubic-bezier(.3, .7, .4, 1.5);
   }
   &:active {
@@ -120,16 +118,15 @@ const computedClasses = computed(() => ({
 .tile-button__front {
   background: var(--brand-purple);
   border-radius: var(--tile-radius);
-  color: white;
-  padding: var(--padding-y) var(--padding-x);
-  height: 100%;
-  position: relative;
   z-index: 3;
+  border: 1px solid var(--tile-edge-color);
+  transform: translate(var(--tile-thickness), var(--tile-thickness));
+  padding: var(--padding-y) var(--padding-x);
+  color: white;
+  position: relative;
   display: grid;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--tile-edge-color);
-  transform: translate(var(--tile-thickness), var(--tile-thickness));
 }
 .tile-button__back {
   border-radius: var(--tile-radius);
@@ -143,20 +140,13 @@ const computedClasses = computed(() => ({
   /* 3d top face */
   &:before {
     content: '';
-    /* right: calc(-.2 * var(--tile-radius)); */
-
     left: calc(var(--tile-thickness) + var(--tile-radius) / 2);
     right: calc(-.25 * var(--tile-thickness));
     height: calc(var(--tile-thickness));
-
-
     border-top-right-radius: 2px;
-    /* background: var(--tile-shadow-color); */
     position: absolute;
     transform: skewX(45deg);
-    /* box-shadow: inset 0px -4px 4px rgba(0,0,0,.3); */
     background: #AAA;
-    /* border-top: 1px solid var(--tile-edge-color); */
     border-right: 1px solid var(--tile-edge-color);
   }
   /* 3d left face */
@@ -170,9 +160,7 @@ const computedClasses = computed(() => ({
     background: #555;
     position: absolute;
     transform: skewY(45deg);
-    /* border-left: 1px solid var(--tile-edge-color); */
     border-bottom: 1px solid var(--tile-edge-color);
-    /* box-shadow: inset -4px 0px 4px rgba(0,0,0,.3); */
   }
 }
 .tile-button__shadow {

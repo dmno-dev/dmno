@@ -44,17 +44,11 @@ const computedClasses = computed(() => ({
 .icon-graph-tile {
   --tile-radius: calc(.05 * var(--tile-width));
   --tile-thickness: calc(.04 * var(--tile-width));
-  --tile-shadow-color: #999;
   --tile-edge-color: #555;
 
   width: var(--tile-width);
   height: calc(var(--tile-width) / 2);
-
-  border-radius: var(--tile-radius);
   position: relative;
-  /* box-shadow: -3px -3px 0 var(--shadow-color); */
-
-  z-index: 2;
 
   &:hover {
     --tile-edge-color: var(--accent-color, black);
@@ -103,57 +97,53 @@ const computedClasses = computed(() => ({
   z-index: 3;
   display: grid;
   position: relative;
-  border-radius: inherit;
+  border-radius: var(--tile-radius);
   grid-template-columns: 1fr 1fr;
   /* box-shadow: -2px -2px 10px rgba(0,0,0,.4); */
   border: 1px solid #111;
   border: 1px solid var(--tile-edge-color);
 }
 .icon-graph-tile__back {
+  /* rounded corner 3d color */
+  background: #CCC;
   width: inherit;
   height: inherit;
-  background: var(--tile-shadow-color);
   position: absolute;
   margin-left: calc(-1 * var(--tile-thickness));
   margin-top: calc(-1 * var(--tile-thickness));
   z-index: 2;
-  border-radius: inherit;
-  /* rounded corner 3d color */
-  background: #CCC;
   border: 1px solid var(--tile-edge-color);
+  border-radius: var(--tile-radius);
+  border-top-right-radius: calc(1.5 * var(--tile-radius));
+  border-bottom-left-radius: calc(1.5 * var(--tile-radius));
 
   /* 3d top face */
   &:before {
     content: '';
-    /* right: calc(-.2 * var(--tile-radius)); */
-
-    top: 0;
-    left: calc(var(--tile-thickness) + var(--tile-radius) / 2);
+    background: #FFF;
+    top: -1px;
+    left: calc(1.5 * var(--tile-thickness));
     right: calc(-.25 * var(--tile-thickness));
-    height: calc(var(--tile-thickness));
+    height: calc(1.5 * var(--tile-thickness));
     border-top-right-radius: 2px;
-    /* background: var(--tile-shadow-color); */
     position: absolute;
     transform: skewX(45deg);
-    /* box-shadow: inset 0px -4px 4px rgba(0,0,0,.3); */
-    background: #FFF;
-    /* border-top: 1px solid var(--tile-edge-color); */
     border-right: 1px solid var(--tile-edge-color);
+    border-top: 1px solid var(--tile-edge-color);
   }
   /* 3d left face */
   &:after {
     content: '';
-    left: 0;
-    top: calc(var(--tile-thickness) + var(--tile-radius) / 2);
-    bottom: calc(-.25 * var(--tile-thickness));
-    width: calc(var(--tile-thickness));
-    border-bottom-left-radius: 2px;
     background: #999;
+    left: -1px;
+    top: calc(1.5 * var(--tile-thickness));
+    bottom: calc(-.25 * var(--tile-thickness));
+    width: calc(1.5 * var(--tile-thickness));
+    border-bottom-left-radius: 2px;
     position: absolute;
     transform: skewY(45deg);
-    /* border-left: 1px solid var(--tile-edge-color); */
     border-bottom: 1px solid var(--tile-edge-color);
-    /* box-shadow: inset -4px 0px 4px rgba(0,0,0,.3); */
+    border-left: 1px solid var(--tile-edge-color);
   }
 }
 .icon-graph-tile__shadow {
