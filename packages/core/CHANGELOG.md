@@ -1,5 +1,11 @@
 # dmno
 
+## 0.0.35
+
+### Patch Changes
+
+- [#189](https://github.com/dmno-dev/dmno/pull/189) [`016e45e`](https://github.com/dmno-dev/dmno/commit/016e45e37ba424c9e99607562b903b36d139c75b) Thanks [@theoephraim](https://github.com/theoephraim)! - fix resolve format json-full
+
 ## 0.0.34
 
 ### Patch Changes
