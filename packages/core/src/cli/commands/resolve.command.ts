@@ -1,5 +1,5 @@
 import kleur from 'kleur';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { tryCatch } from '@dmno/ts-lib';
 import { outdent } from 'outdent';
 import boxen from 'boxen';
@@ -79,8 +79,10 @@ program.action(async (opts: {
   // console.log(service.config);
   if (opts.format === 'json') {
     console.log(JSON.stringify(getExposedConfigValues()));
-  } else if (opts.format === 'json-full') {
+  } else if (opts.format === 'debug') {
     console.dir(service, { depth: null });
+  } else if (opts.format === 'json-full') {
+    console.log(JSON.stringify(service));
   } else if (opts.format === 'json-injected') {
     const { injectedDmnoEnv } = await ctx.dmnoServer.makeRequest('getServiceResolvedConfig', ctx.selectedService.serviceName);
     console.log(JSON.stringify(injectedDmnoEnv));
