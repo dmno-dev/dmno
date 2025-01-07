@@ -1,15 +1,15 @@
 import { Command } from 'commander';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import kleur from 'kleur';
 import { select } from '@inquirer/prompts';
+import Debug from 'debug';
 import { getCliRunCtx } from './cli-ctx';
-import { DmnoService } from '../../config-engine/config-engine';
-import { DmnoPlugin } from '../../config-engine/dmno-plugin';
 import { getMaxLength } from './string-utils';
 import { joinAndCompact } from './formatting';
 import { CliExitError } from './cli-error';
 import { SerializedDmnoPlugin } from '../../config-loader/serialization-types';
 
+const debug = Debug('dmno:cli');
 
 function getServiceLabel(s: { serviceName: string, packageName: string, configLoadError?: any }, padNameEnd: number) {
   return joinAndCompact([
@@ -35,27 +35,6 @@ export function addServiceSelection(program: Command, opts?: {
       ctx.workspace = workspace;
 
       const namesMaxLen = getMaxLength(_.map(workspace.services, (s) => s.serviceName));
-      const disablePrompt = thisCommand.opts().noPrompt || opts?.disablePrompt;
-
-      // // first display loading errors (which would likely cascade into schema errors)
-      // if (_.some(_.values(workspace.allServices), (s) => s.configLoadError)) {
-      //   console.log(`\n🚨 🚨 🚨  ${kleur.bold().underline('We were unable to load all of your config')}  🚨 🚨 🚨\n`);
-      //   console.log(kleur.gray('The following services are failing to load:\n'));
-
-      //   // NOTE - we dont use a table here because word wrapping within the table
-      //   // breaks clicking/linking into your code
-
-      //   _.each(workspace.allServices, (service) => {
-      //     if (!service.configLoadError) return;
-      //     console.log(kleur.bold().red(`💥 Service ${kleur.underline(service.serviceName)} failed to load 💥\n`));
-
-      //     console.log(kleur.bold(service.configLoadError.message), '\n');
-
-      //     console.log(service.configLoadError.cleanedStack?.join('\n'), '\n');
-      //   });
-      //   console.log('bailing from schema load errors');
-      //   return ctx.exit();
-      // }
 
       // handle re-selecting the same service on a restart, which could be a bit weird if the name(s) have changed
       // but we try to just select the same one and not worry too much
@@ -66,71 +45,105 @@ export function addServiceSelection(program: Command, opts?: {
         if (ctx.selectedService) return;
       }
 
+      const noPromptMode = thisCommand.opts().silent || opts?.disablePrompt || thisCommand.opts().prompt === false;
 
       // handle explicit selection via the flag
       // if the user types just -s with no arg, we'll treat that as saying they want the menu
       const explicitMenuOptIn = thisCommand.opts().service === true;
       if (explicitMenuOptIn) {
+        debug('user explicitly opted into service selection menu');
         thisCommand.opts().service = undefined;
-      }
-
-      const explicitSelection = thisCommand.opts().service;
-      if (!explicitMenuOptIn && explicitSelection) {
-        ctx.selectedService = _.find(workspace.services, (s) => s.serviceName === explicitSelection);
-        if (ctx.selectedService) return;
-
-        throw new CliExitError(`Invalid service selection: ${kleur.bold(explicitSelection)}`, {
-          suggestion: [
-            'Maybe you meant one of:',
-            ..._.map(workspace.services, (s) => getServiceLabel(s, namesMaxLen)),
-          ],
-        });
-      }
-
-      // handle auto-selection based on what package manager has passed in as the current package when running scripts via the package manager
-      if (!explicitMenuOptIn && !disablePrompt && !opts?.disableAutoSelect) {
-        // filled by package manager with package name if running an package.json script
-        const packageName = process.env.npm_package_name || process.env.PNPM_PACKAGE_NAME;
-        if (packageName) {
-        // console.log('auto select package name', packageName);
-          const autoServiceFromPackageManager = _.find(workspace.services, (service) => {
-            return service.packageName === packageName;
-          });
-
-          // This fully selects it and moves on
-          // TODO: not totally sure, so we should see how this feels...
-          if (autoServiceFromPackageManager && !disablePrompt) {
-            ctx.selectedService = autoServiceFromPackageManager;
-            ctx.autoSelectedService = true;
-            return;
-          }
+        if (thisCommand.opts().prompt === false) {
+          throw new CliExitError('Cannot use --no-prompt when opting into selection menu (--service/-s without a service name)');
         }
       }
 
-      // handle picking from a menu, default selection will be based on CWD
-      // this pre-selects the menu, but does not continue automatically
-      // NOTE - `pnpm --filter=child-package exec dmno` changes the cwd correctly
-      if (!thisCommand.opts().silent && (explicitMenuOptIn || !opts?.disableMenuSelect)) {
-        // order our services by folder depth (descending)
-        // so we can look for whiuch folder the user is in
-        const servicesOrderedByDirDepth = _.orderBy(workspace.services, (s) => s.path.split('/').length, ['desc']);
+      if (!explicitMenuOptIn) {
+        // first handle explicit selection of a service via the --service/-s flag
+        const explicitSelection = thisCommand.opts().service;
+        if (explicitSelection) {
+          ctx.selectedService = _.find(workspace.services, (s) => s.serviceName === explicitSelection);
+          debug(`user explicitly selected service: ${ctx.selectedService?.serviceName}`);
+          if (ctx.selectedService) return;
 
+          throw new CliExitError(`Invalid service selection: ${kleur.bold(explicitSelection)}`, {
+            suggestion: [
+              'Maybe you meant one of:',
+              ..._.map(workspace.services, (s) => getServiceLabel(s, namesMaxLen)),
+            ],
+          });
+        }
+
+        // if only a single service exists, we can just select it
+        if (_.keys(workspace.services).length === 1) {
+          ctx.selectedService = _.values(workspace.services)[0];
+          debug(`auto-selected service because only 1 service exists: ${ctx.selectedService?.serviceName}`);
+          return;
+        }
+      }
+
+      // filled by package manager with package name if running an package.json script
+      const packageNameFromPackageManager = process.env.npm_package_name || process.env.PNPM_PACKAGE_NAME;
+      let autoSelectedService = _.find(workspace.services, (service) => {
+        return service.packageName === packageNameFromPackageManager;
+      });
+      debug(`auto-detected service using package manager env vars: ${autoSelectedService?.serviceName}`);
+
+      if (!autoSelectedService) {
         const cwd = process.cwd();
-        const autoServiceFromCwd = _.find(servicesOrderedByDirDepth, (service) => {
+        autoSelectedService = _.find(workspace.services, (service) => {
+          // looks for an exact match of cwd (must be at the root of the service)
+          return cwd === service.path;
+        });
+        debug(`auto-detected service using CWD (exact match): ${autoSelectedService?.serviceName}`);
+      }
+
+      // autoselect a service if we have one and that has not been disallowed
+      // NOTE - `pnpm --filter=child-package exec dmno` changes the cwd correctly
+      if (!opts?.disableAutoSelect && !explicitMenuOptIn && autoSelectedService) {
+        ctx.selectedService = autoSelectedService;
+        ctx.autoSelectedService = true;
+        debug(`auto selecting service: ${ctx.selectedService?.serviceName}`);
+        return;
+      }
+
+
+      // if nothing auto-selected, we'll still try to guess based on cwd but more loosely
+      if (!autoSelectedService) {
+        const cwd = process.cwd();
+        const servicesOrderedByDirDepth = _.orderBy(workspace.services, (s) => s.path.split('/').length, ['desc']);
+        autoSelectedService = _.find(servicesOrderedByDirDepth, (service) => {
           return cwd.includes(service.path);
         });
+        debug(`auto-detected service using CWD (loose match): ${autoSelectedService?.serviceName}`);
+      }
 
+      // if the user has explicitly opted into NOT showing the menu, we'll be more lenient in our auto-selection
+      if (noPromptMode) {
+        if (autoSelectedService) {
+          ctx.selectedService = autoSelectedService;
+          ctx.autoSelectedService = true;
+          debug(`auto selecting service because prompting disabled: ${ctx.selectedService?.serviceName}`);
+          return;
+        }
+        throw new CliExitError('Unable to auto-select a service, and selection menu is currently disabled', {
+          suggestion: 'Try using -s flag to select a specific service',
+        });
+      }
+
+      if (!noPromptMode) {
         const menuSelection = await select({
           message: 'Please select a service?',
           choices: _.map(workspace.services, (service) => ({
             name: getServiceLabel(service, namesMaxLen),
             value: service.serviceName,
           })),
-          default: autoServiceFromCwd?.serviceName,
+          default: autoSelectedService?.serviceName,
         });
 
         ctx.selectedService = _.find(workspace.services, (s) => s.serviceName === menuSelection);
         ctx.autoSelectedService = false;
+        debug(`selected service using menu: ${ctx.selectedService?.serviceName}`);
         return;
       }
 
