@@ -1,7 +1,7 @@
 import { execSync, fork } from 'child_process';
 import { inherits } from 'util';
 import kleur from 'kleur';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { select } from '@inquirer/prompts';
 import { ExecaChildProcess, execa } from 'execa';
 import which from 'which';

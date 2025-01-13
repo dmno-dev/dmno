@@ -1,5 +1,5 @@
 import kleur from 'kleur';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { DmnoCommand } from '../lib/dmno-command';
 
 import { addServiceSelection } from '../lib/selection-helpers';

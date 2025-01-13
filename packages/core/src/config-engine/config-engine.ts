@@ -1,5 +1,5 @@
 import path from 'node:path';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import Debug from 'debug';
 import validatePackageName from 'validate-npm-package-name';
 import graphlib from '@dagrejs/graphlib';
@@ -16,25 +16,9 @@ import { DmnoPlugin } from './dmno-plugin';
 import {
   DmnoOverrideLoader, dotEnvFileOverrideLoader, processEnvOverrideLoader, OverrideSource,
 } from './overrides';
-import { asyncEachParallel, asyncEachSeries, asyncMapParallel } from '../lib/async-utils';
+import { asyncEachParallel, asyncMapParallel } from '../lib/async-utils';
 
 const debug = Debug('dmno');
-
-type PickConfigItemDefinition = {
-  /** which service to pick from, defaults to "root" */
-  source?: string;
-  /** key(s) to pick, or function that matches against all keys from source */
-  key: string | Array<string> | ((key: string) => boolean),
-
-  /** new key name or function to rename key(s) */
-  renameKey?: string | ((key: string) => string),
-
-  /** function to transform value(s) */
-  transformValue?: (value: any) => any,
-
-  // TOOD: also allow setting the value (not transforming)
-  // value?: use same value type as above
-};
 
 /**
  * options for defining a service's config schema
@@ -66,8 +50,6 @@ export type DmnoServiceConfig = {
   parent?: string,
   /** optional array of "tags" for the service */
   tags?: Array<string>,
-  /** array of config items to be picked from parent */
-  pick?: Array<PickConfigItemDefinition | string>,
 });
 
 
@@ -193,14 +175,6 @@ export class DmnoWorkspace {
           // pick and parentId is only available on non-root services
           ...service.rawConfig && !service.rawConfig.isRoot && {
             parentId: service.rawConfig.parent,
-            pickSchema: _.map(service.rawConfig.pick, (p) => {
-              if (_.isString(p)) return p;
-              return {
-                ...p,
-                // remap "source" to "entityId"
-                entityId: p.source,
-              };
-            }),
           },
         },
       });

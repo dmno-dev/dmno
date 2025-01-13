@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 
 import Debug from 'debug';
 

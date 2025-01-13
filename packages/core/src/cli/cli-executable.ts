@@ -8,7 +8,7 @@ import './lib/init-process';
 const startBoot = new Date().getTime();
 const cliExecId = new Date().toISOString();
 
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import Debug from 'debug';
 import { DmnoCommand } from './lib/dmno-command';
 

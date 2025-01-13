@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { fdir } from 'fdir';
 import { asyncMap } from 'modern-async';
 import { checkIsFileGitIgnored } from './git-utils';
