@@ -17,10 +17,10 @@ describe('type based value/dependency injection', async () => {
   describe('inject() - inject value from ancestors', () => {
     test('injects a value', async () => {
       const g = new Configraph();
-      g.createEntity({
+      g.addEntity({
         configSchema: { injectSrc: { extends: InjectableType, value: 'injected-val' } },
       });
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: { injectDest: { extends: InjectableType, value: inject() } },
       });
       await g.resolveConfig();
@@ -36,7 +36,7 @@ describe('type based value/dependency injection', async () => {
       });
 
       const g = new Configraph();
-      g.createEntity({
+      g.addEntity({
         configSchema: {
           injectSrc: {
             extends: ObjectType,
@@ -44,7 +44,7 @@ describe('type based value/dependency injection', async () => {
           },
         },
       });
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: { injectDest: { extends: ObjectType, value: inject() } },
       });
       await g.resolveConfig();
@@ -53,14 +53,14 @@ describe('type based value/dependency injection', async () => {
 
     test('works over multiple levels of ancestry', async () => {
       const g = new Configraph();
-      g.createEntity({
+      g.addEntity({
         id: 'a',
         configSchema: {
           a1: { extends: InjectableType, value: 'a1' },
           a2: { extends: InjectableType2, value: 'a2' },
         },
       });
-      g.createEntity({
+      g.addEntity({
         id: 'b',
         parentId: 'a',
         configSchema: {
@@ -68,7 +68,7 @@ describe('type based value/dependency injection', async () => {
           b2: { extends: InjectableType2, value: 'b2' },
         },
       });
-      const e = g.createEntity({
+      const e = g.addEntity({
         id: 'c',
         parentId: 'b',
         configSchema: {
@@ -83,13 +83,13 @@ describe('type based value/dependency injection', async () => {
 
     test('fails if multiple matches found in same entity', async () => {
       const g = new Configraph();
-      g.createEntity({
+      g.addEntity({
         configSchema: {
           a1: { extends: InjectableType },
           a2: { extends: InjectableType },
         },
       });
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           injectFail: { extends: InjectableType, value: inject() },
         },
@@ -100,13 +100,13 @@ describe('type based value/dependency injection', async () => {
 
     test('`injectable: false` types will not be injected', async () => {
       const g = new Configraph();
-      g.createEntity({
+      g.addEntity({
         configSchema: {
           provideFail: { extends: NonInjectableType },
           provideOk: { extends: InjectableType },
         },
       });
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           injectFail: { extends: NonInjectableType, value: inject() },
           injectOk: { extends: InjectableType, value: inject() },
@@ -118,12 +118,12 @@ describe('type based value/dependency injection', async () => {
     });
     test('inject fails if no matching node is found', async () => {
       const g = new Configraph();
-      g.createEntity({
+      g.addEntity({
         configSchema: {
           str: { value: 'stringval' },
         },
       });
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           injectFail: { extends: InjectableType, value: inject() },
         },
@@ -134,12 +134,12 @@ describe('type based value/dependency injection', async () => {
 
     test('child type can be injected as parent type', async () => {
       const g = new Configraph();
-      g.createEntity({
+      g.addEntity({
         configSchema: {
           provideChild: { extends: ChildType },
         },
       });
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           injectParent: { extends: ParentType, value: inject() },
         },
@@ -150,12 +150,12 @@ describe('type based value/dependency injection', async () => {
 
     test('but parent type cannot be injected as child type', async () => {
       const g = new Configraph();
-      g.createEntity({
+      g.addEntity({
         configSchema: {
           provideParent: { extends: ParentType },
         },
       });
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           injectChild: { extends: ChildType, value: inject() },
         },
@@ -166,12 +166,12 @@ describe('type based value/dependency injection', async () => {
 
     test('works properly within branched resolvers', async () => {
       const g = new Configraph();
-      g.createEntity({
+      g.addEntity({
         configSchema: {
           provided: { extends: InjectableType, value: 'injected-val' },
         },
       });
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           env: { value: 'production' },
           injected: {
@@ -199,10 +199,10 @@ describe('type based value/dependency injection', async () => {
   describe('collect() - inject value(s) from descendants', async () => {
     test('injects a value', async () => {
       const g = new Configraph();
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: { collectDest: { extends: InjectableType, value: collect() } },
       });
-      g.createEntity({
+      g.addEntity({
         configSchema: { collectSrc: { extends: InjectableType, value: 'collected-val' } },
       });
       await g.resolveConfig();
@@ -211,14 +211,14 @@ describe('type based value/dependency injection', async () => {
 
     test('works over multiple levels of ancestry', async () => {
       const g = new Configraph();
-      const e = g.createEntity({
+      const e = g.addEntity({
         id: 'a',
         configSchema: {
           a1: { extends: InjectableType, value: collect() },
           a2: { extends: InjectableType2, value: collect() },
         },
       });
-      g.createEntity({
+      g.addEntity({
         id: 'b',
         parentId: 'a',
         configSchema: {
@@ -226,7 +226,7 @@ describe('type based value/dependency injection', async () => {
           b2: { extends: InjectableType2, value: 'b2' },
         },
       });
-      g.createEntity({
+      g.addEntity({
         id: 'c',
         parentId: 'b',
         configSchema: {
@@ -241,12 +241,12 @@ describe('type based value/dependency injection', async () => {
 
     test('fails if multiple matches found in same entity', async () => {
       const g = new Configraph();
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           collectFail: { extends: InjectableType, value: collect() },
         },
       });
-      g.createEntity({
+      g.addEntity({
         configSchema: {
           a1: { extends: InjectableType },
           a2: { extends: InjectableType },
@@ -258,12 +258,12 @@ describe('type based value/dependency injection', async () => {
 
     test('`injectable: false` types will not be injected', async () => {
       const g = new Configraph();
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           collectFail: { extends: NonInjectableType, value: collect() },
         },
       });
-      g.createEntity({
+      g.addEntity({
         configSchema: {
           provideFail: { extends: NonInjectableType },
         },
@@ -274,12 +274,12 @@ describe('type based value/dependency injection', async () => {
 
     test('inject fails if no matching node is found', async () => {
       const g = new Configraph();
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           collectFail: { extends: InjectableType, value: collect() },
         },
       });
-      g.createEntity({
+      g.addEntity({
         configSchema: {
           str: { value: 'stringval' },
         },
@@ -290,12 +290,12 @@ describe('type based value/dependency injection', async () => {
 
     test('child type can be injected as parent type', async () => {
       const g = new Configraph();
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           injectParent: { extends: ParentType, value: collect() },
         },
       });
-      g.createEntity({
+      g.addEntity({
         configSchema: {
           provideChild: { extends: ChildType },
         },
@@ -306,12 +306,12 @@ describe('type based value/dependency injection', async () => {
 
     test('but parent type cannot be injected as child type', async () => {
       const g = new Configraph();
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           injectChild: { extends: ChildType, value: collect() },
         },
       });
-      g.createEntity({
+      g.addEntity({
         configSchema: {
           provideParent: { extends: ParentType },
         },
@@ -322,7 +322,7 @@ describe('type based value/dependency injection', async () => {
 
     test('works properly within branched resolvers', async () => {
       const g = new Configraph();
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           env: { value: 'production' },
           injected: {
@@ -340,7 +340,7 @@ describe('type based value/dependency injection', async () => {
           },
         },
       });
-      g.createEntity({
+      g.addEntity({
         configSchema: {
           provided: { extends: InjectableType, value: 'injected-val' },
         },

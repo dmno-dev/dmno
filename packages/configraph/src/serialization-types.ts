@@ -92,7 +92,7 @@ export type SerializedResolverBranch = {
 
 export type SerializedConfigraphDataType<NodeMetadata = {}> =
   (
-    Pick<ConfigraphDataTypeDefinition<any, NodeMetadata>,
+    Pick<ConfigraphDataTypeDefinition<NodeMetadata>,
     'summary' | 'description' | 'typeDescription' | 'required' | 'expose' |
     'externalDocs' | 'ui'>
   ) &

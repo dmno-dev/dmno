@@ -1,22 +1,21 @@
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import Debug from 'debug';
 
 import {
   CoercionError, ValidationError, ResolutionError,
+  SchemaError,
 } from './errors';
 
-import {
-  ConfigraphBaseTypes, ConfigraphDataType, ConfigraphDataTypeDefinitionOrShorthand,
-} from './data-types';
+import { ConfigraphBaseTypes, ConfigraphDataType, ConfigraphDataTypeDefinition } from './data-types';
 import {
   ConfigValue, ConfigValueResolver,
   ResolverContext,
   resolverCtxAls,
 } from './resolvers';
-import { createdPickedValueResolver } from './resolvers/pick';
 
 import { ConfigraphEntity } from './entity';
-import { ConfigraphDataTypeDefinition, SerializedConfigraphNode } from '.';
+import { NODE_FULL_PATH_SEP } from './common';
+import { SerializedConfigraphNode } from './serialization-types';
 
 const debug = Debug('configraph:node');
 
@@ -50,110 +49,61 @@ export type PickedNodeDef<NodeMetadata = unknown> = {
   transformValue?: (val: any) => any,
 };
 
-//! probably want to add a restriction on node keys?
-// config item keys are all checked against this regex
-// currently it must start with a letter (to make it a valid js property)
-// and can only contain letters, number, and underscore
-// we may want to restrict "__" if we use that as the nesting separator for env var overrides?
-const VALID_ITEM_KEY_REGEX = /^[a-z]\w+$/i;
-
-
 export class ConfigraphNode<NodeMetadata = any> {
-  /** full chain of items up to the actual config item */
-  readonly pickFromNode?: ConfigraphNode<NodeMetadata>;
-
-  readonly type: ConfigraphDataType<unknown, NodeMetadata>;
+  readonly type: ConfigraphDataType<NodeMetadata>;
 
   constructor(
     readonly key: string,
-    defOrShorthand:
-    ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata> | PickedNodeDef<NodeMetadata>,
+    nodeDef: ConfigraphDataTypeDefinition<NodeMetadata>,
     private parent?: ConfigraphEntity | ConfigraphNode<NodeMetadata>,
   ) {
-    // deal with picked items
-    if (_.isObject(defOrShorthand) && 'sourceNode' in defOrShorthand) {
-      const pickDef = defOrShorthand;
-      this.pickFromNode = pickDef.sourceNode;
-
-      // TODO: will need to deal with overriding some parts of the type
-      // and probably need to clone / extend it
-      this.type = this.pickFromNode.type as any;
-      if (this.pickFromNode.children) {
-        _.each(this.pickFromNode.children, (sourceChild, childKey) => {
-          this.children[childKey] = new (this.constructor as any)(sourceChild.key, { sourceNode: sourceChild }, this);
-        });
-      }
-
-      // this may end up following up multiple picked + transformed parents
-      this.valueResolver = createdPickedValueResolver(this.pickFromNode, pickDef.transformValue);
-      this.valueResolver.configNode = this;
-
-      return;
-    }
-
-
-    // similar logic that the data types uses when handling extends
-    // except we always create a new "inline" type as the last in the chain
+    // we create a new "inline" type as the last in the chain
     // see note below about linking to type registry
-    let typeDef: ConfigraphDataTypeDefinition<unknown, unknown>;
-    if (_.isString(defOrShorthand)) {
-      if (!ConfigraphBaseTypes[defOrShorthand]) {
-        throw new Error(`found invalid parent (string) in extends chain - "${defOrShorthand}"`);
-      } else {
-        typeDef = { extends: ConfigraphBaseTypes[defOrShorthand]({}) };
-      }
-    } else if (_.isFunction(defOrShorthand)) {
-      // in this case, we have no settings to pass through, so we pass an empty object
-      const shorthandFnResult = defOrShorthand({});
-      if (!(shorthandFnResult instanceof ConfigraphDataType)) {
-        // TODO: put this in schema error instead?
-        throw new Error('invalid schema as result of fn shorthand');
-      } else {
-        typeDef = { extends: shorthandFnResult };
-      }
-    } else if (defOrShorthand instanceof ConfigraphDataType) {
-      typeDef = { extends: defOrShorthand };
-    } else if (_.isObject(defOrShorthand)) {
-      typeDef = defOrShorthand;
-    } else {
-      // TODO: put this in schema error instead?
-      throw new Error('invalid item schema');
-    }
     // TODO: better typing - remove these "as any"s
-    this.type = new ConfigraphDataType<unknown, NodeMetadata>(
-      typeDef as any,
+    this.type = new ConfigraphDataType<NodeMetadata>(
+      nodeDef,
       undefined,
-      undefined,
-      // link back to the "type registry" connected to the graph root
-      // so that we know the shape of the metadata
-      this.parentEntity?.graphRoot?.defaultDataTypeRegistry as any,
     );
 
     try {
       // console.log(this.type);
       // special handling for object nodes to initialize children
       if (this.type.extendsType(ConfigraphBaseTypes.object)) {
-        _.each(this.type.primitiveType.typeInstanceOptions.children, (childDef, childKey) => {
+        _.each(this.type.primitiveType.typeDef._children, (childDef, childKey) => {
           this.children[childKey] = new (this.constructor as any)(childKey, childDef, this);
         });
       }
       // TODO: also need to initialize the `itemType` for array and dictionary
       // unless we change how those work altogether...
     } catch (err) {
-      this.schemaError = err as Error;
+      this._schemaErrors.push(err instanceof SchemaError ? err : new SchemaError(err as Error));
       debug(err);
     }
 
-    this.valueResolver = this.type.valueResolver;
     if (this.valueResolver) this.valueResolver.configNode = this;
   }
-
-  readonly schemaError?: Error;
 
   overrides: Array<ConfigValueOverride> = [];
   valueFromParent?: ConfigValue;
 
-  valueResolver?: ConfigValueResolver;
+  get valueResolver(): ConfigValueResolver | undefined {
+    return this.type.valueResolver;
+  }
+
+  applyOverrideType(overrideTypeDef: ConfigraphDataTypeDefinition<NodeMetadata>) {
+    this.type.applyOverrideType(overrideTypeDef);
+
+    // currently the resolver (in some cases) needs to know about the config node it is attached to
+    // and this link was previously set up during the node initialization
+    // but this locked this node's resolver to the first definition, and did not take overrides into consideration
+    // sp we must reset the valueResolver to the latest version
+    // TODO: but I would like to remove the need for this altogether!
+    // if we still must do something like this, we could move it to the resolver processing step
+    if (this.valueResolver) this.valueResolver.configNode = this;
+
+    // NOTE - we are involving the node here and passing it through because of resolver stuff!
+  }
+
 
   isResolved = false;
   isFullyResolved = false;
@@ -188,12 +138,17 @@ export class ConfigraphNode<NodeMetadata = any> {
   /** more details about the validation failure if applicable */
   validationErrors?: Array<ValidationError>;
 
+  _schemaErrors: Array<SchemaError> = [];
+
   get schemaErrors() {
-    return this.type.schemaErrors;
+    return [
+      ...this.type.schemaErrors || [],
+      ...this._schemaErrors,
+    ];
   }
 
   /** whether the schema itself is valid or not */
-  get isSchemaValid(): boolean | undefined {
+  get isSchemaValid(): boolean {
     if (this.schemaErrors?.length) return false;
     return true;
   }
@@ -252,7 +207,7 @@ export class ConfigraphNode<NodeMetadata = any> {
     if (!this.parentEntity?.id) {
       throw new Error('unable to get full path - this item is not attached to a service');
     }
-    return `${this.parentEntity.id}!${this.path}`;
+    return `${this.parentEntity.id}${NODE_FULL_PATH_SEP}${this.path}`;
   }
 
   get dependsOnPathsObj(): Record<string, 'schema' | 'resolution'> {

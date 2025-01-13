@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'vitest';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import {
   Configraph, ConfigraphEntity, ConfigraphNode,
 } from '@dmno/configraph';
@@ -13,28 +13,28 @@ describe('graph entities', () => {
         optionalMetadata?: string
       };
       const g = new Configraph<CustomEntityMetadata>();
-      const root = g.createEntity({
+      const root = g.addEntity({
         id: 'root',
         requiredMetadata: 'root-required',
         optionalMetadata: 'root-optional',
       });
-      expect(root.getMetadata('requiredMetadata')).toBe('root-required');
-      expect(root.getMetadata('optionalMetadata')).toBe('root-optional');
+      expect(root.getMetadata('requiredMetadata', { inheritable: true })).toBe('root-required');
+      expect(root.getMetadata('optionalMetadata', { inheritable: true })).toBe('root-optional');
 
 
-      const child = g.createEntity({
+      const child = g.addEntity({
         requiredMetadata: 'child-required',
         // optionalMetadata will be inherited from parent
       });
-      expect(child.getMetadata('requiredMetadata')).toBe('child-required');
-      expect(child.getMetadata('optionalMetadata')).toBe('root-optional');
+      expect(child.getMetadata('requiredMetadata', { inheritable: true })).toBe('child-required');
+      expect(child.getMetadata('optionalMetadata', { inheritable: true })).toBe('root-optional');
 
       // TODO: also need to check how metadata is inherited via templates as well
     });
   });
 
   describe('metadata v2', () => {
-    test('asdf', async () => {
+    test('using a custom child class to define shape of metadata', async () => {
       class CustomConfigraph extends Configraph {}
 
       type CustomNodeMetadata = {
@@ -71,7 +71,6 @@ describe('graph entities', () => {
 
       const g = new CustomConfigraph();
       const e = new CustomConfigraphEntity(g, {
-        id: 'asdf',
         entityExtra: 'entity-metadata',
         configSchema: {
           c1: { nodeExtra: 'node-metadata' },

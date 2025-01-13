@@ -1,10 +1,10 @@
 /* eslint-disable class-methods-use-this */
 import { AsyncLocalStorage } from 'node:async_hooks';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
+
 import { ConfigraphNode } from './config-node';
 import { ResolutionError, SchemaError } from './errors';
-import { SerializedResolver, SerializedResolverBranch } from '.';
-
+import { SerializedResolver, SerializedResolverBranch } from './serialization-types';
 
 // TODO: do we allow Date?
 // what to do about null/undefined?
@@ -81,9 +81,9 @@ export function createResolver(
         label: 'error',
         process() {
           if (err instanceof SchemaError) {
-            this.configNode.schemaErrors.push(err);
+            this.configNode._schemaErrors.push(err);
           } else {
-            this.configNode.schemaErrors.push(new SchemaError(err as Error));
+            this.configNode._schemaErrors.push(new SchemaError(err as Error));
           }
         },
         resolve() {

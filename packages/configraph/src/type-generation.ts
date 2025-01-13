@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { optimize } from 'svgo';
 
 import { ConfigraphBaseTypes } from './data-types';
@@ -157,7 +157,7 @@ export async function getTsDefinitionForNode(item: ConfigraphNode, indentLevel =
     itemTsType = 'boolean';
   } else if (baseType === ConfigraphBaseTypes.enum) {
     // enums have several different formats we need to handle
-    const rawEnumOptions = item.type.primitiveType.typeInstanceOptions;
+    const rawEnumOptions = (item.type.primitiveType as any)._rawEnumOptions;
     let enumOptions = [] as Array<any>;
     if (_.isArray(rawEnumOptions)) {
       // extended definition case

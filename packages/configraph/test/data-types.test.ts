@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'vitest';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import {
   ConfigraphBaseTypes, ConfigraphDataType, createConfigraphDataType, ConfigraphDataTypesRegistry,
   ValidationError,

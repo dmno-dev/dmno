@@ -55,6 +55,7 @@
     "lodash-es": "catalog:",
     "modern-async": "catalog:",
     "svgo": "catalog:",
+    "ts-toolbelt": "^9.6.0",
     "typescript": "catalog:"
   }
 }

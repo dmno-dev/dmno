@@ -1,4 +1,5 @@
 import { ConfigraphEntity } from '../entity';
+import { templateContextAls } from '../entity-template';
 import { SchemaError } from '../errors';
 import { ConfigValueResolver, createResolver } from '../resolvers';
 
@@ -6,14 +7,18 @@ import { ConfigValueResolver, createResolver } from '../resolvers';
 export function configPath(entityPath: string, path: string): ConfigValueResolver;
 export function configPath(path: string): ConfigValueResolver;
 export function configPath(entityPathOrPath: string, pathOnly?: string): ConfigValueResolver {
+  // if we are within a template, we need to adjust the entity id to be relative to the template
+  const templateContext = templateContextAls.getStore();
+  const entityPathBase = templateContext?.baseId || '';
+
   return createResolver({
     label: 'path',
     icon: 'majesticons:map-marker-path',
     process() {
-      const parentEntity = this.configNode.parentEntity;
-      if (!parentEntity) throw new Error('unable to detect parent entity');
+      const thisEntity = this.configNode.parentEntity;
+      if (!thisEntity) throw new Error('unable to detect parent entity');
 
-      const graph = parentEntity.graphRoot;
+      const graph = thisEntity.graphRoot;
 
       let entity: ConfigraphEntity | undefined;
 
@@ -21,25 +26,26 @@ export function configPath(entityPathOrPath: string, pathOnly?: string): ConfigV
       const entityPath = pathOnly ? entityPathOrPath : '.';
 
       if (entityPath === '.') {
-        entity = parentEntity;
+        entity = thisEntity;
       } else if (entityPath.startsWith('.')) {
-        entity = parentEntity;
+        entity = thisEntity;
         for (const entityPathPart of entityPath.split('/')) {
           if (entityPathPart === '..') {
             entity = entity.parentEntity;
 
+            // TODO: if we are within a template, we should not let you go above the template root
             if (!entity) {
               throw new SchemaError(`Invalid entity path "${nodePath}" - reached the root`);
             }
           } else {
-            // TODO: will need to support using relative paths within templates where IDs are not final
             throw new SchemaError('Only ".." is supported for now');
           }
         }
       } else {
-        entity = graph.entitiesById[nodePath];
+        const fullEntityPath = entityPathBase + entityPath;
+        entity = graph.entitiesById[fullEntityPath];
         if (!entity) {
-          throw new SchemaError(`Invalid entity id "${nodePath}"`);
+          throw new SchemaError(`Invalid entity id "${fullEntityPath}"`);
         }
       }
 
