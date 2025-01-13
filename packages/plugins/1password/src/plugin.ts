@@ -1,4 +1,4 @@
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import kleur from 'kleur';
 import {
   DmnoPlugin, ResolverContext,

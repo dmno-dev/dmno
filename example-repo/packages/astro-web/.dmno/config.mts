@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, defineDmnoService } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, pick } from 'dmno';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 
 const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
@@ -10,17 +10,11 @@ export default defineDmnoService({
     dynamicConfig: 'default_static',
   },
   icon: 'devicon-plain:astro',
-  pick: [
-    'NODE_ENV',
-    'DMNO_ENV',
-    {
-      source: 'api',
-      key: 'API_URL',
-    },
-    'SOME_API_KEY',
-  ],
   schema: {
-
+    NODE_ENV: pick(),
+    DMNO_ENV: pick(),
+    SOME_API_KEY: pick(),
+    API_URL: pick('api'),
     INTERNAL_ITEM: {
       description: 'will not be included in DMNO_CONFIG',
       value: 'dont-include-me',

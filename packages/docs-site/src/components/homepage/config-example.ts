@@ -1,5 +1,5 @@
 import {
-  DmnoBaseTypes, defineDmnoService, switchBy, configPath,
+  DmnoBaseTypes, defineDmnoService, switchBy, configPath, pick,
 } from 'dmno';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
@@ -11,9 +11,12 @@ const vaultFileSecrets = new EncryptedVaultDmnoPlugin('vault', { key: configPath
 
 export default defineDmnoService({
   // re-use items defined in other services
-  pick: ['API_KEY', 'DB_URL', 'DMNO_ENV'],
+  
   // more config specific to this service
   schema: {
+    API_KEY: pick(),
+    DB_URL: pick(),
+    DMNO_ENV: pick(),
     DMNO_VAULT_KEY: {
       // re-use existing types with validation and docs info built-in
       extends: EncryptedVaultTypes.encryptionKey,

@@ -15,7 +15,6 @@ const onepass = new OnePasswordDmnoPlugin('1pass', {
 
 export default defineDmnoService({
   name: 'signup-api',
-  pick: [],
   schema: {
     ...pickFromSchemaObject(CloudflareWranglerEnvSchema, {
       CLOUDFLARE_ACCOUNT_ID: {

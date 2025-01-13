@@ -1,7 +1,7 @@
 import { dirname, relative } from 'path';
 import { fileURLToPath } from 'url';
 
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import Debug from 'debug';
 import { checkServiceIsValid, DmnoServer, injectDmnoGlobals } from 'dmno';
 import type { Plugin } from 'vite';

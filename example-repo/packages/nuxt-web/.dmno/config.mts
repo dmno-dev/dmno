@@ -1,12 +1,10 @@
-import { DmnoBaseTypes, defineDmnoService } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, pick } from 'dmno';
 
 export default defineDmnoService({
   name: 'nuxt',
   icon: 'devicon-plain:nuxtjs',
-  pick: [
-    'NODE_ENV',
-  ],
   schema: {
+    NODE_ENV: pick(),
     PUBLIC_EXAMPLE: {
       value: 'public!',
     },

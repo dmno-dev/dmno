@@ -3,7 +3,6 @@ import { DmnoBaseTypes, defineDmnoService } from 'dmno';
 export default defineDmnoService({
   name: 'remix-basic',
   icon: 'ri:remix-run-fill',
-  pick: [],
   settings: {
     dynamicConfig: 'default_static',
     redactSensitiveLogs: true,

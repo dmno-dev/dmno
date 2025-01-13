@@ -1,4 +1,4 @@
-import { defineDmnoService, DmnoBaseTypes, switchBy, processEnvOverrideLoader } from 'dmno';
+import { defineDmnoService, DmnoBaseTypes, switchBy, processEnvOverrideLoader, pick } from 'dmno';
 import { OnePasswordDmnoPlugin, onePasswordOverrideLoader } from '@dmno/1password-plugin';
 import { EncryptedVaultDmnoPlugin } from '@dmno/encrypted-vault-plugin';
 
@@ -15,11 +15,9 @@ export default defineDmnoService({
     // shared overrides
     onePasswordOverrideLoader({ reference: 'op://dev test/rznyyjrwcv5sgc4ykjhzpkoevm/api' }),
   ],
-  pick: [
-    'NODE_ENV',
-    'DMNO_ENV',
-  ],
   schema: {
+    NODE_ENV: pick(),
+    DMNO_ENV: pick(),
     OVERRIDE_ME: {
       value: 'default'
     },

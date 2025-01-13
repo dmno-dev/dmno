@@ -3,7 +3,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { parse as parseJSONC } from 'jsonc-parser';
 import {
   DmnoPlugin,
