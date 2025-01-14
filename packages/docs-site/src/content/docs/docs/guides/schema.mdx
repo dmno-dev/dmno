@@ -100,17 +100,17 @@ export default defineDmnoService({
 
 ### Other services
 
-The rest of your services (if you are working in a monorepo) are extremely similar - we just gain a few new options:
+The rest of your services (if you are working in a monorepo) are extremely similar - we just gain a few new abilities:
 
 - `parent` - set the service's parent (by name), otherwise will default to the root service
 {/* - `tags` - array of strings, not yet used for anything */}
-- `pick` - pick specific config items from other services to use in this one (see [sharing config](/docs/guides/schema/#sharing-config-between-services) for more info)
+- we can now share config items across services (see [sharing config](/docs/guides/schema/#sharing-config-between-services) for more info)
 
 Also note that `settings` values are inherited from parents unless set explicitly.
 
 An example service config:
 
-```typescript title="packages/api/.dmno/config.mts" "defineDmnoService"
+```typescript title="packages/api/.dmno/config.mts" "defineDmnoService" "pick"
 import { defineDmnoService, DmnoBaseTypes } from 'dmno';
 import { StripeDataTypes } from 'stripe-dmno-plugin'; // doesn't exist yet
 
@@ -118,22 +118,10 @@ export default defineDmnoService({
   name: 'api',
   parent: 'backend',
   settings: { /* add/override settings, otherwise inherited from root */ },
-  pick: [
-    'NODE_ENV',
-    'DISCORD_JOIN_LINK',
-    { source: 'database', key: 'DB_URL' },
-  ],
   schema: {
-    // configuration defined only within this service
-    STRIPE_PUB_KEY: {
-      // uses a custom type provided by a plugin
-      extends: StripeDataTypes.StripePublishableKey,
-      description: 'The publishable Stripe API key for this project',
-    },
-    API_URL: {
-      extends: DmnoBaseTypes.url,
-      expose: true,
-    },
+    NODE_ENV: pick(), // copies from the root service
+    DB_URL: pick('database', 'DATABASE_URL'), // copies from `database` and renames the item
+    // ...
   },
 });
 ```
@@ -144,75 +132,6 @@ Every service must have a unique service name within your workspace. You can set
 We recommend you set it to something short - for example `api` instead of `@my-cool-org/api` - because you may be typing it into CLI commands (e.g., `pnpm exec dmno resolve -s api`) and it will be visible in several places in terminal output.
 
 You'll also use it as a reference to the service when services need to reference each other in their configuration, like when picking config (see next section).
-
-{/* TODO: add custom id for this - plugins not working */}
-### Sharing config between services
-
-In any service config you can pick config items from other services to make them available within the service. The set of items you can pick from follow 2 rules:
-- **you can pick _any_ config item from an ancestor service**<br/>
-  _remember everything is a direct child of the root unless an explicit `parent` is set_
-- **otherwise you can only pick config items that are marked with `expose: true`**
-
-Additionally you can transform keys and values before exposing them within the current service.
-
-The pick syntax is very flexible and best illustrated with a few examples:
-```ts
-export default defineDmnoService({
-  name: 'api',
-  parent: 'backend-services',
-  pick: [
-    // you can specify the source service name and key(s) to pick
-    {
-      source: 'root',
-      key: 'SINGLE_KEY',
-    },
-
-    // if source is omitted, it will fallback to the workspace root
-    { key: 'OTHER_KEY_FROM_ROOT' },
-
-    // shorthand to pick single key from root
-    'SHORTHAND_PICK_FROM_ROOT',
-
-    // you can pick multiple keys at once
-    {
-      source: 'other-service',
-      key: ['MULTIPLE', 'KEYS'],
-    },
-
-    // you can pick by filtering keys with a function
-    // (from all items if an ancestor or just exposed items if not)
-    {
-      source: 'backend-services',
-      key: (key) => key.startsWith('DB_'),
-    },
-
-    // keys can be transformed
-    // and you can use a static value if picking a single key
-    {
-      key: 'ORIGINAL_KEY',
-      renameKey: 'NEW_KEY_NAME',
-    },
-
-    // or use a function if picking multiple
-    {
-      key: ['KEY1', 'KEY2'],
-      renameKey: (k) => `PREFIX_${k}`,
-    },
-
-    // values can also be transformed with functions
-    {
-      source: 'backend-services',
-      key: 'GROUP1_THINGY',
-      transformValue: (v) => v + 1,
-    },
-  ],
-});
-```
-
-:::tip[FYI]
-The inability to easily share config in a monorepo was one of the main pain points that helped kickstart dmno's creation
-:::
-
 
 ## Defining config items
 
@@ -278,11 +197,59 @@ export default defineDmnoService({
       // additional settings can be added/overridden as normal
       required: true,
     },
+
+    // if no other settings are needed, you can use a shorthand and leave out the wrapping object
+    SHORTHAND_TYPE: MyCustomPostgresConnectionUrlType,
+    SHORTHAND_STRING: 'number',
   },
 });
 ```
 
 {/* something about inheritance, type system etc... */}
+
+
+{/* TODO: add custom id for this - plugins not working */}
+### Sharing config between services
+
+In any non-root service's `schema` you can `pick` config items from other services to make them available within the service. 
+
+The set of items you can pick from follow 2 rules:
+- **you can pick _any_ config item from an ancestor service**<br/>
+  _remember everything is a direct child of the root unless an explicit `parent` is set_
+- **otherwise you can only pick config items that are marked with `expose: true`**
+
+The `pick` function is a special kind of data type, and it copies all of the source item's properties, not just the value. So you can think of the picked item as extending the data type of the original item. Use it like any other data type in an item's `extends` property. There are 2 optional arguments to help specify the original to pick from:
+
+```typescript /extends: pick\\([^)]*\\)/
+import { defineDmnoService, pick } from 'dmno';
+
+export default defineDmnoService({
+  schema: {
+    PICK1: { extends: pick() }, // picks from [root service] > `PICK1`
+    PICK2: { extends: pick('other-service') }, // picks from `other-service` > `PICK2`
+    PICK3: { extends: pick('other-service', 'OTHER_KEY') }, // picks from `other-service` > `OTHER_KEY`
+    // ...
+```
+
+:::tip[Using `extends` is optional]
+Because pick is a special kind of data type, you can use the shorthand to specify the data type only, and leave out the wrapping object with `extends`:
+
+```diff lang="ts"
++SHORTHAND: pick(),
+// you must use the longer version if you need to add/update additional properties
+SOME_ITEM: { extends: pick(), description: 'can update/add more type settings' },
+```
+:::
+
+
+:::note[FYI]
+The inability to easily share config in a monorepo was one of the main pain points that helped kickstart dmno's creation
+:::
+
+
+If you just want to copy the _value_ once it resolved, but not the rest of the settings, there are 2 other mechanisms for doing so - the `configPath()` and `inject()` resolvers. More details coming soon.
+
+
 
 ### Validations & required config
 
@@ -433,8 +400,8 @@ An quick example to illustrate using our built-in [`switchBy`](/docs/reference/h
 
 ```ts
 export default defineDmnoService({
-  pick: ['APP_ENV'], // picks the config value from the root service
   schema: {
+    APP_ENV: pick(), // picks the definition and value and from the root service
     SOME_API_KEY: {
       value: switchBy('APP_ENV', {
         // static values for pre-prod, so not a problem to include here

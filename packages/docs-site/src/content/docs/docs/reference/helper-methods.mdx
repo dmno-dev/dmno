@@ -35,8 +35,6 @@ type DmnoServiceConfig = {
   // rest of props only available when isRoot !== true 
   parent?: string,
   tags?: string[],
-  pick?: Array<PickConfigItemDefinition | string>,
-  
 };
       `}
     />
@@ -71,11 +69,6 @@ type DmnoServiceConfig = {
           description: 'Settings to apply to the service and as defaults for any children',
         },
         {
-          name: 'pick',
-          type: 'Array<PickConfigItemDefinition | string>',
-          description: 'An array of items to pick from the parent or other service(s). This can be a string (the key) or a PickItemDefinition object.'
-        },
-        {
           name: 'schema',
           type: 'Record<string, ConfigItemDefinitionOrShorthand>',
           required: true,
@@ -89,60 +82,6 @@ type DmnoServiceConfig = {
 Note that when `isRoot` is true, some of the options are not available:
 - `parent` is the name of the parent service.
 - `tags` is an array of tags for the service.
-- `pick` is an array of items to pick from the parent or other services. This can be a string (the key) or a `PickConfigItemDefinition` object.
-
-
-
-#### `PickItemDefinition`
-
-The `PickItemDefinition` type is an object with the following properties:
-
-```typescript
-type PickConfigItemDefinition = {
-  /** which service to pick from, defaults to "root" */
-  source?: string;
-  /** key(s) to pick, or function that matches against all keys from source */
-  key: string | Array<string> | ((key: string) => boolean),
-  /** new key name or function to rename key(s) */
-  renameKey?: string | ((key: string) => string),
-  /** function to transform value(s) */
-  transformValue?: (value: any) => any,
-};
-```
-
-Example: 
-```javascript
-import { defineDmnoService, DmnoBaseTypes } from 'dmno';
-
-export default defineDmnoService({
-  name: 'MyConfig',
-  parent: 'root',
-  pick: [
-    {
-      key: 'ITEM0',
-    },
-    {
-      key: 'ITEM1',
-      renameKey: 'NEW_ITEM1',
-    },
-    {
-      key: 'ITEM2',
-      transformValue: (value) => `${value} transformed`,
-    },
-  ],
-  schema: {
-    MYFIELD: DmnoBaseTypes.string({
-      required: true,
-    }),
-    MYFIELD2: DmnoBaseTypes.number({
-      required: true,
-    }),
-    MYFIELD3: DmnoBaseTypes.boolean({
-      required: true,
-    }),
-  },
-});
-```
 
 #### `DynamicConfigModes`
 
