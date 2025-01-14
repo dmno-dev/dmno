@@ -31,10 +31,6 @@ type CoreConfigraphDataTypeOptions<NodeMetadata = unknown> = NodeMetadata & {
   /** longer description info including details, gotchas, etc... supports markdown  */
   description?: string;
 
-  //! this probably needs to be reworked a bit
-  /** expose this item to be "pick"ed by other services, usually used for outputs of run/deploy */
-  expose?: boolean;
-
   /** description of the data type itself, rather than the instance */
   typeDescription?: string;
 
@@ -598,7 +594,6 @@ export class ConfigraphDataType<Metadata = any> {
       summary: this.summary,
       description: this.description,
       typeDescription: this.typeDescription,
-      expose: this.expose,
       externalDocs: this.externalDocs,
       ui: this.ui,
       required: this.required,

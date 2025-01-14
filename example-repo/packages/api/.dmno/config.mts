@@ -87,7 +87,6 @@ export default defineDmnoService({
     API_URL: {
       description: 'public url of this service',
       extends: DmnoBaseTypes.string({}),
-      expose: true,
       value: switchBy('NODE_ENV', {
         _default: () => `http://localhost:${DMNO_CONFIG.PORT}`,
         // staging: valueCreatedDuringDeployment(),

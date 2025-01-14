@@ -90,7 +90,7 @@ describe('pick behaviour', async () => {
     const g = new Configraph();
     const root = g.addEntity({}); // root
     const b = g.addEntity({ id: 'b', configSchema: { pickMe: pick('a') } });
-    const a = g.addEntity({ id: 'a', configSchema: { pickMe: { expose: true, value: 'a-val' } } });
+    const a = g.addEntity({ id: 'a', configSchema: { pickMe: { value: 'a-val' } } });
     await g.resolveConfig();
     expect(root.isSchemaValid).toBe(true);
     expect(b.isSchemaValid).toBe(true);
@@ -103,15 +103,15 @@ describe('pick behaviour', async () => {
     const root = g.addEntity({}); // root
     const a = g.addEntity({
       id: 'a',
-      configSchema: { na: { expose: true, value: 'a' }, nc: pick('c') },
+      configSchema: { na: { value: 'a' }, nc: pick('c') },
     });
     const b = g.addEntity({
       id: 'b',
-      configSchema: { nb: { expose: true, value: 'b' }, na: pick('a') },
+      configSchema: { nb: { value: 'b' }, na: pick('a') },
     });
     const c = g.addEntity({
       id: 'c',
-      configSchema: { nc: { expose: true, value: 'c' }, nb: pick('b') },
+      configSchema: { nc: { value: 'c' }, nb: pick('b') },
     });
     g.processConfig();
     expect(root.isSchemaValid).toBe(true);
@@ -192,7 +192,13 @@ describe('pick behaviour', async () => {
   // TODO: value transformation - but now it should be more generic rather than pick specific
 
   describe('pick-related SchemaErrors', () => {
-    test('root entity cannot pick', async () => {
+    test('node cannot pick itself', async () => {
+      const g = new Configraph();
+      const e = g.addEntity({ id: 'root', configSchema: { badPick: pick('root', 'badPick') } });
+      g.processConfig();
+      expect(e.configNodes.badPick.isSchemaValid).toBe(false);
+    });
+    test('node cannot pick itself - shorthand', async () => {
       const g = new Configraph();
       const e = g.addEntity({ configSchema: { badPick: pick() } });
       g.processConfig();
@@ -207,34 +213,31 @@ describe('pick behaviour', async () => {
     });
     test('picking an invalid key', async () => {
       const g = new Configraph();
+      g.addEntity({ id: 'root' });
+      const e = g.addEntity({ configSchema: { badPick: pick('root', 'does-not-exist') } });
+      g.processConfig();
+      expect(e.configNodes.badPick.isSchemaValid).toBe(false);
+    });
+    test('picking an invalid key - shorthand', async () => {
+      const g = new Configraph();
       g.addEntity({});
       const e = g.addEntity({ configSchema: { badPick: pick() } });
       g.processConfig();
       expect(e.configNodes.badPick.isSchemaValid).toBe(false);
     });
-    test('picking a non-exposed key from a sibling', async () => {
-      const g = new Configraph();
-      g.addEntity({});
-      g.addEntity({ id: 'sibling', configSchema: { badPick: {} } });
-      // a is not marked `expose: true` so results in an error
-      const e = g.addEntity({ configSchema: { badPick: pick('sibling') } });
-      await g.resolveConfig();
-      expect(e.configNodes.badPick.isSchemaValid).toBe(false);
-    });
-
     test('node pick cycle - direct', async () => {
       const g = new Configraph();
       const root = g.addEntity({}); // root
       const a = g.addEntity({
         id: 'a',
         configSchema: {
-          na: { expose: true, extends: pick('b', 'nb') },
+          na: { extends: pick('b', 'nb') },
         },
       });
       const b = g.addEntity({
         id: 'b',
         configSchema: {
-          nb: { expose: true, extends: pick('a', 'na') },
+          nb: { extends: pick('a', 'na') },
         },
       });
 
@@ -249,19 +252,19 @@ describe('pick behaviour', async () => {
       const a = g.addEntity({
         id: 'a',
         configSchema: {
-          na: { expose: true, extends: pick('b', 'nb') },
+          na: { extends: pick('b', 'nb') },
         },
       });
       const b = g.addEntity({
         id: 'b',
         configSchema: {
-          nb: { expose: true, extends: pick('c', 'nc') },
+          nb: { extends: pick('c', 'nc') },
         },
       });
       const c = g.addEntity({
         id: 'c',
         configSchema: {
-          nc: { expose: true, extends: pick('a', 'na') },
+          nc: { extends: pick('a', 'na') },
         },
       });
 
@@ -279,14 +282,14 @@ describe('pick behaviour', async () => {
         configSchema: {
           na: { extends: pick('b', 'nb') },
           // switchBy understands the dependency at schema time
-          nfn: { expose: true, value: switchBy('na', { _default: 'fn-result' }) },
+          nfn: { value: switchBy('na', { _default: 'fn-result' }) },
 
         },
       });
       const b = g.addEntity({
         id: 'b',
         configSchema: {
-          nb: { expose: true, extends: pick('a', 'nfn') },
+          nb: { extends: pick('a', 'nfn') },
         },
       });
       // note we get an error after processing config, (pre-resolution)
@@ -304,14 +307,14 @@ describe('pick behaviour', async () => {
         configSchema: {
           na: { extends: pick('b', 'nb') },
           // switchBy understands the dependency at schema time
-          nfn: { expose: true, value: (ctx) => ctx.get('na') },
+          nfn: { value: (ctx) => ctx.get('na') },
 
         },
       });
       const b = g.addEntity({
         id: 'b',
         configSchema: {
-          nb: { expose: true, extends: pick('a', 'nfn') },
+          nb: { extends: pick('a', 'nfn') },
         },
       });
 

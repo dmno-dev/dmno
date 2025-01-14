@@ -211,14 +211,9 @@ export default defineDmnoService({
 {/* TODO: add custom id for this - plugins not working */}
 ### Sharing config between services
 
-In any non-root service's `schema` you can `pick` config items from other services to make them available within the service. 
+In a monorepo project with multiple services, DMNO allows config to be shared and composed across multiple services. In any service `schema` you can `pick` config items from other services to make them available within the service. 
 
-The set of items you can pick from follow 2 rules:
-- **you can pick _any_ config item from an ancestor service**<br/>
-  _remember everything is a direct child of the root unless an explicit `parent` is set_
-- **otherwise you can only pick config items that are marked with `expose: true`**
-
-The `pick` function is a special kind of data type, and it copies all of the source item's properties, not just the value. So you can think of the picked item as extending the data type of the original item. Use it like any other data type in an item's `extends` property. There are 2 optional arguments to help specify the original to pick from:
+The `pick` function is a special kind of data type, and it copies all of the source item's properties, not just the value. So you can think of the picked item as extending the data type of the original item. Use it like any other data type in an item's `extends` property. There are 2 optional arguments to help specify the original to pick from, with defaults being to pick from the root service, 
 
 ```typescript /extends: pick\\([^)]*\\)/
 import { defineDmnoService, pick } from 'dmno';
@@ -240,12 +235,6 @@ Because pick is a special kind of data type, you can use the shorthand to specif
 SOME_ITEM: { extends: pick(), description: 'can update/add more type settings' },
 ```
 :::
-
-
-:::note[FYI]
-The inability to easily share config in a monorepo was one of the main pain points that helped kickstart dmno's creation
-:::
-
 
 If you just want to copy the _value_ once it resolved, but not the rest of the settings, there are 2 other mechanisms for doing so - the `configPath()` and `inject()` resolvers. More details coming soon.
 
@@ -359,10 +348,6 @@ An example of how the generated types show up with VSCode's IntelliSense:
 
 ### Dynamic vs static
 Items can use `dynamic: true` or `false` to override their behaviour as to whether they should be bundled into your code at _build time_ versus always loaded at boot time. This is only relevant for some integrations/projects, and it's a _big_ topic. See our [dynamic config guide](/docs/guides/dynamic-config/) for more details!
-
-
-### Expose
-Items marked with `expose: true` will be available to be picked by other services in your workspace that are not children of the service. See [sharing config](#sharing-config-between-services) section above.
 
 
 ### Setting item values

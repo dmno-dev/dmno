@@ -116,7 +116,6 @@ export default defineDmnoService({
     WEB_URL: {
       extends: customUrlType({ newSetting: true }),
       description: 'public url of this web app',
-      expose: true,
       // required: true,
       // value: 'EXAMPLE',
     },

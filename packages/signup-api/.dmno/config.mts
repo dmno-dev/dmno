@@ -74,7 +74,6 @@ export default defineDmnoService({
         staging: () => DMNO_CONFIG.DEPLOY_PRIME_URL,
         production: 'https://signup-api.dmno.dev',
       }),
-      expose: true,
     }
   }
 });

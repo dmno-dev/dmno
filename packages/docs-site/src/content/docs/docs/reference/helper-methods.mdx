@@ -127,7 +127,6 @@ type ConfigItemDefinition = {
   description?: string,
   dynamic?: boolean,
   exampleValue?: any,
-  expose?: boolean,
   extends?: DmnoDataType | string | () => DmnoDataType,
   externalDocs?: { description?, url } | Array<{ description?, url }>,
   required?: boolean,
@@ -170,11 +169,6 @@ type ConfigItemDefinition = {
           name: 'exampleValue',
           type: 'any',
           description: 'An example value for the item.'
-        },
-        {
-          name: 'expose',
-          type: 'boolean',
-          description: 'Whether the item should be exposed to other services. i.e., is it "pickable" by siblings'
         },
         {
           name: 'extends',
