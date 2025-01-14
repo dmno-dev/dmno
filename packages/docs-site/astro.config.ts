@@ -9,6 +9,11 @@ import IconsVitePlugin from 'unplugin-icons/vite';
 import sitemap from '@astrojs/sitemap';
 import dmnoAstroIntegration from '@dmno/astro-integration';
 
+console.log('DMNO ENV', {
+  CF_PAGES_BRANCH: DMNO_CONFIG.CF_PAGES_BRANCH,
+  DMNO_ENV: DMNO_CONFIG.DMNO_ENV,
+});
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://dmno.dev',
