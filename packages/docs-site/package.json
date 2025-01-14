@@ -7,7 +7,7 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro check && astro build",
-    "netlify-build": "pnpm run docgen && pnpm run clidocgen && turbo build",
+    "build-for-deploy": "turbo build --filter=dmno && pnpm run docgen && pnpm run clidocgen && turbo build",
     "preview": "astro preview",
     "astro": "astro",
     "docgen": "typedoc --options ./src/utils/typedoc/typedoc.json",

@@ -11,7 +11,6 @@
     "build": "turbo build",
     "build:libs": "turbo build --filter=\"!@dmno/docs-site\" --filter=\"!@dmno/signup-api\"",
     "preinstall": "npx only-allow pnpm",
-    "prepare": "[ -z \"${NETLIFY}\" ] || pnpm build:libs",
     "dev": "turbo run dev --concurrency=40 --parallel --filter=\"!@dmno/docs-site\" --filter=\"!@dmno/signup-api\"",
     "lint": "turbo lint",
     "changeset:add": "changeset add",
