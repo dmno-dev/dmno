@@ -410,12 +410,12 @@ importers:
       '@dmno/astro-integration':
         specifier: workspace:*
         version: link:../integrations/astro
+      '@dmno/cloudflare-platform':
+        specifier: workspace:*
+        version: link:../platforms/cloudflare
       '@dmno/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@dmno/netlify-platform':
-        specifier: workspace:*
-        version: link:../platforms/netlify
       '@dmno/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig

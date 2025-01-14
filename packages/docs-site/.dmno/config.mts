@@ -1,5 +1,5 @@
 import { DmnoBaseTypes, defineDmnoService, switchBy, pickFromSchemaObject } from 'dmno';
-import { NetlifyEnvSchema } from '@dmno/netlify-platform/types';
+import { CloudflarePagesEnvSchema } from '@dmno/cloudflare-platform';
 
 export default defineDmnoService({
   name: 'docs-site',
@@ -22,15 +22,14 @@ export default defineDmnoService({
       value: 'family=Days+One&family=Fira+Mono:wght@400&family=Inter:wght@100..900'
     },
 
-    ...pickFromSchemaObject(NetlifyEnvSchema, 'CONTEXT', 'BUILD_ID'),
+    ...pickFromSchemaObject(CloudflarePagesEnvSchema, 'CF_PAGES_BRANCH'),
 
     DMNO_ENV: {
-      value: switchBy('CONTEXT', {
-        _default: 'local',
-        'deploy-preview': 'staging',
-        'branch-deploy': 'staging',
-        production: 'production',
-      }),
+      value: () => {
+        if (DMNO_CONFIG.CF_PAGES_BRANCH === 'main') return 'production';
+        if (DMNO_CONFIG.CF_PAGES_BRANCH) return 'staging';
+        return 'local';
+      },
     },
 
     SIGNUP_API_URL: {
