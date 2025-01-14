@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": [ "CF_PAGES", "CF_PAGES_BRANCH", "CF_PAGES_COMMIT_SHA", "CF_PAGES_URL" ],
   "tasks": {
     "build": {
       "dependsOn": [ "^build" ],
