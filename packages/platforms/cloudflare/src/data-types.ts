@@ -24,7 +24,7 @@ export const CloudflarePagesEnvSchema = createVendorSchema({
   },
   CF_PAGES_BRANCH: {
     extends: GitDataTypes.BranchName,
-    description: 'unique ID for the Cloudflare Pages commit',
+    description: 'branch name of the current Cloudflare Pages deployment',
     ...getCommonPagesTypeInfo(),
   },
   CF_PAGES_COMMIT_SHA: {
@@ -34,7 +34,7 @@ export const CloudflarePagesEnvSchema = createVendorSchema({
   },
   CF_PAGES_URL: {
     extends: 'url',
-    description: 'URL of the current Cloudflare Pages site',
+    description: 'URL of the current Cloudflare Pages deployment',
     ...getCommonPagesTypeInfo(),
   },
 }, { fromVendor: 'cloudflare-pages' });
