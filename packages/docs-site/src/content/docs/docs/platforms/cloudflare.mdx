@@ -235,7 +235,7 @@ Please reach out if you need help setting things up, or have a use case that is 
 
 ### Cloudflare Pages env vars
 
-The Cloudflare Pages environment injects a few [environment variables](https://docs.netlify.com/configure-builds/environment-variables/#read-only-variables) into its _build environment_ that provide information about the current build. This module exposes a pre-made config schema object which you can use in your own schema. You can use the `pickFromSchemaObject` utility to pick only the env var keys that you need from the full list. For example:
+The Cloudflare Pages environment injects a few [environment variables](https://developers.cloudflare.com/pages/configuration/build-configuration/#environment-variables) into its _build environment_ that provide information about the current build. This module exposes a pre-made config schema object which you can use in your own schema. You can use the `pickFromSchemaObject` utility to pick only the env var keys that you need from the full list. For example:
 
 ```ts title='.dmno/config.mts'
 import { defineDmnoService, switchBy, pickFromSchemaObject } from 'dmno';
