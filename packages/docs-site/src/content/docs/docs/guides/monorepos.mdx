@@ -4,11 +4,11 @@ title: Monorepo guide
 
 import { FileTree } from "@astrojs/starlight/components";
 
-While DMNO works great in a traditional single-purpose repo, it was designed from the beginning to handle the challenges of working in a monorepo.
+While DMNO works great in a traditional single-purpose repo, it was designed from the ground up to handle the challenges of working in a monorepo.
 
 ## Monorepo structure
 
-In a monolithic repo, you will have a single `.dmno` folder that holds all of your DMNO config. In a monorepo, you will have a single `.dmno` folder at the root in your _workspace root service_, and then each child project/service will have its own `.dmno` folder too. Here is an example:
+In a monorepo, rather than having only a single `.dmno` folder at the root of your project, each child project/service will have its own `.dmno` folder too. Here is an example:
 
 <FileTree>
   - / (root of your project)
@@ -36,16 +36,16 @@ By default, DMNO will rely on your existing tooling to detect where potential ch
 | [pnpm](https://pnpm.io/workspaces) | `pnpm-workspace.yaml`<br/>└ `packages` |
 | [moonrepo](https://moonrepo.dev/docs/config/workspace#projects) | `.moon/workspace.yml`<br/>└ `projects` |
 
-In some situations, like in a large polyglot repo, or a large repo that has multiple smaller monorepos within it, you may need an alternate way of defining where to look for DMNO services. In this case, you can create a `workspace.yaml` in your workspace root's `.dmno` folder. If this file is found, it will override everything else.
+In some situations, like a large polyglot repo, or a large repo that has multiple smaller monorepos within it, you may need an alternate way of defining where to look for DMNO services. In this case, you can create a `workspace.yaml` in your workspace root's `.dmno` folder. If this file is found, it will override everything else.
 
 ```yaml title=".dmno/workpace.yaml"
 projects:
-  - "packages/*"
-  - "libs/some-lib"
+  - "packages/*" # glob pattern
+  - "libs/some-lib" # exact path
 ```
 
-:::note[Actual services have a `.dmno` folder]
-These glob patterns define where to look for _potential_ DMNO services, however only those services which have been initialized and have a `.dmno` folder will be considered DMNO services within your workspace.
+:::note[Not every child project needs a `.dmno` folder]
+These glob patterns define where to look for _potential_ DMNO services, however only those services which have a `.dmno` folder will be considered DMNO services within your workspace. Shared libraries that have no need for config may not need a `.dmno` folder at all and will be ignored by DMNO.
 :::
 
 ## Concurrent DMNO tasks

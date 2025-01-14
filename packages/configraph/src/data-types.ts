@@ -523,7 +523,6 @@ export class ConfigraphDataType<Metadata = any> {
 
   get summary() { return this.getDefItem('summary'); }
   get description() { return this.getDefItem('description'); }
-  get expose() { return this.getDefItem('expose'); }
   get typeLabel() { return this.getDefItem('typeLabel'); } // little special since it only exists on reusable types
   get typeDescription() { return this.getDefItem('typeDescription'); }
   get exampleValue() { return this.getDefItem('exampleValue'); }

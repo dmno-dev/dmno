@@ -11,14 +11,12 @@ If you haven't already, follow our [Quickstart](/docs/get-started/quickstart/) g
 
 ## Project structure
 
-Using DMNO, we define a configuration schema for your entire project. We break that configuration up to live alongside each of the services in your code, and provide ways for them to reference each other as needed. Each service config is defined in a `config.mts` TypeScript file that lives in a `.dmno` directory.
-
-You'll always have a `.dmno/config.mts` file at the root of your project, and if you are working in a monorepo, you'll have another `.dmno/config.mts` in each of your services that require configuration. You may have some workspace packages that are purely shared libraries, and don't have any configuration. These do not need a `.dmno` folder.
+Using DMNO, we define a configuration schema for your entire project that lives in a `config.mts` TypeScript file within a special `.dmno` directory at the root of your project. In a monorepo project with multiple child packages/services, we keep the root config, but we also break things up into multiple `.dmno/config.mts` files that live alongside each part and provide mechanisms for them to reference each other as needed.
 
 A typical DMNO project structure:
 
 <Tabs syncKey='repoType'>
-  <TabItem label="Single repo">
+  <TabItem label="Single project repo">
     <FileTree>
         - / (root of your project)
           - .dmno
@@ -26,9 +24,7 @@ A typical DMNO project structure:
             - .env.local (your local overrides and sensitive values)
             - **config.mts** (your config schema)
             - tsconfig.json (dmno specific tsconfig)
-          - api/
-          - some_folder/
-          - frontend/
+          - src/
           - scripts/
           - ...etc
     </ FileTree>
@@ -48,8 +44,8 @@ A typical DMNO project structure:
   </TabItem>
 </Tabs>
 
-:::note
-There are many ways to organize package folders in a monorepo. We'll respect your monorepo's workspace settings' glob rules for where to look (e.g., `package.json > workspaces`, `pnpm-workspace.yaml`, etc).
+:::tip[Monorepos]
+Check out the [monorepo guide](/docs/guides/monorepos/) for more details on using DMNO within a monorepo
 :::
 
 ### Root service config

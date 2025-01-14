@@ -25,12 +25,18 @@ const debug = Debug('dmno');
  * @category HelperMethods
  */
 export type DmnoServiceConfig = {
-  /** set to true if this is the root service */
-  isRoot?: boolean,
   /** service name - if empty, name from package.json will be used */
   name?: string,
   /** settings for this service - each item will be inherited from parent(s) if unspecified */
   settings?: DmnoServiceSettings,
+
+  /** @deprecated No longer required - can be safely removed */
+  isRoot?: never,
+  /**
+   * @deprecated No longer supported - picked items can be defined within `schema` now using `PICKED_ITEM: { extends: pick('entity', 'path') }`
+   * @see https://dmno.dev/docs/guides/schema/
+   * */
+  pick?: never,
 
   // ? Should this be part of settings? if inherited from parent, it probably should
   /** override loading plugins - if not specified, will default to loading process env vars and dotenv files */
@@ -42,15 +48,11 @@ export type DmnoServiceConfig = {
   icon?: string, // might want to pick from ConfigraphEntityDef?
   /** custom color for this entity */
   color?: string, // might want to pick from ConfigraphEntityDef?
-} & ({
-  isRoot: true
-} | {
-  isRoot?: false,
   /** name of parent service (if applicable) - if empty this service will be a child of the root service */
   parent?: string,
   /** optional array of "tags" for the service */
   tags?: Array<string>,
-});
+};
 
 
 
@@ -113,7 +115,7 @@ export class DmnoWorkspace {
     // first set up graph edges based on "parent"
     for (const service of this.servicesArray) {
     // check if parent service is valid
-      const parentServiceName = !service.rawConfig?.isRoot ? service.rawConfig?.parent : undefined;
+      const parentServiceName = !service.isRoot ? service.rawConfig?.parent : undefined;
       if (parentServiceName) {
         // NOTE - errors are dealt with later by configraph
         if (this.services[parentServiceName] && parentServiceName !== service.serviceName) {
@@ -172,8 +174,8 @@ export class DmnoWorkspace {
 
           configSchema: service.rawConfig?.schema as any,
 
-          // pick and parentId is only available on non-root services
-          ...service.rawConfig && !service.rawConfig.isRoot && {
+          // parentId is only available on non-root services
+          ...service.rawConfig && !service.isRoot && {
             parentId: service.rawConfig.parent,
           },
         },
@@ -333,7 +335,7 @@ export class DmnoService {
   }
 
   get parentService(): DmnoService | undefined {
-    if (this.rawConfig?.isRoot) return;
+    if (this.isRoot) return;
     if (this.rawConfig?.parent) {
       const parent = this.workspace.getService({ serviceName: this.rawConfig?.parent });
       if (parent) return parent;

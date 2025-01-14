@@ -92,9 +92,7 @@ export type SerializedResolverBranch = {
 
 export type SerializedConfigraphDataType<NodeMetadata = {}> =
   (
-    Pick<ConfigraphDataTypeDefinition<NodeMetadata>,
-    'summary' | 'description' | 'typeDescription' | 'required' | 'expose' |
-    'externalDocs' | 'ui'>
+    Pick<ConfigraphDataTypeDefinition<NodeMetadata>, 'summary' | 'description' | 'typeDescription' | 'required' | 'externalDocs' | 'ui'>
   ) &
   // dmno config specific metadata -- 'sensitive' | 'useAt' | 'dynamic'
   NodeMetadata;

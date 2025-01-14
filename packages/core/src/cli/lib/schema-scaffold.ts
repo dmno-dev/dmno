@@ -165,7 +165,6 @@ export function generateDmnoConfigInitialCode(opts: {
     `import { ${joinAndCompact(dmnoImports, ', ')} } from 'dmno';`,
     '',
     'export default defineDmnoService({',
-    opts.isRoot && '  isRoot: true,',
     opts.isRoot && '  settings: {\n    redactSensitiveLogs: true,\n    interceptSensitiveLeakRequests: true,\n    preventClientLeaks: true,\n  },',
     opts.serviceName
       ? `  name: '${opts.serviceName}',`

@@ -173,10 +173,6 @@ export class ConfigLoader {
 
           const importedConfig = await this.viteRunner.executeFile(configFilePath);
 
-          if (w.isRoot && !importedConfig.default.isRoot) {
-            throw new Error('Root service .dmno/config.mts must set `isRoot: true`');
-          }
-
           service = new DmnoService({
             ...serviceInitOpts,
             // NOTE - could actually be a DmnoServiceConfig or DmnoWorkspaceConfig
