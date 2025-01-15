@@ -1,5 +1,11 @@
 # @dmno/configraph
 
+## 0.0.9
+
+### Patch Changes
+
+- [#193](https://github.com/dmno-dev/dmno/pull/193) [`4489744`](https://github.com/dmno-dev/dmno/commit/4489744e4c459ed9eb8c6953ed1d6ac1fd7e251a) Thanks [@theoephraim](https://github.com/theoephraim)! - entity templates, pick refactor
+
 ## 0.0.8
 
 ### Patch Changes

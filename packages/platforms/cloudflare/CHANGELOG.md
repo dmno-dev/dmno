@@ -1,5 +1,11 @@
 # @dmno/cloudflare-platform
 
+## 0.0.3
+
+### Patch Changes
+
+- [#194](https://github.com/dmno-dev/dmno/pull/194) [`50e2338`](https://github.com/dmno-dev/dmno/commit/50e2338594935485737e363bfaa0d7364268dfc8) Thanks [@theoephraim](https://github.com/theoephraim)! - fix cf pages type description
+
 ## 0.0.2
 
 ### Patch Changes

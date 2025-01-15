@@ -1,6 +1,6 @@
 {
   "name": "@dmno/cloudflare-platform",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Tools and data-types to use DMNO with Cloudflare",
   "author": "dmno-dev",
   "license": "MIT",

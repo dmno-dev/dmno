@@ -1,5 +1,14 @@
 # @dmno/docs-site
 
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies [[`22853fe`](https://github.com/dmno-dev/dmno/commit/22853fe3293c00d6a71b40b4e694f5d4d34c9ebc), [`50e2338`](https://github.com/dmno-dev/dmno/commit/50e2338594935485737e363bfaa0d7364268dfc8), [`4489744`](https://github.com/dmno-dev/dmno/commit/4489744e4c459ed9eb8c6953ed1d6ac1fd7e251a)]:
+  - dmno@0.0.36
+  - @dmno/cloudflare-platform@0.0.3
+  - @dmno/astro-integration@0.0.18
+
 ## 0.0.11
 
 ### Patch Changes
