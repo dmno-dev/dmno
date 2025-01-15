@@ -214,6 +214,10 @@ export default defineConfig({
               label: 'Vercel',
               link: '/docs/platforms/vercel/',
             },
+            {
+              label: 'GitHub Actions',
+              link: '/docs/platforms/github-actions/',
+            },
           ],
         }, {
           label: 'Reference',
