@@ -22,6 +22,7 @@ export default defineConfig({
   // Entry points
   entry: [ 
     'functions-src/signup.ts',
+    'functions-src/index.ts',
   ],
   
   sourcemap: true, // Generate sourcemaps
