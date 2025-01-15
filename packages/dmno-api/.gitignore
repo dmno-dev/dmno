@@ -1,4 +1,3 @@
-functions-dist
 functions/*.js
 functions/*.map
 .wrangler

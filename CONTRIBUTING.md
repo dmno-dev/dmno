@@ -21,24 +21,27 @@ Then install deps via `pnpm`:
 ## Packages
 
 - `packages/core` - Core package for DMNO (includes CLI) 
-- `packages/docs-site` - Docs site (dmno.dev)
-- `packages/chat.dmno.dev` - Redirects to Discord
-- `packages/signup-api` - Netlify functions for email signup
+- `packages/docs-site` - Docs site (https://dmno.dev)
+- `packages/dmno-api` - Basic api for tracking email signups
 
 ## Plugins
 
 - `plugins/1password` - DMNO plugin for 1Password 
 - `plugins/encrypted-vault` - DMNO plugin for encrypted values
+- `plugins/bitwarden` - DMNO plugin for Bitwarden Secrets Manager
+- `plugins/infisical` - DMNO plugin for Infisical
 
 ## Integrations
 - `integrations/astro` - DMNO integration for Astro
 - `integrations/vite` - DMNO integration for Vite
 - `integrations/nextjs` - DMNO integration for Next.js
 - `integrations/remix` - DMNO integration for Remix
+- `integrations/fastify` - DMNO integration for Fastify
 
 ## Platforms  
 - `platforms/netlify` - DMNO platform for Netlify
 - `platforms/vercel` - DMNO platform for Vercel
+- `platforms/cloudflare` - DMNO platform for Cloudflare
 
 ## libs
 

@@ -175,7 +175,7 @@ program.action(async (opts: {
       // TODO: figure out how we want to disable this while we are building/testing this
       const response = await tryCatch(async () => {
         // TODO: would love to use dmno for this URL, but using dmno while _building_ dmno feels like it might be tricky
-        return await fetch('https://signup-api.dmno.dev/signup', {
+        return await fetch('https://api.dmno.dev/signup', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
