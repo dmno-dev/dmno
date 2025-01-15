@@ -151,7 +151,7 @@ DMNO has a full-featured type system that extends beyond what TypeScript is capa
 
 Each item is defined by extending some base type (whether explicitly or not) and adding additional overrides on top of it.
 
-Most of the time, you'll use existing data types, either from [`DmnoBaseTypes`](/docs/reference/base-types/) or from a published plugin - some by DMNO, some by others. These data types are factory functions, and accept settings that control reusable behavior like validation rules and docs info. You should almost always be able to accomplish what you need with existing types - but of course you can author your own resuable types as well.
+Most of the time, you'll use existing data types, either from [`DmnoBaseTypes`](/docs/reference/base-types/) or from a published plugin - some by DMNO, some by others. These data types are factory functions, and accept settings that control reusable behavior like validation rules and docs info. You should almost always be able to accomplish what you need with existing types - but you can author your own reusable types as well.
 
 These types are also used to generate TypeScript types for your config and give you type safety with docs when using your config in your application code.
 
@@ -299,7 +299,7 @@ For config values that have a common prefix, showing the first 2 characters will
 
 
 ### Docs & IntelliSense ||docs||
-DMNO lets you attach additional information to items that serve as inline documentation about the item. This data is also used to generate very rich TypeScript JSDoc comments for your config - giving you and your team ✨ magical IDE superpowers.
+DMNO lets you attach additional information to items that serve as inline documentation about the item. This data is also used to generate TypeScript JSDoc comments for your config - giving you and your team ✨ magical IDE superpowers.
 
 :::tip
 Some of these settings make more sense within the context of authoring reusable types, but they are all always available.
@@ -335,7 +335,7 @@ An example of how the generated types show up with VSCode's IntelliSense:
 
 
 ### Dynamic vs static ||dynamic||
-Items can use `dynamic: true` or `false` to override their behaviour as to whether they should be bundled into your code at _build time_ versus always loaded at boot time. This is only relevant for some integrations/projects, and it's a _big_ topic. See our [dynamic config guide](/docs/guides/dynamic-config/) for more details.
+Items can use `dynamic: true` or `false` to override their behaviour as to whether they should be bundled into your code at _build_ time versus always loaded at _boot_ time. This is only relevant for some integrations/projects, and it's a _big_ topic. See our [dynamic config guide](/docs/guides/dynamic-config/) for more details.
 
 
 ### Setting item values ||value||
