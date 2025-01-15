@@ -10,6 +10,7 @@ export default defineDmnoService({
   },
   pick: [
     'GITHUB_REPO_URL',
+    'GITHUB_ACTION_REPO_URL',
     'DISCORD_JOIN_URL',
     'GENERAL_CONTACT_EMAIL',
     'POSTHOG_API_KEY',
