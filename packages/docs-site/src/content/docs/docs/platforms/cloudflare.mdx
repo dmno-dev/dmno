@@ -39,9 +39,7 @@ For example, if you wanted to pull your Cloudflare credentials from 1Password, c
 ```ts title=".dmno/config.mts"
 import { CloudflareWranglerEnvSchema, DmnoWranglerEnvSchema } from '@dmno/cloudflare-platform';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
-import {
-  DmnoBaseTypes, defineDmnoService, pickFromSchemaObject, switchBy,
-} from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, pickFromSchemaObject, switchBy } from 'dmno';
 
 // initialize our 1Password plugin
 const opSecrets = new OnePasswordDmnoPlugin('1pass', {

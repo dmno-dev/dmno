@@ -4,7 +4,7 @@ description: Learn how DMNO uses `.env` files to scaffold out your config schema
 ---
 
 DMNO uses `.env` files in two ways:
-1. To scaffold out the initial [`schema`](/docs/guides/schema/#defining-config-items) in your `config.mts` files when your run `dmno init`
+1. To scaffold out the initial [`schema`](/docs/guides/schema/) in your `config.mts` files when your run `dmno init`
 2. To set value overrides to be used while resolving your config values
 
 Let's zoom in on each of these.
@@ -40,7 +40,7 @@ Whenever we are resolving your configuration values, dmno will load any `.env` f
 To decide which `.env.*` files to enable, we use the current value of `NODE_ENV` that we find in actual environment variables via `process.env`, not any value set via your schema or another `.env` file.
 :::
 
-While we support it, **we do not recommend using complicated `.env` file setups like this within dmno!** It is supported purely to ease migration. Instead we recommend migrating this logic into the schema itself - setting values using functions and helpers like `switchBy` to express more complex overriding behaviour, and using plugins to load sensitive values securely. See our [Schema Authoring guide](/docs/guides/schema/#setting-item-values) for more details.
+While we support it, **we do not recommend using complicated `.env` file setups like this within dmno!** It is supported purely to ease migration. Instead we recommend migrating this logic into the schema itself - setting values using functions and helpers like `switchBy` to express more complex overriding behaviour, and using plugins to load sensitive values securely. See our [Schema Authoring guide](/docs/guides/schema/#value) for more details.
 
 We do, however, recommend using a single gitignored `.env.local` file to store any overrides you want to apply locally. This can be useful for short-lived temporary settings that you may want to toggle during development - like flags that enable certain debugging related features. It's also where we recommend storing sensitive keys that you don't want checked into version control; values that in deployed environments you would set via actual environment variables.
 

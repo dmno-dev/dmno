@@ -54,8 +54,6 @@ export type DmnoServiceConfig = {
   tags?: Array<string>,
 };
 
-
-
 export type InjectedDmnoEnvItem = {
   value: any,
   dynamic?: boolean | 1 | '1',
