@@ -16,13 +16,17 @@ To use `switchBy`, we select another item by name to use as the switch condition
 Note that each branch can be a static value, a function, or a resolver - just like setting the value itself. This leads to some powerful composition capabilities.
 
 ```typescript
-import { NodeEnvType, switchBy } from 'dmno';
+import { switchBy } from 'dmno';
 
 export default defineDmnoService({
   schema: {
-    NODE_ENV: NodeEnvType,
+    APP_ENV: {
+      description: 'our custom app environment flag',
+      extends: DmnoBaseTypes.enum(['development', 'staging', 'production', 'test']),
+      value: 'development',
+    },
     TOGGLED_ITEM: {
-      value: switchBy('NODE_ENV', {
+      value: switchBy('APP_ENV', {
         _default: 'default/development value',
         staging: 'staging value',
         test: 'test value',
@@ -33,7 +37,7 @@ export default defineDmnoService({
     },
     SOME_API_KEY: {
       sensitive: true,
-      value: switchBy('NODE_ENV', {
+      value: switchBy('APP_ENV', {
         _default: devSecretsVault.item(),
         production: prodSecretsVault.item(),
       },
@@ -56,6 +60,7 @@ export default defineDmnoService({
   schema: {
     ...pickFromSchemaObject(VercelEnvSchema, 'VERCEL_ENV', 'VERCEL_GIT_COMMIT_REF'),
     APP_ENV: {
+      extends: DmnoBaseTypes.enum(['development', 'branch-preview', 'pr-preview', 'staging', 'production', 'test']),
       value: () => {
         if (DMNO_CONFIG.VERCEL_ENV === 'production') return 'production';
         if (DMNO_CONFIG.VERCEL_ENV === 'preview') {
@@ -79,6 +84,6 @@ APP_ENV=production pnpm exec dmno run -- your-build-command
 
 ## Overrides from `process.env`
 
-Keep in mind that DMNO loads in process environment variables in as _overrides_, so there are many cases where your schema does not have a value defined for a certain environment flag, because you are expecting to receive it as an override. Sometimes this could be contextual information injected by the hosting platform, like `VERCEL_GIT_PULL_REQUEST_ID`, or it could be env vars that have been set via the platform's env var management UI. This will be especially true if you are migrating an existing project to DMNO.
+Keep in mind that DMNO loads in process environment variables as _overrides_, so there are many cases where your schema does not have a value defined for a certain environment flag, because you are expecting to receive it as an override. Sometimes this could be contextual information injected by the hosting platform, like `VERCEL_GIT_PULL_REQUEST_ID`, or it could be env vars that have been set via the platform's env var management UI. This will be especially true if you are migrating an existing project to DMNO.
 
 Over time, you may find it helpful to migrate more of your config into the schema and to a centralized secret store (like 1Password). This reduces secret sprawl, keeping things more secure and easier to reason about. In this case, you may still inject your _secret-zero_ as an override, but everything else will be defined via the schema.

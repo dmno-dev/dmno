@@ -26,15 +26,13 @@ This method is used to define the configuration schema in each of your services,
       lang="ts"
       code={`
 type DmnoServiceConfig = {
-  isRoot?: boolean,
   name?: string,
+  parent?: string,
+  tags?: string[],
   settings?: {
     dynamicConfig: DynamicConfigModes,
   },
   schema: Record<string, ConfigItemDefinitionOrShorthand>,
-  // rest of props only available when isRoot !== true 
-  parent?: string,
-  tags?: string[],
 };
       `}
     />
@@ -44,19 +42,14 @@ type DmnoServiceConfig = {
     <PropTable properties={
       [
         {
-          name: 'isRoot',
-          type: 'boolean',
-          description: 'MUST be set to true for root service only.'
-        },
-        {
           name: 'name',
           type: 'string',
-          description: 'The name of the workspace.'
+          description: 'The name of the service - will use `name` from package.json if not set.'
         },
         {
           name: 'parent',
           type: 'string',
-          description: 'The name of the parent service.'
+          description: 'The name of the parent service - will default to root service if not set.'
         },
         {
           name: 'tags',
@@ -78,10 +71,6 @@ type DmnoServiceConfig = {
     } />
   </TabItem>
 </Tabs>
-
-Note that when `isRoot` is true, some of the options are not available:
-- `parent` is the name of the parent service.
-- `tags` is an array of tags for the service.
 
 #### `DynamicConfigModes`
 

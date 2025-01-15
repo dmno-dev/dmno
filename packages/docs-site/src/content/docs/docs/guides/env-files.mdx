@@ -25,7 +25,7 @@ This automatic scaffolding of your config `schema` is meant to be a good startin
 `dmno init` will also prompt you to delete the `.env` files that were previously checked into source control because the values in those files have now been incorporated into your new config schema.
 :::
 
-## Setting overrides via `.env` files
+## Setting overrides via `.env` files ||overrides||
 
 Whenever we are resolving your configuration values, dmno will load any `.env` files within a `.dmno` folder and apply those values as _overrides_. This means that they will take higher precendence than values set directly in your `schema`, and lower precedence than overrides set via actual environment variables passed in from your shell. The overall precedence order from highest to lowest is:
 - Environment variables from your shell (e.g., `ENV_VAR=xyz npm run dev`)

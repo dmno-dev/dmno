@@ -56,7 +56,7 @@ Check out the [monorepo guide](/docs/guides/monorepos/) for more details on usin
 Your `.dmno/config.mts` file will define settings for your project, including a full schema of all the config items used within your project. Your config file must include `export default defineDmnoService({ //...`. Here is an example:
 
 ```typescript title=".dmno/config.mts" "export default defineDmnoService"
-import { DmnoBaseTypes, defineDmnoService, switchBy, NodeEnvType } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, switchBy } from 'dmno';
 
 export default defineDmnoService({
   // project settings that affect DMNO itself
@@ -95,7 +95,7 @@ In a monorepo, aside from the root config file, each child service will have its
 - we can now share config items across services (see [sharing config](/docs/guides/schema/#pick) for more info)
 
 ```typescript title="apps/docs-site/.dmno/config.mts" /(name):/ /(parent):/ /pick\\([^)]*\\)/
-import { DmnoBaseTypes, defineDmnoService, switchBy, NodeEnvType } from 'dmno';
+import { defineDmnoService, pick } from 'dmno';
 
 export default defineDmnoService({
   name: 'docs-site', // service name (optional - will default to `name` from `package.json`)
@@ -222,9 +222,6 @@ Because pick is a special kind of data type, you can use the shorthand to specif
 SOME_ITEM: { extends: pick(), description: 'can update/add more type settings' },
 ```
 :::
-
-If you just want to copy the _value_ once it resolved, but not the rest of the settings, there are 2 other mechanisms for doing so - the `configPath()` and `inject()` resolvers. More details coming soon.
-
 
 
 ### Validations & required config ||validation||

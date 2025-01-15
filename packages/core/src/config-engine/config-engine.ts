@@ -34,7 +34,7 @@ export type DmnoServiceConfig = {
   isRoot?: never,
   /**
    * @deprecated No longer supported - picked items can be defined within `schema` now using `PICKED_ITEM: { extends: pick('entity', 'path') }`
-   * @see https://dmno.dev/docs/guides/schema/
+   * @see https://dmno.dev/docs/guides/schema/#pick
    * */
   pick?: never,
 
