@@ -1,5 +1,5 @@
 import path from 'node:path';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import Debug from 'debug';
 import validatePackageName from 'validate-npm-package-name';
 import graphlib from '@dagrejs/graphlib';
@@ -16,37 +16,27 @@ import { DmnoPlugin } from './dmno-plugin';
 import {
   DmnoOverrideLoader, dotEnvFileOverrideLoader, processEnvOverrideLoader, OverrideSource,
 } from './overrides';
-import { asyncEachParallel, asyncEachSeries, asyncMapParallel } from '../lib/async-utils';
+import { asyncEachParallel, asyncMapParallel } from '../lib/async-utils';
 
 const debug = Debug('dmno');
-
-type PickConfigItemDefinition = {
-  /** which service to pick from, defaults to "root" */
-  source?: string;
-  /** key(s) to pick, or function that matches against all keys from source */
-  key: string | Array<string> | ((key: string) => boolean),
-
-  /** new key name or function to rename key(s) */
-  renameKey?: string | ((key: string) => string),
-
-  /** function to transform value(s) */
-  transformValue?: (value: any) => any,
-
-  // TOOD: also allow setting the value (not transforming)
-  // value?: use same value type as above
-};
 
 /**
  * options for defining a service's config schema
  * @category HelperMethods
  */
 export type DmnoServiceConfig = {
-  /** set to true if this is the root service */
-  isRoot?: boolean,
   /** service name - if empty, name from package.json will be used */
   name?: string,
   /** settings for this service - each item will be inherited from parent(s) if unspecified */
   settings?: DmnoServiceSettings,
+
+  /** @deprecated No longer required - can be safely removed */
+  isRoot?: never,
+  /**
+   * @deprecated No longer supported - picked items can be defined within `schema` now using `PICKED_ITEM: { extends: pick('entity', 'path') }`
+   * @see https://dmno.dev/docs/guides/schema/#pick
+   * */
+  pick?: never,
 
   // ? Should this be part of settings? if inherited from parent, it probably should
   /** override loading plugins - if not specified, will default to loading process env vars and dotenv files */
@@ -58,19 +48,11 @@ export type DmnoServiceConfig = {
   icon?: string, // might want to pick from ConfigraphEntityDef?
   /** custom color for this entity */
   color?: string, // might want to pick from ConfigraphEntityDef?
-} & ({
-  isRoot: true
-} | {
-  isRoot?: false,
   /** name of parent service (if applicable) - if empty this service will be a child of the root service */
   parent?: string,
   /** optional array of "tags" for the service */
   tags?: Array<string>,
-  /** array of config items to be picked from parent */
-  pick?: Array<PickConfigItemDefinition | string>,
-});
-
-
+};
 
 export type InjectedDmnoEnvItem = {
   value: any,
@@ -131,7 +113,7 @@ export class DmnoWorkspace {
     // first set up graph edges based on "parent"
     for (const service of this.servicesArray) {
     // check if parent service is valid
-      const parentServiceName = !service.rawConfig?.isRoot ? service.rawConfig?.parent : undefined;
+      const parentServiceName = !service.isRoot ? service.rawConfig?.parent : undefined;
       if (parentServiceName) {
         // NOTE - errors are dealt with later by configraph
         if (this.services[parentServiceName] && parentServiceName !== service.serviceName) {
@@ -190,17 +172,9 @@ export class DmnoWorkspace {
 
           configSchema: service.rawConfig?.schema as any,
 
-          // pick and parentId is only available on non-root services
-          ...service.rawConfig && !service.rawConfig.isRoot && {
+          // parentId is only available on non-root services
+          ...service.rawConfig && !service.isRoot && {
             parentId: service.rawConfig.parent,
-            pickSchema: _.map(service.rawConfig.pick, (p) => {
-              if (_.isString(p)) return p;
-              return {
-                ...p,
-                // remap "source" to "entityId"
-                entityId: p.source,
-              };
-            }),
           },
         },
       });
@@ -359,7 +333,7 @@ export class DmnoService {
   }
 
   get parentService(): DmnoService | undefined {
-    if (this.rawConfig?.isRoot) return;
+    if (this.isRoot) return;
     if (this.rawConfig?.parent) {
       const parent = this.workspace.getService({ serviceName: this.rawConfig?.parent });
       if (parent) return parent;

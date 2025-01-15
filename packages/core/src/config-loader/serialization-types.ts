@@ -75,9 +75,8 @@ export type SerializedResolverBranch = {
 };
 
 export type SerializedDmnoDataType = Pick<
-ConfigraphDataTypeDefinition<any, DmnoDataTypeMetadata>,
-'summary' | 'description' | 'typeDescription' | 'required' | 'expose' |
-'externalDocs' | 'ui' |
+ConfigraphDataTypeDefinition<DmnoDataTypeMetadata>,
+'summary' | 'description' | 'typeDescription' | 'required' | 'externalDocs' | 'ui' |
 // dmno config specific metadata
 'sensitive' | 'useAt' | 'dynamic'
 >;

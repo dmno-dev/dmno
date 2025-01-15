@@ -1,4 +1,4 @@
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { DmnoCommand } from './dmno-command';
 
 // this adds a hidden command which spits out a json schema of the entire cli

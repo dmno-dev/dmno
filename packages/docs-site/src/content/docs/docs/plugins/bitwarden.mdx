@@ -58,7 +58,7 @@ You should use multiple projects to segment your secrets following the [Principl
 :::
 
 
-Machine account access tokens now serve as your _secret-zero_ - which grants access to the rest of your sensitive config stored in Bitwarden. It must be set locally and in deployed environments, but it is sensitive so we must pass in the value as an _override_ rather than storing it within the config. Locally, this usually means storing it in your [`.env.local` file](/docs/guides/env-files/) and on a deployed environment you'll usually set it wherever you would normally pass in environment variables. DMNO will handle the rest. See [Setting overrides](/docs/guides/env-files/#setting-overrides-via-env-files) for more details.
+Machine account access tokens now serve as your _secret-zero_ - which grants access to the rest of your sensitive config stored in Bitwarden. It must be set locally and in deployed environments, but it is sensitive so we must pass in the value as an _override_ rather than storing it within the config. Locally, this usually means storing it in your [`.env.local` file](/docs/guides/env-files/) and on a deployed environment you'll usually set it wherever you would normally pass in environment variables. DMNO will handle the rest. See [Setting overrides](/docs/guides/env-files/#overrides) for more details.
 
 
 ------

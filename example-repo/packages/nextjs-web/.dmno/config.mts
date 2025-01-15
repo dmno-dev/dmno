@@ -1,4 +1,4 @@
-import { defineDmnoService } from 'dmno';
+import { defineDmnoService, pick } from 'dmno';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
@@ -14,24 +14,15 @@ export default defineDmnoService({
     interceptSensitiveLeakRequests: true,
     preventClientLeaks: true,
   },
-  pick: [
-    'NODE_ENV',
-    'DMNO_ENV',
-    {
-      source: 'api',
-      key: 'API_URL',
-      renameKey: 'NEXT_PUBLIC_API_URL',
-    },
-    {
-      source: 'group1',
-      // picking the renamed key from group1
-      key: 'PICK_TEST_G1',
-      renameKey: 'PICK_TEST_NW',
-      // should apply _after_ the group1 transform
-      transformValue: (val) => `${val}-nextwebtransform`,
-    }
-  ],
   schema: {
+    NODE_ENV: pick(),
+    DMNO_ENV: pick(),
+    NEXT_PUBLIC_API_URL: pick('api', 'API_URL'),
+    PICK_TEST_NW: {
+      extends: pick('group1', 'PICK_TEST_G1'),
+      // TODO: reimplement
+      // transformValue: (val) => `${val}-nextwebtransform`,
+    },
     FOO: {
       value: 'foo',
       description: 'test of a public env var without a NEXT_PUBLIC_ prefix',

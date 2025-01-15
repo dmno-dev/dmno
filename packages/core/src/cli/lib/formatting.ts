@@ -1,5 +1,5 @@
 import kleur from 'kleur';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { SerializedConfigItem, SerializedDmnoError } from '../../config-loader/serialization-types';
 
 type ColorMod = Exclude<keyof typeof kleur, 'enabled'>;

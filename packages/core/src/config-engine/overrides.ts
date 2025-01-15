@@ -1,4 +1,4 @@
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { loadServiceDotEnvFiles } from '../lib/dotenv-utils';
 //! need to clean up overrrides
 type NestedOverrideObj<T = string> = {

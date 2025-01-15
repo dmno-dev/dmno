@@ -28,7 +28,6 @@ const EncryptedVaultSecrets = new EncryptedVaultDmnoPlugin('vault/prod', { name:
 
 export default defineDmnoService({
   name: 'root',
-  isRoot: true,
   settings: {
     interceptSensitiveLeakRequests: true,
     redactSensitiveLogs: true,

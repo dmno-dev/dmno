@@ -1,5 +1,5 @@
 import kleur from 'kleur';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { ConfigLoadError } from '@dmno/configraph';
 import { CliExitError } from '../cli/lib/cli-error';
 

@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { TLSSocket } from 'node:tls';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import getPort from 'get-port';
 import { Server as SocketIoServer } from 'socket.io';
 import launchEditor from 'launch-editor';

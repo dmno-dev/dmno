@@ -74,9 +74,7 @@ For example:
 ```ts title='.dmno/config.mts'
 import { defineDmnoService, switchBy, pickFromSchemaObject } from 'dmno';
 import { VercelEnvSchema } from '@dmno/vercel-platform';
-import {
-  EncryptedVaultDmnoPlugin, EncryptedVaultTypes,
-} from '@dmno/encrypted-vault-plugin';
+import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
 // you could use a single vault, but it's best practice
 // to split out prod secrets to limit access

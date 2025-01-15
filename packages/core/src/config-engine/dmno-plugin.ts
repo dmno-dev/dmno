@@ -1,4 +1,4 @@
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import Debug from 'debug';
 
 import {
@@ -9,7 +9,7 @@ import {
 import {
   DmnoService, DmnoWorkspace,
 } from './config-engine';
-import { DmnoConfigraphNode, DmnoConfigraphServiceEntity, DmnoDataTypeMetadata } from './configraph-adapter';
+import { DmnoConfigraphServiceEntity, DmnoDataTypeMetadata } from './configraph-adapter';
 import { SerializedDmnoPlugin } from '../config-loader/serialization-types';
 
 const debug = Debug('dmno:plugins');

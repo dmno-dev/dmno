@@ -66,7 +66,7 @@ Next, you'll need to create a [Machine Identity](https://infisical.com/docs/docu
 
 How you want to segment your identities and secrets is up to you. You could create a separate identity and secrets for each environment, or each service, or each project. At minimum, we recommend segmenting your production and non-production secrets. See [Secret Segmentation](/docs/guides/secret-segmentation/) for more details.
 
-Also note that the **Client Secret** is highly sensitive and should be treated as your _secret zero_. It will need to be set locally and passed in as an override. Locally, it can be set in your `.env.local` file, and in any deployed environments it can be set however you normally set environment variables for that platform. DMNO will handle the rest. See [Setting overrides](/docs/guides/env-files/#setting-overrides-via-env-files) for more details.
+Also note that the **Client Secret** is highly sensitive and should be treated as your _secret zero_. It will need to be set locally and passed in as an override. Locally, it can be set in your `.env.local` file, and in any deployed environments it can be set however you normally set environment variables for that platform. DMNO will handle the rest. See [Setting overrides](/docs/guides/env-files/#overrides) for more details.
 
 ------------
 

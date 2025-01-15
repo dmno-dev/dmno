@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { getTsDefinitionForNode } from '@dmno/configraph';
 
 import {

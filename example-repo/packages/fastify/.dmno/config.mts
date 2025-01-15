@@ -1,7 +1,6 @@
 import { DmnoBaseTypes, defineDmnoService } from 'dmno';
 
 export default defineDmnoService({
-  pick: [],
   settings: {
     preventClientLeaks: true
   },

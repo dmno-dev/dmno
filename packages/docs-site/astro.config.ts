@@ -8,6 +8,7 @@ import partytown from '@astrojs/partytown';
 import IconsVitePlugin from 'unplugin-icons/vite';
 import sitemap from '@astrojs/sitemap';
 import dmnoAstroIntegration from '@dmno/astro-integration';
+import remarkCustomHeaderId from 'remark-custom-header-id';
 
 // https://astro.build/config
 export default defineConfig({
@@ -24,6 +25,11 @@ export default defineConfig({
     // },
   },
   trailingSlash: 'always',
+  markdown: {
+    remarkPlugins: [
+      remarkCustomHeaderId,
+    ],
+  },
   integrations: [
     dmnoAstroIntegration(),
     starlight({
@@ -159,7 +165,6 @@ export default defineConfig({
           ],
         }, {
           label: 'Plugins',
-          badge: 'New',
           items: [
             {
               label: 'Overview',
@@ -184,7 +189,6 @@ export default defineConfig({
           ],
         }, {
           label: 'Integrations',
-          badge: 'New',
           items: [
             { label: 'Overview', link: '/docs/integrations/overview/' },
             { label: 'Remix', link: '/docs/integrations/remix/' },
@@ -196,7 +200,6 @@ export default defineConfig({
           ],
         }, {
           label: 'Platforms',
-          badge: 'New',
           items: [
             {
               label: 'Overview',
@@ -205,6 +208,7 @@ export default defineConfig({
             {
               label: 'Cloudflare',
               link: '/docs/platforms/cloudflare/',
+              badge: 'New',
             },
             {
               label: 'Netlify',

@@ -1,5 +1,5 @@
 
-import { DmnoBaseTypes, defineDmnoService, configPath, NodeEnvType, switchBy, inject, ValidationError } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, configPath, NodeEnvType, switchBy, inject, ValidationError, pick } from 'dmno';
 import { OnePasswordDmnoPlugin, OnePasswordTypes } from '@dmno/1password-plugin';
 
 
@@ -14,10 +14,8 @@ export default defineDmnoService({
     redactSensitiveLogs: true,
     preventClientLeaks: true,
   },
-  pick: [
-    'NODE_ENV'
-  ],
   schema: {
+    NODE_ENV: pick(),
     NORMAL_NUMBER: {
       value: 123,
       required: true,

@@ -1,25 +1,18 @@
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import graphlib from '@dagrejs/graphlib';
 import Debug from 'debug';
-
 import { asyncForEach } from 'modern-async';
+
 import { ConfigraphNode } from './config-node';
 import { SchemaError } from './errors';
 import { ConfigraphEntity, ConfigraphEntityDef } from './entity';
 import { ConfigraphPlugin } from './plugin';
-import { ConfigraphCachingProvider } from './caching';
-
-import { CacheMode, ConfigraphDataTypesRegistry, ConfigValue } from '.';
-
+import { CacheMode, ConfigraphCachingProvider } from './caching';
+import { ConfigValue } from './resolvers';
+import { NODE_FULL_PATH_SEP } from './common';
+import { ConfigraphDataTypesRegistry } from './data-types';
 
 const debug = Debug('configraph');
-
-// config item keys are all checked against this regex
-// currently it must start with a letter (to make it a valid js property)
-// and can only contain letters, number, and underscore
-// we may want to restrict "__" if we use that as the nesting separator for env var overrides?
-const VALID_NODE_KEY_REGEX = /^[a-z]\w*$/i;
-
 
 // TODO: ideally we would extract the shape of the entity metadata from these schema objects
 // but currently we are passing it in twice, once for TS and once for runtime
@@ -36,8 +29,6 @@ export class Configraph<
 
   _rootEntityId!: string;
   entitiesById: Record<string, ConfigraphEntity> = {};
-  entitiesByParentId: Record<string, Array<ConfigraphEntity>> = {};
-  sortedEntityIds: Array<string> = [];
   pluginsById: Record<string, ConfigraphPlugin> = {};
   nodesByFullPath: Record<string, ConfigraphNode> = {};
 
@@ -54,8 +45,13 @@ export class Configraph<
     return this.entitiesById[this._rootEntityId];
   }
 
-  get sortedEntities() {
-    return _.map(this.sortedEntityIds, (id) => this.entitiesById[id]);
+  getChildEntities(id: string) {
+    const outEdges = this.entitiesDag.outEdges(id) || [];
+    const childIds = outEdges.filter((e) => {
+      const edgeWithData = this.entitiesDag.edge(e.v, e.w);
+      return edgeWithData.type === 'parent';
+    }).map((e) => e.w);
+    return _.values(_.pick(this.entitiesById, childIds || []));
   }
 
   generateEntityId() {
@@ -63,7 +59,7 @@ export class Configraph<
     return `configraph_entity_${Configraph.autoIdEntityCounter++}`;
   }
 
-  createEntity(
+  addEntity(
     entityDef: ConfigraphEntityDef<EntityMetadata, NodeMetadata>,
   ) {
     return new ConfigraphEntity(
@@ -72,20 +68,32 @@ export class Configraph<
     );
   }
 
-  registerEntity(entity: ConfigraphEntity) {
+  removeEntity(entityId: string) {
+    if (!this.entitiesById[entityId]) {
+      throw new Error('entity does not exist!');
+    }
+    delete this.entitiesById[entityId];
+    // or do we want to keep it, but mark it as deleted somehow?
+  }
+
+  updateEntity(
+    entityId: string,
+    entityDef: Omit<ConfigraphEntityDef<EntityMetadata, NodeMetadata>, 'id'>,
+  ) {
+    if (!this.entitiesById[entityId]) {
+      throw new Error('entity does not exist!');
+    }
+    this.entitiesById[entityId].defs.push(entityDef);
+  }
+
+  registerEntity(entity: ConfigraphEntity<any, any>) {
     if (this.entitiesById[entity.id]) {
       // TODO: this should likely roll up into a graph level error, rather than exploding
       throw new Error(`Entity IDs must be unique - duplicate id detected "${entity.id}"`);
     }
     // first entity registered will always be considered the root
     if (!this._rootEntityId) this._rootEntityId = entity.id;
-    else if (!entity.parentId) entity.parentId = this._rootEntityId;
     this.entitiesById[entity.id] = entity;
-    if (entity.parentId) {
-      this.entitiesByParentId[entity.parentId] ||= [];
-      this.entitiesByParentId[entity.parentId].push(entity);
-    }
-    // do we also want to add to an array?
   }
 
   registerPlugin(plugin: ConfigraphPlugin, parentEntityId?: string) {
@@ -116,7 +124,7 @@ export class Configraph<
       this.entitiesDag.setNode(entityId, { /* can add more metadata here */ });
     }
 
-    // first set up graph edges based on entity "parentId"
+    // set up graph edges based on entity "parentId"
     for (const entity of entitiesArray) {
       // check if parent service is valid
       if (entity.parentId) {
@@ -137,46 +145,6 @@ export class Configraph<
         if (!entity.parentId) throw new Error('Expected non-root entity to have a parent id set');
       }
     }
-
-    // add graph edges based on "pick"
-    // we will not process individual items yet, but this will give us a DAG of entity dependencies
-    for (const entity of entitiesArray) {
-      if (entity.isRoot) continue;
-      // eslint-disable-next-line @typescript-eslint/no-loop-func
-      _.each(entity.pickSchema, (rawPick) => {
-        // pick defaults to picking from "root" unless otherwise specified
-        const pickFromEntityId = _.isString(rawPick)
-          ? this._rootEntityId
-          : (rawPick.entityId || this._rootEntityId);
-        if (!this.entitiesById[pickFromEntityId]) {
-          entity.schemaErrors.push(new SchemaError(`Invalid entity id in "pick" config - "${pickFromEntityId}"`));
-        } else if (pickFromEntityId === entity.id) {
-          entity.schemaErrors.push(new SchemaError('Cannot "pick" from self'));
-        } else {
-          // create directed edge from entity output feeding into this one
-          // (ex: database feeds DB_URL into api )
-          this.entitiesDag.setEdge(pickFromEntityId, entity.id, { type: 'pick' });
-        }
-      });
-    }
-
-    // look for cycles in the entities graph, add schema errors if present
-    const graphCycles = graphlib.alg.findCycles(this.entitiesDag);
-    _.each(graphCycles, (cycleMemberIds) => {
-      // each cycle is just an array of gaphlib node "names" (our entity "ids") in the cycle
-      _.each(cycleMemberIds, (id) => {
-        this.entitiesById[id].schemaErrors.push(new SchemaError(`Detected entity dependency cycle - ${cycleMemberIds.join(' + ')}`));
-        // we'll set these back to root to avoid infinite loops
-        this.entitiesById[id].parentId = this._rootEntityId;
-      });
-    });
-
-    // if no cycles were found in the entities graph, we use a topological sort to get the right order to continue processing config
-    if (!graphCycles.length) {
-      this.sortedEntityIds = graphlib.alg.topsort(this.entitiesDag);
-      // we'll sort the services array into dependency order
-      debug('DEP SORTED ENTITIES', this.sortedEntityIds);
-    }
   }
 
   // TODO: probably could use a better name
@@ -192,125 +160,22 @@ export class Configraph<
       node: ConfigraphNode,
       fns: Array<() => void>,
     }> = [];
-    for (const entity of this.sortedEntities) {
-      const ancestorIds = entity.ancestorIds;
+    // first pass of processing config nodes
+    for (const entity of _.values(this.entitiesById)) {
+      entity.processConfig();
+      // TODO: additional entities created via templates are not yet in the entities DAG
+    }
 
-      // process "picked" nodes
-      if (entity.isRoot) {
-        if (entity.pickSchema.length) {
-          entity.schemaErrors.push(new SchemaError('Root entity cannot pick anything'));
-        }
-      } else {
-        for (const rawPickItem of entity.pickSchema || []) {
-          const pickFromEntityId = _.isString(rawPickItem)
-            ? this._rootEntityId
-            : (rawPickItem.entityId || this._rootEntityId);
-          const isPickingFromAncestor = ancestorIds.includes(pickFromEntityId);
-          const rawPickKey = _.isString(rawPickItem) ? rawPickItem : rawPickItem.key;
-          const pickFromService = this.entitiesById[pickFromEntityId];
-          if (!pickFromService) {
-          // NOTE: we've already added a schema error if item is picking from an non-existant service
-          // while setting up the services DAG, so we can just bail on the item
-            continue;
-          }
+    // now process picked config items, since we need the nodes to exist already
+    // but this will connect everything and wire up the types properly
+    for (const entity of _.values(this.entitiesById)) {
+      entity.processPickedConfig();
+    }
 
-          // first we'll gather a list of the possible keys we can pick from
-          // when picking from an ancestor, we pick from all config items
-          // while non-ancestors expose only items that have `expose: true` set on them
-
-          const allKeysToPickFrom = _.keys(pickFromService.configNodes);
-          const allowedKeysToPickFrom: Array<string> = [];
-
-          if (isPickingFromAncestor) {
-            // note we're picking from the processed config items
-            // which may include items that entity picked
-            allowedKeysToPickFrom.push(...allKeysToPickFrom);
-          } else {
-            // whereas only "exposed" items can be picked from non-ancestors
-            const exposedNodes = _.pickBy(pickFromService.configNodes, (node) => !!node.type.expose);
-            allowedKeysToPickFrom.push(..._.keys(exposedNodes));
-          }
-
-          const keysToPick: Array<string> = [];
-
-          // if passed key is `true` it means pick everything
-          if (rawPickKey === true) {
-            keysToPick.push(...allowedKeysToPickFrom);
-
-          // if key is a string or array of strings, we'll need to check they are valid
-          } else if (_.isString(rawPickKey) || _.isArray(rawPickKey)) {
-            for (const keyToCheck of _.castArray(rawPickKey)) {
-              if (!allowedKeysToPickFrom.includes(keyToCheck)) {
-                if (allKeysToPickFrom.includes(keyToCheck)) {
-                  entity.schemaErrors.push(new SchemaError(`Picked node ${pickFromEntityId} > ${keyToCheck} is not exposed - add \`expose: true\` to node schema`));
-                } else {
-                  entity.schemaErrors.push(new SchemaError(`Picked node ${pickFromEntityId} > ${keyToCheck} does not exist`));
-                }
-              } else {
-                keysToPick.push(keyToCheck);
-              }
-            }
-
-          // if it's a function, we'll be filtering from the list of potential items
-          } else if (_.isFunction(rawPickKey)) { // fn that filters keys
-            const pickKeysViaFilter = _.filter(allowedKeysToPickFrom, rawPickKey);
-
-            // we probably want to warn the user if the filter selected nothing?
-            if (!pickKeysViaFilter.length) {
-              // TODO: we may want to mark this error as a "warning" or something?
-              // or some other way of configuring / ignoring
-              entity.schemaErrors.push(new SchemaError(`Pick from ${pickFromEntityId} using key filter fn had no matches`));
-            } else {
-              keysToPick.push(...pickKeysViaFilter);
-              // console.log('pick keys by filter', pickKeysViaFilter);
-            }
-          }
-
-          for (let i = 0; i < keysToPick.length; i++) {
-            const pickKey = keysToPick[i];
-            // deal with key renaming
-            let newKeyName = pickKey;
-            if (!_.isString(rawPickItem) && rawPickItem.renameKey) {
-              // renameKey can be a static string (if dealing with a single key)
-              if (_.isString(rawPickItem.renameKey)) {
-                // deal with the case of trying to rename multiple keys to a single value
-                // TODO: might be able to discourage this in the TS typing?
-                if (keysToPick.length > 1) {
-                  // add an error (once)
-                  if (i === 0) {
-                    entity.schemaErrors.push(new SchemaError(`Picked multiple keys from ${pickFromEntityId} using static rename`));
-                  }
-                  // add an index suffix... so the items will at least still appear
-                  newKeyName = `${rawPickItem.renameKey}-${i}`;
-                } else {
-                  newKeyName = rawPickItem.renameKey;
-                }
-
-              // or a function to transform the existing key
-              } else {
-                newKeyName = rawPickItem.renameKey(pickKey);
-              }
-            }
-
-            entity.addConfigNode(newKeyName, {
-              sourceNode: pickFromService.configNodes[pickKey],
-              transformValue: _.isString(rawPickItem) ? undefined : rawPickItem.transformValue,
-            });
-          }
-        }
-      }
-
-      // process the regular configSchema nodes
-      for (const nodeKey in entity.configSchema) {
-        if (!nodeKey.match(VALID_NODE_KEY_REGEX)) {
-          entity.schemaErrors.push(new SchemaError(`Invalid node key "${nodeKey}"`));
-        } else {
-          const nodeDef = entity.configSchema[nodeKey];
-          // this descends into children
-          entity.addConfigNode(nodeKey, nodeDef);
-        }
-      }
-
+    // now process resolvers - wires up additional inter entity connections
+    // NOTE - not sure if we need to re-sort the entities and rebuild the dag?
+    for (const entityId in this.entitiesById) {
+      const entity = this.entitiesById[entityId];
       // now that all config nodes exist, process the resolvers
       for (const node of entity.flatConfigNodes) {
         this.nodesDag.setNode(node.fullPath);
@@ -322,15 +187,15 @@ export class Configraph<
           postProcessFns.push({ node, fns: nodePostProcessFns || [] });
           // TODO: handle errors - attach as schema errors to resolver / node?
         } catch (err) {
+          //! Not sure about if the error should be attached to the data-type or the node?
+          // should probably be attached to the resolver itself instead?
           if (err instanceof SchemaError) {
-            node.schemaErrors.push(err);
+            node._schemaErrors.push(err);
           } else {
-            node.schemaErrors.push(new SchemaError(err as SchemaError));
+            node._schemaErrors.push(new SchemaError(err as SchemaError));
           }
         }
       }
-
-      entity.initOverrides();
     }
 
     // after the entire graph of config nodes have been processed, we'll call post-processing functions
@@ -341,9 +206,10 @@ export class Configraph<
           fn();
         } catch (err) {
           if (err instanceof SchemaError) {
-            node.schemaErrors.push(err);
+            //! same note as above about where these errors should live
+            node._schemaErrors.push(err);
           } else {
-            node.schemaErrors.push(new SchemaError(err as SchemaError));
+            node._schemaErrors.push(new SchemaError(err as SchemaError));
           }
         }
       });
@@ -356,6 +222,15 @@ export class Configraph<
         this.nodesDag.setEdge(dependsOnPath, nodePath, { type: dependencyType });
       }
     }
+
+    // now we look for cycles based on node dependencies and mark the nodes w/ a schema error
+    const nodeCycles = graphlib.alg.findCycles(this.nodesDag);
+    for (const nodeCycle of nodeCycles) {
+      for (const nodePath of nodeCycle) {
+        this.nodesByFullPath[nodePath]._schemaErrors.push(new SchemaError('Detected dependency cycle'));
+      }
+    }
+
     //! add some plugin related checks here?
   }
 
@@ -405,8 +280,15 @@ export class Configraph<
     await this.cacheProvider?.save();
   }
 
+  getNode(entityId: string, nodePath: string) {
+    // TODO: could use the already indexed nodesByFullPath?
+    const entity = this.entitiesById[entityId];
+    if (!entity) throw new Error(`Invalid entity id - ${entityId}`);
+    return entity.getConfigNodeByPath(nodePath);
+  }
+  // TODO: deprecate this
   getItemByPath(fullPath: string) {
-    const [entityId, itemPath] = fullPath.split('!');
+    const [entityId, itemPath] = fullPath.split(NODE_FULL_PATH_SEP);
     const entity = this.entitiesById[entityId];
     if (!entity) throw new Error(`Invalid entity id - ${entityId}`);
     return entity.getConfigNodeByPath(itemPath);

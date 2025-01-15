@@ -1,4 +1,4 @@
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import * as acorn from 'acorn';
 import * as acornWalk from 'acorn-walk';
 import tsPlugin from 'acorn-typescript';
