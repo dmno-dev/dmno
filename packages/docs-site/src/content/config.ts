@@ -8,6 +8,7 @@ export const collections = {
       extend: (context) => (
         blogSchema(context).merge(z.object({
           npmPackage: z.string().optional(),
+          customHeaderContent: z.string().optional(),
         }))
       ),
     }),

@@ -1,13 +1,18 @@
 ---
 title: Using DMNO with GitHub Actions
 description: Use DMNO's GitHub Action to reuse your env vars across your GitHub Actions workflows
+customHeaderContent: |
+  <a href="https://github.com/marketplace/actions/dmno-secrets-and-config">
+    <img src="https://img.shields.io/badge/GitHub%20Actions-DMNO%20Secrets%20and%20Config-2A903B?logo=githubactions&logoColor=FFFFFF" />
+  </a>
+  <a href="https://github.com/dmno-dev/dmno-gh-action">
+    <img src="https://img.shields.io/badge/Github%20repo-dmno--dev%2Fdmno--gh--action-blue?logo=github&logoColor=FFFFFF" />
+  </a>
+
+
 ---
 
 import BugReportLink from '@/components/BugReportLink.astro';
-
-[![GitHub package.json version](https://img.shields.io/github/package-json/v/dmno-dev/dmno-gh-action?color=green)](https://github.com/dmno-dev/dmno-gh-action)
-
-[![GitHub Marketplace](https://img.shields.io/badge/GitHub%20Marketplace-green)](https://github.com/marketplace/actions/dmno-secrets-and-config)
 
 
 While DMNO provides everything you need to manage your env vars in your repo, you may want to reuse your env vars across your GitHub Actions workflows. We created a [GitHub Action](https://github.com/marketplace/actions/dmno-secrets-and-config) that makes this easier.
@@ -57,18 +62,19 @@ jobs:
 
 ### Inputs
 
-- `service-name`: Explicitly select the service to populate config for (useful
-  in a monorepo with multiple services)
-- `base-directory`: The base directory to generate config for, if not provided,
-  the current working directory will be used
-- `phase`: The phase of the service to generate config for
-- `emit-env-vars`: Whether to emit environment variables, defaults to true
-- `output-vars`: Whether to also provide the variables in the output, defaults
-  to false
-- `skip-regex`: The regular expression to skip config for, defaults to empty
-  string
-- `skip-cache`: Whether to skip the cache, defaults to false
-- `clear-cache`: Whether to clear the cache, defaults to false
+All inputs are optional!
+
+| Name | Description |
+|--|--|
+| `service-name` | Explicitly select the service to populate config for<br/>_useful in a monorepo with multiple services_ |
+| `emit-env-vars` | Whether to emit environment variables<br/>_defaults to true_ |
+| `output-vars` | Whether to also provide the config as a [job output](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/passing-information-between-jobs)<br/>_defaults to false_ |
+| `skip-regex` | Use a regex to skip certain config items from being included |
+| `skip-cache` | Whether to skip the cache<br/>_defaults to false_ |
+| `clear-cache` | Whether to clear the cache<br/>_defaults to false_ |
+
+{/* | `phase` | Set a phase to resolve config for (ex: build, boot)<br/>_usually not needed_ | */}
+{/* | `base-directory` | Instead of setting a specific service, you can set the base directory and the service will be detected | | */}
 
 ### Outputs
 

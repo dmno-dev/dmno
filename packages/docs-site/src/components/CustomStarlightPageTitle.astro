@@ -10,12 +10,16 @@ const PAGE_TITLE_ID = '_top';
 <div>
   <h1 id={PAGE_TITLE_ID}>
     {Astro.props.entry.data.title}
-    {Astro.props.entry.data.npmPackage && <div class="page-title-badges">
-      <a href=`https://www.npmjs.com/package/${Astro.props.entry.data.npmPackage}`>
-        <img src=`https://img.shields.io/npm/v/${Astro.props.entry.data.npmPackage}?label=${encodeURIComponent(Astro.props.entry.data.npmPackage)}&color=9B55F5` />
-      </a>
-    </div>}
   </h1>
+  <div class="page-title-badges">
+    {Astro.props.entry.data.npmPackage && 
+      <a href=`https://www.npmjs.com/package/${Astro.props.entry.data.npmPackage}`>
+        <img src=`https://img.shields.io/npm/v/${Astro.props.entry.data.npmPackage}?label=${encodeURIComponent(Astro.props.entry.data.npmPackage)}&color=9B55F5&logo=npm` />
+      </a>
+    }
+    {Astro.props.entry.data.customHeaderContent && <Fragment set:html={Astro.props.entry.data.customHeaderContent} /> }
+  </div>
+  
 </div>
 
 <style>
@@ -28,6 +32,14 @@ const PAGE_TITLE_ID = '_top';
 	}
   .page-title-badges {
     margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    > p {
+      display: block;
+      margin: 0 !important;
+      padding: 0;
+    }
     &:empty {
       display: none;
     }
