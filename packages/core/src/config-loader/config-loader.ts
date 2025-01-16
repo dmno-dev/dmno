@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 
 import Debug from 'debug';
 
@@ -172,10 +172,6 @@ export class ConfigLoader {
           this.viteRunner.moduleCache.deleteByModuleId(configFilePath);
 
           const importedConfig = await this.viteRunner.executeFile(configFilePath);
-
-          if (w.isRoot && !importedConfig.default.isRoot) {
-            throw new Error('Root service .dmno/config.mts must set `isRoot: true`');
-          }
 
           service = new DmnoService({
             ...serviceInitOpts,

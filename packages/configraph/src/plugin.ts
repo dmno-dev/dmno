@@ -1,4 +1,4 @@
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import Debug from 'debug';
 
 import { ConfigraphDataTypeDefinitionOrShorthand } from './data-types';
@@ -71,7 +71,7 @@ EntityClass extends ConfigraphEntity = ConfigraphEntity,
   // @ts-ignore
   EntityClass: (new (...args: Array<any>) => N) = ConfigraphEntity;
 
-  initInternalEntity(graphRoot: Configraph, parentEntityId: string) {
+  initInternalEntity(graphRoot: Configraph<any, any>, parentEntityId: string) {
     this.internalEntity = new this.EntityClass(graphRoot, {
       // TODO: something better for the id? figure out what characters are reserved?
       id: `$PLUGINS/${this.instanceId}`,

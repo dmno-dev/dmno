@@ -13,11 +13,11 @@ There are a few different ways you can adopt DMNO incrementally:
 - You can start by adding DMNO to a single service, and then gradually add it to more services as needed. If you're in a monorepo, it's best to start with some root config and then incrementally add a service at a time.
 
 **Feature by feature**: 
-  - Mark items as `required` and `sensitive`
-  - Add descriptions to items to [automatically attach documentation](/docs/guides/schema/#docs--intellisense)
-  - Add [specific types](/docs/guides/schema/#data-types--extends) to each of the config items
-  - Then add custom [validation rules](/docs/guides/schema/#validations--required-config), coercion, and custom types
-  - Set [values](/docs/guides/schema/#setting-item-values) from the schema itself (e.g., functions, switching [based on environment](/docs/guides/multi-env/))
+  - Mark items as `required` and [`sensitive`](/docs/guides/schema/#sensitive)
+  - Add descriptions to items to [automatically attach documentation](/docs/guides/schema/#docs)
+  - Add [specific types](/docs/guides/schema/#data-type) to each of the config items
+  - Then add custom [validation rules](/docs/guides/schema/#validation), coercion, and custom types
+  - Set [values](/docs/guides/schema/#value) from the schema itself (e.g., functions, switching [based on environment](/docs/guides/multi-env/))
   - Add [plugins](/docs/plugins/overview/) to fetch the config values from a secure source
 
 **In your code**: 

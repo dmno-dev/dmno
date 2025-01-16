@@ -62,8 +62,6 @@ Our data types can be used to generate extremely rich TypeScript types, and soon
 
 In a monorepo project, services can reach into a parent or sibling to pick config items - and optionally transform keys and/or values along the way. This lets us easily define and reuse shared config items, and picking from siblings also gives us an implicit dependency graph of how our services are related.
 
-Note - a service can pick any config item from a parent/ancestor, but only config items marked with `expose: true` from siblings.
-
 ### Resolution (resolve, resolvers)
 
 DMNO config is loaded in 2 phases - first we load the schema itself, and then we attempt to resolve the values. This resolution process calls special resolver functions and passes in extra contextual information about the item being resolved and the rest of the resolved configuration values. This lets us form a reactive [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph) to generate our configuration, and to understand much about the shape of that graph without necessarily needing to know the values themselves.

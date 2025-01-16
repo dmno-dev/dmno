@@ -1,4 +1,4 @@
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import Debug from 'debug';
 import {
   ConfigraphNode,
@@ -7,72 +7,25 @@ import {
 import { SchemaError } from './errors';
 import { Configraph } from './graph';
 import { ConfigraphPlugin } from './plugin';
-import { ConfigValue } from './resolvers';
-import { ExternalDocsEntry } from './common';
+import {
+  ENTITY_TEMPLATE_ID_SEP, ExternalDocsEntry, VALID_NODE_KEY_REGEX, VALID_NODE_PATH_REGEX,
+} from './common';
 import { ConfigraphEntityTemplate } from './entity-template';
-import { ConfigraphDataTypeDefinitionOrShorthand } from './data-types';
+import {
+  ConfigraphBaseTypes, ConfigraphDataTypeDefinition,
+  ConfigraphDataTypeDefinitionOrShorthand, expandDataTypeDefShorthand,
+} from './data-types';
+import { PickedDataType } from './pick';
 
 const debug = Debug('configraph');
-
-type NestedOverrideObj<T = string> = {
-  [key: string]: NestedOverrideObj<T> | T;
-};
-
-export class OverrideSource {
-  constructor(
-    readonly type: string,
-    readonly values: NestedOverrideObj,
-    readonly enabled = true,
-  ) {}
-
-  /** get an env var override value using a dot notation path */
-  getOverrideForPath(path: string) {
-    return _.get(this.values, path);
-  }
-}
-
-
-export type PickSchemaEntry = {
-  /** id of entity to pick from, defaults to root entity */
-  entityId?: string;
-  /** key(s) to pick, or function that matches against all keys from source */
-  key: string | Array<string> | ((key: string) => boolean) | true,
-
-  /** new key name or function to rename key(s) */
-  renameKey?: string | ((key: string) => string),
-
-  /** function to transform value(s) */
-  transformValue?: (value: any) => any,
-
-  // TOOD: also allow setting the value (not transforming)
-  // value?: use same value type as above
-};
-export type ConfigraphPickSchemaEntryOrShorthand = PickSchemaEntry | string;
-
-//! this needs to support transformations, resolvers, etc?
-type EntityOverrideValue = ConfigValue;
-type EntityOverridesDef =
-  // simpler object notation
-  Record<string, EntityOverrideValue>
-  // or more verbose array
-  | Array<EntityOverrideObjectDef>;
-type EntityOverrideObjectDef = { path: string, value: EntityOverrideValue };
-
-/** helper to transform raw overrides more verbose format */
-function getEntityOverridesDefs(rawOverrides: EntityOverridesDef) {
-  if (_.isArray(rawOverrides)) return rawOverrides;
-  return _.map(rawOverrides, (value, path) => ({ value, path }));
-}
 
 export type ConfigraphEntityDef<EntityMetadata, NodeMetadata> = EntityMetadata & {
   id?: string,
   parentId?: string,
 
-  extends?: ConfigraphEntityTemplate<EntityMetadata, NodeMetadata>;
-  overrides?: EntityOverridesDef;
+  extends?: (entity: ConfigraphEntity) => ConfigraphEntityTemplate<EntityMetadata, NodeMetadata>;
 
   configSchema?: Record<string, ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata>>;
-  pickSchema?: Array<PickSchemaEntry | string>;
 
   // additional entity-level validations for checking combinations of things
   // ? would array of validation fns be better?
@@ -98,23 +51,21 @@ export type ConfigraphEntityDef<EntityMetadata, NodeMetadata> = EntityMetadata &
 };
 
 
-
-
 // type ExtractNodeMetadata<ConfigraphNodeSubclass> = ConfigraphNodeSubclass extends ConfigraphNode<infer X> ? X : never;
 
 export class ConfigraphEntity<
-  EntityMetadata = unknown,
-  NodeMetadata = unknown,
+  EntityMetadata extends Record<string, any> = {},
+  NodeMetadata extends Record<string, any> = {},
   N extends ConfigraphNode = ConfigraphNode,
 > {
-  // template: ConfiGraphEntityTemplate;
+  // readonly id: string;
 
-  readonly id: string;
+  /** complete id - must be unique within the graph */
+  id: string;
+  templateIdBase?: string;
+
+  /** complete parent id */
   parentId?: string;
-
-  configSchema: Record<string, ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata>> = {};
-  pickSchema: Array<PickSchemaEntry | string> = [];
-
 
   // @ts-ignore
   NodeClass: (new (...args: Array<any>) => N) = ConfigraphNode;
@@ -126,57 +77,226 @@ export class ConfigraphEntity<
   injectedPlugins: Array<ConfigraphPlugin> = [];
   ownedPlugins: Array<ConfigraphPlugin> = [];
 
-  state: any;
-  private overrideSources = [] as Array<OverrideSource>;
-
   // /** error encountered while _loading_ the config */
   // readonly configLoadError?: ConfigLoadError;
 
   /** error within the schema itself */
   readonly schemaErrors: Array<SchemaError> = [];
 
+  // private templateChain: Array<ConfigraphEntityTemplate<EntityMetadata, NodeMetadata>> = [];
+  public defs: Array<ConfigraphEntityDef<EntityMetadata, NodeMetadata>> = [];
+
+  readonly graphRoot: Configraph;
+  readonly templateRootEntity?: ConfigraphEntity<EntityMetadata, NodeMetadata>;
+
   constructor(
-    readonly graphRoot: Configraph,
+    /**
+     * reference to the configraph root
+     * or if this entity is being created by a template, then to the root entity of that template
+     * */
+    readonly graphOrTemplateRoot: Configraph<any, any> | ConfigraphEntity<EntityMetadata, NodeMetadata>,
     readonly def: ConfigraphEntityDef<EntityMetadata, NodeMetadata>,
-    // readonly NodeClass: (new (...args: Array<any>) => N),
   ) {
-    // if this entity is using a template, we need to merge the template definition with the specific instance settings
-    const entityTemplate = def.extends;
-    if (entityTemplate) {
-      if (!entityTemplate.entities.length) {
-        this.schemaErrors.push(new SchemaError('Entity template is invalid - has no root entity'));
-      } else {
-        const entityTemplateRoot = entityTemplate.entities[0];
-        if (entityTemplateRoot.configSchema) {
-          this.configSchema = entityTemplateRoot.configSchema;
-        }
-        if (entityTemplateRoot.pickSchema) {
-          // TODO: need to remap - pick entity IDs
-          this.pickSchema = entityTemplateRoot.pickSchema;
-        }
-      }
-    }
-
-    // TODO: add restrictions on naming?
-    this.id = def.id || graphRoot.generateEntityId();
-
-    if (def.parentId) {
-      if (def.parentId === this.id) {
-        this.schemaErrors.push(new SchemaError('Cannot set entity parent to self'));
-        this.parentId = graphRoot._rootEntityId;
-      } else if (!graphRoot.entitiesById[def.parentId]) {
-        this.schemaErrors.push(new SchemaError(`Parent id ${def.parentId} not found - it could be a bad id or you may be initializing entities out of order`));
-        this.parentId = graphRoot._rootEntityId;
-      } else {
+    // TODO: add restrictions on id/naming?
+    if (graphOrTemplateRoot instanceof Configraph) {
+      this.graphRoot = graphOrTemplateRoot;
+      this.id = def.id || this.graphRoot.generateEntityId();
+      if (def.parentId) {
         this.parentId = def.parentId;
+
+      // default to being a child of the graph root
+      // but root entity id isn't set yet if this entity is the root
+      } else if (this.graphRoot._rootEntityId) {
+        this.parentId = this.graphRoot._rootEntityId;
+      }
+    } else {
+      this.graphRoot = graphOrTemplateRoot.graphRoot;
+      this.templateRootEntity = graphOrTemplateRoot;
+
+      // the id defined within the template is relative to the template only
+      this.id = `${this.templateRootEntity.templateIdBase}${
+        def.id || `child-${this.templateRootEntity.childEntities.length}`}`;
+
+      if (def.parentId) {
+        // remap parent id within template to full id
+        this.parentId = [
+          ...this.templateRootEntity.id
+            .split(ENTITY_TEMPLATE_ID_SEP)
+            .slice(0, -1), def.parentId,
+        ].join(ENTITY_TEMPLATE_ID_SEP);
+      } else {
+        // defaults to being child of the template root
+        this.parentId = this.templateRootEntity.id;
       }
     }
 
-    if (def?.pickSchema) this.pickSchema = def?.pickSchema;
-    if (def?.configSchema) this.configSchema = def?.configSchema;
+
+    let currentTemplateFn = def.extends;
+    let templateCount = 0;
+    const templateChain: Array<ConfigraphEntityTemplate> = [];
+    while (currentTemplateFn) {
+      // we know know this entity is the base of a template so we need to track this id as the "root" for other template-relateive ids
+      if (templateCount === 0) {
+        this.templateIdBase = this.id + ENTITY_TEMPLATE_ID_SEP;
+      }
+
+      const initializedTemplate = currentTemplateFn(this);
+      templateChain.unshift(initializedTemplate);
+
+      // and now we'll add an extra id suffix ex: 'someTemplateInstance*root'
+      if (templateCount === 0) {
+        this.id += `${ENTITY_TEMPLATE_ID_SEP}${initializedTemplate.rootEntityDef.id || 'root'}`;
+      }
+
+
+      // follow up the chain if necessary
+      currentTemplateFn = initializedTemplate.rootEntityDef.extends;
+      templateCount++;
+    }
+
+    if (this.parentId) {
+      // make sure an entity cannot be set to be the child of itself
+      if (this.parentId === this.id) {
+        this.parentId = this.templateRootEntity?.id || this.graphRoot._rootEntityId;
+        this.schemaErrors.push(new SchemaError('Cannot set entity parent to self'));
+      } else if (!this.graphRoot.entitiesById[this.parentId]) {
+        this.schemaErrors.push(new SchemaError(`Parent id ${def.parentId} not found - it could be a bad id or you may be initializing entities out of order`));
+        this.parentId = this.templateRootEntity?.id || this.graphRoot._rootEntityId;
+      }
+    }
 
     // automatically register, since we are already passing in the graph reference
-    graphRoot.registerEntity(this);
+    this.graphRoot.registerEntity(this);
+
+    // now walk up the template chain and add/update/remove additional entities from those templates
+    for (const currentTemplate of templateChain || []) {
+      for (let i = 0; i < currentTemplate.addedEntityDefs.length; i++) {
+        // we cannot mutate the actual definition, so we clone it
+        // might want to change that in the future?
+        const entityDef = _.cloneDeep(currentTemplate.addedEntityDefs[i]);
+        const isTemplateRootEntity = i === 0;
+
+        if (isTemplateRootEntity) {
+          this.defs.push(entityDef);
+        } else {
+          // pass in a reference to _this_ entity, so we know which entity is linked to the template that created this
+          const newEntity = new ConfigraphEntity(this, entityDef);
+        }
+      }
+      for (const entityIdToUpdate in currentTemplate.updatedEntityDefs) {
+        const updatedEntityDef = currentTemplate.updatedEntityDefs[entityIdToUpdate];
+        // UPDATE
+        const fullEntityId = `${this.templateIdBase}${entityIdToUpdate}`;
+        const entityToUpdate = this.graphRoot.entitiesById[fullEntityId];
+        if (!entityToUpdate) {
+          this.schemaErrors.push(new SchemaError(`Template tried to update invlaid id - ${entityIdToUpdate}`));
+        } else {
+          entityToUpdate.defs.push(updatedEntityDef);
+        }
+      }
+      for (const entityIdToRemove of currentTemplate.removedEntityIds) {
+        // REMOVE
+        const fullEntityId = `${this.templateIdBase}${entityIdToRemove}`;
+        const entityToRemove = this.graphRoot.entitiesById[fullEntityId];
+
+        if (!entityToRemove) {
+          this.schemaErrors.push(new SchemaError(`Template tried to remove invalid id - ${entityIdToRemove}`));
+        } else {
+          // TODO: probably want to store it but mark as removed?
+          delete this.graphRoot.entitiesById[fullEntityId];
+        }
+      }
+    }
+
+    // now add the actual entity definition to the chain
+    this.defs.push(def);
+
+    // console.log('entity is now defined');
+    // console.dir(this.defs, { depth: null });
+  }
+
+  private initOrUpdateConfigNode(
+    nodePath: string,
+    typeDef: ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata>,
+  ) {
+    const expandedTypeDef = expandDataTypeDefShorthand(typeDef);
+
+    if (!VALID_NODE_PATH_REGEX.test(nodePath)) {
+      this.schemaErrors.push(new SchemaError(`Invalid config node path: ${nodePath}`));
+      return;
+    }
+
+    if (nodePath.includes('.')) {
+      // TODO: will need to deal with arrays/maps and how we target the child type
+      // maybe something like `arrayNode.*`?
+
+      let existingNode: ConfigraphNode<any> | undefined;
+      try {
+        // first check if a node at that path already exists
+        existingNode = this.getConfigNodeByPath(nodePath);
+      } catch (err) {
+        // nothing to do here - but the fn above throws
+      }
+      if (existingNode) {
+        existingNode.applyOverrideType(expandedTypeDef);
+      } else {
+        const pathParts = nodePath.split('.');
+        const newChildKey = pathParts.pop()!;
+        const parentPath = pathParts.join('.');
+        try {
+          existingNode = this.getConfigNodeByPath(parentPath);
+        } catch (err) {}
+        if (existingNode) {
+          if (!existingNode.type.isType(ConfigraphBaseTypes.object)) {
+            this.schemaErrors.push(new SchemaError(`Cannot add new child to non-object node: ${parentPath}`));
+            return;
+          }
+
+          const NodeClass = existingNode.constructor as any;
+          existingNode.children[newChildKey] = new NodeClass(newChildKey, expandedTypeDef, existingNode);
+        } else {
+          this.schemaErrors.push(new SchemaError(`Existing node not found to modify: ${parentPath}`));
+          return;
+        }
+      }
+    }
+
+    if (!this.configNodes[nodePath]) {
+      if (!nodePath.match(VALID_NODE_KEY_REGEX)) {
+        this.schemaErrors.push(new SchemaError(`Invalid node key "${nodePath}"`));
+        return;
+      }
+
+      const newNode = new (this.NodeClass)(nodePath, expandedTypeDef, this);
+      this.configNodes[nodePath] = newNode;
+    } else {
+      // apply new type definition as an override to the node / its type
+      const existingNode = this.configNodes[nodePath];
+      existingNode.applyOverrideType(expandedTypeDef);
+    }
+  }
+
+  processConfig() {
+    // all the definition from templates have already been collected into an array
+    // so now we just need to process all the config nodes
+    for (const def of this.defs) {
+      _.each(def.configSchema, (nodeDef, nodePath) => {
+        this.initOrUpdateConfigNode(nodePath, nodeDef);
+      });
+    }
+  }
+  processPickedConfig() {
+    _.each(this.configNodes, (node) => {
+      if (node.type.typeDef.extends instanceof PickedDataType) {
+        const pickedDataType = node.type.typeDef.extends;
+        // to finish wiring up the "picked" type, we need to know the current key and access to the graph
+        //! probably need to handle node override types too
+
+        //! need to recurse into objects
+        // (or disallow picking wtihin objects)
+        pickedDataType.finishInit(node);
+      }
+    });
   }
 
   addOwnedPlugin(plugin: ConfigraphPlugin) {
@@ -193,28 +313,36 @@ export class ConfigraphEntity<
 
   private getDefItem<
     K extends keyof ConfigraphEntityDef<EntityMetadata, NodeMetadata>,
-  >(key: K): ConfigraphEntityDef<EntityMetadata, NodeMetadata>[K] {
-    if (key in this.def) return this.def[key];
-    let entityTemplate = this.def.extends?.rootEntity;
-    while (entityTemplate) {
-      if (key in entityTemplate) {
-        return entityTemplate[key];
-      }
-      // templates can extend each other, so we potentially have to follow up a chain
-      entityTemplate = entityTemplate.extends?.rootEntity;
+  >(
+    key: K,
+    opts?: {
+      inheritable?: Boolean,
+    },
+  ): ConfigraphEntityDef<EntityMetadata, NodeMetadata>[K] | undefined {
+    // walk the chain of definitions which includes everything from templates and the actual instance
+    for (let i = this.defs.length - 1; i >= 0; i--) {
+      const def = this.defs[i];
+      if (key in def) return def[key];
     }
-    return this.parentEntity?.getDefItem(key as any);
+
+    // otherwise we'll inherit from parent entity
+    if (opts?.inheritable) {
+      return this.parentEntity?.getDefItem(key as any);
+    }
   }
 
-  getMetadata<K extends keyof EntityMetadata>(key: K) {
-    return this.getDefItem(key);
+  getMetadata<K extends keyof EntityMetadata>(key: K, opts?: {
+    inheritable?: Boolean,
+  }) {
+    return this.getDefItem(key, opts);
   }
 
   //! these should probably not inherit from parents, but should inherit from a template
   get label() { return this.getDefItem('label'); }
+  get summary() { return this.getDefItem('summary'); }
+  get description() { return this.getDefItem('description'); }
   get color() { return this.getDefItem('color'); }
   get icon() { return this.getDefItem('icon'); }
-
 
   get isRoot() {
     return this.graphRoot.rootEntity === this;
@@ -230,7 +358,7 @@ export class ConfigraphEntity<
     return this.graphRoot.rootEntity;
   }
   get childEntities(): Array<ConfigraphEntity> {
-    return this.graphRoot.entitiesByParentId[this.id];
+    return this.graphRoot.getChildEntities(this.id);
   }
 
   get ancestorIds(): Array<string> {
@@ -240,7 +368,7 @@ export class ConfigraphEntity<
 
   addConfigNode(
     key: string,
-    nodeDef: ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata> | PickedNodeDef,
+    nodeDef: ConfigraphDataTypeDefinition<NodeMetadata> | PickedNodeDef,
   ) {
     const node = new (this.NodeClass)(key, nodeDef, this);
 
@@ -290,35 +418,6 @@ export class ConfigraphEntity<
     return _.flatMapDeep(this.configNodes, (node) => {
       return [node, node.flatChildren];
     });
-  }
-
-  initOverrides() {
-    // handle overrides set on the entity template if applicable
-    if (this.def.extends && this.def.extends.entities[0].overrides) {
-      const entityOverridesFromTemplate = this.def.extends.entities[0].overrides;
-      for (const overrideItem of getEntityOverridesDefs(entityOverridesFromTemplate)) {
-        const node = this.getConfigNodeByPath(overrideItem.path);
-
-        //! are these actually overrides? something different?
-        node.overrides.unshift({
-          sourceType: 'entity template',
-          icon: '',
-          value: overrideItem.value,
-        });
-      }
-    }
-
-    // handle overrides set on this entity definition directly
-    if (this.def.overrides) {
-      for (const overrideItem of getEntityOverridesDefs(this.def.overrides)) {
-        const node = this.getConfigNodeByPath(overrideItem.path);
-        node.overrides.unshift({
-          sourceType: 'entity definition',
-          icon: '',
-          value: overrideItem.value,
-        });
-      }
-    }
   }
 
   toCoreJSON() {

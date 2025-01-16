@@ -1,7 +1,7 @@
 {
   "name": "@dmno/docs-site",
   "private": true,
-  "version": "0.0.11",
+  "version": "0.0.12",
   "type": "module",
   "scripts": {
     "dev": "astro dev",
@@ -24,8 +24,8 @@
     "@astrojs/starlight": "^0.25.4",
     "@astrojs/vue": "^4.5.0",
     "@dmno/astro-integration": "workspace:*",
-    "@dmno/eslint-config": "workspace:*",
     "@dmno/cloudflare-platform": "workspace:*",
+    "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "@dmno/ui-lib": "workspace: *",
     "@iconify/vue": "^4.1.2",
@@ -41,6 +41,7 @@
     "less": "^4.2.0",
     "nanostores": "^0.10.3",
     "postcss-nested": "^7.0.2",
+    "remark-custom-header-id": "^1.0.0",
     "sharp": "^0.33.4",
     "starlight-blog": "^0.11.1",
     "starlight-links-validator": "^0.10.1",

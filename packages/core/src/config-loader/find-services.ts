@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import readYamlFile from 'read-yaml-file';
 import { fdir } from 'fdir';
 import { tryCatch } from '@dmno/ts-lib';

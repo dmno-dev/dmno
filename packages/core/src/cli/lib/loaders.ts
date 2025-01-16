@@ -1,4 +1,4 @@
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import kleur from 'kleur';
 import gradient from 'gradient-string';
 import { createDeferredPromise } from '@dmno/ts-lib';

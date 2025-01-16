@@ -1,5 +1,5 @@
 import kleur from 'kleur';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { joinAndCompact } from './formatting';
 
 export class CliExitError extends Error {

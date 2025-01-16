@@ -3,7 +3,6 @@ import { GitDataTypes, GithubDataTypes } from 'dmno/vendor-types';
 
 export default defineDmnoService({
   name: 'root',
-  isRoot: true,
   schema: {
     GITHUB_ORG_NAME: {
       extends: GithubDataTypes.OrgName,

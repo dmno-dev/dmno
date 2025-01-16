@@ -1,4 +1,4 @@
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 
 import {
   ConfigValueResolver, InlineValueResolverDef, processInlineResolverDef, ResolverContext,
@@ -16,24 +16,20 @@ export type ConfigraphTypeExtendsDefinition =
   // existing type that was initialized w/ settings - ex: `DmnoBaseTypes.string({ ... })`
   ConfigraphDataType |
   // existing type, but not initialized - ex: `DmnoBaseTypes.string`
-  ConfigraphDataTypeFactoryFn<any, any> |
+  ConfigraphDataTypeFactoryFn<any> |
   // string label for a small subset of simple base types - ex: `'string'`
   ConfigraphSimpleBaseTypeNames;
 
 export type TypeValidationResult = boolean | undefined | void | Error | Array<Error>;
 
 export type ConfigraphDataTypeDefinitionOrShorthand<NodeMetadata = unknown> =
-  CoreConfigraphDataTypeOptions<unknown, NodeMetadata> | ConfigraphTypeExtendsDefinition;
+  CoreConfigraphDataTypeOptions<NodeMetadata> | ConfigraphTypeExtendsDefinition;
 
-type CoreConfigraphDataTypeOptions<ExtendsTypeSettings = unknown, NodeMetadata = unknown> = NodeMetadata & {
+type CoreConfigraphDataTypeOptions<NodeMetadata = unknown> = NodeMetadata & {
   /** short description of what this config item is for */
   summary?: string;
   /** longer description info including details, gotchas, etc... supports markdown  */
   description?: string;
-
-  //! this probably needs to be reworked a bit
-  /** expose this item to be "pick"ed by other services, usually used for outputs of run/deploy */
-  expose?: boolean;
 
   /** description of the data type itself, rather than the instance */
   typeDescription?: string;
@@ -75,21 +71,18 @@ type CoreConfigraphDataTypeOptions<ExtendsTypeSettings = unknown, NodeMetadata =
 
   /** validation function that can use type instance settings */
   validate?: (
-    this: ConfigraphDataType<ExtendsTypeSettings>,
     val: any,
     ctx?: ResolverContext
   ) => TypeValidationResult;
 
   /** validation function that can use type instance settings */
   asyncValidate?: (
-    this: ConfigraphDataType<ExtendsTypeSettings>,
     val: any,
     ctx?: ResolverContext
   ) => Promise<TypeValidationResult>;
 
   /** coerce function that can use type instance settings */
   coerce?: (
-    this: ConfigraphDataType<ExtendsTypeSettings>,
     val: any,
     ctx?: ResolverContext
   ) => any;
@@ -128,14 +121,16 @@ type ReusableConfigraphDataTypeOptions = {
   injectable?: false,
 };
 
-export type ConfigraphDataTypeDefinition<TypeSettings = unknown, Metadata = unknown> =
-CoreConfigraphDataTypeOptions<TypeSettings, Metadata> & ReusableConfigraphDataTypeOptions;
+export type ConfigraphDataTypeDefinition<Metadata = unknown> =
+CoreConfigraphDataTypeOptions<Metadata> & ReusableConfigraphDataTypeOptions;
 
 /**
  * data type factory function - which is the result of `createConfigraphDataType`
  * This is the type of our base types and any custom types defined by the user
  * */
-export type ConfigraphDataTypeFactoryFn<T, M> = ((opts?: T) => ConfigraphDataType<T, M>);
+export type ConfigraphDataTypeFactoryFn<InstanceSettingsArgs extends Array<any>, M = {}> = (
+  (...opts: InstanceSettingsArgs) => ConfigraphDataType<M>
+);
 
 // /**
 //  * utility type to extract the settings schema shape from a ConfigraphDataTypeFactoryFn (for example ConfigraphBaseTypes.string)
@@ -145,39 +140,72 @@ export type ConfigraphDataTypeFactoryFn<T, M> = ((opts?: T) => ConfigraphDataTyp
 //   F extends ConfigraphDataTypeFactoryFn<infer T> ? T : never;
 
 
-export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
-  // NOTE - note quite sure about this setup yet...
-  // but the idea is to provide a wrapped version of the validate/coerce (the fns that need the type instance options)
-  // while providing transparent access to the rest. This is so the ConfigItem can just walk up the chain of types
-  // without having to understand the details... The other option is to revert that change and
+export function expandDataTypeDefShorthand<T>(
+  defOrShorthand: ConfigraphDataTypeDefinitionOrShorthand<T>,
+): ConfigraphDataTypeDefinition<T> {
+  if (_.isString(defOrShorthand)) {
+    if (!ConfigraphBaseTypes[defOrShorthand]) {
+      throw new Error(`found invalid parent (string) in extends chain - "${defOrShorthand}"`);
+    } else {
+      return { extends: ConfigraphBaseTypes[defOrShorthand]({}) } as any;
+    }
+  } else if (_.isFunction(defOrShorthand)) {
+    // in this case, we have no settings to pass through, so we pass an empty object
+    const shorthandFnResult = defOrShorthand({});
+    if (!(shorthandFnResult instanceof ConfigraphDataType)) {
+      // TODO: put this in schema error instead?
+      throw new Error('invalid schema as result of fn shorthand');
+    } else {
+      return { extends: shorthandFnResult } as any;
+    }
+  } else if (defOrShorthand instanceof ConfigraphDataType) {
+    return { extends: defOrShorthand } as any;
+  } else if (_.isObject(defOrShorthand)) {
+    return defOrShorthand;
+  } else {
+    // TODO: put this in schema error instead?
+    console.log(defOrShorthand);
+    throw new Error('invalid item schema');
+  }
+}
 
+
+export class ConfigraphDataType<Metadata = any> {
+  // first / primary parent
   parentType?: ConfigraphDataType;
-  private _valueResolver?: ConfigValueResolver;
+  // additional overrides that take precedence, but have some additional handling rules
+  private overrideTypes: Array<ConfigraphDataType> = [];
 
-  readonly schemaErrors: Array<SchemaError> = [];
+  protected _valueResolver?: ConfigValueResolver;
+
+  readonly _schemaErrors: Array<SchemaError> = [];
+  get schemaErrors(): Array<SchemaError> {
+    return [
+      ...this._schemaErrors,
+      ...this.parentType?.schemaErrors || [],
+    ];
+  }
 
   constructor(
-    readonly typeDef: ConfigraphDataTypeDefinition<InstanceOptions, Metadata>,
-    readonly typeInstanceOptions?: InstanceOptions,
+    readonly typeDef: ConfigraphDataTypeDefinition<Metadata>,
     /**
      * the factory function that created this item
      * Should be always defined unless this is an inline defined type from a config schema
      * */
-    private _typeFactoryFn?: ConfigraphDataTypeFactoryFn<InstanceOptions, Metadata>,
-    readonly _registry?: ConfigraphDataTypesRegistry<Metadata>,
+    private _typeFactoryFn?: ConfigraphDataTypeFactoryFn<any, Metadata>,
   ) {
     // if this is already one of our primitive base types, we are done
     if (this.typeDef.extends === PrimitiveBaseType) {
       // we'll skip setting the parentType since the primitive base type is just a placeholder / marker
 
-    // if extends is set, we make sure it is initialized properly and save that in the parent
+    // if `extends` is set, we make sure it is initialized properly and save that in the parent
     } else if (this.typeDef.extends) {
       // deal with string case - only valid for simple base types - `extends: 'number'`
       if (_.isString(this.typeDef.extends)) {
         if (!ConfigraphBaseTypes[this.typeDef.extends]) {
           throw new Error(`found invalid parent (string) in extends chain - "${this.typeDef.extends}"`);
         } else {
-          this.parentType = ConfigraphBaseTypes[this.typeDef.extends](typeInstanceOptions as any);
+          this.parentType = ConfigraphBaseTypes[this.typeDef.extends]();
         }
       // deal with uninitialized case - `extends: ConfigraphBaseTypes.number`
       } else if (_.isFunction(this.typeDef.extends) && (this.typeDef.extends as any)._isConfigraphTypeFactory) {
@@ -214,12 +242,27 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
     }
   }
 
+  applyOverrideType(typeDef: ConfigraphDataTypeDefinition<Metadata>) {
+    const initializedOverrideType = new ConfigraphDataType<Metadata>(
+      typeDef,
+      undefined,
+    );
+    this.overrideTypes.unshift(initializedOverrideType);
+  }
+
   get valueResolver(): ConfigValueResolver | undefined {
-    return this._valueResolver ?? this.parentType?.valueResolver;
+    // note - resolvers handled differently because of the `processInlineResolverDef` behaviour
+    return [
+      ..._.map(this.overrideTypes, (ot) => ot.valueResolver),
+      this._valueResolver,
+      this.parentType?.valueResolver,
+    ].find(Boolean); // gets first non-falsy element
   }
 
 
   validate(val: any, ctx?: ResolverContext): true | Array<ValidationError> {
+    // TODO: need to respect validations/coercion from overrides
+
     // first we'll deal with empty values, and we'll check al
     // we'll check all the way up the chain for required setting and deal with that first
     if (
@@ -422,13 +465,13 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
 
 
   /** helper to unroll config schema using the type chain of parent "extends"  */
-  private getDefItem<T extends keyof ConfigraphDataTypeDefinition<InstanceOptions, Metadata>>(
+  private getDefItem<T extends keyof ConfigraphDataTypeDefinition<Metadata>>(
     key: T,
     opts?: {
       mergeArray?: boolean,
       inherit?: false,
     },
-  ): ConfigraphDataTypeDefinition<InstanceOptions, Metadata>[T] | undefined {
+  ): ConfigraphDataTypeDefinition<Metadata>[T] | undefined {
     // in mergeArray mode, we'll merge all values found in the ancestor chain into a single array
     if (opts?.mergeArray) {
       if (this.typeDef[key] === undefined) {
@@ -444,22 +487,42 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
       }
     }
 
-    // first check if the item definition itself has a value
+    // first check overrides, checking the entire chain
+    if (this.overrideTypes) {
+      for (const overrideType of this.overrideTypes) {
+        // TODO: what if an override is _unsetting_ something (ex: `someKey: undefined`)
+        // do we want to check if the key exists instead of undefined?
+
+        // if something is explicitly defined, we return it
+        if (overrideType.typeDef[key] !== undefined) {
+          return overrideType.typeDef[key];
+        }
+
+        // TODO: this is probably not quite right yet, but it gets really tricky
+        // otherwise if the override has its own parent type, we'll check up that chain
+        if (overrideType.typeDef.extends) {
+          const overrideParentVal = overrideType.getDefItem(key, opts);
+          if (overrideParentVal !== undefined) return overrideParentVal;
+        }
+      }
+    }
+
+    // next check if the item definition itself has a value
     if (this.typeDef[key] !== undefined) {
       return this.typeDef[key];
-    // otherwise run up the ancestor heirarchy
-    } else {
-      // if `inherit: false` is enabled, we only check the parent if this is an inline defined type
-      if (opts?.inherit === false && !this.isInlineDefinedType) {
-        return undefined;
-      }
-      return this.parentType?.getDefItem(key, opts);
     }
+
+    // otherwise run up the ancestor heirarchy
+
+    // if `inherit: false` is enabled, we only check the parent if this is an inline defined type
+    if (opts?.inherit === false && !this.isInlineDefinedType) {
+      return undefined;
+    }
+    return this.parentType?.getDefItem(key, opts);
   }
 
   get summary() { return this.getDefItem('summary'); }
   get description() { return this.getDefItem('description'); }
-  get expose() { return this.getDefItem('expose'); }
   get typeLabel() { return this.getDefItem('typeLabel'); } // little special since it only exists on reusable types
   get typeDescription() { return this.getDefItem('typeDescription'); }
   get exampleValue() { return this.getDefItem('exampleValue'); }
@@ -487,7 +550,6 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
 
   /** checks if this data type is directly an instance of the data type (not via inheritance) */
   isType(factoryFn: ConfigraphDataTypeFactoryFn<any, any> | typeof ObjectDataType): boolean {
-    if (factoryFn === ObjectDataType) return this.isType(_RawObjectDataType);
     // we jump straight to the parent if we are dealing with an inline defined type
     return this.typeFactoryFn === factoryFn;
   }
@@ -504,7 +566,6 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
 
   /** checks if this data type is an instance of the data type, whether directly or via inheritance */
   extendsType(factoryFn: ConfigraphDataTypeFactoryFn<any, any> | typeof ObjectDataType): boolean {
-    if (factoryFn === ObjectDataType) return this.extendsType(_RawObjectDataType);
     // follows up the chain checking for the type we passed in
     return this.isType(factoryFn) || this.parentType?.extendsType(factoryFn) || false;
   }
@@ -532,7 +593,6 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
       summary: this.summary,
       description: this.description,
       typeDescription: this.typeDescription,
-      expose: this.expose,
       externalDocs: this.externalDocs,
       ui: this.ui,
       required: this.required,
@@ -543,25 +603,20 @@ export class ConfigraphDataType<InstanceOptions = any, Metadata = any> {
 
 // abusing a class here to be able to attach the additional type argument
 // which is necessary to be able define a new type registry for types with extra metadata
-export class ConfigraphDataTypesRegistry<Metadata = {}> {
+export class ConfigraphDataTypesRegistry<NodeMetadata = {}> {
   // eslint-disable-next-line class-methods-use-this
-  create<TypeSettings = {}>(
+  create<InstanceSettingsArgs extends Array<any>>(
     dataTypeDef: (
       // most cases we pass in a static object
-      ConfigraphDataTypeDefinition<TypeSettings, Metadata>
+      ConfigraphDataTypeDefinition<NodeMetadata>
       // but we can pass in a function if the data type accepts additional usage options
-      | ((uo?: TypeSettings) => ConfigraphDataTypeDefinition<TypeSettings, Metadata>)
+      | ((...args: InstanceSettingsArgs) => ConfigraphDataTypeDefinition<NodeMetadata>)
     ),
-  ): ConfigraphDataTypeFactoryFn<TypeSettings, Metadata> {
-    const typeRegistry = this;
-    const typeFactoryFn = (usageOpts?: TypeSettings) => {
-      const dataTypeObj = _.isFunction(dataTypeDef) ? dataTypeDef(usageOpts) : dataTypeDef;
-
-      return new ConfigraphDataType<TypeSettings, Metadata>(
-        _.isFunction(dataTypeDef) ? dataTypeDef(usageOpts) : dataTypeDef,
-        usageOpts ?? {} as TypeSettings,
+  ): ConfigraphDataTypeFactoryFn<InstanceSettingsArgs, NodeMetadata> {
+    const typeFactoryFn = (...usageOpts: InstanceSettingsArgs) => {
+      return new ConfigraphDataType<NodeMetadata>(
+        _.isFunction(dataTypeDef) ? dataTypeDef(...usageOpts) : dataTypeDef,
         typeFactoryFn,
-        typeRegistry,
       );
     };
     typeFactoryFn._isConfigraphTypeFactory = true;
@@ -569,6 +624,7 @@ export class ConfigraphDataTypesRegistry<Metadata = {}> {
   }
 }
 export const createConfigraphDataType = (new ConfigraphDataTypesRegistry()).create;
+
 
 
 
@@ -838,41 +894,43 @@ const SimpleObjectDataType = createConfigraphDataType({
 
 
 // Complex "container" types //////////////////////////////////////////////////////////
-type ObjectDataTypeSettings = {
-  children: Record<string, ConfigraphDataTypeDefinitionOrShorthand>,
-  allowEmpty?: boolean,
-};
-
-const _RawObjectDataType = createConfigraphDataType((settings?: ObjectDataTypeSettings) => ({
-  typeLabel: 'dmno/object',
-  extends: PrimitiveBaseType,
-  injectable: false,
-  ui: { icon: 'tabler:code-dots' }, // this one has 3 dots inside brackets, vs simple object is only brackets
-  coerce(val) {
-    if (_.isPlainObject(val)) return val;
-    if (!_.isString(val)) {
-      return new CoercionError('Only strings can be coerced into objects via JSON.parse');
-    }
-    try {
-      const parsed = JSON.parse(val);
-      if (_.isPlainObject(val)) return parsed;
-      return new CoercionError('String passed JSON.parse but is not an object');
-    } catch (err) {
-      return new CoercionError('String was unable to JSON.parse');
-    }
-  },
-  validate(val) {
+const ObjectDataType = createConfigraphDataType(
+  (
+    childrenSchema: Record<string, ConfigraphDataTypeDefinitionOrShorthand>,
+    otherSettings?: {
+      allowEmpty?: boolean,
+    },
+  ) => ({
+    typeLabel: 'dmno/object',
+    extends: PrimitiveBaseType,
+    injectable: false,
+    ui: { icon: 'tabler:code-dots' }, // this one has 3 dots inside brackets, vs simple object is only brackets
+    coerce(val) {
+      if (_.isPlainObject(val)) return val;
+      if (!_.isString(val)) {
+        return new CoercionError('Only strings can be coerced into objects via JSON.parse');
+      }
+      try {
+        const parsed = JSON.parse(val);
+        if (_.isPlainObject(val)) return parsed;
+        return new CoercionError('String passed JSON.parse but is not an object');
+      } catch (err) {
+        return new CoercionError('String was unable to JSON.parse');
+      }
+    },
+    validate(val) {
     // special handling to not allow empty strings (unless explicitly allowed)
-    if (_.isEmpty(val) && !settings?.allowEmpty) {
-      return [new ValidationError('If set, object must not be empty')];
-    }
-    return true;
-  },
-}));
-const ObjectDataType = (
-  childrenSchema: ObjectDataTypeSettings['children'],
-  otherSettings?: Omit<ObjectDataTypeSettings, 'children'>,
-) => _RawObjectDataType({ children: childrenSchema, ...otherSettings });
+      if (_.isEmpty(val) && !otherSettings?.allowEmpty) {
+        return [new ValidationError('If set, object must not be empty')];
+      }
+      return true;
+    },
+
+    // special place to store the child schema
+    // TODO: improve types for this
+    _children: childrenSchema,
+  }),
+);
 
 
 /**
@@ -992,6 +1050,7 @@ const EnumDataType = createConfigraphDataType((settings?: EnumDataTypeSettings) 
       });
     }
   },
+  _rawEnumOptions: settings,
 }));
 
 const EMAIL_REGEX = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;

@@ -1,5 +1,5 @@
-import _ from 'lodash-es';
-import { ConfigValue } from '.';
+import * as _ from 'lodash-es';
+import { ConfigValue } from './resolvers';
 
 export type CacheMode = 'skip' | 'clear' | true;
 
@@ -28,9 +28,9 @@ export abstract class ConfigraphCachingProvider {
     }
   }
 
-  abstract load(): Promise<void>;
-  abstract save(): Promise<void>;
-  abstract reset(): Promise<void>;
+  abstract load(): Promise<void> | void;
+  abstract save(): Promise<void> | void;
+  abstract reset(): Promise<void> | void;
 }
 
 export class ConfigraphCacheEntry {

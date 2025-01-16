@@ -4,9 +4,8 @@ export {
 } from './common';
 export {
   ConfigraphEntity, ConfigraphEntityDef,
-  ConfigraphPickSchemaEntryOrShorthand,
 } from './entity';
-export { ConfigraphEntityTemplate } from './entity-template';
+export { ConfigraphEntityTemplate, createConfigraphEntityTemplate } from './entity-template';
 export {
   ConfigraphNode,
 } from './config-node';
@@ -20,6 +19,7 @@ export {
   ConfigraphTypeExtendsDefinition,
   TypeValidationResult,
 } from './data-types';
+export { pick } from './pick';
 
 export { inject, collect } from './resolvers/injection';
 export {

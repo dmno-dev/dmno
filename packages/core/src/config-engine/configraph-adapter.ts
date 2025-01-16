@@ -1,4 +1,4 @@
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import {
   Configraph,
   ConfigraphDataTypesRegistry,
@@ -16,6 +16,7 @@ import { DmnoConfigraphCachingProvider } from './dmno-configraph-cache';
 export {
   ConfigraphBaseTypes as DmnoBaseTypes,
 
+  pick,
   inject, collect, configPath,
   createResolver,
   ResolverContext, getResolverCtx, ConfigValueResolver,

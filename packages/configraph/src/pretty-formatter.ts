@@ -1,5 +1,6 @@
 import kleur from 'kleur';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
+
 import { ConfigraphError } from './errors';
 import { ConfigraphNode } from './config-node';
 

@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import fs from 'node:fs';
 import path from 'path';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { parse as parseJSONC, modify as modifyJSONC, applyEdits as applyEditsJSONC } from 'jsonc-parser';
 import buildEsmResolver from 'esm-resolve';
 import kleur from 'kleur';

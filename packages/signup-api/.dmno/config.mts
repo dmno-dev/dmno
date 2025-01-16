@@ -15,7 +15,6 @@ const onepass = new OnePasswordDmnoPlugin('1pass', {
 
 export default defineDmnoService({
   name: 'signup-api',
-  pick: [],
   schema: {
     ...pickFromSchemaObject(CloudflareWranglerEnvSchema, {
       CLOUDFLARE_ACCOUNT_ID: {
@@ -75,7 +74,6 @@ export default defineDmnoService({
         staging: () => DMNO_CONFIG.DEPLOY_PRIME_URL,
         production: 'https://signup-api.dmno.dev',
       }),
-      expose: true,
     }
   }
 });

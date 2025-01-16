@@ -1,4 +1,4 @@
-import { DmnoBaseTypes, defineDmnoService, switchBy, pickFromSchemaObject } from 'dmno';
+import { DmnoBaseTypes, defineDmnoService, switchBy, pickFromSchemaObject, pick } from 'dmno';
 import { CloudflarePagesEnvSchema } from '@dmno/cloudflare-platform';
 
 export default defineDmnoService({
@@ -8,14 +8,12 @@ export default defineDmnoService({
     redactSensitiveLogs: true,
     preventClientLeaks: true,
   },
-  pick: [
-    'GITHUB_REPO_URL',
-    'GITHUB_ACTION_REPO_URL',
-    'DISCORD_JOIN_URL',
-    'GENERAL_CONTACT_EMAIL',
-    'POSTHOG_API_KEY',
-  ],
   schema: {
+    GITHUB_REPO_URL: pick(),
+    GITHUB_ACTION_REPO_URL: pick(),
+    DISCORD_JOIN_URL: pick(),
+    GENERAL_CONTACT_EMAIL: pick(),
+    POSTHOG_API_KEY: pick(),
     GOOGLE_TAG_MANAGER_ID: {
       value: 'G-361VY1ET7B',
     },

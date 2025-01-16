@@ -1,6 +1,6 @@
 {
   "name": "@dmno/vite-integration",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "tools for integrating dmno into vite",
   "author": "dmno-dev",
   "license": "MIT",

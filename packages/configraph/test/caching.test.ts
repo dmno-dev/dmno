@@ -2,7 +2,7 @@ import {
   expect, test, describe, vi,
   afterEach,
 } from 'vitest';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import {
   cacheFunctionResult,
   Configraph, ConfigraphCachingProvider,
@@ -49,7 +49,7 @@ describe('caching', () => {
     const g = new Configraph();
     g.cacheProvider = testCache;
 
-    const e = g.createEntity({
+    const e = g.addEntity({
       configSchema: {
         random: { value: () => Math.floor(Math.random() * 100) },
         randomCached: { value: cacheFunctionResult(() => Math.floor(Math.random() * 100)) },

@@ -1,4 +1,4 @@
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 
 // copied these error types from Astro
 // and we will try to keep it compatible so we can interact with their error overlay

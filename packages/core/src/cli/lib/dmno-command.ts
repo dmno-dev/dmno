@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 
 interface CliCommandExample {
   command: string;

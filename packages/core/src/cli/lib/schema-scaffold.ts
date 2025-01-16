@@ -1,7 +1,7 @@
 /* eslint-disable no-nested-ternary */
 
 import fs from 'node:fs';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { fdir } from 'fdir';
 import { LoadedDotEnvFile } from '../../lib/dotenv-utils';
 import { joinAndCompact } from './formatting';
@@ -165,12 +165,10 @@ export function generateDmnoConfigInitialCode(opts: {
     `import { ${joinAndCompact(dmnoImports, ', ')} } from 'dmno';`,
     '',
     'export default defineDmnoService({',
-    opts.isRoot && '  isRoot: true,',
     opts.isRoot && '  settings: {\n    redactSensitiveLogs: true,\n    interceptSensitiveLeakRequests: true,\n    preventClientLeaks: true,\n  },',
     opts.serviceName
       ? `  name: '${opts.serviceName}',`
       : (opts.isMonorepo ? '  // no `name` specified - will inherit from package.json' : undefined),
-    !opts.isRoot && '  pick: [],',
     '  schema: {',
     ...schemaConfigAsCode.split('\n').map((line) => `    ${line}`),
     '  },',

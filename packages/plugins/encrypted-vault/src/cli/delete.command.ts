@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { execSync } from 'node:child_process';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { parse as parseJSONC } from 'jsonc-parser';
 import { kleur, createDmnoPluginCliCommand } from 'dmno/cli-lib';
 

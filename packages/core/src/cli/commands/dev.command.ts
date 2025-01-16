@@ -1,5 +1,5 @@
 import kleur from 'kleur';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { outdent } from 'outdent';
 import gradient from 'gradient-string';
 import boxen from 'boxen';

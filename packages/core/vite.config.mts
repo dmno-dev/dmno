@@ -14,7 +14,7 @@ export default defineConfig({
     // globals: true,
     // setupFiles: './setupTests.ts',
     onConsoleLog(log: string, type: 'stdout' | 'stderr'): false | void {
-      console.log('log in test: ', log);
+      if (process.env.NO_SWALLOW_LOGS) console.log('log in test: ', log);
       if (log === 'message from third party library' && type === 'stdout') {
         return false;
       }

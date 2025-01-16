@@ -1,4 +1,4 @@
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import { SchemaError } from '../errors';
 import {
   createResolver, InlineValueResolverDef, processInlineResolverDef, ResolverContext,

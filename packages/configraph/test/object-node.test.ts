@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'vitest';
-import _ from 'lodash-es';
+import * as _ from 'lodash-es';
 import {
   Configraph, inject, collect, switchBy,
   ConfigraphBaseTypes, createConfigraphDataType,
@@ -36,7 +36,7 @@ describe('object config nodes', async () => {
     }, (spec, description) => {
       test(description, async () => {
         const g = new Configraph();
-        const e = g.createEntity({
+        const e = g.addEntity({
           configSchema: {
             obj: {
               extends: ConfigraphBaseTypes.object(
@@ -59,7 +59,7 @@ describe('object config nodes', async () => {
 
   test('resolves object child values with correct precedence', async () => {
     const g = new Configraph();
-    const e = g.createEntity({
+    const e = g.addEntity({
       configSchema: {
         obj: {
           extends: ConfigraphBaseTypes.object({
@@ -74,9 +74,12 @@ describe('object config nodes', async () => {
           },
         },
       },
-      overrides: {
-        'obj.c4': 'val-from-overrides',
-      },
+    });
+    g.processConfig();
+    // add additional override value
+    e.getConfigNodeByPath('obj.c4').overrides.push({
+      sourceType: 'unknown',
+      value: 'val-from-overrides',
     });
     await g.resolveConfig();
 
@@ -96,7 +99,7 @@ describe('object config nodes', async () => {
 
   test('nested object fns', async () => {
     const g = new Configraph();
-    const e = g.createEntity({
+    const e = g.addEntity({
       configSchema: {
         obj: {
           extends: ConfigraphBaseTypes.object({
@@ -127,7 +130,7 @@ describe('object config nodes', async () => {
   describe('nested validation', () => {
     test('parent node is invalid if any children are invalid', async () => {
       const g = new Configraph();
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           obj: {
             extends: ConfigraphBaseTypes.object({
@@ -142,7 +145,7 @@ describe('object config nodes', async () => {
     });
     test('children are invalid if parent cannot resolve', async () => {
       const g = new Configraph();
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           obj: {
             extends: ConfigraphBaseTypes.object({
@@ -195,7 +198,7 @@ describe('object config nodes', async () => {
     }, (spec, description) => {
       test(description, async () => {
         const g = new Configraph();
-        const e = g.createEntity({
+        const e = g.addEntity({
           configSchema: {
             obj: {
               extends: ConfigraphBaseTypes.object(
@@ -219,7 +222,7 @@ describe('object config nodes', async () => {
   describe('multiple nested objects', () => {
     test('nested objects must completely resolve', async () => {
       const g = new Configraph();
-      const e = g.createEntity({
+      const e = g.addEntity({
         configSchema: {
           rootObj: {
             extends: ConfigraphBaseTypes.object({
@@ -235,6 +238,90 @@ describe('object config nodes', async () => {
       });
       await g.resolveConfig();
       expect(e.configNodes.rootObj.resolvedValue).toEqual({ childObj: { c1: 'c1' } });
+    });
+  });
+
+  describe('overriding nested node types', () => {
+    test('can update a nested object node using a dot-path', async () => {
+      const g = new Configraph();
+      const e = g.addEntity({
+        configSchema: {
+          rootObj: {
+            extends: ConfigraphBaseTypes.object({
+              r1: { value: 'r1' },
+              childObj: {
+                extends: ConfigraphBaseTypes.object({
+                  c1: { value: 'c1' },
+                }),
+              },
+            }),
+          },
+          'rootObj.r1': { value: 'r1-updated' },
+          'rootObj.childObj': { description: 'childObj description' },
+          'rootObj.childObj.c1': { value: 'c1-updated' },
+        },
+      });
+      await g.resolveConfig();
+      expect(e.getConfigNodeByPath('rootObj.r1').resolvedValue).toEqual('r1-updated');
+      expect(e.getConfigNodeByPath('rootObj.childObj').type.description).toEqual('childObj description');
+      expect(e.getConfigNodeByPath('rootObj.childObj.c1').resolvedValue).toEqual('c1-updated');
+      expect(e.configNodes.rootObj.resolvedValue).toEqual({
+        r1: 'r1-updated',
+        childObj: { c1: 'c1-updated' },
+      });
+    });
+    test('can add a new child to an object using a dot-path', async () => {
+      const g = new Configraph();
+      const e = g.addEntity({
+        configSchema: {
+          rootObj: {
+            extends: ConfigraphBaseTypes.object({
+              r1: { value: 'r1' },
+              childObj: {
+                extends: ConfigraphBaseTypes.object({
+                  c1: { value: 'c1' },
+                }),
+              },
+            }),
+          },
+          'rootObj.r2': { value: 'r2' },
+          'rootObj.childObj.c2': { value: 'c2' },
+        },
+      });
+      await g.resolveConfig();
+      expect(e.getConfigNodeByPath('rootObj.r2').resolvedValue).toEqual('r2');
+      expect(e.getConfigNodeByPath('rootObj.childObj.c2').resolvedValue).toEqual('c2');
+      expect(e.configNodes.rootObj.resolvedValue).toEqual({
+        r1: 'r1',
+        r2: 'r2',
+        childObj: { c1: 'c1', c2: 'c2' },
+      });
+    });
+
+    // TODO: check valid node paths - maybe not here?
+
+    test('throws if parent object does not exist', async () => {
+      const g = new Configraph();
+      const e = g.addEntity({
+        configSchema: {
+          notAnObject: {},
+          rootObj: {
+            extends: ConfigraphBaseTypes.object({
+              r1: { value: 'r1' },
+              childObj: {
+                extends: ConfigraphBaseTypes.object({
+                  c1: { value: 'c1' },
+                }),
+              },
+            }),
+          },
+          'notAnObject.newChild': {}, // not an object
+          'badKey.newChild': {}, // bad key at root
+          'rootObj.badKey.newChild': {}, // bad nested key
+        },
+      });
+      await g.resolveConfig();
+      expect(e.schemaErrors.length).toEqual(3);
     });
   });
 });

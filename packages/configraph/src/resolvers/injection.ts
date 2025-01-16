@@ -10,7 +10,7 @@ export function inject(injectOpts?: {
     icon: 'fluent:swipe-down-24-regular',
     process() {
       if (this.configNode.type.injectable === false) {
-        this.configNode.schemaErrors.push(new SchemaError(`Type ${this.configNode.type.typeLabel} is not injectable`));
+        this.configNode._schemaErrors.push(new SchemaError(`Type ${this.configNode.type.typeLabel} is not injectable`));
         return;
       }
 

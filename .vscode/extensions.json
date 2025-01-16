@@ -2,6 +2,7 @@
   "recommendations": [
     "Vue.volar",
     "pflannery.vscode-versionlens",
+    "antfu.pnpm-catalog-lens",
     "unifiedjs.vscode-mdx",
     "allemandinstable.colorful-comments-refreshed",
   ]

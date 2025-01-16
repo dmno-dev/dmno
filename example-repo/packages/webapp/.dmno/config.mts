@@ -1,16 +1,18 @@
-import { DmnoBaseTypes, cacheFunctionResult, createDmnoDataType, defineDmnoService, switchBy } from 'dmno';
+import { DmnoBaseTypes, cacheFunctionResult, createDmnoDataType, defineDmnoService, switchBy, pick } from 'dmno';
 import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 const OnePassBackend = OnePasswordDmnoPlugin.injectInstance('1pass');
 
-const customUrlType = createDmnoDataType<{ newSetting: boolean }>({
-  typeLabel: 'my-custom-url',
-  extends: DmnoBaseTypes.url({
-    prependProtocol: true,
-    normalize: true,
-  }),
-  summary: 'summary from custom type',
-});
+const customUrlType = createDmnoDataType(
+  ({ newSetting: boolean }) => ({
+    typeLabel: 'my-custom-url',
+    extends: DmnoBaseTypes.url({
+      prependProtocol: true,
+      normalize: true,
+    }),
+    summary: 'summary from custom type',
+  })
+);
 
 export default defineDmnoService({
   name: 'web',
@@ -19,25 +21,17 @@ export default defineDmnoService({
   settings: {
     dynamicConfig: 'only_static',
   },
-  pick: [
-    'NODE_ENV',
-    'DMNO_ENV',
-    // 'GOOGLE_ANALYTICS_MEASUREMENT_ID',
-    {
-      source: 'api',
-      key: 'API_URL',
-      renameKey: 'VITE_API_URL',
-    },
-    {
-      source: 'group1',
-      // picking the renamed key from group1
-      key: 'PICK_TEST_G1',
-      renameKey: 'PICK_TEST_W',
-      // should apply _after_ the group1 transform
-      transformValue: (val) => `${val}-webtransform`,
-    }
-  ],
   schema: {
+
+    NODE_ENV: pick(),
+    DMNO_ENV: pick(),
+    VITE_API_URL: pick('api', 'API_URL'),
+    PICK_TEST_W: {
+      extends: pick('group1', 'PICK_TEST_G1'),
+      // TODO: reimplement
+      // transformValue: (val) => `${val}-webtransform`,
+    },
+
     // OP_ITEM_1: {
     //   sensitive: true,
     //   value: OnePassBackend.item(),
@@ -122,7 +116,6 @@ export default defineDmnoService({
     WEB_URL: {
       extends: customUrlType({ newSetting: true }),
       description: 'public url of this web app',
-      expose: true,
       // required: true,
       // value: 'EXAMPLE',
     },
