@@ -10,6 +10,7 @@ export default defineDmnoService({
   },
   schema: {
     GITHUB_REPO_URL: pick(),
+    GITHUB_ACTION_REPO_URL: pick(),
     DISCORD_JOIN_URL: pick(),
     GENERAL_CONTACT_EMAIL: pick(),
     POSTHOG_API_KEY: pick(),

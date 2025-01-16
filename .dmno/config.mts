@@ -12,6 +12,10 @@ export default defineDmnoService({
       extends: GitDataTypes.RepoName,
       value: 'dmno',
     },
+    GITHUB_ACTION_REPO_NAME: {
+      extends: GitDataTypes.RepoName,
+      value: 'dmno-gh-action',
+    },
     GITHUB_ORG_URL: {
       extends: DmnoBaseTypes.url({ allowedDomains: ['github.com'] }),
       value: () => `https://github.com/${DMNO_CONFIG.GITHUB_ORG_NAME}`,
@@ -20,6 +24,11 @@ export default defineDmnoService({
     GITHUB_REPO_URL: {
       extends: GitDataTypes.PublicRepoUrl,
       value: () => `${DMNO_CONFIG.GITHUB_ORG_URL}/${DMNO_CONFIG.GITHUB_REPO_NAME}`,
+      required: true,
+    },
+    GITHUB_ACTION_REPO_URL: {
+      extends: GitDataTypes.PublicRepoUrl,
+      value: () => `${DMNO_CONFIG.GITHUB_ORG_URL}/${DMNO_CONFIG.GITHUB_ACTION_REPO_NAME}`,
       required: true,
     },
     DISCORD_JOIN_URL: {
