@@ -110,6 +110,16 @@ export default defineConfig({
             href: '/sitemap-index.xml',
           },
         },
+        ...(DMNO_CONFIG.DMNO_ENV === 'production' || true ? [{
+          tag: 'script' as const,
+          attrs: {
+            id: "vtag-ai-js",
+            async: true,
+            src:"https://r2.leadsy.ai/tag.js",
+            'data-pid':"moAnJfbaj7zWLkaY",
+            'data-version': "062024",
+          }
+        }] : []),
       ],
       sidebar: [
         {
