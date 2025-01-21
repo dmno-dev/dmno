@@ -82,12 +82,33 @@ export function addServiceSelection(program: Command, opts?: {
         }
       }
 
-      // filled by package manager with package name if running an package.json script
+      let autoSelectedService: typeof workspace.services[keyof typeof workspace.services] | undefined;
+
+      // filled by package manager with package name if running a package.json script
+      // also filled when running `pnpm exec dmno`
       const packageNameFromPackageManager = process.env.npm_package_name || process.env.PNPM_PACKAGE_NAME;
-      let autoSelectedService = _.find(workspace.services, (service) => {
-        return service.packageName === packageNameFromPackageManager;
-      });
-      debug(`auto-detected service using package manager env vars: ${autoSelectedService?.serviceName}`);
+
+      if (packageNameFromPackageManager) {
+        // must watch out for edge case where the user can have multiple packages with same "name"
+        const autoSelectedServiceByPackageName = _.filter(workspace.services, (service) => {
+          return service.packageName === packageNameFromPackageManager;
+        });
+
+        if (autoSelectedServiceByPackageName.length === 1) {
+          autoSelectedService = autoSelectedServiceByPackageName[0];
+          debug(`auto-detected service using package manager env vars: ${autoSelectedService?.serviceName}`);
+        } else if (autoSelectedServiceByPackageName.length > 1) {
+          throw new CliExitError(
+            `Found multiple monorepo packages with the same name: ${kleur.bold(packageNameFromPackageManager)}`,
+            {
+              suggestion: [
+                'These packages had the same "name" in their package.json:',
+                ..._.map(autoSelectedServiceByPackageName, (p) => `- ${p.path}`),
+              ],
+            },
+          );
+        }
+      }
 
       if (!autoSelectedService) {
         const cwd = process.cwd();
