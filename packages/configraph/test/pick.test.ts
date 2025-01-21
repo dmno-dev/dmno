@@ -1,7 +1,7 @@
 import { setTimeout as delay } from 'node:timers/promises';
 import { expect, test, describe } from 'vitest';
 import {
-  Configraph, createConfigraphEntityTemplate, pick, switchBy,
+  Configraph, ConfigraphBaseTypes, createConfigraphEntityTemplate, pick, switchBy,
 } from '@dmno/configraph';
 
 describe('pick behaviour', async () => {
@@ -96,6 +96,39 @@ describe('pick behaviour', async () => {
     expect(b.isSchemaValid).toBe(true);
     expect(a.isSchemaValid).toBe(true);
     expect(b.configNodes.pickMe.resolvedValue).toEqual('a-val');
+  });
+
+  test('can pick within an object', async () => {
+    const g = new Configraph();
+    const root = g.addEntity({
+      id: 'root',
+      configSchema: {
+        a: { value: 'root-a-val' },
+        b: { value: 'root-b-val' },
+        obj: {
+          extends: ConfigraphBaseTypes.object({
+            a: { value: 'root-obj-a-val' },
+            b: { value: 'root-obj-b-val' },
+          }),
+        },
+      },
+    });
+    const e = g.addEntity({
+      configSchema: {
+        obj: {
+          extends: ConfigraphBaseTypes.object({
+            a: pick(), // should default to same full path: `obj.a`
+            b: pick('root', 'b'),
+          }),
+        },
+      },
+    });
+    await g.resolveConfig();
+    expect(e.getConfigNodeByPath('obj.a').resolvedValue).toBe('root-obj-a-val');
+
+    expect(e.getConfigNodeByPath('obj.a').isSchemaValid).toBe(true);
+    expect(e.getConfigNodeByPath('obj.b').resolvedValue).toBe('root-b-val');
+    expect(root.isSchemaValid).toBe(true);
   });
 
   test('entity pick cycles are allowed, as long as the nodes dont create a cycle', async () => {
@@ -351,7 +384,6 @@ describe('pick behaviour', async () => {
         configSchema: {},
       });
       g.processConfig();
-      // console.log(e.configNodes.badPick.schemaErrors);
       expect(e.configNodes.badPick.isSchemaValid).toBe(false);
     });
 
@@ -396,7 +428,6 @@ describe('pick behaviour', async () => {
         },
       });
       await g.resolveConfig();
-      // console.log(g.getNode('t*templateChildA', 'pickFromTemplateRoot'));
       expect(g.getNode('t*templateRoot', 'pickMe').resolvedValue).toEqual('not-within-template');
       expect(g.getNode('t*templateChildA', 'pickFromTemplateRoot').resolvedValue).toEqual('from-template-root');
       expect(g.getNode('t*templateChildB', 'pickFromTemplateSibling').resolvedValue).toEqual('from-template-sibling');

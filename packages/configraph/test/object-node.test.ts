@@ -67,12 +67,16 @@ describe('object config nodes', async () => {
             c2: { extends: DataTypeWithDefaultValue, value: 'val-from-object-schema' },
             c3: { extends: DataTypeWithDefaultValue, value: 'val-from-object-schema' },
             c4: { extends: DataTypeWithDefaultValue, value: 'val-from-object-schema' },
+            // c5: { extends: DataTypeWithDefaultValue, value: 'val-from-object-schema' },
           }),
           value: {
             c3: 'val-from-object-value',
             c4: 'val-from-object-value',
+            // c5: 'val-from-object-value',
           },
         },
+        // ! NEED TO SORT THROUGH THIS PRECEDENCE
+        // 'obj.c5': { value: 'value-from-dot-path-override' },
       },
     });
     g.processConfig();
@@ -87,6 +91,7 @@ describe('object config nodes', async () => {
     expect(e.getConfigNodeByPath('obj.c2').resolvedValue).toEqual('val-from-object-schema');
     expect(e.getConfigNodeByPath('obj.c3').resolvedValue).toEqual('val-from-object-value');
     expect(e.getConfigNodeByPath('obj.c4').resolvedValue).toEqual('val-from-overrides');
+    // expect(e.getConfigNodeByPath('obj.c5').resolvedValue).toEqual('value-from-dot-path-override');
 
     // child values all roll back up into parent object
     expect(e.getConfigNodeByPath('obj').resolvedValue).toEqual({

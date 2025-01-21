@@ -253,10 +253,28 @@ export class Configraph<
         const nodeWasResolved = node.isResolved;
         const nodeWasFullyResolved = node.isFullyResolved;
         await node.resolve();
-        // for objects, the node first gets "resolved" but not "fully resolved" (where child values rolled back up)
+
+        // register any new child nodes in the graph
+        _.each(node.children, (child) => {
+          const childPath = child.fullPath;
+          if (!this.nodesByFullPath[childPath]) {
+            nextBatchNodeIds.push(childPath);
+            this.nodesByFullPath[childPath] = child;
+            // if the new node was an object, we may need to add its children as well
+            for (const newDescendantNode of child.flatChildren) {
+              this.nodesByFullPath[newDescendantNode.path] = newDescendantNode;
+            }
+            // ! TODO: here we may need to trigger some further processing on these new children (pick, inject, etc)
+          }
+        });
+
+        // for objects/arrays, the node first gets "resolved" but not "fully resolved" (where child values rolled back up)
         // so we make progress (and therefore should continue) if a node transitions to resolved or fully resolved
-        if (!nodeWasResolved && node.isResolved) resolvedCount++;
-        else if (!nodeWasFullyResolved && node.isFullyResolved) resolvedCount++;
+        if (!nodeWasResolved && node.isResolved) {
+          resolvedCount++;
+        } else if (!nodeWasFullyResolved && node.isFullyResolved) {
+          resolvedCount++;
+        }
         if (!node.isFullyResolved) {
           nextBatchNodeIds.push(nodeId);
         }

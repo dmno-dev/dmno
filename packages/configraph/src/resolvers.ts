@@ -401,7 +401,7 @@ export function processInlineResolverDef(resolverDef: InlineValueResolverDef) {
 
   // static value case - including explicitly setting to `undefined
   } else if (
-    _.isString(resolverDef) || _.isNumber(resolverDef) || _.isBoolean(resolverDef)
+    _.isString(resolverDef) || _.isNumber(resolverDef) || _.isBoolean(resolverDef) || _.isArray(resolverDef)
     || _.isPlainObject(resolverDef)
   ) {
     return createResolver({

@@ -899,6 +899,7 @@ const ObjectDataType = createConfigraphDataType(
     childrenSchema: Record<string, ConfigraphDataTypeDefinitionOrShorthand>,
     otherSettings?: {
       allowEmpty?: boolean,
+      parseJson?: boolean,
     },
   ) => ({
     typeLabel: 'dmno/object',
@@ -907,21 +908,23 @@ const ObjectDataType = createConfigraphDataType(
     ui: { icon: 'tabler:code-dots' }, // this one has 3 dots inside brackets, vs simple object is only brackets
     coerce(val) {
       if (_.isPlainObject(val)) return val;
-      if (!_.isString(val)) {
-        return new CoercionError('Only strings can be coerced into objects via JSON.parse');
+      if (_.isString(val) && otherSettings?.parseJson) {
+        try {
+          return JSON.parse(val);
+        } catch (err) {
+          throw new CoercionError('String was unable to JSON.parse', { err: err as any });
+        }
       }
-      try {
-        const parsed = JSON.parse(val);
-        if (_.isPlainObject(val)) return parsed;
-        return new CoercionError('String passed JSON.parse but is not an object');
-      } catch (err) {
-        return new CoercionError('String was unable to JSON.parse');
-      }
+      return val;
     },
     validate(val) {
-    // special handling to not allow empty strings (unless explicitly allowed)
+      if (!_.isPlainObject(val)) {
+        throw new ValidationError('Value must be a object');
+      }
+
+      // special handling to not allow empty strings (unless explicitly allowed)
       if (_.isEmpty(val) && !otherSettings?.allowEmpty) {
-        return [new ValidationError('If set, object must not be empty')];
+        throw new ValidationError('If set, object must not be empty');
       }
       return true;
     },
@@ -939,11 +942,6 @@ const ObjectDataType = createConfigraphDataType(
  */
 export type ArrayDataTypeSettings = {
   /**
-   * The schema definition for each item in the array.
-   */
-  itemSchema?: ConfigraphDataTypeDefinitionOrShorthand;
-
-  /**
    * The minimum length of the array.
    */
   minLength?: number;
@@ -957,15 +955,48 @@ export type ArrayDataTypeSettings = {
    * The exact length of the array.
    */
   isLength?: number;
+
+  splitString?: string
+
+  castArray?: boolean
+  allowEmpty?: boolean
 };
-const ArrayDataType = createConfigraphDataType((settings?: ArrayDataTypeSettings) => ({
-  typeLabel: 'dmno/array',
-  extends: PrimitiveBaseType,
-  injectable: false,
-  ui: { icon: 'tabler:brackets' }, // square brackets
-  // TODO: validate checks if it's an array
-  // helper to coerce csv string into array of strings
-}));
+const ArrayDataType = createConfigraphDataType(
+  (itemSchema?: ConfigraphDataTypeDefinitionOrShorthand, settings?: ArrayDataTypeSettings) => ({
+    typeLabel: 'dmno/array',
+    extends: PrimitiveBaseType,
+    injectable: false,
+    ui: { icon: 'tabler:brackets' }, // square brackets
+    coerce(val) {
+      if (_.isArray(val)) return val;
+      if (_.isString(val) && settings?.splitString) {
+        return val.split(settings?.splitString);
+      }
+      if (settings?.castArray && val !== null && val !== undefined) return [val];
+      return val;
+    },
+    validate(val) {
+      if (!_.isArray(val)) {
+        throw new ValidationError('Value is not an array');
+      }
+      // special handling to not allow empty arrays (unless explicitly allowed)
+      if (!settings?.allowEmpty && val.length === 0) {
+        throw new ValidationError('Array must not be empty');
+      }
+      if (settings?.minLength !== undefined && val.length < settings.minLength) {
+        throw new ValidationError(`Array must contain at least ${settings.minLength} items`);
+      }
+      if (settings?.maxLength !== undefined && val.length > settings.maxLength) {
+        throw new ValidationError(`Array must not contain more than ${settings.maxLength} items`);
+      }
+      return true;
+    },
+
+    // special place to store the child schema
+    // TODO: improve types for this
+    _itemSchema: itemSchema,
+  }),
+);
 
 
 /**
@@ -973,11 +1004,6 @@ const ArrayDataType = createConfigraphDataType((settings?: ArrayDataTypeSettings
  * @category BaseTypes
  */
 export type DictionaryDataTypeSettings = {
-  /**
-   * The schema definition for each item in the dictionary.
-   */
-  itemSchema?: ConfigraphDataTypeDefinitionOrShorthand;
-
   /**
    * The minimum number of items in the dictionary.
    */
@@ -1002,14 +1028,48 @@ export type DictionaryDataTypeSettings = {
    * A description of the keys of the dictionary.
    */
   keyDescription?: string;
+
+  allowEmpty?: boolean;
+  parseJson?: boolean
 };
-const DictionaryDataType = createConfigraphDataType((settings?: DictionaryDataTypeSettings) => ({
-  typeLabel: 'dmno/dictionary',
-  extends: PrimitiveBaseType,
-  injectable: false,
-  ui: { icon: 'tabler:code-asterisk' }, // curly brackets with an asterisk inside
-  // TODO: validate checks if it's an object
-}));
+const DictionaryDataType = createConfigraphDataType(
+  (itemSchema?: ConfigraphDataTypeDefinitionOrShorthand, settings?: DictionaryDataTypeSettings) => ({
+    typeLabel: 'dmno/dictionary',
+    extends: PrimitiveBaseType,
+    injectable: false,
+    ui: { icon: 'tabler:code-asterisk' }, // curly brackets with an asterisk inside
+    coerce(val) {
+      if (_.isPlainObject(val)) return val;
+      if (_.isString(val) && settings?.parseJson) {
+        try {
+          return JSON.parse(val);
+        } catch (err) {
+          throw new CoercionError('Unable to parse string as JSON', { err: err as any });
+        }
+      }
+      return val;
+    },
+    validate(val) {
+      if (!_.isPlainObject(val)) {
+        throw new ValidationError('Value must be an object');
+      }
+      const numItems = _.values(val).length;
+      if (!numItems && !settings?.allowEmpty) {
+        throw new ValidationError('Object must not be empty');
+      }
+
+      if (settings?.minItems !== undefined && numItems < settings.minItems) {
+        throw new ValidationError(`Dictionary must contain at least ${settings.minItems} items`);
+      }
+      if (settings?.maxItems !== undefined && numItems > settings.maxItems) {
+        throw new ValidationError(`Dictionary must not contain more than ${settings.maxItems} items`);
+      }
+
+      return true;
+    },
+
+  }),
+);
 
 type PossibleEnumValues = string | number | boolean; // do we need explicitly allow null/undefined?
 type ExtendedEnumDescription = {

@@ -6,7 +6,9 @@ import {
   SchemaError,
 } from './errors';
 
-import { ConfigraphBaseTypes, ConfigraphDataType, ConfigraphDataTypeDefinition } from './data-types';
+import {
+  ConfigraphBaseTypes, ConfigraphDataType, ConfigraphDataTypeDefinition, expandDataTypeDefShorthand,
+} from './data-types';
 import {
   ConfigValue, ConfigValueResolver,
   ResolverContext,
@@ -49,6 +51,8 @@ export type PickedNodeDef<NodeMetadata = unknown> = {
   transformValue?: (val: any) => any,
 };
 
+export const VIRTUAL_CHILD_KEY = '$virtual-child';
+
 export class ConfigraphNode<NodeMetadata = any> {
   readonly type: ConfigraphDataType<NodeMetadata>;
 
@@ -70,11 +74,16 @@ export class ConfigraphNode<NodeMetadata = any> {
       // special handling for object nodes to initialize children
       if (this.type.extendsType(ConfigraphBaseTypes.object)) {
         _.each(this.type.primitiveType.typeDef._children, (childDef, childKey) => {
-          this.children[childKey] = new (this.constructor as any)(childKey, childDef, this);
+          this.children[childKey] = new (this.constructor as any)(childKey, expandDataTypeDefShorthand(childDef), this);
         });
+      } else if (this.type.extendsType(ConfigraphBaseTypes.array)) {
+        this.children[VIRTUAL_CHILD_KEY] = new (this.constructor as any)(
+          VIRTUAL_CHILD_KEY,
+          expandDataTypeDefShorthand(this.type.primitiveType.typeDef._itemSchema),
+          this,
+        );
       }
-      // TODO: also need to initialize the `itemType` for array and dictionary
-      // unless we change how those work altogether...
+      // TODO: deal with dictionary/map
     } catch (err) {
       this._schemaErrors.push(err instanceof SchemaError ? err : new SchemaError(err as Error));
       debug(err);
@@ -223,6 +232,12 @@ export class ConfigraphNode<NodeMetadata = any> {
   }
 
   async resolve() {
+    if (this.key === VIRTUAL_CHILD_KEY) {
+      this.isResolved = true;
+      this.isFullyResolved = true;
+      return;
+    }
+
     // RESET
     //! we'll need more logic to reset properly as dependency values are changing, once we incorporate multi-stage async resolution
     this.dependencyResolutionError = undefined;
@@ -249,17 +264,19 @@ export class ConfigraphNode<NodeMetadata = any> {
     }
 
 
-    // now deal with resolution
+    // ~ resolution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // TODO: need to track dependencies used in coerce/validate/etc
 
     const itemResolverCtx = new ResolverContext((!this.overrides.length && this.valueResolver) || this);
     resolverCtxAls.enterWith(itemResolverCtx);
 
-    if (this.overrides.length) {
-      this.debug('using override - marking as resolved');
-      this.isResolved = true;
-    } else if (this.valueResolver) {
-      if (!this.valueResolver.isFullyResolved) {
+    const wasResolved = this.isResolved;
+
+    if (!this.isResolved) {
+      if (this.overrides.length) {
+        this.debug('using override - marking as resolved');
+        this.isResolved = true;
+      } else if (this.valueResolver) {
         this.debug('running node resolver');
         await this.valueResolver.resolve(itemResolverCtx);
         // some errors mean we are waiting for another node to resolve, so we will retry them
@@ -269,12 +286,14 @@ export class ConfigraphNode<NodeMetadata = any> {
         } else {
           this.isResolved = true;
         }
+      } else {
+        this.debug('no resolver - marking as resolved');
+        this.isResolved = true;
       }
-    } else {
-      this.debug('no resolver - marking as resolved');
-      this.isResolved = true;
     }
 
+
+    // ~ coercion ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // apply coercion logic (for example - parse strings into numbers)
     // NOTE - currently we trigger this if the resolved value was not undefined
     // but we may want to coerce undefined values in some cases as well?
@@ -297,8 +316,33 @@ export class ConfigraphNode<NodeMetadata = any> {
       }
     }
 
+    // ~ array/dictionary fan-out ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    if (!wasResolved && this.isResolved) {
+      if (this.type.extendsType(ConfigraphBaseTypes.array)) {
+        if (_.isArray(this.resolvedRawValue) && this.resolvedRawValue.length) {
+          const childPlaceholderNode = this.children[VIRTUAL_CHILD_KEY];
+
+          // we now initialize the actual child nodes
+          for (let i = 0; i < this.resolvedRawValue.length; i++) {
+            // note that the virtual child has already had its type definition "expanded" (in case it was using a shorthand)
+            this.children[i] ||= new (this.constructor as any)(i, childPlaceholderNode.type.typeDef, this);
+          }
+          // not sure if we want to delete the placeholder or what?
+          // delete this.children[VIRTUAL_CHILD_KEY];
+        }
+      }
+    }
+    // TODO: dictionary
+
+
+
+    // ~ complex type roll-up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     // special handling for objects - roll up child values into parent
-    if (this.type.extendsType(ConfigraphBaseTypes.object)) {
+    const isObject = this.type.extendsType(ConfigraphBaseTypes.object)
+      || this.type.extendsType(ConfigraphBaseTypes.dictionary);
+    const isArray = this.type.extendsType(ConfigraphBaseTypes.array);
+    if (isObject || isArray) {
       let waitingForChildCount = 0;
       _.each(this.children, (c) => {
         if (!c.isFullyResolved) waitingForChildCount++;
@@ -313,9 +357,10 @@ export class ConfigraphNode<NodeMetadata = any> {
       // now roll up the child values into the parent object
       let finalParentObjectValue: any;
       for (const childKey in this.children) {
+        if (isArray && childKey === VIRTUAL_CHILD_KEY) continue;
         const childNode = this.children[childKey];
         if (childNode.resolvedValue !== undefined) {
-          finalParentObjectValue ||= {};
+          finalParentObjectValue ||= isArray ? [] : {};
           finalParentObjectValue[childKey] = childNode.resolvedValue;
         }
       }
@@ -323,11 +368,11 @@ export class ConfigraphNode<NodeMetadata = any> {
       // special handling to maintain empty object vs undefined
       if (finalParentObjectValue === undefined) {
         if (this.resolvedRawValue && _.isEmpty(this.resolvedRawValue)) {
-          this.resolvedValue = {};
+          this.resolvedValue = isArray ? [] : {};
         }
       }
 
-      // now do one more pass to check if we have invalid children, and mark the object as invalid
+      // now do one more pass to check if we have invalid children, and mark the parent as invalid
       if (this.resolvedValue !== undefined && this.resolvedValue !== null) {
         const invalidChildCount = _.sumBy(_.values(this.children), (c) => (!c.isValid ? 1 : 0));
         if (invalidChildCount) {
@@ -342,7 +387,7 @@ export class ConfigraphNode<NodeMetadata = any> {
       }
     }
 
-    // run validation logic
+    // ~ validation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if (!this.validationErrors) {
       const validationResult = this.type.validate(_.cloneDeep(this.resolvedValue), itemResolverCtx);
       this.validationErrors = validationResult === true ? [] : validationResult;

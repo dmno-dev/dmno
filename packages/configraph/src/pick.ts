@@ -42,9 +42,6 @@ export class PickedDataType extends ConfigraphDataType {
       throw new Error('error initializing picked node - no parent entity found');
     }
 
-    // console.log('finish pick init', pickToNode.fullPath);
-    // console.log(this._templateRootBaseId, this._templateRootEntityId);
-
     const graphRoot = pickToNode.parentEntity.graphRoot;
 
     // default to graph root if no entity ID is specified
@@ -55,12 +52,10 @@ export class PickedDataType extends ConfigraphDataType {
         this._pickFromEntityId = `${this._templateRootBaseId}${this._pickFromEntityId}`;
       }
     }
-    // default to picking using the same key
-    // TODO: what about nested paths?
+    // default to picking using the same path/key
     if (!this._pickFromPath) {
-      this._pickFromPath = pickToNode.key;
+      this._pickFromPath = pickToNode.path;
     }
-
 
     if (!this._pickFromEntityId || !this._pickFromPath) {
       throw new Error('error initializing picked node');
