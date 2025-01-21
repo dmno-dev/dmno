@@ -1,14 +1,10 @@
 import kleur from 'kleur';
 import * as _ from 'lodash-es';
 import boxen from 'boxen';
-
-import {
-  input, checkbox, confirm,
-} from '@inquirer/prompts';
-
+import { input, checkbox, confirm } from '@inquirer/prompts';
 import { tryCatch } from '@dmno/ts-lib';
-
 import Debug from 'debug';
+
 import { findDmnoServices } from '../../config-loader/find-services';
 import { DmnoCommand } from '../lib/dmno-command';
 

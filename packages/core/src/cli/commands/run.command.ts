@@ -1,9 +1,7 @@
 import * as _ from 'lodash-es';
 import { ExecaChildProcess, execa } from 'execa';
 import which from 'which';
-import Debug from 'debug';
 
-import kleur from 'kleur';
 import { DmnoCommand } from '../lib/dmno-command';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
