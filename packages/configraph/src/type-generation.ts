@@ -157,7 +157,7 @@ export async function getTsDefinitionForNode(item: ConfigraphNode, indentLevel =
     itemTsType = 'boolean';
   } else if (baseType === ConfigraphBaseTypes.enum) {
     // enums have several different formats we need to handle
-    const rawEnumOptions = (item.type.primitiveType as any)._rawEnumOptions;
+    const rawEnumOptions = (item.type.primitiveType as any).typeDef._rawEnumOptions;
     let enumOptions = [] as Array<any>;
     if (_.isArray(rawEnumOptions)) {
       // extended definition case
@@ -176,10 +176,25 @@ export async function getTsDefinitionForNode(item: ConfigraphNode, indentLevel =
       enumOptions = _.keys(rawEnumOptions);
     }
 
-    itemTsType = _.map(enumOptions, JSON.stringify).join(' | ');
+    if (!enumOptions.length) {
+      itemTsType = 'never'; // should it be any instead?
+    } else {
+      // we could spit out descriptions in comments here, although currently it does nothing
+      // see https://github.com/microsoft/TypeScript/issues/38106
+      itemTsType = _.map(enumOptions, JSON.stringify).join(' | ');
+    }
   } else if (baseType === ConfigraphBaseTypes.object) {
-    // TODO: deal with object types here!
+    // TODO: deal with object children
     itemTsType = '{}';
+  } else if (baseType === ConfigraphBaseTypes.array) {
+    // TODO: deal with array item type
+    itemTsType = 'Array<any>';
+  } else if (baseType === ConfigraphBaseTypes.dictionary) {
+    // TODO: deal with record child type
+    itemTsType = 'Record<string, any>';
+  } else {
+    // throw?
+    itemTsType = 'any';
   }
   // TODO: deal with array and map types here!
 
