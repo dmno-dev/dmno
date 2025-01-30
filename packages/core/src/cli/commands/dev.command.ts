@@ -1,15 +1,14 @@
 import kleur from 'kleur';
 import * as _ from 'lodash-es';
-import { outdent } from 'outdent';
 import gradient from 'gradient-string';
 import boxen from 'boxen';
+
 import { DmnoCommand } from '../lib/dmno-command';
-import { formatError, formattedValue, getItemSummary } from '../lib/formatting';
+import { getItemSummary } from '../lib/formatting';
 import { getCliRunCtx } from '../lib/cli-ctx';
-import { ConfigServer } from '../../config-loader/config-server';
 import { addCacheFlags } from '../lib/cache-helpers';
 import { addServiceSelection } from '../lib/selection-helpers';
-import { DMNO_DEV_BANNER, fallingDmnoLoader, fallingDmnosAnimation } from '../lib/loaders';
+import { DMNO_DEV_BANNER, fallingDmnosAnimation } from '../lib/loaders';
 
 const TERMINAL_COLS = Math.floor(process.stdout.columns * 0.75);
 
