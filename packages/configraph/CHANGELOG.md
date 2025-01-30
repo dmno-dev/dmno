@@ -1,5 +1,11 @@
 # @dmno/configraph
 
+## 0.0.10
+
+### Patch Changes
+
+- [#200](https://github.com/dmno-dev/dmno/pull/200) [`5c4725c`](https://github.com/dmno-dev/dmno/commit/5c4725c7795c9b7334fad77493683a954d9a3f9c) Thanks [@theoephraim](https://github.com/theoephraim)! - add basic array data type
+
 ## 0.0.9
 
 ### Patch Changes
