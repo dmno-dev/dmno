@@ -219,10 +219,6 @@ export class DmnoWorkspace {
       });
     });
 
-    if (!this.rootService) {
-      console.log('root service name', this.rootServiceName);
-      console.log(Object.keys(this.services));
-    }
     this.configraph.cacheProvider.cacheDirPath = path.join(this.rootService.path, '.dmno');
     await this.configraph.resolveConfig();
 

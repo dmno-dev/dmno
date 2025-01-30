@@ -3,6 +3,7 @@ import Debug from 'debug';
 import {
   ConfigraphNode,
   PickedNodeDef,
+  VIRTUAL_CHILD_KEY,
 } from './config-node';
 import { SchemaError } from './errors';
 import { Configraph } from './graph';
@@ -210,9 +211,6 @@ export class ConfigraphEntity<
 
     // now add the actual entity definition to the chain
     this.defs.push(def);
-
-    // console.log('entity is now defined');
-    // console.dir(this.defs, { depth: null });
   }
 
   private initOrUpdateConfigNode(
@@ -246,14 +244,22 @@ export class ConfigraphEntity<
         try {
           existingNode = this.getConfigNodeByPath(parentPath);
         } catch (err) {}
+
+        // TODO: need to walk the full path and initialize multiple nodes along the way, not just the last
         if (existingNode) {
-          if (!existingNode.type.isType(ConfigraphBaseTypes.object)) {
+          const NodeClass = existingNode.constructor as any;
+          if (existingNode.type.isType(ConfigraphBaseTypes.object)) {
+            existingNode.children[newChildKey] = new NodeClass(newChildKey, expandedTypeDef, existingNode);
+          } else if (existingNode.type.isType(ConfigraphBaseTypes.array)) {
+            const arrayItemTypeDef = existingNode.children[VIRTUAL_CHILD_KEY].type.typeDef;
+            // initialize the new child node using the array child placeholder
+            existingNode.children[newChildKey] = new NodeClass(newChildKey, arrayItemTypeDef, existingNode);
+            // apply the override on top
+            existingNode.children[newChildKey].applyOverrideType(expandedTypeDef);
+          } else {
             this.schemaErrors.push(new SchemaError(`Cannot add new child to non-object node: ${parentPath}`));
             return;
           }
-
-          const NodeClass = existingNode.constructor as any;
-          existingNode.children[newChildKey] = new NodeClass(newChildKey, expandedTypeDef, existingNode);
         } else {
           this.schemaErrors.push(new SchemaError(`Existing node not found to modify: ${parentPath}`));
           return;
@@ -286,14 +292,11 @@ export class ConfigraphEntity<
     }
   }
   processPickedConfig() {
-    _.each(this.configNodes, (node) => {
+    _.each(this.flatConfigNodes, (node) => {
+      //! need to handle the entire type chain and overrides!
       if (node.type.typeDef.extends instanceof PickedDataType) {
         const pickedDataType = node.type.typeDef.extends;
-        // to finish wiring up the "picked" type, we need to know the current key and access to the graph
-        //! probably need to handle node override types too
-
-        //! need to recurse into objects
-        // (or disallow picking wtihin objects)
+        // to finish wiring up the "picked" type, we need to know the current key and access to the graph, so we pass in the node
         pickedDataType.finishInit(node);
       }
     });
