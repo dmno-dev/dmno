@@ -5,9 +5,6 @@ ignore
 
 .DS_Store
 
-# Local Netlify folder
-.netlify
-
 config.local.ts
 .env.local
 .env.local.*
