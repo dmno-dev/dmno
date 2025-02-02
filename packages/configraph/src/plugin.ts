@@ -33,7 +33,7 @@ function cleanGitUrl(repoUrl: string, directoryPath?: string) {
 
 export abstract class ConfigraphPlugin<
 NodeMetadata = unknown,
-EntityClass extends ConfigraphEntity = ConfigraphEntity,
+EC extends ConfigraphEntity = ConfigraphEntity,
 > {
   /** name of the plugin itself - which is the name of the class */
   pluginType = this.constructor.name;
@@ -45,7 +45,7 @@ EntityClass extends ConfigraphEntity = ConfigraphEntity,
 
   readonly inputSchema: PluginInputSchema<NodeMetadata>;
 
-  internalEntity?: EntityClass;
+  internalEntity?: EC;
   constructor(
     readonly instanceId: string,
     readonly opts: {
@@ -69,7 +69,7 @@ EntityClass extends ConfigraphEntity = ConfigraphEntity,
   static packageMetadata?: PluginPackageMetadata;
 
   // @ts-ignore
-  EntityClass: (new (...args: Array<any>) => N) = ConfigraphEntity;
+  EntityClass: (new (...args: Array<any>) => EC) = ConfigraphEntity;
 
   initInternalEntity(graphRoot: Configraph<any, any>, parentEntityId: string) {
     this.internalEntity = new this.EntityClass(graphRoot, {
