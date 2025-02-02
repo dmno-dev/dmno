@@ -1,18 +1,12 @@
 import kleur from 'kleur';
 import * as _ from 'lodash-es';
-import { tryCatch } from '@dmno/ts-lib';
-import { outdent } from 'outdent';
-import boxen from 'boxen';
-import { DmnoCommand } from '../lib/dmno-command';
 
-import {
-  formatError, formattedValue, getItemSummary, joinAndCompact,
-} from '../lib/formatting';
+import { DmnoCommand } from '../lib/dmno-command';
+import { getItemSummary } from '../lib/formatting';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 import { addCacheFlags } from '../lib/cache-helpers';
 import { addWatchMode } from '../lib/watch-mode-helpers';
-import { CliExitError } from '../lib/cli-error';
 import { checkForConfigErrors, checkForSchemaErrors } from '../../config-engine/check-errors-helpers';
 import { stringifyObjectAsEnvFile } from '../lib/env-file-helpers';
 import { isSubshell } from '../lib/shell-helpers';

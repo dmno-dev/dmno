@@ -1,9 +1,9 @@
 import kleur from 'kleur';
 import * as _ from 'lodash-es';
 import { outdent } from 'outdent';
+
 import { DmnoCommand } from '../lib/dmno-command';
 import { getCliRunCtx } from '../lib/cli-ctx';
-import { pathExists } from '../../lib/fs-utils';
 
 const program = new DmnoCommand('clear-cache')
   .summary('cache utils')

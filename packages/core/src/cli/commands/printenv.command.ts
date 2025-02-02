@@ -1,7 +1,7 @@
 import kleur from 'kleur';
 import * as _ from 'lodash-es';
-import { DmnoCommand } from '../lib/dmno-command';
 
+import { DmnoCommand } from '../lib/dmno-command';
 import { addServiceSelection } from '../lib/selection-helpers';
 import { getCliRunCtx } from '../lib/cli-ctx';
 import { addCacheFlags } from '../lib/cache-helpers';
