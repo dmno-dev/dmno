@@ -1,5 +1,15 @@
 # @dmno/configraph
 
+## 0.0.10
+
+### Patch Changes
+
+- [#204](https://github.com/dmno-dev/dmno/pull/204) [`0e794cd`](https://github.com/dmno-dev/dmno/commit/0e794cdad1b8e4be5fd74c39ecca6d959d1fa5bf) Thanks [@theoephraim](https://github.com/theoephraim)! - fix type bug in configraph
+
+- [#202](https://github.com/dmno-dev/dmno/pull/202) [`5a32b23`](https://github.com/dmno-dev/dmno/commit/5a32b2399397074180670ab3a0c342df7e16c977) Thanks [@theoephraim](https://github.com/theoephraim)! - fix typegen enum issue
+
+- [#200](https://github.com/dmno-dev/dmno/pull/200) [`5c4725c`](https://github.com/dmno-dev/dmno/commit/5c4725c7795c9b7334fad77493683a954d9a3f9c) Thanks [@theoephraim](https://github.com/theoephraim)! - add basic array data type
+
 ## 0.0.9
 
 ### Patch Changes
