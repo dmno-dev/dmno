@@ -5,7 +5,7 @@
   "main": "index.js",
   "author": "",
   "license": "MIT",
-  "packageManager": "pnpm@9.14.2",
+  "packageManager": "pnpm@9.15.4",
   "scripts": {
     "dmno:dev": "dmno dev"
   },
