@@ -183,6 +183,13 @@ export default defineDmnoService({
       extends: DmnoBaseTypes.md5,
       value: 'd41d8cd98f00b204e9800998ecf8427e'
     },
+
+    SOME_ENUM: {
+      extends: DmnoBaseTypes.enum({
+        opt1: { description: 'something' },
+        opt2: { description: 'something else' },
+      }),
+    }
   }
 });
 

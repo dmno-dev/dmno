@@ -1087,20 +1087,20 @@ type EnumDataTypeSettings = (
   | Record<string, Omit<ExtendedEnumDescription, 'value'>>
 );
 
-const EnumDataType = createConfigraphDataType((settings?: EnumDataTypeSettings) => ({
+const EnumDataType = createConfigraphDataType((enumOptions?: EnumDataTypeSettings) => ({
   typeLabel: 'dmno/enum',
   extends: PrimitiveBaseType,
   injectable: false,
   ui: { icon: 'material-symbols-light:category' }, // a few shapes... not sure about this one
   validate(val) {
     let possibleValues: Array<any>;
-    if (_.isPlainObject(settings)) {
-      possibleValues = _.keys(settings);
-    } else if (_.isArray(settings)) {
-      if (_.isObject(settings[0]) && 'value' in settings[0]) {
-        possibleValues = _.map(settings, (i) => (i as any).value);
+    if (_.isPlainObject(enumOptions)) {
+      possibleValues = _.keys(enumOptions);
+    } else if (_.isArray(enumOptions)) {
+      if (_.isObject(enumOptions[0]) && 'value' in enumOptions[0]) {
+        possibleValues = _.map(enumOptions, (i) => (i as any).value);
       } else {
-        possibleValues = settings;
+        possibleValues = enumOptions;
       }
     }
     possibleValues ||= [];
@@ -1110,7 +1110,7 @@ const EnumDataType = createConfigraphDataType((settings?: EnumDataTypeSettings) 
       });
     }
   },
-  _rawEnumOptions: settings,
+  _rawEnumOptions: enumOptions,
 }));
 
 const EMAIL_REGEX = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
