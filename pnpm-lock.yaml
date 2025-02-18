@@ -231,6 +231,9 @@ importers:
       svgo:
         specifier: 'catalog:'
         version: 3.3.2
+      tab:
+        specifier: https://pkg.pr.new/bombshell-dev/tab@4595b27
+        version: https://pkg.pr.new/bombshell-dev/tab@4595b27
       typescript:
         specifier: 'catalog:'
         version: 5.7.2
@@ -11075,6 +11078,10 @@ packages:
     resolution: {integrity: sha512-ulAk51I9UVUyJgxlv9M6lFot2WP3e7t8Kz9+IS6D4rVba1tR9kON+Ey69f+1R4Q8cd45Lod6a4IcJIxnzGc/zA==}
     engines: {node: '>=18'}
 
+  tab@https://pkg.pr.new/bombshell-dev/tab@4595b27:
+    resolution: {tarball: https://pkg.pr.new/bombshell-dev/tab@4595b27}
+    version: 0.0.0
+
   tabtab@3.0.2:
     resolution: {integrity: sha512-jANKmUe0sIQc/zTALTBy186PoM/k6aPrh3A7p6AaAfF6WPSbTx1JYeGIGH162btpH+mmVEXln+UxwViZHO2Jhg==}
 
@@ -14480,7 +14487,7 @@ snapshots:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 20.14.12
+      '@types/node': 22.10.4
       '@types/yargs': 16.0.9
       chalk: 4.1.2
 
@@ -15889,7 +15896,7 @@ snapshots:
 
   '@types/concat-stream@2.0.3':
     dependencies:
-      '@types/node': 20.14.12
+      '@types/node': 22.10.4
 
   '@types/cookie@0.4.1': {}
 
@@ -25225,6 +25232,10 @@ snapshots:
       tslib: 2.6.2
 
   system-architecture@0.1.0: {}
+
+  tab@https://pkg.pr.new/bombshell-dev/tab@4595b27:
+    dependencies:
+      mri: 1.2.0
 
   tabtab@3.0.2:
     dependencies:
