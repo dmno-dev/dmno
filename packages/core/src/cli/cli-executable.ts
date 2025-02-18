@@ -27,7 +27,7 @@ import { PluginCommand } from './commands/plugin.command';
 import { InitCommand } from './commands/init.command';
 import { ClearCacheCommand } from './commands/clear-cache.command';
 import { PrintEnvCommand } from './commands/printenv.command';
-import { CompleteCommand } from './commands/complete.command.ts';
+import { CompleteCommand } from './commands/complete.command';
 
 const debug = Debug('dmno:cli');
 
