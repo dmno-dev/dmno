@@ -145,6 +145,7 @@
     "read-yaml-file": "^2.1.0",
     "socket.io": "^4.8.0",
     "svgo": "catalog:",
+    "tab": "https://pkg.pr.new/bombshell-dev/tab@4595b27",
     "typescript": "catalog:",
     "validate-npm-package-name": "^5.0.0",
     "vite": "catalog:",
