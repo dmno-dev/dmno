@@ -1,5 +1,11 @@
 # @dmno/cloudflare-platform
 
+## 0.0.4
+
+### Patch Changes
+
+- [#208](https://github.com/dmno-dev/dmno/pull/208) [`37b6dd2`](https://github.com/dmno-dev/dmno/commit/37b6dd2816e9d17aaf9e1e4c24d17670c009f7c8) Thanks [@theoephraim](https://github.com/theoephraim)! - add missing hashbang to dwrangler
+
 ## 0.0.3
 
 ### Patch Changes
