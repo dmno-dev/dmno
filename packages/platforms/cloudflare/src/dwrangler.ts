@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+// hashbang needed to get npm generated ".bin/dmno" to work with esm imports
+
 /**
  * small wrapper around the wrangler cli to help inject DMNO config
  * ideally we could inject using other methods,
@@ -66,6 +69,21 @@ async function reloadDmnoConfig() {
   injectedValues = {};
   injectedDynamicValues = {};
 
+  for (const itemKey in injectedProcessEnv) {
+    const processEnvItem = injectedProcessEnv[itemKey];
+    const val = processEnvItem;
+    // some config is to affect wrangler itself
+    if (
+      wranglerSystemEnvKeys.includes(itemKey)
+      // users can pass in multiple bindings that will have different keys
+      || itemKey.startsWith('WRANGLER_HYPERDRIVE_LOCAL_CONNECTION_STRING_')
+    ) {
+      if (val) {
+        wranglerSystemEnv[itemKey] = val;
+      }
+    }
+  }
+
   for (const itemKey in injectedDmnoEnv) {
     if (itemKey.startsWith('$')) continue;
 
@@ -78,7 +96,8 @@ async function reloadDmnoConfig() {
       // users can pass in multiple bindings that will have different keys
       || itemKey.startsWith('WRANGLER_HYPERDRIVE_LOCAL_CONNECTION_STRING_')
     ) {
-      wranglerSystemEnv[itemKey] = val;
+      // set above
+      // wranglerSystemEnv[itemKey] = val;
     } else if (dmnoWranglerEnvKeys.includes(itemKey)) {
       dmnoWranglerSettings[itemKey] = val;
     }
@@ -184,6 +203,9 @@ async function restartWrangler() {
   if (isDevMode) {
     if (dmnoWranglerSettings.WRANGLER_DEV_PORT) {
       wranglerDevArgs.push('--port', dmnoWranglerSettings.WRANGLER_DEV_PORT);
+    }
+    if (dmnoWranglerSettings.WRANGLER_DEV_PROTOCOL) {
+      wranglerDevArgs.push('--local-protocol', dmnoWranglerSettings.WRANGLER_DEV_PROTOCOL);
     }
     if (dmnoWranglerSettings.WRANGLER_DEV_IP) {
       wranglerDevArgs.push('--ip', dmnoWranglerSettings.WRANGLER_DEV_IP);
