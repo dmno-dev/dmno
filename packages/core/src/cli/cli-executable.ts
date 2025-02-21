@@ -11,6 +11,7 @@ const cliExecId = new Date().toISOString();
 import * as _ from 'lodash-es';
 import Debug from 'debug';
 import { DmnoCommand } from './lib/dmno-command';
+// import {Completion, script} from "tab";
 
 import { addDocsCommand } from './lib/cli-schema-generation';
 import { customizeHelp } from './lib/help-customizations';
@@ -26,12 +27,15 @@ import { PluginCommand } from './commands/plugin.command';
 import { InitCommand } from './commands/init.command';
 import { ClearCacheCommand } from './commands/clear-cache.command';
 import { PrintEnvCommand } from './commands/printenv.command';
+import { CompleteCommand } from './commands/complete.command';
 
 const debug = Debug('dmno:cli');
 
 const program = new DmnoCommand('dmno')
   .description('dmnno cli - https://dmno.dev')
   .version('0.0.1');
+
+program.enablePositionalOptions();
 
 program.addCommand(ResolveCommand);
 program.addCommand(RunCommand);
@@ -40,6 +44,7 @@ program.addCommand(InitCommand);
 program.addCommand(ClearCacheCommand);
 program.addCommand(PluginCommand);
 program.addCommand(PrintEnvCommand);
+program.addCommand(CompleteCommand);
 
 // have to pass through the root program for this one so we can access all the subcommands
 addDocsCommand(program);
