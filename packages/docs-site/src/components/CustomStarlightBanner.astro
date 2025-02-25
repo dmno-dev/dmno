@@ -1,7 +1,7 @@
 ---
 import type { Props } from "@astrojs/starlight/props";
 
-const { banner } = Astro.props.entry.data;
+const { banner } = Astro.locals.starlightRoute.entry.data;
 
 const showDefaultBanner =
   !banner &&
