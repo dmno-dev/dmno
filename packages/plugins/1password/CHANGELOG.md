@@ -1,5 +1,11 @@
 # @dmno/1password-plugin
 
+## 0.0.13
+
+### Patch Changes
+
+- [#211](https://github.com/dmno-dev/dmno/pull/211) [`42683de`](https://github.com/dmno-dev/dmno/commit/42683de2d08c88073c4417f183bf2294742a3bc7) Thanks [@theoephraim](https://github.com/theoephraim)! - add scarf analytics
+
 ## 0.0.12
 
 ### Patch Changes
