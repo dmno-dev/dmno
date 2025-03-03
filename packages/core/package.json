@@ -1,6 +1,6 @@
 {
   "name": "dmno",
-  "version": "0.0.37",
+  "version": "0.0.38",
   "description": "dmno is the best way to manage config / env vars in your entire stack",
   "author": "dmno-dev",
   "license": "MIT",
