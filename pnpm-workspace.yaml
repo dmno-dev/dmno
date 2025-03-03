@@ -18,6 +18,7 @@ catalog:
   "vite-node": "^2.1.2"
   "vitest": "^2.1.5"
   "@dagrejs/graphlib": "^2.2.4"
+  "@scarf/scarf": "^1.4.0"
   "@types/debug": "^4.1.12"
   "@types/lodash-es": "^4.17.12"
   "@types/node": "^20.14.11"

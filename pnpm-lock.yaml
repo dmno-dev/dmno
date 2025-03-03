@@ -9,6 +9,9 @@ catalogs:
     '@dagrejs/graphlib':
       specifier: ^2.2.4
       version: 2.2.4
+    '@scarf/scarf':
+      specifier: ^1.4.0
+      version: 1.4.0
     '@types/debug':
       specifier: ^4.1.12
       version: 4.1.12
@@ -23,7 +26,7 @@ catalogs:
       version: 1.0.2
     debug:
       specifier: ^4.3.4
-      version: 4.3.7
+      version: 4.4.0
     kleur:
       specifier: ^4.1.5
       version: 4.1.5
@@ -47,7 +50,7 @@ catalogs:
       version: 5.4.11
     vite-node:
       specifier: ^2.1.2
-      version: 2.1.2
+      version: 2.1.8
     vitest:
       specifier: ^2.1.5
       version: 2.1.8
@@ -85,7 +88,7 @@ importers:
         version: 2.2.4
       debug:
         specifier: 'catalog:'
-        version: 4.3.7
+        version: 4.4.0(supports-color@9.4.0)
       kleur:
         specifier: 'catalog:'
         version: 4.1.5
@@ -131,7 +134,7 @@ importers:
         version: 8.2.4(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.2)(typescript@5.7.2)(yaml@2.5.1)
       vite-node:
         specifier: 'catalog:'
-        version: 2.1.2(@types/node@20.14.12)(less@4.2.0)
+        version: 2.1.8(@types/node@20.14.12)(less@4.2.0)
       vite-tsconfig-paths:
         specifier: ^5.0.1
         version: 5.0.1(typescript@5.7.2)(vite@5.4.11(@types/node@20.14.12)(less@4.2.0))
@@ -153,6 +156,9 @@ importers:
       '@inquirer/prompts':
         specifier: ^5.0.1
         version: 5.0.1
+      '@scarf/scarf':
+        specifier: 'catalog:'
+        version: 1.4.0
       acorn:
         specifier: ^8.12.1
         version: 8.12.1
@@ -173,7 +179,7 @@ importers:
         version: 12.0.0
       debug:
         specifier: 'catalog:'
-        version: 4.3.7
+        version: 4.4.0(supports-color@9.4.0)
       diff:
         specifier: ^5.2.0
         version: 5.2.0
@@ -242,7 +248,7 @@ importers:
         version: 5.4.11(@types/node@20.14.12)(less@4.2.0)
       vite-node:
         specifier: 'catalog:'
-        version: 2.1.2(@types/node@20.14.12)(less@4.2.0)
+        version: 2.1.8(@types/node@20.14.12)(less@4.2.0)
       which:
         specifier: ^4.0.0
         version: 4.0.0
@@ -309,7 +315,7 @@ importers:
         version: 2.1.6
       debug:
         specifier: 'catalog:'
-        version: 4.3.7
+        version: 4.4.0(supports-color@9.4.0)
       es-toolkit:
         specifier: ^1.25.2
         version: 1.25.2
@@ -564,7 +570,7 @@ importers:
     dependencies:
       debug:
         specifier: 'catalog:'
-        version: 4.3.7
+        version: 4.4.0(supports-color@9.4.0)
     devDependencies:
       '@dmno/eslint-config':
         specifier: workspace:*
@@ -604,7 +610,7 @@ importers:
     dependencies:
       debug:
         specifier: 'catalog:'
-        version: 4.3.7
+        version: 4.4.0(supports-color@9.4.0)
       fastify-plugin:
         specifier: ^5.0.1
         version: 5.0.1
@@ -666,7 +672,7 @@ importers:
     dependencies:
       debug:
         specifier: 'catalog:'
-        version: 4.3.7
+        version: 4.4.0(supports-color@9.4.0)
       lodash-es:
         specifier: 'catalog:'
         version: 4.17.21
@@ -715,7 +721,7 @@ importers:
     dependencies:
       debug:
         specifier: 'catalog:'
-        version: 4.3.7
+        version: 4.4.0(supports-color@9.4.0)
       lodash-es:
         specifier: 'catalog:'
         version: 4.17.21
@@ -755,7 +761,7 @@ importers:
     dependencies:
       debug:
         specifier: 'catalog:'
-        version: 4.3.7
+        version: 4.4.0(supports-color@9.4.0)
       execa:
         specifier: ^9.5.1
         version: 9.5.2
@@ -801,7 +807,7 @@ importers:
         version: 7.3.0
       debug:
         specifier: 'catalog:'
-        version: 4.3.7
+        version: 4.4.0(supports-color@9.4.0)
       lodash-es:
         specifier: 'catalog:'
         version: 4.17.21
@@ -835,7 +841,7 @@ importers:
     dependencies:
       debug:
         specifier: 'catalog:'
-        version: 4.3.7
+        version: 4.4.0(supports-color@9.4.0)
       lodash-es:
         specifier: 'catalog:'
         version: 4.17.21
@@ -870,9 +876,12 @@ importers:
       '@1password/sdk':
         specifier: ^0.1.1
         version: 0.1.1
+      '@scarf/scarf':
+        specifier: 'catalog:'
+        version: 1.4.0
       debug:
         specifier: 'catalog:'
-        version: 4.3.7
+        version: 4.4.0(supports-color@9.4.0)
       kleur:
         specifier: ^4.1.5
         version: 4.1.5
@@ -4481,6 +4490,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@scarf/scarf@1.4.0':
+    resolution: {integrity: sha512-xxeapPiUXdZAE3che6f3xogoJPeZgig6omHEy1rIY5WVsB3H2BHNnZH+gHG6x91SCWyQCzWGsuL2Hh3ClO5/qQ==}
+
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
 
@@ -6873,9 +6885,6 @@ packages:
     resolution: {integrity: sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==}
     engines: {node: '>= 0.4'}
 
-  es-module-lexer@1.5.0:
-    resolution: {integrity: sha512-pqrTKmwEIgafsYZAGw9kszYzmagcE/n4dbgwGWLEXg7J4QFJVQRBld8j3Q3GNez79jzxZshq0bcT962QHOghjw==}
-
   es-module-lexer@1.5.4:
     resolution: {integrity: sha512-MVNK56NiMrOwitFB7cqDwq0CQutbw+0BvLshJSse0MUNU+y1FC3bUS/AQg7oUng+/wKrrki7JfmwtVHkVfPLlw==}
 
@@ -7691,9 +7700,6 @@ packages:
   get-east-asian-width@1.2.0:
     resolution: {integrity: sha512-2nk+7SIVb14QrgXFHcm84tD4bKQz0RxPuMT8Ag5KPOq7J5fEmAg0UbXdTOSHqNuHSU28k55qnceesxXRZGzKWA==}
     engines: {node: '>=18'}
-
-  get-func-name@2.0.2:
-    resolution: {integrity: sha512-8vXOvuE167CtIc3OyItco7N/dpRtBbYOsPsXCz7X/PMnlGjYjSGuZJgM1Y7mmew7BKf9BqvLX2tnOVy1BBUsxQ==}
 
   get-intrinsic@1.2.4:
     resolution: {integrity: sha512-5uYhsJH8VJBTv7oslg4BznJYhDoRI6waYCxMmCdnTrcCrHA/fCFKoTFz2JKKE0HdDFUF7/oQuhzumXJK7paBRQ==}
@@ -8945,9 +8951,6 @@ packages:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
 
-  loupe@3.1.1:
-    resolution: {integrity: sha512-edNu/8D5MKVfGVFRhFf8aAxiTM6Wumfz5XsaatSxlD3w4R1d/WEKUTydCdPGbl9K7QG/Ca3GnDV2sIKIpXRQcw==}
-
   loupe@3.1.2:
     resolution: {integrity: sha512-23I4pFZHmAemUnz8WZXbYRSKYj801VDaNv9ETuMh7IrMc7VuVVSo+Z9iLE3ni30+U48iDWfi30d3twAXBYmnCg==}
 
@@ -9566,9 +9569,6 @@ packages:
     resolution: {integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==}
     engines: {node: '>=10'}
     hasBin: true
-
-  mlly@1.6.1:
-    resolution: {integrity: sha512-vLgaHvaeunuOXHSmEbZ9izxPx3USsk8KCQ8iC+aTlp5sKRSoZvwhHh5L9VbKSaVC6sJDqbyohIS76E2VmHIPAA==}
 
   mlly@1.7.1:
     resolution: {integrity: sha512-rrVRZRELyQzrIUAVMHxP97kv+G786pHmOKzuFII8zDYahFBS7qnHh2AlYSl1GAHhaMPCz6/oHjVMcfFYgFYHgA==}
@@ -11568,9 +11568,6 @@ packages:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
     engines: {node: '>= 0.8'}
 
-  std-env@3.7.0:
-    resolution: {integrity: sha512-JPbdCEQLj1w5GilpiHAx3qJvFndqybBysA3qUOnznweH4QbNYUsW/ea8QzSrnh0vNsezMMw5bcVool8lM0gwzg==}
-
   std-env@3.8.0:
     resolution: {integrity: sha512-Bc3YwwCB+OzldMxOXJIIvC6cPRWr/LxOp48CdQTOkPyk/t4JWWJbrilwBd7RJzKV8QW7tJkcgAmeuLLJugl5/w==}
 
@@ -12681,11 +12678,6 @@ packages:
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
 
-  vite-node@2.1.2:
-    resolution: {integrity: sha512-HPcGNN5g/7I2OtPjLqgOtCRu/qhVvBxTUD3qzitmL0SrG1cWFzxzhMDWussxSbrRYWqnKf8P2jiNhPMSN+ymsQ==}
-    engines: {node: ^18.0.0 || >=20.0.0}
-    hasBin: true
-
   vite-node@2.1.8:
     resolution: {integrity: sha512-uPAwSr57kYjAUux+8E2j0q0Fxpn8M9VoyfGiRI8Kfktz9NcYMCenwY5RnZxnF1WTu3TGiYipirIzacLL3VVGFg==}
     engines: {node: ^18.0.0 || >=20.0.0}
@@ -13717,18 +13709,18 @@ snapshots:
   '@babel/code-frame@7.24.2':
     dependencies:
       '@babel/highlight': 7.24.2
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   '@babel/code-frame@7.24.7':
     dependencies:
       '@babel/highlight': 7.24.7
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   '@babel/code-frame@7.26.2':
     dependencies:
       '@babel/helper-validator-identifier': 7.25.9
       js-tokens: 4.0.0
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   '@babel/compat-data@7.24.7': {}
 
@@ -14087,14 +14079,14 @@ snapshots:
       '@babel/helper-validator-identifier': 7.24.7
       chalk: 2.4.2
       js-tokens: 4.0.0
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   '@babel/highlight@7.24.7':
     dependencies:
       '@babel/helper-validator-identifier': 7.24.7
       chalk: 2.4.2
       js-tokens: 4.0.0
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   '@babel/parser@7.24.4':
     dependencies:
@@ -15513,7 +15505,7 @@ snapshots:
       '@antfu/install-pkg': 0.4.1
       '@antfu/utils': 0.7.10
       '@iconify/types': 2.0.0
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@9.4.0)
       kolorist: 1.8.0
       local-pkg: 0.5.0
       mlly: 1.7.1
@@ -16289,7 +16281,7 @@ snapshots:
       archiver: 6.0.2
       common-path-prefix: 3.0.0
       cp-file: 10.0.0
-      es-module-lexer: 1.5.4
+      es-module-lexer: 1.6.0
       esbuild: 0.19.11
       execa: 6.1.0
       fast-glob: 3.3.2
@@ -16329,7 +16321,7 @@ snapshots:
       archiver: 6.0.2
       common-path-prefix: 3.0.0
       cp-file: 10.0.0
-      es-module-lexer: 1.5.4
+      es-module-lexer: 1.6.0
       esbuild: 0.19.11
       execa: 6.1.0
       fast-glob: 3.3.2
@@ -16369,7 +16361,7 @@ snapshots:
       archiver: 7.0.1
       common-path-prefix: 3.0.0
       cp-file: 10.0.0
-      es-module-lexer: 1.5.0
+      es-module-lexer: 1.6.0
       esbuild: 0.19.11
       execa: 6.1.0
       fast-glob: 3.3.2
@@ -17072,6 +17064,8 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.34.8':
     optional: true
 
+  '@scarf/scarf@1.4.0': {}
+
   '@sec-ant/readable-stream@0.4.1': {}
 
   '@shikijs/core@1.18.0':
@@ -17289,7 +17283,7 @@ snapshots:
 
   '@types/mute-stream@0.0.4':
     dependencies:
-      '@types/node': 20.14.12
+      '@types/node': 22.10.4
 
   '@types/nlcst@2.0.3':
     dependencies:
@@ -17297,7 +17291,7 @@ snapshots:
 
   '@types/node-forge@1.3.11':
     dependencies:
-      '@types/node': 20.14.12
+      '@types/node': 22.10.4
 
   '@types/node@12.20.55': {}
 
@@ -17383,7 +17377,7 @@ snapshots:
       '@typescript-eslint/type-utils': 7.7.1(eslint@8.57.0)(typescript@5.7.2)
       '@typescript-eslint/utils': 7.7.1(eslint@8.57.0)(typescript@5.7.2)
       '@typescript-eslint/visitor-keys': 7.7.1
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@9.4.0)
       eslint: 8.57.0
       graphemer: 1.4.0
       ignore: 5.3.1
@@ -17414,7 +17408,7 @@ snapshots:
       '@typescript-eslint/types': 7.7.1
       '@typescript-eslint/typescript-estree': 7.7.1(typescript@5.7.2)
       '@typescript-eslint/visitor-keys': 7.7.1
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@9.4.0)
       eslint: 8.57.0
     optionalDependencies:
       typescript: 5.7.2
@@ -17591,7 +17585,7 @@ snapshots:
       deepmerge: 4.3.1
       media-query-parser: 2.0.2
       modern-ahocorasick: 1.0.1
-      picocolors: 1.1.0
+      picocolors: 1.1.1
     transitivePeerDependencies:
       - babel-plugin-macros
 
@@ -17606,7 +17600,7 @@ snapshots:
       find-up: 5.0.0
       javascript-stringify: 2.1.0
       lodash: 4.17.21
-      mlly: 1.6.1
+      mlly: 1.7.3
       outdent: 0.8.0
       vite: 5.4.11(@types/node@20.14.12)(less@4.2.0)
       vite-node: 1.6.0(@types/node@20.14.12)(less@4.2.0)
@@ -17712,7 +17706,7 @@ snapshots:
     dependencies:
       '@vitest/spy': 2.1.8
       estree-walker: 3.0.3
-      magic-string: 0.30.12
+      magic-string: 0.30.17
     optionalDependencies:
       vite: 5.4.11(@types/node@20.14.12)(less@4.2.0)
 
@@ -17728,7 +17722,7 @@ snapshots:
   '@vitest/snapshot@2.1.8':
     dependencies:
       '@vitest/pretty-format': 2.1.8
-      magic-string: 0.30.12
+      magic-string: 0.30.17
       pathe: 1.1.2
 
   '@vitest/spy@2.1.8':
@@ -18609,7 +18603,7 @@ snapshots:
       common-ancestor-path: 1.0.1
       cookie: 0.6.0
       cssesc: 3.0.0
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@9.4.0)
       deterministic-object-hash: 2.0.2
       devalue: 5.0.0
       diff: 5.2.0
@@ -19186,7 +19180,7 @@ snapshots:
       assertion-error: 2.0.1
       check-error: 2.1.1
       deep-eql: 5.0.2
-      loupe: 3.1.1
+      loupe: 3.1.2
       pathval: 2.0.0
 
   chalk@2.4.2:
@@ -20038,7 +20032,7 @@ snapshots:
     dependencies:
       '@types/cookie': 0.4.1
       '@types/cors': 2.8.17
-      '@types/node': 20.14.12
+      '@types/node': 22.10.4
       accepts: 1.3.8
       base64id: 2.0.0
       cookie: 0.4.2
@@ -20143,8 +20137,6 @@ snapshots:
 
   es-errors@1.3.0: {}
 
-  es-module-lexer@1.5.0: {}
-
   es-module-lexer@1.5.4: {}
 
   es-module-lexer@1.6.0: {}
@@ -20191,7 +20183,7 @@ snapshots:
     dependencies:
       '@jspm/core': 2.0.1
       esbuild: 0.17.6
-      local-pkg: 0.5.0
+      local-pkg: 0.5.1
       resolve.exports: 2.0.2
 
   esbuild@0.17.19:
@@ -20523,7 +20515,7 @@ snapshots:
 
   eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.7.1(eslint@8.57.0)(typescript@5.7.2))(eslint-plugin-import@2.29.1)(eslint@8.57.0):
     dependencies:
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@9.4.0)
       enhanced-resolve: 5.16.0
       eslint: 8.57.0
       eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.7.1(eslint@8.57.0)(typescript@5.7.2))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
@@ -20688,7 +20680,7 @@ snapshots:
       ajv: 6.12.6
       chalk: 4.1.2
       cross-spawn: 7.0.3
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@9.4.0)
       doctrine: 3.0.0
       escape-string-regexp: 4.0.0
       eslint-scope: 7.2.2
@@ -20995,7 +20987,7 @@ snapshots:
 
   extract-zip@2.0.1:
     dependencies:
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@9.4.0)
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
@@ -21451,8 +21443,6 @@ snapshots:
   get-caller-file@2.0.5: {}
 
   get-east-asian-width@1.2.0: {}
-
-  get-func-name@2.0.2: {}
 
   get-intrinsic@1.2.4:
     dependencies:
@@ -22078,7 +22068,7 @@ snapshots:
   https-proxy-agent@7.0.4:
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@9.4.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -22744,7 +22734,7 @@ snapshots:
       mlly: 1.7.3
       node-forge: 1.3.1
       pathe: 1.1.2
-      std-env: 3.7.0
+      std-env: 3.8.0
       ufo: 1.5.4
       untun: 0.1.3
       uqr: 0.1.2
@@ -22885,10 +22875,6 @@ snapshots:
   loose-envify@1.4.0:
     dependencies:
       js-tokens: 4.0.0
-
-  loupe@3.1.1:
-    dependencies:
-      get-func-name: 2.0.2
 
   loupe@3.1.2: {}
 
@@ -23984,13 +23970,6 @@ snapshots:
       minimist: 1.2.8
 
   mkdirp@1.0.4: {}
-
-  mlly@1.6.1:
-    dependencies:
-      acorn: 8.14.0
-      pathe: 1.1.2
-      pkg-types: 1.2.1
-      ufo: 1.5.4
 
   mlly@1.7.1:
     dependencies:
@@ -25253,7 +25232,7 @@ snapshots:
   postcss@8.4.31:
     dependencies:
       nanoid: 3.3.7
-      picocolors: 1.1.0
+      picocolors: 1.1.1
       source-map-js: 1.2.1
 
   postcss@8.4.38:
@@ -25265,7 +25244,7 @@ snapshots:
   postcss@8.4.40:
     dependencies:
       nanoid: 3.3.7
-      picocolors: 1.1.0
+      picocolors: 1.1.1
       source-map-js: 1.2.1
 
   postcss@8.4.47:
@@ -26673,8 +26652,6 @@ snapshots:
 
   statuses@2.0.1: {}
 
-  std-env@3.7.0: {}
-
   std-env@3.8.0: {}
 
   stdin-discarder@0.1.0:
@@ -26881,7 +26858,7 @@ snapshots:
       css-tree: 2.3.1
       css-what: 6.1.0
       csso: 5.0.5
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   synckit@0.9.0:
     dependencies:
@@ -26892,7 +26869,7 @@ snapshots:
 
   tabtab@3.0.2:
     dependencies:
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@9.4.0)
       es6-promisify: 6.1.1
       inquirer: 6.5.2
       minimist: 1.2.8
@@ -27182,15 +27159,15 @@ snapshots:
       cac: 6.7.14
       chokidar: 3.6.0
       consola: 3.2.3
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@9.4.0)
       esbuild: 0.23.0
       execa: 5.1.1
       globby: 11.1.0
       joycon: 3.1.1
-      picocolors: 1.1.0
+      picocolors: 1.1.1
       postcss-load-config: 6.0.1(jiti@1.21.0)(postcss@8.4.38)(tsx@4.19.2)(yaml@2.5.1)
       resolve-from: 5.0.0
-      rollup: 4.21.3
+      rollup: 4.34.8
       source-map: 0.8.0-beta.0
       sucrase: 3.35.0
       tree-kill: 1.2.2
@@ -27209,15 +27186,15 @@ snapshots:
       cac: 6.7.14
       chokidar: 3.6.0
       consola: 3.2.3
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@9.4.0)
       esbuild: 0.23.0
       execa: 5.1.1
       globby: 11.1.0
       joycon: 3.1.1
-      picocolors: 1.1.0
+      picocolors: 1.1.1
       postcss-load-config: 6.0.1(jiti@1.21.0)(postcss@8.5.3)(tsx@4.19.2)(yaml@2.5.1)
       resolve-from: 5.0.0
-      rollup: 4.21.3
+      rollup: 4.34.8
       source-map: 0.8.0-beta.0
       sucrase: 3.35.0
       tree-kill: 1.2.2
@@ -27628,7 +27605,7 @@ snapshots:
       '@antfu/install-pkg': 0.4.1
       '@antfu/utils': 0.7.10
       '@iconify/utils': 2.1.32
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@9.4.0)
       kolorist: 1.8.0
       local-pkg: 0.5.0
       unplugin: 1.14.1(webpack-sources@3.2.3)
@@ -27692,13 +27669,13 @@ snapshots:
     dependencies:
       browserslist: 4.23.0
       escalade: 3.1.2
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   update-browserslist-db@1.1.0(browserslist@4.23.3):
     dependencies:
       browserslist: 4.23.3
       escalade: 3.1.2
-      picocolors: 1.1.0
+      picocolors: 1.1.1
 
   update-browserslist-db@1.1.2(browserslist@4.24.4):
     dependencies:
@@ -27853,24 +27830,7 @@ snapshots:
       cac: 6.7.14
       debug: 4.4.0(supports-color@9.4.0)
       pathe: 1.1.2
-      picocolors: 1.1.0
-      vite: 5.4.11(@types/node@20.14.12)(less@4.2.0)
-    transitivePeerDependencies:
-      - '@types/node'
-      - less
-      - lightningcss
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-
-  vite-node@2.1.2(@types/node@20.14.12)(less@4.2.0):
-    dependencies:
-      cac: 6.7.14
-      debug: 4.3.7
-      pathe: 1.1.2
+      picocolors: 1.1.1
       vite: 5.4.11(@types/node@20.14.12)(less@4.2.0)
     transitivePeerDependencies:
       - '@types/node'
@@ -27887,7 +27847,7 @@ snapshots:
     dependencies:
       cac: 6.7.14
       debug: 4.4.0(supports-color@9.4.0)
-      es-module-lexer: 1.5.4
+      es-module-lexer: 1.6.0
       pathe: 1.1.2
       vite: 5.4.11(@types/node@20.14.12)(less@4.2.0)
     transitivePeerDependencies:
@@ -27990,7 +27950,7 @@ snapshots:
       '@vue/babel-plugin-jsx': 1.2.2(@babel/core@7.25.2)
       '@vue/compiler-dom': 3.5.12
       kolorist: 1.8.0
-      magic-string: 0.30.12
+      magic-string: 0.30.17
       vite: 6.2.0(@types/node@22.10.4)(jiti@1.21.0)(less@4.2.0)(tsx@4.19.2)(yaml@2.5.1)
     transitivePeerDependencies:
       - supports-color
@@ -28002,7 +27962,7 @@ snapshots:
 
   vite-tsconfig-paths@5.0.1(typescript@5.7.2)(vite@5.4.11(@types/node@20.14.12)(less@4.2.0)):
     dependencies:
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@9.4.0)
       globrex: 0.1.2
       tsconfck: 3.1.0(typescript@5.7.2)
     optionalDependencies:
@@ -28064,7 +28024,7 @@ snapshots:
       chai: 5.1.2
       debug: 4.4.0(supports-color@9.4.0)
       expect-type: 1.1.0
-      magic-string: 0.30.12
+      magic-string: 0.30.17
       pathe: 1.1.2
       std-env: 3.8.0
       tinybench: 2.9.0
@@ -28315,7 +28275,7 @@ snapshots:
     dependencies:
       chalk: 4.1.2
       commander: 9.5.0
-      debug: 4.3.7
+      debug: 4.4.0(supports-color@9.4.0)
     transitivePeerDependencies:
       - supports-color
 

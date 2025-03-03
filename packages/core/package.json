@@ -119,6 +119,7 @@
     "@dmno/configraph": "workspace:*",
     "@inquirer/core": "^8.0.1",
     "@inquirer/prompts": "^5.0.1",
+    "@scarf/scarf": "catalog:",
     "acorn": "^8.12.1",
     "acorn-typescript": "^1.4.13",
     "acorn-walk": "^8.3.3",

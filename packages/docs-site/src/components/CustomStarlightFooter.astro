@@ -20,6 +20,14 @@ import EmailSignup from "./EmailSignup.vue";
     <a href="/docs/footer/about/">About</a>
     <a href="/docs/footer/legal/">Legal</a>
   </div>
+  {
+    DMNO_PUBLIC_CONFIG.SCARF_PIXEL_ID && (
+      <img
+        referrerpolicy="no-referrer-when-downgrade"
+        src={`https://scarf.dmno.dev/a.png?x-pxid=${DMNO_PUBLIC_CONFIG.SCARF_PIXEL_ID}`}
+      />
+    )
+  }
 </footer>
 
 <style>
