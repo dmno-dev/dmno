@@ -113,12 +113,12 @@ export default defineConfig({
         ...(DMNO_CONFIG.DMNO_ENV === 'production' || true ? [{
           tag: 'script' as const,
           attrs: {
-            id: "vtag-ai-js",
+            id: 'vtag-ai-js',
             async: true,
-            src:"https://r2.leadsy.ai/tag.js",
-            'data-pid':"moAnJfbaj7zWLkaY",
-            'data-version': "062024",
-          }
+            src: 'https://r2.leadsy.ai/tag.js',
+            'data-pid': 'moAnJfbaj7zWLkaY',
+            'data-version': '062024',
+          },
         }] : []),
       ],
       sidebar: [
@@ -312,14 +312,6 @@ export default defineConfig({
         forward: ['dataLayer.push'],
       },
     }),
-    sitemap({
-      filter(page) {
-        return !(
-          page.includes('/deployment/')
-          || page.includes('/nuxtjs')
-          || page.includes('/blog')
-        );
-      },
-    }),
+    sitemap(),
   ],
 });
