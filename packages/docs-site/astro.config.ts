@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightBlog from 'starlight-blog';
+import starlightLlmsTxt from 'starlight-llms-txt';
 import vue from '@astrojs/vue';
 import robotsTxt from 'astro-robots-txt';
 import starlightLinksValidator from 'starlight-links-validator';
@@ -59,6 +60,7 @@ export default defineConfig({
           recentPostCount: 10,
         }),
         starlightLinksValidator(),
+        starlightLlmsTxt(),
       ],
       expressiveCode: {
       },
