@@ -10,22 +10,17 @@
     "lint:fix": "pnpm run lint --fix"
   },
   "dependencies": {
-    "@dmno/ts-lib": "workspace:*",
     "@hono/zod-validator": "^0.4.3",
     "emailvalid": "^1.0.4",
     "hono": "^4.7.4",
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250109.0",
+    "@cloudflare/workers-types": "^4.20250317.0",
     "@dmno/1password-plugin": "workspace:*",
     "@dmno/cloudflare-platform": "workspace:*",
-    "@dmno/encrypted-vault-plugin": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
-    "@dmno/tsconfig": "workspace:*",
     "dmno": "workspace:*",
-    "tsup": "catalog:",
-    "typescript": "catalog:",
-    "wrangler": "^3.102.0"
+    "wrangler": "^4.0.0"
   }
 }

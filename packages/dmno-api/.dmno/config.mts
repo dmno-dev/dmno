@@ -1,36 +1,27 @@
 import { DmnoBaseTypes, defineDmnoService, configPath, switchBy, pickFromSchemaObject } from 'dmno';
-import { CloudflarePagesEnvSchema, CloudflareWranglerEnvSchema, DmnoWranglerEnvSchema } from '@dmno/cloudflare-platform';
-import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
-// import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
+import { CloudflareWranglerEnvSchema, DmnoWranglerEnvSchema } from '@dmno/cloudflare-platform';
+import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
-// we'll just use a single vault for now since it only has the 1 key - can split prod/staging later
-const encryptedVault = new EncryptedVaultDmnoPlugin('vault', {
-  key: configPath('..', 'DMNO_VAULT_KEY'),
-  name: 'prod',
-});
-
-// const onepass = new OnePasswordDmnoPlugin('1pass', { fallbackToCliBasedAuth: true });
-
+const onepass = new OnePasswordDmnoPlugin('1pass', { fallbackToCliBasedAuth: true });
 
 export default defineDmnoService({
   name: 'api',
   schema: {
+    ...pickFromSchemaObject(DmnoWranglerEnvSchema, {
+      WRANGLER_ENV: {},
+    }),
     ...pickFromSchemaObject(CloudflareWranglerEnvSchema, {
       CLOUDFLARE_ACCOUNT_ID: {
-        value: encryptedVault.item(),
+        value: onepass.itemByReference("op://API secrets/cloudflare/CLOUDFLARE_ACCOUNT_ID")
       },
       CLOUDFLARE_API_TOKEN: {
-        value: encryptedVault.item(),
+        value: onepass.itemByReference("op://API secrets/cloudflare/CLOUDFLARE_API_TOKEN")
       },
     }),
-    DMNO_VAULT_KEY: {
-      extends: EncryptedVaultTypes.encryptionKey,
-      required: true,
-    },
     MAILERLITE_TOKEN: {
       sensitive: true,
       required: true,
-      value: encryptedVault.item(),
+      value: onepass.itemByReference("op://API secrets/mailerlite/MAILERLITE_TOKEN")
     },
     MAILERLITE_GROUP_ID: {
       value: '112994107484276105',
@@ -39,15 +30,6 @@ export default defineDmnoService({
         url: 'https://dashboard.mailerlite.com/subscribers?rules=W1t7Im9wZXJhdG9yIjoiaW5fYW55IiwiY29uZGl0aW9uIjoiZ3JvdXBzIiwiYXJncyI6WyJncm91cHMiLFsiMTEyOTk0MTA3NDg0Mjc2MTA1Il1dfV1d&group=112994107484276105&status=active',
         description: 'Group: All Subs'
       }
-    },
-    ...pickFromSchemaObject(CloudflarePagesEnvSchema, 'CF_PAGES_BRANCH'),
-
-    DMNO_ENV: {
-      value: () => {
-        if (DMNO_CONFIG.CF_PAGES_BRANCH === 'main') return 'production';
-        if (DMNO_CONFIG.CF_PAGES_BRANCH) return 'staging';
-        return 'local';
-      },
     },
   }
 });
