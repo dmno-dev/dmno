@@ -6,54 +6,12 @@ settings:
 
 catalogs:
   default:
-    '@dagrejs/graphlib':
-      specifier: ^2.2.4
-      version: 2.2.4
-    '@scarf/scarf':
-      specifier: ^1.4.0
-      version: 1.4.0
-    '@types/debug':
-      specifier: ^4.1.12
-      version: 4.1.12
-    '@types/lodash-es':
-      specifier: ^4.17.12
-      version: 4.17.12
-    '@types/node':
-      specifier: ^20.14.11
-      version: 20.14.12
-    base64-arraybuffer:
-      specifier: ^1.0.2
-      version: 1.0.2
-    debug:
-      specifier: ^4.3.4
-      version: 4.4.0
-    kleur:
-      specifier: ^4.1.5
-      version: 4.1.5
-    lodash-es:
-      specifier: ^4.17.21
-      version: 4.17.21
-    modern-async:
-      specifier: ^2.0.4
-      version: 2.0.4
-    svgo:
-      specifier: ^3.2.0
-      version: 3.3.2
     tsup:
       specifier: ^8.2.4
       version: 8.2.4
     typescript:
       specifier: ^5.7.2
       version: 5.7.2
-    vite:
-      specifier: ^5.4.6
-      version: 5.4.11
-    vite-node:
-      specifier: ^2.1.2
-      version: 2.1.8
-    vitest:
-      specifier: ^2.1.5
-      version: 2.1.8
 
 importers:
 
@@ -404,9 +362,18 @@ importers:
       '@dmno/ts-lib':
         specifier: workspace:*
         version: link:../ts-lib
+      '@hono/zod-validator':
+        specifier: ^0.4.3
+        version: 0.4.3(hono@4.7.4)(zod@3.24.2)
       emailvalid:
         specifier: ^1.0.4
         version: 1.0.4
+      hono:
+        specifier: ^4.7.4
+        version: 4.7.4
+      zod:
+        specifier: ^3.24.2
+        version: 3.24.2
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20250109.0
@@ -3167,6 +3134,12 @@ packages:
 
   '@floating-ui/utils@0.2.8':
     resolution: {integrity: sha512-kym7SodPp8/wloecOpcmSnWJsK7M0E5Wg8UcFA+uO4B9s5d0ywXOEro/8HM9x0rW+TljRzul/14UYz3TleT3ig==}
+
+  '@hono/zod-validator@0.4.3':
+    resolution: {integrity: sha512-xIgMYXDyJ4Hj6ekm9T9Y27s080Nl9NXHcJkOvkXPhubOLj8hZkOL8pDnnXfvCf5xEE8Q4oMFenQUZZREUY2gqQ==}
+    peerDependencies:
+      hono: '>=3.9.0'
+      zod: ^3.19.1
 
   '@humanwhocodes/config-array@0.11.14':
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
@@ -7781,6 +7754,10 @@ packages:
   he@1.2.0:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
+
+  hono@4.7.4:
+    resolution: {integrity: sha512-Pst8FuGqz3L7tFF+u9Pu70eI0xa5S3LPUmrNd5Jm8nTHze9FxLTK9Kaj5g/k4UcwuJSXTP65SyHOPLrffpcAJg==}
+    engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
     resolution: {integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ==}
@@ -12929,6 +12906,7 @@ packages:
   wrangler@3.102.0:
     resolution: {integrity: sha512-Za4DstbS3+/hu+///K/4dFFeV6XbPBAGp7NCnVajchxRTwEPTdbO5eezH0HLJPMHK6G/0yIzyhlEMnyg4YzHAA==}
     engines: {node: '>=16.17.0'}
+    deprecated: Downgrade to 3.99.0
     hasBin: true
     peerDependencies:
       '@cloudflare/workers-types': ^4.20241230.0
@@ -13157,9 +13135,6 @@ packages:
       typescript: ^4.9.4 || ^5.0.2
       zod: ^3
 
-  zod@3.23.4:
-    resolution: {integrity: sha512-/AtWOKbBgjzEYYQRNfoGKHObgfAZag6qUJX1VbHo2PRBgS+wfWagEY2mizjfyAPcGesrJOcx/wcl0L9WnVrHFw==}
-
   zod@3.23.8:
     resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
 
@@ -13327,7 +13302,7 @@ snapshots:
     dependencies:
       sitemap: 8.0.0
       stream-replace-string: 2.0.0
-      zod: 3.23.8
+      zod: 3.24.2
 
   '@astrojs/starlight@0.32.1(astro@5.3.1(@netlify/blobs@7.3.0)(@types/node@22.10.4)(jiti@1.21.0)(less@4.2.0)(rollup@4.34.8)(tsx@4.19.2)(typescript@5.7.2)(yaml@2.5.1))':
     dependencies:
@@ -14271,7 +14246,7 @@ snapshots:
   '@cloudflare/workers-shared@0.11.0':
     dependencies:
       mime: 3.0.0
-      zod: 3.23.8
+      zod: 3.24.2
 
   '@cloudflare/workers-types@4.20250109.0': {}
 
@@ -15098,6 +15073,11 @@ snapshots:
 
   '@floating-ui/utils@0.2.8': {}
 
+  '@hono/zod-validator@0.4.3(hono@4.7.4)(zod@3.24.2)':
+    dependencies:
+      hono: 4.7.4
+      zod: 3.24.2
+
   '@humanwhocodes/config-array@0.11.14':
     dependencies:
       '@humanwhocodes/object-schema': 2.0.3
@@ -15255,7 +15235,7 @@ snapshots:
       aws-sdk: 2.1311.0
       axios: 1.7.7
       typescript: 5.7.2
-      zod: 3.23.8
+      zod: 3.24.2
     transitivePeerDependencies:
       - debug
 
@@ -17636,7 +17616,7 @@ snapshots:
 
   acorn-walk@8.3.3:
     dependencies:
-      acorn: 8.12.1
+      acorn: 8.14.0
 
   acorn@7.4.1: {}
 
@@ -17937,13 +17917,13 @@ snapshots:
   astro-robots-txt@1.0.0:
     dependencies:
       valid-filename: 4.0.0
-      zod: 3.23.4
+      zod: 3.24.2
 
   astro-sitemap@1.0.0:
     dependencies:
       minimatch: 9.0.4
       sitemap: 7.1.1
-      zod: 3.23.4
+      zod: 3.24.2
 
   astro@4.15.9(@types/node@20.14.12)(less@4.2.0)(rollup@4.34.8)(typescript@5.7.2):
     dependencies:
@@ -18009,9 +17989,9 @@ snapshots:
       which-pm: 3.0.0
       xxhash-wasm: 1.0.2
       yargs-parser: 21.1.1
-      zod: 3.23.8
-      zod-to-json-schema: 3.23.3(zod@3.23.8)
-      zod-to-ts: 1.2.0(typescript@5.7.2)(zod@3.23.8)
+      zod: 3.24.2
+      zod-to-json-schema: 3.23.3(zod@3.24.2)
+      zod-to-ts: 1.2.0(typescript@5.7.2)(zod@3.24.2)
     optionalDependencies:
       sharp: 0.33.4
     transitivePeerDependencies:
@@ -18522,7 +18502,7 @@ snapshots:
 
   capnp-ts@0.7.0:
     dependencies:
-      debug: 4.4.0(supports-color@9.4.0)
+      debug: 4.4.0
       tslib: 2.6.2
     transitivePeerDependencies:
       - supports-color
@@ -19066,6 +19046,10 @@ snapshots:
       ms: 2.1.2
 
   debug@4.3.7:
+    dependencies:
+      ms: 2.1.3
+
+  debug@4.4.0:
     dependencies:
       ms: 2.1.3
 
@@ -21238,6 +21222,8 @@ snapshots:
 
   he@1.2.0: {}
 
+  hono@4.7.4: {}
+
   hookable@5.5.3: {}
 
   hosted-git-info@2.8.9: {}
@@ -21966,7 +21952,7 @@ snapshots:
       h3: 1.11.1
       http-shutdown: 1.2.2
       jiti: 1.21.0
-      mlly: 1.7.3
+      mlly: 1.7.4
       node-forge: 1.3.1
       pathe: 1.1.2
       std-env: 3.8.0
@@ -22008,7 +21994,7 @@ snapshots:
 
   local-pkg@0.5.1:
     dependencies:
-      mlly: 1.7.3
+      mlly: 1.7.4
       pkg-types: 1.2.1
 
   local-pkg@1.1.1:
@@ -23138,7 +23124,7 @@ snapshots:
       workerd: 1.20241205.0
       ws: 8.18.0
       youch: 3.3.4
-      zod: 3.23.8
+      zod: 3.24.2
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -23157,7 +23143,7 @@ snapshots:
       workerd: 1.20241230.0
       ws: 8.18.0
       youch: 3.3.4
-      zod: 3.23.8
+      zod: 3.24.2
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -24220,13 +24206,13 @@ snapshots:
   pkg-types@1.1.3:
     dependencies:
       confbox: 0.1.7
-      mlly: 1.7.3
+      mlly: 1.7.4
       pathe: 1.1.2
 
   pkg-types@1.2.1:
     dependencies:
       confbox: 0.1.8
-      mlly: 1.7.3
+      mlly: 1.7.4
       pathe: 1.1.2
 
   pkg-types@1.3.1:
@@ -26296,7 +26282,7 @@ snapshots:
       cac: 6.7.14
       chokidar: 3.6.0
       consola: 3.2.3
-      debug: 4.4.0(supports-color@9.4.0)
+      debug: 4.4.0
       esbuild: 0.23.0
       execa: 5.1.1
       globby: 11.1.0
@@ -26513,7 +26499,7 @@ snapshots:
   unenv-nightly@2.0.0-20241218-183400-5d6aec3:
     dependencies:
       defu: 6.1.4
-      mlly: 1.7.3
+      mlly: 1.7.4
       ohash: 1.1.4
       pathe: 1.1.2
       ufo: 1.5.4
@@ -27767,25 +27753,18 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.5.2
 
-  zod-to-json-schema@3.23.3(zod@3.23.8):
+  zod-to-json-schema@3.23.3(zod@3.24.2):
     dependencies:
-      zod: 3.23.8
+      zod: 3.24.2
 
   zod-to-json-schema@3.24.3(zod@3.24.2):
     dependencies:
       zod: 3.24.2
 
-  zod-to-ts@1.2.0(typescript@5.7.2)(zod@3.23.8):
-    dependencies:
-      typescript: 5.7.2
-      zod: 3.23.8
-
   zod-to-ts@1.2.0(typescript@5.7.2)(zod@3.24.2):
     dependencies:
       typescript: 5.7.2
       zod: 3.24.2
-
-  zod@3.23.4: {}
 
   zod@3.23.8: {}
 

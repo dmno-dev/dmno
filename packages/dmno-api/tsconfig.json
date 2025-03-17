@@ -1,9 +1,12 @@
 {
-  "exclude": [ "functions-src/**/*.ts" ],
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "lib": [ "esnext" ],
-    "baseUrl": ".",
-  }
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "lib": [ "ESNext" ],
+    "types": [ "@cloudflare/workers-types/2023-07-01" ],
+  },
+  "include": [ "src/**/*.ts" ]
 }

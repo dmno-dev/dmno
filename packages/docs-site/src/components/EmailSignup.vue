@@ -54,7 +54,7 @@ async function onSubmit() {
       email.value = '';
       emailSubmitted.value = true;
     } else {
-      const errorMessage = (await response?.json())?.message || 'Something went wrong';
+      const errorMessage = (await response?.json())?.error?.message || 'Something went wrong';
       alert(errorMessage);
     }
   } catch (err) {

@@ -4,7 +4,7 @@ import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-v
 // import { OnePasswordDmnoPlugin } from '@dmno/1password-plugin';
 
 // we'll just use a single vault for now since it only has the 1 key - can split prod/staging later
-const EncryptedVault = new EncryptedVaultDmnoPlugin('vault', {
+const encryptedVault = new EncryptedVaultDmnoPlugin('vault', {
   key: configPath('..', 'DMNO_VAULT_KEY'),
   name: 'prod',
 });
@@ -15,15 +15,14 @@ const EncryptedVault = new EncryptedVaultDmnoPlugin('vault', {
 export default defineDmnoService({
   name: 'api',
   schema: {
-    // these may be useful if we move over to workers, or move to another CI
-    // ...pickFromSchemaObject(CloudflareWranglerEnvSchema, {
-    //   CLOUDFLARE_ACCOUNT_ID: {
-    //     value: onepass.itemByReference("op://Shared/Cloudflare/account id"),
-    //   },
-    //   CLOUDFLARE_API_TOKEN: {
-    //     value: onepass.itemByReference("op://Shared/Cloudflare/workers api token"),
-    //   },
-    // }),
+    ...pickFromSchemaObject(CloudflareWranglerEnvSchema, {
+      CLOUDFLARE_ACCOUNT_ID: {
+        value: encryptedVault.item(),
+      },
+      CLOUDFLARE_API_TOKEN: {
+        value: encryptedVault.item(),
+      },
+    }),
     DMNO_VAULT_KEY: {
       extends: EncryptedVaultTypes.encryptionKey,
       required: true,
@@ -31,7 +30,7 @@ export default defineDmnoService({
     MAILERLITE_TOKEN: {
       sensitive: true,
       required: true,
-      value: EncryptedVault.item(),
+      value: encryptedVault.item(),
     },
     MAILERLITE_GROUP_ID: {
       value: '112994107484276105',

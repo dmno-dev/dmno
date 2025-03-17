@@ -191,7 +191,7 @@ program.action(async (opts: {
       }, (_err) => {});
 
       if (response && !response.ok) {
-        console.log((await response.json()).message);
+        console.log((await response.json()).error?.message);
       }
     } else {
       console.log('No worries! You can always sign up later at https://dmno.dev');

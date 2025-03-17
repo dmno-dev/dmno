@@ -52,7 +52,6 @@
   },
   "devDependencies": {
     "@iconify/json": "^2.2.212",
-    "netlify-cli": "^17.23.5",
     "typedoc": "^0.25.13"
   }
 }
