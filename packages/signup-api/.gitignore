@@ -1,7 +1,0 @@
-functions-dist
-functions/*.js
-functions/*.map
-.wrangler
-# netlify deploy fails if it doesnt have a non-functions folder to deploy
-# so we put a folder with a single dummy txt file in it...
-!dist
