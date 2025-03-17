@@ -1,5 +1,11 @@
 # dmno
 
+## 0.0.39
+
+### Patch Changes
+
+- [#198](https://github.com/dmno-dev/dmno/pull/198) [`d92fd8e`](https://github.com/dmno-dev/dmno/commit/d92fd8e44377407b9323e3c059532bad4a839c63) Thanks [@theoephraim](https://github.com/theoephraim)! - update signup api url
+
 ## 0.0.38
 
 ### Patch Changes
