@@ -1,0 +1,70 @@
+---
+title: Overrides
+description: How to load override values into your config
+---
+
+While we can set values in our schema, we also need to respect actual env vars coming from the current process/shell. At the very least, a single environment flag is often necessary to toggle many `switchBy` resolvers in the schema to load the correct values for a specific environment. For example: `APP_ENV=production dmno run -- your-build-command`.
+
+Additionally, during development, we often need to temporarily toggle certain config values to test different behaviors. We want to be able to do this in a way that does not risk being accidentally checked into source control, so we must load them from somewhere other than our schema.
+
+We refer to these values as _overrides_ because they take precedence over any values set from within the schema. While env vars are the obvious example, we may also want to similarly load overrides from other sources, like [`.env` files](/docs/guides/env-files/).
+
+DMNO's default behavior is to treat env vars with the most precedence, and then values from `.env` files. However if you need to adjust this behavior, or load values from another source, we expose a concept of _override loaders_ to do so.
+
+:::tip[Your schema must define these config items]
+Only config items defined in your schema will have values loaded from an override loader.
+:::
+
+
+## Override loader registration
+
+While defining a service, you may set the `overrides` property to register one or more override loaders in a specific order. These loaders will return a key-value object, and matching config items will treat these values as overrides.
+
+```diff lang="ts" title=".dmno/config.mts"
+import { 
+  defineDmnoService, //...
++  processEnvOverrideLoader, dotEnvFileOverrideLoader
+} from 'dmno';
++ import { anotherCustomOverrideLoader } from 'some-plugin';
+
+export default defineDmnoService({
++  overrides: [
++    processEnvOverrideLoader(),
++    dotEnvFileOverrideLoader(),
++    anotherCustomOverrideLoader(),
++  ],
+  //...
+```
+
+:::note[You must include the default loaders]
+Note that once you set any value here, you must explcitly include `processEnvOverrideLoader` and `dotEnvFileOverrideLoader` if you want to support those behaviors. This lets you explicitly adjust the precedence order as needed.
+:::
+
+
+## 1Password Override Loader
+
+While dotenv files are convenient, using them often means sensitive values sitting in plaintext on our machine. If you are using our [1Password plugin](/docs/plugins/1password/), we can use an override loader to store a dotenv style blob of overrides in a 1Password item, and have them secured behind the 1Password Desktop App's biometric authentication 🔒🦾. 
+
+You could also use this to store a group of values shared between your team, which in some cases may be more convenient than wiring up every individual item.
+
+Here is how we'd adjust the our config to use 2 instances of the `onePasswordOverrideLoader` accordingly:
+
+```diff lang="ts" title=".dmno/config.mts" add="onePasswordOverrideLoader" add="processEnvOverrideLoader"
+import { defineDmnoService, processEnvOverrideLoader } from 'dmno';
+import { OnePasswordDmnoPlugin, OnePasswordTypes, onePasswordOverrideLoader } from '@dmno/1password-plugin';
+
+export default defineDmnoService({
+  name: 'api',
++  overrides: [
++    processEnvOverrideLoader(),
++    // personal overrides
++    // each dev can have a matching item in their personal "Employee" vault
++    onePasswordOverrideLoader(
++      { reference: 'op://Employee/myapp-local-dev-overrides/api' }, 
++      { ignoreMissing: true } // do not throw if item doesn't exist
++    ),
++    // shared overrides
++    onePasswordOverrideLoader({ reference: 'op://non-prod-config/local-dev-env/api' }),
++  ],
+  //...
+```

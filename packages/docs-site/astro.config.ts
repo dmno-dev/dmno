@@ -167,6 +167,10 @@ export default defineConfig({
               link: '/docs/guides/typescript/',
             },
             {
+              label: 'Overrides',
+              link: '/docs/guides/overrides/',
+            },
+            {
               label: '.env Files',
               link: '/docs/guides/env-files/',
             },
