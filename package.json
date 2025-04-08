@@ -9,9 +9,9 @@
   },
   "scripts": {
     "build": "turbo build",
-    "build:libs": "turbo build --filter=\"!@dmno/docs-site\" --filter=\"!@dmno/api\"",
+    "build:libs": "turbo build --filter=\"!@dmno/docs-site\"",
     "preinstall": "npx only-allow pnpm",
-    "dev": "turbo run dev --concurrency=40 --parallel --filter=\"!@dmno/docs-site\" --filter=\"!@dmno/api\"",
+    "dev": "turbo run dev --concurrency=40 --parallel --filter=\"!@dmno/docs-site\"",
     "lint": "turbo lint",
     "changeset:add": "changeset add",
     "changeset:version": "dmno run -- changeset version",
