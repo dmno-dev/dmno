@@ -67,7 +67,7 @@ export default defineDmnoService({
   // configuration schema that describes all the config / env vars used in your project
   schema: {
     APP_ENV: {
-      extends: DmnoBaseTypes.enum('development', 'staging', 'production'),
+      extends: DmnoBaseTypes.enum(['development', 'staging', 'production']),
       value: 'development', // default value
     },
     DISCORD_JOIN_LINK: {
