@@ -83,8 +83,6 @@ A note on requirements:
 
 DMNO’s integration with 1Password makes use of Service Accounts. So you’ll need to create one that has access to the Vault that will hold your sensitive config items. 
 
-******INSERT SCREENSHOT******
-
 > Note that you **cannot** change the access of a particular service account after it has been created. 
 
 For the purposes of this tutorial, let’s create a new Vault called **DMNO Production Secrets**, and create a service account that has access to only this vault. See the 1Password docs for information on creating Vaults and Service Accounts.
