@@ -10,7 +10,7 @@ cover:
 
 If you’ve ever felt that sinking feeling when dealing with sensitive environment variables then this post is for you. We’ll show you how we can take them from a ‘set it and forget it until it comes back to haunt you’ concept to something that will provide confidence and safety throughout your entire development workflow. 
 
-*But first, a short history lesson. *
+*But first, a short history lesson.*
 
 
 ### A very brief history of environment variables
