@@ -8,6 +8,10 @@ import { Tabs, TabItem } from '@astrojs/starlight/components'
 import TabbedCode from '@/components/TabbedCode.astro';
 import BugReportLink from '@/components/BugReportLink.astro';
 
+:::caution[Turbopack not supported]
+This integration is currently not compatible with Turbopack. You will need to remove the `--turbopack` flag from your `next dev` command when using `dmno run`. We're working on a solution for this, and will update this page when it's ready.
+:::
+
 If you have an existing Next.js app, you're probably already familiar with how environment variables work in Next. Check their docs [here](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables) if you need a refresher. 
 
 Now forget all of that, and let's simplify things with DMNO. 🥳
