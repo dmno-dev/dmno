@@ -14,9 +14,9 @@ import { splitFullResolverPath } from '../lib/helpers';
 
 export const DeleteItemCommand = createDmnoPluginCliCommand({
   name: 'delete',
-  summary: 'add item(s) to your encrypted vault file',
+  summary: 'delete item(s) from your encrypted vault file',
   description: `
-  adds items...
+  delete items...
 `,
   examples: [
     {
