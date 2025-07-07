@@ -1,0 +1,68 @@
+{
+    "name": "DMNO Development",
+    "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.vscode-typescript-next",
+                "ms-vscode.vscode-json",
+                "bradlc.vscode-tailwindcss",
+                "esbenp.prettier-vscode",
+                "dbaeumer.vscode-eslint",
+                "ms-vscode.vscode-markdown",
+                "ms-vscode.vscode-yaml",
+                "astro-build.astro-vscode",
+                "unifiedjs.vscode-mdx"
+            ],
+            "settings": {
+                "typescript.preferences.importModuleSpecifier": "relative",
+                "typescript.suggest.autoImports": true,
+                "editor.formatOnSave": true,
+                "editor.defaultFormatter": "esbenp.prettier-vscode",
+                "editor.codeActionsOnSave": {
+                    "source.fixAll.eslint": "explicit"
+                },
+                "files.associations": {
+                    "*.mts": "typescript"
+                },
+                "terminal.integrated.shell.linux": "/bin/zsh",
+                "terminal.integrated.defaultProfile.linux": "zsh"
+            }
+        }
+    },
+    "forwardPorts": [
+        4321,
+        5173,
+        3000,
+        8080
+    ],
+    "portsAttributes": {
+        "4321": {
+            "label": "Docs Site (Astro)",
+            "onAutoForward": "notify"
+        },
+        "5173": {
+            "label": "Dev UI (Vite)",
+            "onAutoForward": "notify"
+        },
+        "3000": {
+            "label": "Example Apps",
+            "onAutoForward": "notify"
+        },
+        "8080": {
+            "label": "API Server",
+            "onAutoForward": "notify"
+        }
+    },
+    "runArgs": [
+        "--memory=8g",
+        "--memory-swap=8g",
+        "--env", "PNPM_ENABLE_HARD_LINKS=false"
+    ],
+    "onCreateCommand": "bash .devcontainer/on-create.sh",
+    "postCreateCommand": "bash .devcontainer/post-create.sh",
+    "containerEnv": {
+        "PNPM_ENABLE_HARD_LINKS": "false"
+    },
+    "remoteUser": "node"
+}
