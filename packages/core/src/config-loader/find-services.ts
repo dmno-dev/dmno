@@ -82,9 +82,12 @@ export async function findDmnoServices(includeUnitialized = false): Promise<Scan
         const filePath = path.join(cwd, settingsLocation.file);
         if (!await pathExists(filePath)) continue;
 
+        debug(`found workspace settings file: ${filePath}`);
+
         // assume first package.json file found is root until we find evidence otherwise
         if (settingsLocation.file === 'package.json' && !dmnoWorkspaceRootPath) {
           dmnoWorkspaceRootPath = cwd;
+          debug(`set dmnoWorkspaceRootPath to ${cwd} (from package.json)`);
         }
 
         debug(`looking for workspace globs in ${filePath} > ${settingsLocation.globsPath}`);
@@ -97,13 +100,26 @@ export async function findDmnoServices(includeUnitialized = false): Promise<Scan
         }
         const possiblePackagePatterns = _.get(fileContents, settingsLocation.globsPath);
         if (possiblePackagePatterns) {
-          packagePatterns = possiblePackagePatterns;
-          dmnoWorkspaceRootPath = cwd;
-          isMonorepo = true;
+          // Handle both legacy format (workspaces as array) and modern format (workspaces as object with packages property)
+          let actualPackagePatterns: string[] | undefined;
+          if (Array.isArray(possiblePackagePatterns)) {
+            actualPackagePatterns = possiblePackagePatterns;
+          } else if (possiblePackagePatterns && typeof possiblePackagePatterns === 'object' && possiblePackagePatterns.packages) {
+            actualPackagePatterns = possiblePackagePatterns.packages;
+          }
+          
+          if (actualPackagePatterns) {
+            debug(`found workspace patterns in ${filePath}:`, actualPackagePatterns);
+            packagePatterns = actualPackagePatterns;
+            dmnoWorkspaceRootPath = cwd;
+            debug(`updated dmnoWorkspaceRootPath to ${cwd} (from workspace patterns)`);
+            isMonorepo = true;
+          }
         }
 
         // if this is our dmno-specific file, we'll consider this "final" and stop scanning upwards
         if (settingsLocation.file === '.dmno/workspace.yaml') {
+          debug(`found dmno workspace config at ${filePath} - stopping upward scan`);
           dmnoWorkspaceFinal = true;
           // everything else in the yaml file is additional settings
           otherSettings = _.omit(fileContents, settingsLocation.globsPath);
