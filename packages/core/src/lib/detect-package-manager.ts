@@ -6,7 +6,7 @@ export type JsPackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun' | 'deno';
 
 type JsPackageManagerMeta = {
   name: JsPackageManager;
-  lockfile: string;
+  lockfile: string | string[];
   add: string;
   exec: string;
   dlx: string;
@@ -36,7 +36,7 @@ export const JS_PACKAGE_MANAGERS: Record<JsPackageManager, JsPackageManagerMeta>
   },
   bun: {
     name: 'bun',
-    lockfile: 'bun.lockb',
+    lockfile: ['bun.lock', 'bun.lockb'],
     add: 'bun add',
     exec: 'bun run',
     dlx: 'bunx',
@@ -67,14 +67,30 @@ export function detectJsPackageManager(opts?: {
     let pm: JsPackageManager;
     let detectedPm: JsPackageManager | undefined;
     for (pm in JS_PACKAGE_MANAGERS) {
-      const lockFilePath = path.join(
-        cwd,
-        JS_PACKAGE_MANAGERS[pm].lockfile,
-      );
+      const lockfiles = Array.isArray(JS_PACKAGE_MANAGERS[pm].lockfile) 
+        ? JS_PACKAGE_MANAGERS[pm].lockfile 
+        : [JS_PACKAGE_MANAGERS[pm].lockfile as string];
 
-      if (pathExistsSync(lockFilePath)) {
+      let lockFileExists = false;
+      for (const lockfile of lockfiles) {
+        const lockFilePath = path.join(cwd, lockfile);
+        if (pathExistsSync(lockFilePath)) {
+          lockFileExists = true;
+          break;
+        }
+      }
+
+      if (lockFileExists) {
         // if we find 2 lockfiles at the same level, we throw an error
-        if (detectedPm) throw new Error(`Found multiple js package manager lockfiles - ${JS_PACKAGE_MANAGERS[pm].lockfile} and ${JS_PACKAGE_MANAGERS[detectedPm].lockfile}`);
+        if (detectedPm) {
+          const currentLockfiles = Array.isArray(JS_PACKAGE_MANAGERS[pm].lockfile) 
+            ? (JS_PACKAGE_MANAGERS[pm].lockfile as string[]).join(' or ')
+            : JS_PACKAGE_MANAGERS[pm].lockfile;
+          const detectedLockfiles = Array.isArray(JS_PACKAGE_MANAGERS[detectedPm].lockfile) 
+            ? (JS_PACKAGE_MANAGERS[detectedPm].lockfile as string[]).join(' or ')
+            : JS_PACKAGE_MANAGERS[detectedPm].lockfile;
+          throw new Error(`Found multiple js package manager lockfiles - ${currentLockfiles} and ${detectedLockfiles}`);
+        }
         detectedPm = pm;
       }
     }
