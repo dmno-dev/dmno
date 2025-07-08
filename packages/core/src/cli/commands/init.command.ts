@@ -5,7 +5,7 @@ import { input, checkbox, confirm } from '@inquirer/prompts';
 import { tryCatch } from '@dmno/ts-lib';
 import Debug from 'debug';
 
-import { findDmnoServices } from '../../config-loader/find-services';
+import { findDmnoServices, selectAndApplyWorkspaceConfig } from '../../config-loader/find-services';
 import { DmnoCommand } from '../lib/dmno-command';
 
 import { joinAndCompact } from '../lib/formatting';
@@ -33,11 +33,13 @@ program.action(async (opts: {
   console.log(DMNO_DEV_BANNER);
   // console.log(kleur.gray('let us help you connect the dots ● ● ●'));
 
-  const [workspaceInfo] = await Promise.all([
+  const [workspaceInfoInitial] = await Promise.all([
     findDmnoServices(true),
     fallingDmnosAnimation(),
   ]);
 
+  // Handle workspace configuration selection after animation completes
+  const workspaceInfo = await selectAndApplyWorkspaceConfig(workspaceInfoInitial);
 
   // await fallingDmnoLoader('● Scanning repo', '● Scan complete');
 
