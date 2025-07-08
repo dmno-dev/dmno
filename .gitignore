@@ -5,6 +5,11 @@ ignore
 
 .DS_Store
 
+# pnpm directories
+.pnpm-store
+.pnpm-cache
+.pnpm-state
+
 config.local.ts
 .env.local
 .env.local.*
@@ -31,3 +36,4 @@ changesets-summary.json
 # local ssl certs
 **/.dmno/certs
 
+**/.devpod-internal
