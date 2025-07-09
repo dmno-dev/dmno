@@ -1,0 +1,22 @@
+{
+  "integrationForPackage": "react-router",
+  "publicPrefix": "VITE_",
+  "installationCodemods": [
+    {
+      "glob": "vite.config.*",
+      "imports": [ {
+          "moduleName": "@dmno/react-router-integration",
+          "importVars": [ "dmnoReactRouterVitePlugin" ],
+        } ],
+      "updates": [
+        {
+          "symbol": "EXPORT",
+          "path": [ "plugins" ],
+          "action": {
+            "arrayContains": "dmnoReactRouterVitePlugin()"
+          }
+        }
+      ]
+    }
+  ],
+}

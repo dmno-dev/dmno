@@ -4,18 +4,14 @@ import { fileURLToPath } from 'url';
 import * as _ from 'lodash-es';
 import Debug from 'debug';
 import { checkServiceIsValid, DmnoServer, injectDmnoGlobals } from 'dmno';
-import type { Plugin } from 'vite';
+import { Plugin } from 'vite';
 
-import type {
-  Preset,
-} from '@remix-run/dev';
-
-const debug = Debug('dmno:remix-integration');
+const debug = Debug('dmno:react-router-integration');
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let firstLoad = !(process as any).dmnoServer;
 
-debug('dmno remix+vite plugin loaded. first load = ', firstLoad);
+debug('dmno react-router+vite plugin loaded. first load = ', firstLoad);
 
 let isDevMode: boolean;
 let dmnoHasTriggeredReload = false;
@@ -54,28 +50,37 @@ type DmnoPluginOptions = {
   injectResolvedConfigAtBuildTime: boolean,
 };
 
-export function dmnoRemixVitePlugin(dmnoOptions?: DmnoPluginOptions) {
+export function dmnoReactRouterVitePlugin(dmnoOptions?: DmnoPluginOptions): Plugin {
   const dmnoServer: DmnoServer = (process as any).dmnoServer;
 
   // detect if we need to build the resolved config into the output
   // which is needed when running on external platforms where we dont have ability to use `dmno run`
-  const injectResolvedConfigAtBuildTime = (
+  let injectResolvedConfigAtBuildTime = (
     process.env.__VERCEL_BUILD_RUNNING // build running via `vercel` cli
     || process.env.NETLIFY // build running remotely on netlify
     || (process.env.NETLIFY_LOCAL && !process.env.NETLIFY_DEV) // build running locally via `netlify` cli
     || process.env.CF_PAGES // maybe add additional check for /functions folder?
     || dmnoOptions?.injectResolvedConfigAtBuildTime // explicit opt-in
-
   );
 
+  let buildingForCloudflare = false;
+
   return {
-    name: 'dmno-remix-vite-plugin',
+    name: 'dmno-react-router-vite-plugin',
     enforce: 'pre', // not positive this matters
 
     // this function will get called on each restart!
     async config(config, env) {
+      // check if the vite cloudflare plugin is registered to detect if we are building for cloudflare
+      buildingForCloudflare = !!config.plugins?.find((p) => {
+        return (Array.isArray(p) ? p : [p]).find((p2) => {
+          return p2 && (p2 as any).name?.startsWith('vite-plugin-cloudflare:')
+        });
+      });
+      if (buildingForCloudflare) injectResolvedConfigAtBuildTime = true;
+
       // console.log('vite config hook', config, env);
-      // remix loads 2 vite servers, one for frontend, one for back
+      // RR loads 2 vite servers, one for frontend, one for back
       // this feels hacky to identify it but seems to be working ok
       const isBackendViteServer = (
         // during dev mode, the "mode" is only actually set to "development" on the backend s
@@ -83,7 +88,7 @@ export function dmnoRemixVitePlugin(dmnoOptions?: DmnoPluginOptions) {
         // during build, we can use the "build.ssr" flag
         || config.build?.ssr
       );
-      debug('deteced vite backend build =', isBackendViteServer);
+      debug('detected vite backend build =', isBackendViteServer);
 
       isDevMode = env.command === 'serve';
       buildDir = `${config.root || process.cwd()}/${config.build?.outDir}`;
@@ -158,7 +163,7 @@ export function dmnoRemixVitePlugin(dmnoOptions?: DmnoPluginOptions) {
           const decoder = new TextDecoder();
           const chunkStr = decoder.decode(rawChunk);
           // console.log(chunkStr);
-          (globalThis as any)._dmnoLeakScan(chunkStr, { method: 'remix vite dev server middleware (ServerResponse.write)', file: req.url });
+          (globalThis as any)._dmnoLeakScan(chunkStr, { method: 'react router vite dev server middleware (ServerResponse.write)', file: req.url });
           // @ts-ignore
           return oWrite.apply(this, args);
         };
@@ -174,7 +179,7 @@ export function dmnoRemixVitePlugin(dmnoOptions?: DmnoPluginOptions) {
             // TODO: maybe can exclude them somehow?
             && !req.url?.endsWith('/vite/dist/client/env.mjs')
           ) {
-            (globalThis as any)._dmnoLeakScan(chunkStr, { method: 'remix vite dev server middleware (ServerResponse.end)', file: req.url });
+            (globalThis as any)._dmnoLeakScan(chunkStr, { method: 'react router vite dev server middleware (ServerResponse.end)', file: req.url });
           }
           // @ts-ignore
           return oEnd.apply(this, args);
@@ -205,7 +210,7 @@ export function dmnoRemixVitePlugin(dmnoOptions?: DmnoPluginOptions) {
         if (options.dir?.endsWith('/build/client')) {
           // TODO: add more metadata
           (globalThis as any)._dmnoLeakScan(code, {
-            method: 'remix vite client chunk scan',
+            method: 'react router vite client chunk scan',
             file: chunk.fileName,
           });
         }
@@ -216,11 +221,11 @@ export function dmnoRemixVitePlugin(dmnoOptions?: DmnoPluginOptions) {
     transform(src, id) {
       // inject server-side code here - either into the user-provided `entry.server.tsx` or a default file like `entry.server.node.tsx`
       if (id.match(/\/entry\.server(\.[a-z]+)?\.[jt]sx/)) {
-        // note - can also patch '\0virtual:remix/server-build'
+        // note - can also patch '\0virtual:react-router/server-build'
         return [
           // 'console.log(\'>>> injected server dmno code <<<\');',
 
-          'import { injectDmnoGlobals } from "dmno/inject-globals";',
+          `import { injectDmnoGlobals } from "dmno/injector-standalone${buildingForCloudflare ? '/edge' : ''}";`,
 
           // call the globals injector
           // and inject the resolved config values if we are building for netlify/vercel/etc
@@ -233,15 +238,17 @@ export function dmnoRemixVitePlugin(dmnoOptions?: DmnoPluginOptions) {
       }
 
       if (
-      // `/entry.client.tsx` would seem like the appropriate place,
-      // but it is not actually loaded first, so we dont get DMNO_CONFIG available in calls at the top level of routes
-      // and is also not effective in both dev and built code
+        this.environment.name === 'client' && (
+          // `/entry.client.tsx` would seem like the appropriate place,
+          // but it is not actually loaded first, so we dont get DMNO_CONFIG available in calls at the top level of routes
+          // and is also not effective in both dev and built code
 
-        // this works for "built" code
-        id.endsWith('/node_modules/react/jsx-runtime.js')
+          // this works for "built" code
+          id.endsWith('/node_modules/react/jsx-runtime.js')
 
-        // this works during local dev
-        || id.endsWith('/node_modules/vite/dist/client/env.mjs')
+          // this works during local dev
+          || id.endsWith('/node_modules/vite/dist/client/env.mjs')
+        )
       ) {
         return [
           // original source - must be first, because in the vite env case, it has already injected the static config from the define plugin
@@ -284,7 +291,7 @@ export function dmnoRemixVitePlugin(dmnoOptions?: DmnoPluginOptions) {
                 if (${JSON.stringify(dmnoInjectionResult.publicDynamicKeys)}.includes(key)) {
                   throw new Error(\`❌ Unable to access dynamic config item \\\`\${key}\\\` in "static" output mode\`);
                 }
-          `, // TODO: tailor message above to remix's static mode
+          `, // TODO: tailor message above to react router's static mode
 
           // in dev mode, we'll give a more detailed error message, letting the user know if they tried to access a sensitive or non-existant item
           isDevMode ? `
@@ -319,53 +326,5 @@ export function dmnoRemixVitePlugin(dmnoOptions?: DmnoPluginOptions) {
     // handleHotUpdate({ file, server }) {
     //   console.log('hot update', file);
     // },
-  } satisfies Plugin;
+  }
 }
-
-
-export function dmnoRemixPreset() {
-  return {
-    name: 'dmno-remix-preset',
-    remixConfig: async (args) => {
-      // console.log('remixConfig!', args);
-      // detect SPA mode with `ssr: false`
-      if (args.remixUserConfig.ssr === false) {
-        // setting `enableDynamicPublicClientLoading = false;` doesnt actually since the vite plugin already ran for the client build
-        if (enableDynamicPublicClientLoading) { // only true if there are public dynamic config items in the schema
-          throw new Error('Remix in SPA mode does not support any public dynamic config!');
-        }
-      }
-      if (!enableDynamicPublicClientLoading) return {};
-
-      return {
-        // inject public dynamic config endpoint
-        routes(defineRoutes) {
-          return defineRoutes((route) => {
-            // TODO: ideally we would use a virtual module but remix seems to be making some assumptions about a real file existing
-
-            // instead awkwardly we need to use a relative path and need it based on the build output dir which is not available here
-            const relativeRoutePath = relative(buildDir, `${__dirname}/public-dynamic-config-api-route.js`);
-
-            route(
-              '/_dmno-public-dynamic-config',
-              relativeRoutePath,
-              { id: '_dmno-public-dynamic-config', index: true },
-            );
-          });
-        },
-      };
-    },
-    // remixConfigResolved: (args) => {
-    //   console.log('resolved!', args);
-    //   console.log('routes!', args.remixConfig.routes);
-    // },
-
-    // remixConfigResolved: ({ remixConfig }) => {
-    //   if (remixConfig.serverBundles !== serverBundles) {
-    //     throw new Error('`serverBundles` was overridden!');
-    //   }
-    // },
-  } satisfies Preset;
-}
-
-
