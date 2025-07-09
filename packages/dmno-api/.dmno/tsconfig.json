@@ -1,7 +1,0 @@
-{
-  "extends": "dmno/tsconfigs/dmno-folder",
-  "include": [
-    "./**/*.mts",
-    "./.typegen/global.d.ts"
-  ]
-}
