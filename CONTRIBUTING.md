@@ -18,6 +18,56 @@ Then install `pnpm`
 Then install deps via `pnpm`: 
 `pnpm i`
 
+## Building
+
+Before you can run any of the projects locally, you need to build the packages since this is a monorepo with interdependencies. The packages reference each other and need their `dist/` directories to be built.
+
+### Build all packages at once
+
+To build all packages in the workspace:
+
+```bash
+pnpm run build
+```
+
+### Build specific packages individually
+
+If you need to build specific packages, you can do so by navigating to the package directory and running the build command:
+
+```bash
+# Core package (required by most other packages)
+cd packages/core && pnpm build
+
+# Configraph (required by core)
+cd packages/configraph && pnpm build
+
+# Build specific integrations
+cd packages/integrations/astro && pnpm build
+cd packages/integrations/vite && pnpm build
+cd packages/integrations/nextjs && pnpm build
+
+# Build specific plugins
+cd packages/plugins/1password && pnpm build
+cd packages/plugins/encrypted-vault && pnpm build
+
+# Build specific platforms
+cd packages/platforms/cloudflare && pnpm build
+cd packages/platforms/netlify && pnpm build
+cd packages/platforms/vercel && pnpm build
+```
+
+### Running the docs site
+
+After building the required packages, you can run the docs site locally:
+
+```bash
+cd packages/docs-site && pnpm run dev
+```
+
+The docs site will be available at `http://localhost:4321/`.
+
+**Note:** If you encounter module resolution errors, it usually means a package hasn't been built yet. Check the error message to see which package is missing its `dist/` directory and build it first.
+
 ## Packages
 
 - `packages/core` - Core package for DMNO (includes CLI) 
