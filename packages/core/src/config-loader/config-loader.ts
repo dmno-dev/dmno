@@ -12,7 +12,7 @@ import { ViteNodeServer } from 'vite-node/server';
 import { createDeferredPromise } from '@dmno/ts-lib';
 import { createDebugTimer } from '../cli/lib/debug-timer';
 import { setupViteServer } from './vite-server';
-import { ScannedWorkspaceInfo, findDmnoServices } from './find-services';
+import { ScannedWorkspaceInfo, findDmnoServices, selectAndApplyWorkspaceConfig } from './find-services';
 import {
   DmnoService, DmnoWorkspace, DmnoServiceConfig,
 } from '../config-engine/config-engine';
@@ -55,7 +55,8 @@ export class ConfigLoader {
   }
 
   private async finishInit() {
-    this.workspaceInfo = await findDmnoServices();
+    const workspaceInfoInitial = await findDmnoServices();
+    this.workspaceInfo = await selectAndApplyWorkspaceConfig(workspaceInfoInitial);
     // already filtered to only services with a .dmno folder
     const dmnoServicePackages = this.workspaceInfo.workspacePackages;
 
