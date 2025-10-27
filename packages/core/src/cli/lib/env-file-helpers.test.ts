@@ -18,4 +18,8 @@ describe('stringifyObjectAsEnvFile', () => {
     const result = stringifyObjectAsEnvFile({ foo: 'bar"baz' });
     expect(result).toEqual('foo="bar\\"baz"');
   });
+  test('excludes undefined values', () => {
+    const result = stringifyObjectAsEnvFile({ foo: 'bar', baz: undefined, qux: 'test' });
+    expect(result).toEqual('foo="bar"\nqux="test"');
+  });
 });
