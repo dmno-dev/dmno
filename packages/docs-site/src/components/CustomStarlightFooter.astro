@@ -16,9 +16,10 @@ import EmailSignup from "./EmailSignup.vue";
   <Pagination {...Astro.props} />
   <EmailSignup client:load />
   <div class="footer-links">
-    <span>© 2024 DMNO Inc.</span>
-    <a href="/docs/footer/about/">About</a>
-    <a href="/docs/footer/legal/">Legal</a>
+    <span
+      >© 2025 <a href="https://dmno.io" target="_blank">DMNO Inc.</a> All rights
+      reserved.</span
+    >
   </div>
   {
     DMNO_PUBLIC_CONFIG.SCARF_PIXEL_ID && (

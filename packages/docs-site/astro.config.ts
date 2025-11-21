@@ -290,7 +290,10 @@ export default defineConfig({
           items: [
             {
               label: 'About',
-              link: '/docs/footer/about/',
+              link: 'https://dmno.io',
+              attrs: {
+                target: '_blank',
+              },
             },
             {
               label: 'Legal',
