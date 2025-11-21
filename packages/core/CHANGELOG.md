@@ -1,5 +1,11 @@
 # dmno
 
+## 0.0.40
+
+### Patch Changes
+
+- [#235](https://github.com/dmno-dev/dmno/pull/235) [`2681e77`](https://github.com/dmno-dev/dmno/commit/2681e77a6970b6f14127914b8e174dcc45db5f45) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Remove undefined items from `dmno resolve --format env` output
+
 ## 0.0.39
 
 ### Patch Changes
