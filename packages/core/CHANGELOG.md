@@ -1,5 +1,11 @@
 # dmno
 
+## 0.0.41
+
+### Patch Changes
+
+- [#239](https://github.com/dmno-dev/dmno/pull/239) [`8998a83`](https://github.com/dmno-dev/dmno/commit/8998a83ef664ea3157a7a81930c19d1cd0de84a2) Thanks [@philmillman](https://github.com/philmillman)! - updated node-forge
+
 ## 0.0.40
 
 ### Patch Changes
