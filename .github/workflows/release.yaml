@@ -13,6 +13,8 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    # npm trusted publishing (OIDC) + NPM_TOKEN secret are scoped to this environment
+    environment: publish
     permissions:
       contents: write
       pull-requests: write
