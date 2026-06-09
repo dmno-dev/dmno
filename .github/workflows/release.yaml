@@ -34,6 +34,9 @@ jobs:
           cache: 'pnpm'
       - name: Install node deps
         run: pnpm i
+      # Ensure a recent npm for OIDC/provenance publishing (bumpy publishes with provenance)
+      - name: Update npm
+        run: npm install -g npm@latest
       - name: Enable turborepo build cache
         uses: rharkor/caching-for-turbo@v2.3.2
       - name: Build publishable DMNO modules
