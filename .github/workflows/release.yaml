@@ -5,14 +5,24 @@ on:
     branches:
       - main
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+concurrency:
+  group: bumpy-release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: write
+      id-token: write # required for npm provenance / OIDC
     steps:
       - uses: actions/checkout@v4
+        with:
+          # full history is needed for bumpy to compare against the base branch
+          fetch-depth: 0
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -26,15 +36,17 @@ jobs:
         run: pnpm i
       - name: Enable turborepo build cache
         uses: rharkor/caching-for-turbo@v2.3.2
-      - name: Create Release Pull Request or Publish to npm
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          title: "[Changesets] Versioned release"
-          commit: "[Changesets] Create versioned packages for publishing"
-          # This expects you to have a script called release which does a build for your packages and calls changeset publish
-          publish: pnpm run changeset:publish
+      - name: Build publishable DMNO modules
+        run: pnpm build:libs
+      - name: Create Release PR / Publish to npm
+        # opens/updates a version PR when bump files are pending,
+        # and publishes to npm when that version PR is merged to main
+        run: pnpm exec bumpy ci release
         env:
+          # BUMPY_GH_TOKEN: a bot PAT used to push the version branch + open the PR so that
+          # PR workflows (e.g. release-preview) get triggered for it. Falls back to GITHUB_TOKEN.
+          BUMPY_GH_TOKEN: ${{ secrets.BUMPY_GH_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 

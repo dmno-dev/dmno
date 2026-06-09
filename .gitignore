@@ -15,8 +15,6 @@ vite.config.ts.timestamp*
 
 tmp-package-registry
 
-changesets-summary.json
-
 # DMNO files ###
 # local cache for resolved values
 **/.dmno/cache.json

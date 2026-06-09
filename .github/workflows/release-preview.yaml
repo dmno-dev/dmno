@@ -6,6 +6,10 @@ on:
       - main
 
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,7 +34,16 @@ jobs:
         run: pnpm i
       - name: Enable turborepo build cache
         uses: rharkor/caching-for-turbo@v2.3.2
-      - name: Build publishable DMNO modules 
+
+      # Verify changed packages have a bump file, and post the release plan as a PR comment
+      - name: Bumpy release plan check
+        if: github.event_name == 'pull_request'
+        run: pnpm exec bumpy ci check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build publishable DMNO modules
         run: pnpm build:libs
 
       # we use a custom script to run `npx pkg-pr-new publish`

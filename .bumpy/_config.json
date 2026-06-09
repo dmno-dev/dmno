@@ -1,0 +1,13 @@
+{
+  "$schema": "../node_modules/@varlock/bumpy/config-schema.json",
+  "baseBranch": "main",
+  "changelog": [
+    "github", {
+      "repo": "dmno-dev/dmno",
+      "internalAuthors": [ "theoephraim", "philmillman", "@app/copilot-swe-agent", "claude" ]
+    }
+  ],
+  "publish": {
+    "provenance": true
+  }
+}
