@@ -1,5 +1,11 @@
 # @dmno/cloudflare-platform
 
+## 0.0.5
+
+### Patch Changes
+
+- [#242](https://github.com/dmno-dev/dmno/pull/242) [`054a1d3`](https://github.com/dmno-dev/dmno/commit/054a1d3aacd6bc1f5fcbef7d953f1b6416d08a6b) Thanks [@philmillman](https://github.com/philmillman)! - fix typo in WRANGLER_INJECT_MODE
+
 ## 0.0.4
 
 ### Patch Changes
