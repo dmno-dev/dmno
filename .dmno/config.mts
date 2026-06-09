@@ -51,7 +51,7 @@ export default defineDmnoService({
       description: 'publishable API key for PostHog',
     },
     GITHUB_TOKEN: {
-      description: 'Personal github access token, used for changesets publishing',
+      description: 'Personal github access token, used by bumpy for changelog generation + publishing',
       sensitive: true,
     },
   }
