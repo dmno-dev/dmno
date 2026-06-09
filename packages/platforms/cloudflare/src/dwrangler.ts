@@ -142,7 +142,7 @@ async function restartWrangler() {
   }
 
 
-  const injectMode: 'inline' | 'secrets' = dmnoWranglerSettings.DWRANGLER_INJECT_MODE as any || 'inline';
+  const injectMode: 'inline' | 'secrets' = dmnoWranglerSettings.WRANGLER_INJECT_MODE as any || 'inline';
 
   const wranglerBuildArgs = [];
   const wranglerDevArgs = [];
@@ -154,7 +154,7 @@ async function restartWrangler() {
 
     // for "dynamic" config, we have 2 methods of injecting - vars or define
 
-    // users can toggle between these modes by setting DWRANGLER_INJECT_MODE in their config.mts
+    // users can toggle between these modes by setting WRANGLER_INJECT_MODE in their config.mts
 
     // in "define" mode, we inline the entire resolved config with additional metadata into the build code
     // this is necessary for our global patching stuff to work, and it also enables users to use config
