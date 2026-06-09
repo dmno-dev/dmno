@@ -1,5 +1,7 @@
 # DMNO [![npm](https://img.shields.io/npm/v/dmno?label=dmno)](https://www.npmjs.com/package/dmno)
 
+> **Maintenance mode:** DMNO receives critical bug and security fixes only. For a suitable replacement, see [Varlock](https://varlock.dev).
+
 >Full-stack configuration & secrets.
 >Batteries included.
 

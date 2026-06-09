@@ -5,6 +5,7 @@ import LandingPage from "@/components/layouts/LandingPage.astro";
 import CTABlock from "@/components/CTABlock.astro";
 import Hero from "@/components/Hero.astro";
 import LandingPageSection from "@/components/LandingPageSection.astro";
+import MaintenanceCallout from "@/components/MaintenanceCallout.astro";
 
 import IntegrationsHero from "@/components/homepage/IntegrationsHero.vue";
 
@@ -25,6 +26,10 @@ const muxId = "FmBLL2H1yt6cEfqz01QVje7LSlI8DtF9Vn18NRsv5o6E";
   showSidebar={false}
   showIntegrations={true}
 >
+  <div class="homepage-callout">
+    <MaintenanceCallout />
+  </div>
+
   <Hero>
     <Fragment slot="heading">Connective Configuration</Fragment>
     <Fragment slot="subheading">
@@ -62,4 +67,12 @@ const muxId = "FmBLL2H1yt6cEfqz01QVje7LSlI8DtF9Vn18NRsv5o6E";
   />
 </LandingPage>
 
-<style></style>
+<style lang="less">
+  .homepage-callout {
+    padding: 1rem 2rem 0;
+
+    @media (min-width: 50rem) {
+      padding: 1.5rem 2rem 0;
+    }
+  }
+</style>
