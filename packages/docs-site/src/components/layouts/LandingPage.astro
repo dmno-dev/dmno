@@ -1,6 +1,16 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-import { Icon } from 'astro-iconify';
+import RemixIcon from '~icons/simple-icons/remix';
+import NextjsIcon from '~icons/devicon/nextjs';
+import AstroIcon from '~icons/devicon/astro';
+import ViteIcon from '~icons/devicon/vitejs';
+import NodejsIcon from '~icons/logos/nodejs-icon';
+import FastifyIcon from '~icons/simple-icons/fastify';
+import OnePasswordIcon from '~icons/simple-icons/1password';
+import BitwardenIcon from '~icons/simple-icons/bitwarden';
+import CloudflareIcon from '~icons/devicon/cloudflare';
+import VercelIcon from '~icons/simple-icons/vercel';
+import NetlifyIcon from '~icons/devicon/netlify';
 import LogoBar from '../LogoBar.astro';
 
 interface Props {
@@ -38,19 +48,19 @@ const {
         </div>
         <LogoBar>
           {/* prefer simple-icons for single color icons, so it flips dark/light */}
-          <a href="/docs/integrations/remix/"><Icon name="simple-icons:remix" /></a>
-          <a href="/docs/integrations/nextjs/"><Icon name="devicon:nextjs" /></a>
-          <a href="/docs/integrations/astro/"><Icon name="devicon:astro" /></a>
-          <a href="/docs/integrations/vite/"><Icon name="devicon:vitejs" /></a>
-          <a href="/docs/integrations/node/"><Icon name="logos:nodejs-icon" /></a>
-          <a href="/docs/integrations/fastify/"><Icon name="simple-icons:fastify" /></a>
+          <a href="/docs/integrations/remix/" set:html={RemixIcon} />
+          <a href="/docs/integrations/nextjs/" set:html={NextjsIcon} />
+          <a href="/docs/integrations/astro/" set:html={AstroIcon} />
+          <a href="/docs/integrations/vite/" set:html={ViteIcon} />
+          <a href="/docs/integrations/node/" set:html={NodejsIcon} />
+          <a href="/docs/integrations/fastify/" set:html={FastifyIcon} />
 
-          <a href="/docs/plugins/1password/"><Icon name="simple-icons:1password" /></a>
-          <a href="/docs/plugins/bitwarden/"><Icon name="simple-icons:bitwarden" /></a>
+          <a href="/docs/plugins/1password/" set:html={OnePasswordIcon} />
+          <a href="/docs/plugins/bitwarden/" set:html={BitwardenIcon} />
 
-          <a href="/docs/platforms/cloudflare/"><Icon name="devicon:cloudflare" /></a>
-          <a href="/docs/platforms/vercel/"><Icon name="simple-icons:vercel" /></a>
-          <a href="/docs/platforms/netlify/"><Icon name="devicon:netlify" /></a>
+          <a href="/docs/platforms/cloudflare/" set:html={CloudflareIcon} />
+          <a href="/docs/platforms/vercel/" set:html={VercelIcon} />
+          <a href="/docs/platforms/netlify/" set:html={NetlifyIcon} />
         </LogoBar>
         
         <div class="richtext">
