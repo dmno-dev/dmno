@@ -11,13 +11,13 @@ const cliExecId = new Date().toISOString();
 import * as _ from 'lodash-es';
 import Debug from 'debug';
 import { DmnoCommand } from './lib/dmno-command';
+import packageJson from '../../package.json';
 
 import { addDocsCommand } from './lib/cli-schema-generation';
 import { customizeHelp } from './lib/help-customizations';
 import { getCliRunCtx, initCliRunCtx } from './lib/cli-ctx';
 import { CliExitError } from './lib/cli-error';
 import { WATCHING_FILES_MESSAGE } from './lib/watch-mode-helpers';
-
 
 import { ResolveCommand } from './commands/resolve.command';
 import { RunCommand } from './commands/run.command';
@@ -31,7 +31,7 @@ const debug = Debug('dmno:cli');
 
 const program = new DmnoCommand('dmno')
   .description('dmnno cli - https://dmno.dev')
-  .version('0.0.1');
+  .version(packageJson.version);
 
 program.addCommand(ResolveCommand);
 program.addCommand(RunCommand);
