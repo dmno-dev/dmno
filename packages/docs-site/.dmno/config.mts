@@ -1,5 +1,4 @@
-import { DmnoBaseTypes, defineDmnoService, switchBy, pickFromSchemaObject, pick } from 'dmno';
-import { CloudflarePagesEnvSchema } from '@dmno/cloudflare-platform';
+import { defineDmnoService, switchBy, pick } from 'dmno';
 
 export default defineDmnoService({
   name: 'docs-site',
@@ -21,12 +20,18 @@ export default defineDmnoService({
       value: 'family=Days+One&family=Fira+Mono:wght@400&family=Inter:wght@100..900'
     },
 
-    ...pickFromSchemaObject(CloudflarePagesEnvSchema, 'CF_PAGES_BRANCH'),
+    WORKERS_CI_BRANCH: {
+      description: 'branch name of the current Cloudflare Workers Builds build',
+      externalDocs: {
+        description: 'Cloudflare Workers Builds docs - env vars',
+        url: 'https://developers.cloudflare.com/workers/ci-cd/builds/configuration/#environment-variables',
+      },
+    },
 
     DMNO_ENV: {
       value: () => {
-        if (DMNO_CONFIG.CF_PAGES_BRANCH === 'main') return 'production';
-        if (DMNO_CONFIG.CF_PAGES_BRANCH) return 'staging';
+        if (DMNO_CONFIG.WORKERS_CI_BRANCH === 'main') return 'production';
+        if (DMNO_CONFIG.WORKERS_CI_BRANCH) return 'staging';
         return 'local';
       },
     },
