@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "dmno-docs-site",
+  "name": "dmno-website",
   "compatibility_date": "2026-11-01",
   // static-assets-only worker (no `main` script)
   "assets": {
