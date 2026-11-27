@@ -7,3 +7,6 @@ dist/
 # docgen files
 src/utils/typedoc/typedoc-output.json
 src/utils/cli.json
+
+# wrangler
+.wrangler/

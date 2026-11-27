@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dmno-docs-site",
+  "compatibility_date": "2026-11-01",
+  // static-assets-only worker (no `main` script)
+  "assets": {
+    "directory": "./dist",
+    // astro builds with `trailingSlash: 'always'` -> /foo/index.html
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  // enable once the dmno.dev zone lives in the same CF account as this worker
+  // "routes": [
+  //   { "pattern": "dmno.dev", "custom_domain": true }
+  // ],
+  "workers_dev": true,
+  "preview_urls": true
+}

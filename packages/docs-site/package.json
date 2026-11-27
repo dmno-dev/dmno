@@ -9,6 +9,7 @@
     "build": "astro check && astro build",
     "build-for-deploy": "turbo build --filter=dmno && pnpm run docgen && pnpm run clidocgen && turbo build",
     "preview": "astro preview",
+    "deploy": "wrangler deploy",
     "astro": "astro",
     "docgen": "typedoc --options ./src/utils/typedoc/typedoc.json",
     "clidocgen": "dmno get-cli-schema > ./src/utils/cli.json",
@@ -24,7 +25,6 @@
     "@astrojs/starlight": "^0.32.1",
     "@astrojs/vue": "^5.0.7",
     "@dmno/astro-integration": "workspace:*",
-    "@dmno/cloudflare-platform": "workspace:*",
     "@dmno/eslint-config": "workspace:*",
     "@dmno/tsconfig": "workspace:*",
     "@dmno/ui-lib": "workspace: *",
@@ -51,6 +51,7 @@
   },
   "devDependencies": {
     "@iconify/json": "^2.2.212",
-    "typedoc": "^0.25.13"
+    "typedoc": "^0.25.13",
+    "wrangler": "^4"
   }
 }
